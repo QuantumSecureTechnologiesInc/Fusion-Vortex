@@ -1,0 +1,170 @@
+// stdlib/hashmap.fu - HashMap<K, V> implementation
+
+// Entry in a hash bucket (for collision handling via chaining)
+class HashMapEntry<K, V> {
+    key: K;
+    value: V;
+    hash_code: int;
+    has_next: bool;
+}
+
+// HashMap - hash table with separate chaining
+class HashMap<K, V> where K: Hash + Eq {
+    // Note: Using simplified structure due to Fusion limitations
+    // In production, this would use a proper bucket array
+    size: int;
+    capacity: int;
+    threshold: int;
+}
+
+impl<K: Hash + Eq, V> HashMap<K, V> {
+    // Create new empty HashMap
+    fn new() -> HashMap<K, V> {
+        let capacity = 16;
+        let load_factor = 75; // 0.75 * 100
+        let threshold = (capacity * load_factor) / 100;
+        
+        return HashMap {
+            size: 0,
+            capacity: capacity,
+            threshold: threshold
+        };
+    }
+    
+    // Create with specific capacity
+    fn with_capacity(capacity: int) -> HashMap<K, V> {
+        let load_factor = 75;
+        let threshold = (capacity * load_factor) / 100;
+        
+        return HashMap {
+            size: 0,
+            capacity: capacity,
+            threshold: threshold
+        };
+    }
+    
+    // Get number of entries
+    fn len(self) -> int {
+        return self.size;
+    }
+    
+    // Check if empty
+    fn is_empty(self) -> bool {
+        return self.size == 0;
+    }
+    
+    // Get capacity
+    fn capacity(self) -> int {
+        return self.capacity;
+    }
+    
+    // Compute bucket index from hash
+    fn bucket_index(self, hash: int) -> int {
+        // Use modulo to map hash to bucket index
+        let index = hash % self.capacity;
+        if index < 0 {
+            return 0 - index; // Make positive
+        } else {
+            return index;
+        }
+    }
+    
+    // Insert key-value pair (stub implementation)
+    // In real implementation, would store in bucket array
+    fn insert(mut self, key: K, value: V) -> Option<V> {
+        let hash = key.hash();
+        let index = self.bucket_index(hash);
+        
+        // Stub: In real implementation, would:
+        // 1. Check if key exists, return old value
+        // 2. Insert new entry in bucket at index
+        // 3. Handle collisions with chaining
+        // 4. Resize if needed
+        
+        self.size = self.size + 1;
+        
+        // Check if resize needed
+        if self.size > self.threshold {
+            self.resize();
+        }
+        
+        return Option::None; // No old value
+    }
+    
+    // Get value by key (stub implementation)
+    fn get(self, key: K) -> Option<V> {
+        let hash = key.hash();
+        let index = self.bucket_index(hash);
+        
+        // Stub: In real implementation, would:
+        // 1. Find bucket at index
+        // 2. Search chain for matching key
+        // 3. Return value if found
+        
+        return Option::None;
+    }
+    
+    // Check if key exists
+    fn contains_key(self, key: K) -> bool {
+        return self.get(key).is_some();
+    }
+    
+    // Remove key-value pair (stub implementation)
+    fn remove(mut self, key: K) -> Option<V> {
+        let hash = key.hash();
+        let index = self.bucket_index(hash);
+        
+        // Stub: In real implementation, would:
+        // 1. Find bucket at index
+        // 2. Search chain for matching key
+        // 3. Remove entry and return value
+        
+        if self.size > 0 {
+            self.size = self.size - 1;
+        }
+        
+        return Option::None;
+    }
+    
+    // Clear all entries
+    fn clear(mut self) {
+        self.size = 0;
+        // In real implementation, would clear all buckets
+    }
+    
+    // Resize hash table (called when load factor exceeded)
+    fn resize(mut self) {
+        let new_capacity = self.capacity * 2;
+        let load_factor = 75;
+        let new_threshold = (new_capacity * load_factor) / 100;
+        
+        // Stub: In real implementation, would:
+        // 1. Allocate new bucket array with new_capacity
+        // 2. Rehash all existing entries
+        // 3. Update capacity and threshold
+        
+        self.capacity = new_capacity;
+        self.threshold = new_threshold;
+    }
+}
+
+// Helper to create HashMap from pairs (conceptual)
+fn hashmap_from<K: Hash + Eq, V>(pairs: Vector<(K, V)>) -> HashMap<K, V> {
+    let mut map = HashMap::with_capacity(pairs.len());
+    
+    // In real implementation, would iterate and insert all pairs
+    // for pair in pairs {
+    //     map.insert(pair.0, pair.1);
+    // }
+    
+    return map;
+}
+
+// Example usage:
+// let mut map = HashMap::<int, string>::new();
+// map.insert(1, "one");
+// map.insert(2, "two");
+// let value = map.get(1); // Some("one")
+// let exists = map.contains_key(2); // true
+// map.remove(1);
+// let size = map.len(); // 1

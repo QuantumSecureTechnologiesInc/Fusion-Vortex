@@ -1,0 +1,40 @@
+[package]
+name = "fusion_lang"
+version = "0.1.0"
+edition = "2021"
+authors = ["QuantumSecure Technologies Ltd"]
+description = "Fusion Programming Language Compiler"
+
+[dependencies]
+# Core Dependencies
+logos = "0.14"
+clap = { version = "4.4", features = ["derive"] }
+lazy_static = "1.4"
+regex = "1.10"
+thiserror = "1.0"
+sha3 = "0.10"  # For hybrid cryptography module
+
+# Cryptography - Classical
+x25519-dalek = "2.0"
+ed25519-dalek = "2.1"
+rand = "0.8"
+
+# Cryptography - Post-Quantum
+pqcrypto-kyber = "0.8"
+pqcrypto-dilithium = "0.5"
+pqcrypto-traits = "0.3"
+
+# Phase 3: Language Server Protocol (LSP)
+tower-lsp = "0.20"
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+
+# Phase 3: WebAssembly Backend
+wasm-encoder = "0.219"
+wasmparser = "0.219"
+
+[dev-dependencies]
+tempfile = "3.8"
+

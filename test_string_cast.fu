@@ -1,0 +1,46 @@
+
+class StdString {
+    buffer: int; 
+    length: int;
+    
+    // cast_to_int intrinsic needed if we want to store `string` in `int` buffer field 
+    // OR we change buffer to `string`. 
+    // But buffer allocated by malloc returns `int` (void* -> i64).
+    
+    // If we want to read/write chars, we treat them as ints.
+    
+    fn from_raw(s: string) -> StdString {
+        let len = strlen(s); // ok
+        let buf = malloc(len + 1);
+        
+        // memcpy needs source as int (pointer). 's' is string.
+        // We need explicit cast primitive string -> int. (ptrtoint)
+        // Let's implement intrinsic `cast_to_int<T>(val)`.
+        
+        let s_ptr = cast_to_int::<string>(s);
+        memcpy(buf, s_ptr, len + 1);
+        
+        return StdString { buffer: buf, length: len };
+    }
+    
+    fn get_buffer() -> int {
+        return self.buffer;
+    }
+}
+
+fn main() -> int {
+    let s = StdString::from_raw("Hello World");
+    let ptr = s.get_buffer();
+    print("Buffer Address:");
+    print(ptr); // Prints address
+    
+    // We can't print StdString directly yet.
+    // print(s.buffer) would print address.
+    
+    // To prove it works, let's verify length.
+    let len = s.length;
+    print("Length:");
+    print(len); // Should be 11
+    
+    return 0;
+}

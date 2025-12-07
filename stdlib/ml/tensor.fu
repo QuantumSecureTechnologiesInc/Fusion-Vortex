@@ -1,0 +1,213 @@
+// stdlib/ml/tensor.fu - Tensor implementation (simplified)
+
+use vector::Vector;
+use option::Option;
+
+// Simplified Tensor implementation using Vector
+class Tensor {
+    data: Vector<float>;
+    shape: Vector<int>;
+    size: int;
+}
+
+impl Tensor {
+    fn new(shape: Vector<int>) -> Tensor {
+        let mut total_size = 1;
+        let mut i = 0;
+        
+        while i < shape.len() {
+            total_size = total_size * shape.get(i).unwrap();
+            i = i + 1;
+        }
+        
+        let mut data = Vector::new();
+        let mut j = 0;
+        while j < total_size {
+            data.push(0.0);
+            j = j + 1;
+        }
+        
+        return Tensor {
+            data: data,
+            shape: shape,
+            size: total_size
+        };
+    }
+    
+    fn from_vector(data: Vector<float>, shape: Vector<int>) -> Result<Tensor, string> {
+        let mut total_size = 1;
+        let mut i = 0;
+        
+        while i < shape.len() {
+            total_size = total_size * shape.get(i).unwrap();
+            i = i + 1;
+        }
+        
+        if data.len() != total_size {
+            return Result::Err("Data size doesn't match shape");
+        }
+        
+        return Result::Ok(Tensor {
+            data: data,
+            shape: shape,
+            size: total_size
+        });
+    }
+    
+    fn get_shape(self) -> Vector<int> {
+        return self.shape;
+    }
+    
+    fn rank(self) -> int {
+        return self.shape.len();
+    }
+    
+    fn total_size(self) -> int {
+        return self.size;
+    }
+    
+    fn get_at(self, index: int) -> Option<float> {
+        return self.data.get(index);
+    }
+    
+    fn set_at(mut self, index: int, value: float) {
+        self.data.set(index, value);
+    }
+    
+    fn fill(mut self, value: float) {
+        let mut i = 0;
+        while i < self.size {
+            self.data.set(i, value);
+            i = i + 1;
+        }
+    }
+    
+    fn zeros(shape: Vector<int>) -> Tensor {
+        let mut tensor = Tensor::new(shape);
+        tensor.fill(0.0);
+        return tensor;
+    }
+    
+    fn ones(shape: Vector<int>) -> Tensor {
+        let mut tensor = Tensor::new(shape);
+        tensor.fill(1.0);
+        return tensor;
+    }
+}
+
+// Element-wise operations
+fn add_tensors(a: Tensor, b: Tensor) -> Result<Tensor, string> {
+    if a.size != b.size {
+        return Result::Err("Tensors must have same size");
+    }
+    
+    let mut result = Tensor::new(a.shape);
+    let mut i = 0;
+    
+    while i < a.size {
+        let val_a = a.get_at(i).unwrap();
+        let val_b = b.get_at(i).unwrap();
+        result.set_at(i, val_a + val_b);
+        i = i + 1;
+    }
+    
+    return Result::Ok(result);
+}
+
+fn multiply_tensors(a: Tensor, b: Tensor) -> Result<Tensor, string> {
+    if a.size != b.size {
+        return Result::Err("Tensors must have same size");
+    }
+    
+    let mut result = Tensor::new(a.shape);
+    let mut i = 0;
+    
+    while i < a.size {
+        let val_a = a.get_at(i).unwrap();
+        let val_b = b.get_at(i).unwrap();
+        result.set_at(i, val_a * val_b);
+        i = i + 1;
+    }
+    
+    return Result::Ok(result);
+}
+
+fn scalar_multiply(tensor: Tensor, scalar: float) -> Tensor {
+    let mut result = Tensor::new(tensor.shape);
+    let mut i = 0;
+    
+    while i < tensor.size {
+        let val = tensor.get_at(i).unwrap();
+        result.set_at(i, val * scalar);
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+// Activation functions (element-wise)
+fn relu(tensor: Tensor) -> Tensor {
+    let mut result = Tensor::new(tensor.shape);
+    let mut i = 0;
+    
+    while i < tensor.size {
+        let val = tensor.get_at(i).unwrap();
+        if val > 0.0 {
+            result.set_at(i, val);
+        } else {
+            result.set_at(i, 0.0);
+        }
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+fn sigmoid_value(x: float) -> float {
+    // Simplified sigmoid: 1 / (1 + e^(-x))
+    // For now, approximate with tanh
+    let tanh_val = tanh_approx(x / 2.0);
+    return (tanh_val + 1.0) / 2.0;
+}
+
+fn tanh_approx(x: float) -> float {
+    // Approximation of tanh using polynomial
+    // tanh(x) ≈ x - x^3/3 + 2x^5/15 (for small x)
+    if x > 2.0 {
+        return 1.0;
+    }
+    if x < -2.0 {
+        return -1.0;
+    }
+    
+    let x2 = x * x;
+    let x3 = x2 * x;
+    let x5 = x3 * x2;
+    
+    return x - x3 / 3.0 + 2.0 * x5 / 15.0;
+}
+
+fn sigmoid(tensor: Tensor) -> Tensor {
+    let mut result = Tensor::new(tensor.shape);
+    let mut i = 0;
+    
+    while i < tensor.size {
+        let val = tensor.get_at(i).unwrap();
+        result.set_at(i, sigmoid_value(val));
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+// Example usage:
+// let mut shape = Vector::new();
+// shape.push(2);
+// shape.push(3);  // 2x3 tensor
+// 
+// let mut tensor = Tensor::zeros(shape);
+// tensor.set_at(0, 1.5);
+// tensor.set_at(1, 2.5);
+// 
+// let activated = relu(tensor);
+// let sig = sigmoid(activated);

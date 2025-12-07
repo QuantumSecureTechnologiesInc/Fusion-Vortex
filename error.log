@@ -1,0 +1,16 @@
+    Checking fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+error[E0433]: failed to resolve: could not find `GrammarResponseType` in `antlr_rust`
+  --> src\bin\generate_parser.rs:17:21
+   |
+17 |         antlr_rust::GrammarResponseType::Rs,
+   |                     ^^^^^^^^^^^^^^^^^^^ could not find `GrammarResponseType` in `antlr_rust`
+
+error[E0425]: cannot find function `process_grammar` in crate `antlr_rust`
+  --> src\bin\generate_parser.rs:15:23
+   |
+15 |     match antlr_rust::process_grammar(
+   |                       ^^^^^^^^^^^^^^^ not found in `antlr_rust`
+
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `fusion_lang` (bin "generate_parser") due to 2 previous errors

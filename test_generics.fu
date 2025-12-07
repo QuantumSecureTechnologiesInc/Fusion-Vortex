@@ -1,0 +1,18 @@
+fn identity<T>(x: T) -> T {
+    return x;
+}
+
+class wrapper {
+    val: int;
+}
+
+fn main() -> int {
+    let a: int = 10;
+    let b: int = identity(a); 
+    print(b);
+
+    let w: wrapper = wrapper { val: 42 };
+    let w2: wrapper = identity(w);
+    
+    return 0;
+}

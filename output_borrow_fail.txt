@@ -1,0 +1,213 @@
+warning: unused variable: `target`
+   --> src\borrow_checker\mod.rs:134:37
+    |
+134 |             Statement::Assignment { target, value } => {
+    |                                     ^^^^^^ help: try ignoring the field: `target: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `val_ty`
+   --> src\codegen\mod.rs:492:35
+    |
+492 |                     let (val_val, val_ty) = self.generate_expression(&args[2])?;
+    |                                   ^^^^^^ help: if this is intentional, prefix it with an underscore: `_val_ty`
+
+warning: field `attributes` is never read
+ --> src\ast\mod.rs:7:9
+  |
+5 |     Function {
+  |     -------- field in this variant
+6 |         name: String,
+7 |         attributes: Vec<Attribute>,
+  |         ^^^^^^^^^^
+  |
+  = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `implements` is never read
+  --> src\ast\mod.rs:17:9
+   |
+14 |     Class {
+   |     ----- field in this variant
+...
+17 |         implements: Vec<String>,
+   |         ^^^^^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Trait`, `GlobalVariable`, and `Module` are never constructed
+  --> src\ast\mod.rs:21:5
+   |
+ 4 | pub enum Declaration {
+   |          ----------- variants in this enum
+...
+21 |     Trait {
+   |     ^^^^^
+...
+25 |     GlobalVariable {
+   |     ^^^^^^^^^^^^^^
+...
+35 |     Module {
+   |     ^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `params` and `return_type` are never read
+  --> src\ast\mod.rs:62:9
+   |
+60 | pub struct MethodSignature {
+   |            --------------- fields in this struct
+61 |     pub name: String,
+62 |     pub params: Vec<Parameter>,
+   |         ^^^^^^
+63 |     pub return_type: Option<Type>,
+   |         ^^^^^^^^^^^
+   |
+   = note: `MethodSignature` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `For`, `Break`, and `Continue` are never constructed
+  --> src\ast\mod.rs:91:5
+   |
+72 | pub enum Statement {
+   |          --------- variants in this enum
+...
+91 |     For {
+   |     ^^^
+...
+98 |     Break,
+   |     ^^^^^
+99 |     Continue,
+   |     ^^^^^^^^
+   |
+   = note: `Statement` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `object` and `index` are never read
+   --> src\ast\mod.rs:135:9
+    |
+134 |     Index {
+    |     ----- fields in this variant
+135 |         object: Box<Expression>,
+    |         ^^^^^^
+136 |         index: Box<Expression>,
+    |         ^^^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `UnaryOp`, `Array`, and `Map` are never constructed
+   --> src\ast\mod.rs:111:5
+    |
+103 | pub enum Expression {
+    |          ---------- variants in this enum
+...
+111 |     UnaryOp {
+    |     ^^^^^^^
+...
+138 |     Array(Vec<Expression>),
+    |     ^^^^^
+139 |     Map(Vec<(Expression, Expression)>),
+    |     ^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float` and `Boolean` are never constructed
+   --> src\ast\mod.rs:145:5
+    |
+143 | pub enum Literal {
+    |          ------- variants in this enum
+144 |     Integer(i64),
+145 |     Float(f64),
+    |     ^^^^^
+146 |     String(String),
+147 |     Boolean(bool),
+    |     ^^^^^^^
+    |
+    = note: `Literal` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Modulo`, `LessEqual`, and `GreaterEqual` are never constructed
+   --> src\ast\mod.rs:156:5
+    |
+151 | pub enum BinaryOp {
+    |          -------- variants in this enum
+...
+156 |     Modulo,
+    |     ^^^^^^
+...
+160 |     LessEqual,
+    |     ^^^^^^^^^
+161 |     GreaterThan,
+162 |     GreaterEqual,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `BinaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Negate` and `Not` are never constructed
+   --> src\ast\mod.rs:169:5
+    |
+168 | pub enum UnaryOp {
+    |          ------- variants in this enum
+169 |     Negate,
+    |     ^^^^^^
+170 |     Not,
+    |     ^^^
+    |
+    = note: `UnaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float`, `TypeParameter`, `Array`, `Optional`, `Union`, and `Function` are never constructed
+   --> src\ast\mod.rs:178:5
+    |
+174 | pub enum Type {
+    |          ---- variants in this enum
+...
+178 |     Float,
+    |     ^^^^^
+...
+182 |     TypeParameter(String), // New: Represents an unresolved generic type (e.g., 'T')
+    |     ^^^^^^^^^^^^^
+183 |     Array(Box<Type>),
+    |     ^^^^^
+184 |     Optional(Box<Type>),
+    |     ^^^^^^^^
+185 |     Union(Vec<Type>),
+    |     ^^^^^
+186 |     Function {
+    |     ^^^^^^^^
+    |
+    = note: `Type` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variant `HardwareAccelerated` is never constructed
+   --> src\ast\mod.rs:199:5
+    |
+198 | pub enum Attribute {
+    |          --------- variant in this enum
+199 |     HardwareAccelerated(String),
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `Attribute` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Borrowed` and `MutBorrowed` are never constructed
+ --> src\borrow_checker\mod.rs:8:5
+  |
+5 | enum OwnershipState {
+  |      -------------- variants in this enum
+...
+8 |     Borrowed,    // Immutable borrow coverage
+  |     ^^^^^^^^
+9 |     MutBorrowed, // Mutable borrow coverage
+  |     ^^^^^^^^^^^
+  |
+  = note: `OwnershipState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `print` is never used
+ --> src\stdlib\mod.rs:4:12
+  |
+4 |     pub fn print(s: &str) {
+  |            ^^^^^
+
+warning: `fusion_lang` (bin "fusion_lang") generated 16 warnings (run `cargo fix --bin "fusion_lang" -p fusion_lang` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running `target\debug\fusion_lang.exe --input test_borrow.fu`
+Compiling test_borrow.fu...
+Parsed AST successfully.
+Semantic Analysis Passed
+Borrow/Ownership Errors:
+ - Use of moved value: a

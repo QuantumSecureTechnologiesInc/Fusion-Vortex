@@ -1,0 +1,73 @@
+// src/zkp/protocols.fu - High-Level ZKP Protocol Interface
+
+use fusion::zkp::circuit::{Circuit, CircuitVariable};
+use fusion::runtime::Result;
+
+// --- Protocol Data Structures ---
+
+struct Proof(List<u8>); // Opaque proof bytes
+struct ProvingKey(List<u8>); // Key used by Prover
+struct VerifyingKey(List<u8>); // Key used by Verifier
+
+// --- Abstract Proving Protocol Trait ---
+
+trait ProvingProtocol:
+    // Required for SNARKs like Groth16, unnecessary for STARKs/Bulletproofs
+    fn setup(circuit: Circuit) -> Result<(ProvingKey, VerifyingKey)>;
+    
+    // Core proving logic
+    fn prove(
+        pk: ProvingKey, 
+        witness_values: Map<String, i64>, 
+        public_values: Map<String, i64>
+    ) -> Result<Proof>;
+    
+    // Core verification logic
+    fn verify(
+        vk: VerifyingKey, 
+        proof: Proof, 
+        public_values: Map<String, i64>
+    ) -> Result<bool>;
+
+// --- Concrete Protocol Implementations ---
+
+// Example 1: Groth16 (Fast proof, small proof size, requires trusted setup)
+struct Groth16;
+implements ProvingProtocol for Groth16 { ... }
+
+// Example 2: Plonky2 (Fast proving time, efficient recursive composition)
+struct Plonky2;
+implements ProvingProtocol for Plonky2 { ... }
+
+// Example 3: Bulletproofs (Logarithmic proof size, no trusted setup, good for range proofs)
+struct Bulletproofs;
+implements ProvingProtocol for Bulletproofs { ... }
+
+
+// --- Example Usage Function ---
+
+/// Example function to prove that a value 'x' is positive without revealing 'x'.
+fn prove_positive_knowledge(x: i64) -> Result<(Proof, bool)>:
+    // 1. Define the Circuit (Computation to be verified)
+    let circuit = Circuit::new("PositiveKnowledge")
+        .add_constraint(...) // Constraint: x is not zero
+        .add_constraint(...) // Constraint: x is not negative (requires range checks)
+
+    // 2. Setup (Groth16 requires this step once per circuit definition)
+    let (pk, vk) = Groth16::setup(circuit)?;
+    
+    // 3. Prove (Witness: x is private)
+    let proof = Groth16::prove(
+        pk, 
+        witness_values: Map::new().insert("x", x),
+        public_values: Map::new() // No public inputs for this simple proof
+    )?;
+    
+    // 4. Verify (Verifier only needs the verifying key and the proof)
+    let is_valid = Groth16::verify(
+        vk, 
+        proof, 
+        public_values: Map::new()
+    )?;
+
+    return Ok((proof, is_valid));

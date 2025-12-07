@@ -1,0 +1,8 @@
+// test_multi_file_main.fu - Main entry point for multi-file test
+pub mod test_multi_file_utils;
+
+fn main() -> int {
+    let x = test_multi_file_utils::add(5, 3);
+    let y = test_multi_file_utils::multiply(x, 2);
+    return y;
+}

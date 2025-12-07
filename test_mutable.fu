@@ -1,0 +1,23 @@
+// Test mutable variables
+
+fn main() -> int {
+    // Test immutable variable (should fail on reassignment)
+    let x = 5;
+    print("Initial x:");
+    print(x);
+    
+    // Test mutable variable (should work)
+    let mut counter = 0;
+    print("Initial counter:");
+    print(counter);
+    
+    counter = counter + 1;
+    print("After increment:");
+    print(counter);
+    
+    counter = counter + 10;
+    print("After adding 10:");
+    print(counter);
+    
+    return 0;
+}

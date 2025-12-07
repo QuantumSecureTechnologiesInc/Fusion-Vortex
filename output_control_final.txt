@@ -1,0 +1,231 @@
+   Compiling fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+warning: field `attributes` is never read
+ --> src\ast\mod.rs:7:9
+  |
+5 |     Function {
+  |     -------- field in this variant
+6 |         name: String,
+7 |         attributes: Vec<Attribute>,
+  |         ^^^^^^^^^^
+  |
+  = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `generic_params` and `implements` are never read
+  --> src\ast\mod.rs:16:9
+   |
+14 |     Class {
+   |     ----- fields in this variant
+15 |         name: String,
+16 |         generic_params: Vec<String>, // New: Generic Type Parameters for the class itself
+   |         ^^^^^^^^^^^^^^
+17 |         implements: Vec<String>,
+   |         ^^^^^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Trait`, `GlobalVariable`, and `Module` are never constructed
+  --> src\ast\mod.rs:21:5
+   |
+ 4 | pub enum Declaration {
+   |          ----------- variants in this enum
+...
+21 |     Trait {
+   |     ^^^^^
+...
+25 |     GlobalVariable {
+   |     ^^^^^^^^^^^^^^
+...
+30 |     Module {
+   |     ^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `params` and `return_type` are never read
+  --> src\ast\mod.rs:57:9
+   |
+55 | pub struct MethodSignature {
+   |            --------------- fields in this struct
+56 |     pub name: String,
+57 |     pub params: Vec<Parameter>,
+   |         ^^^^^^
+58 |     pub return_type: Option<Type>,
+   |         ^^^^^^^^^^^
+   |
+   = note: `MethodSignature` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `For`, `Break`, and `Continue` are never constructed
+  --> src\ast\mod.rs:86:5
+   |
+67 | pub enum Statement {
+   |          --------- variants in this enum
+...
+86 |     For {
+   |     ^^^
+...
+93 |     Break,
+   |     ^^^^^
+94 |     Continue,
+   |     ^^^^^^^^
+   |
+   = note: `Statement` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `UnaryOp`, `Index`, `Array`, and `Map` are never constructed
+   --> src\ast\mod.rs:106:5
+    |
+ 98 | pub enum Expression {
+    |          ---------- variants in this enum
+...
+106 |     UnaryOp {
+    |     ^^^^^^^
+...
+127 |     Index {
+    |     ^^^^^
+...
+131 |     Array(Vec<Expression>),
+    |     ^^^^^
+132 |     Map(Vec<(Expression, Expression)>),
+    |     ^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float` and `Boolean` are never constructed
+   --> src\ast\mod.rs:138:5
+    |
+136 | pub enum Literal {
+    |          ------- variants in this enum
+137 |     Integer(i64),
+138 |     Float(f64),
+    |     ^^^^^
+139 |     String(String),
+140 |     Boolean(bool),
+    |     ^^^^^^^
+    |
+    = note: `Literal` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Modulo`, `LessEqual`, and `GreaterEqual` are never constructed
+   --> src\ast\mod.rs:149:5
+    |
+144 | pub enum BinaryOp {
+    |          -------- variants in this enum
+...
+149 |     Modulo,
+    |     ^^^^^^
+...
+153 |     LessEqual,
+    |     ^^^^^^^^^
+154 |     GreaterThan,
+155 |     GreaterEqual,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `BinaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Negate` and `Not` are never constructed
+   --> src\ast\mod.rs:162:5
+    |
+161 | pub enum UnaryOp {
+    |          ------- variants in this enum
+162 |     Negate,
+    |     ^^^^^^
+163 |     Not,
+    |     ^^^
+    |
+    = note: `UnaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: multiple variants are never constructed
+   --> src\ast\mod.rs:171:5
+    |
+167 | pub enum Type {
+    |          ---- variants in this enum
+...
+171 |     Float,
+    |     ^^^^^
+172 |     String,
+173 |     Boolean,
+    |     ^^^^^^^
+174 |     Custom(String),        // Named types (e.g., DataProcessor)
+175 |     TypeParameter(String), // New: Represents an unresolved generic type (e.g., 'T')
+    |     ^^^^^^^^^^^^^
+176 |     Array(Box<Type>),
+    |     ^^^^^
+177 |     Optional(Box<Type>),
+    |     ^^^^^^^^
+178 |     Union(Vec<Type>),
+    |     ^^^^^
+179 |     Function {
+    |     ^^^^^^^^
+...
+184 |     GenericInstance {
+    |     ^^^^^^^^^^^^^^^
+    |
+    = note: `Type` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variant `HardwareAccelerated` is never constructed
+   --> src\ast\mod.rs:192:5
+    |
+191 | pub enum Attribute {
+    |          --------- variant in this enum
+192 |     HardwareAccelerated(String),
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `Attribute` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `print` is never used
+ --> src\stdlib\mod.rs:4:12
+  |
+4 |     pub fn print(s: &str) {
+  |            ^^^^^
+
+warning: `fusion_lang` (bin "fusion_lang") generated 12 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.21s
+     Running `target\debug\fusion_lang.exe --input test_control.fu`
+Compiling test_control.fu...
+Parsed AST successfully.
+Semantic Analysis Passed
+LLVM IR Generated:
+@.str.4 = private unnamed_addr constant [9 x i8] c"x is big\00", align 1
+@.str.9 = private unnamed_addr constant [12 x i8] c"x is medium\00", align 1
+@.str.10 = private unnamed_addr constant [11 x i8] c"x is small\00", align 1
+; ModuleID = 'fusion_module'
+source_filename = "fusion_module"
+
+declare i32 @printf(i8*, ...)
+
+define i64 @main() {
+entry:
+  %x = alloca i64
+  store i64 10, i64* %x
+  %TMP0 = load i64, i64* %x
+  %TMP1 = icmp sgt i64 %TMP0, 20
+  %TMP2 = zext i1 %TMP1 to i64
+  %cmp_res_4 = icmp ne i64 %TMP2, 0
+  br i1 %cmp_res_4, label %then_3, label %else_3
+
+then_3:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.4, i64 0, i64 0))
+  br label %merge_3
+
+else_3:
+  %TMP5 = load i64, i64* %x
+  %TMP6 = icmp sgt i64 %TMP5, 5
+  %TMP7 = zext i1 %TMP6 to i64
+  %cmp_res_9 = icmp ne i64 %TMP7, 0
+  br i1 %cmp_res_9, label %then_8, label %else_8
+
+then_8:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.9, i64 0, i64 0))
+  br label %merge_8
+
+else_8:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.10, i64 0, i64 0))
+  br label %merge_8
+
+merge_8:
+  br label %merge_3
+
+merge_3:
+  ret i64 0
+  ret i64 0
+}
+
+

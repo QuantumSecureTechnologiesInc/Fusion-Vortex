@@ -1,0 +1,57 @@
+// src/wasm/types.rs - WASM Type Mappings
+
+use crate::ast::Type;
+use wasm_encoder::ValType;
+
+/// Convert Fusion types to WASM types
+pub fn fusion_to_wasm_type(fusion_type: &Type) -> Option<ValType> {
+    match fusion_type {
+        Type::Integer => Some(ValType::I64),
+        Type::Float => Some(ValType::F64),
+        Type::Boolean => Some(ValType::I32), // 0 = false, 1 = true
+        Type::String => Some(ValType::I32),  // Pointer to memory
+        Type::Void => None,                  // No return value
+        Type::Custom(_) => Some(ValType::I32), // Heap pointer
+        Type::TypeParameter(_) => Some(ValType::I32), // Generic resolved to pointer
+        Type::Array(_) => Some(ValType::I32), // Pointer to array
+        Type::Optional(_) => Some(ValType::I32), // Pointer to option
+        Type::Union(_) => Some(ValType::I32), // Tagged union pointer
+        Type::Function { .. } => Some(ValType::I32), // Function table index
+        Type::GenericInstance { .. } => Some(ValType::I32), // Instance pointer
+        Type::Unknown => None,               // Should not reach codegen
+    }
+}
+
+/// Check if a type needs memory allocation
+#[allow(dead_code)]
+pub fn needs_heap_allocation(fusion_type: &Type) -> bool {
+    matches!(
+        fusion_type,
+        Type::String
+            | Type::Custom(_)
+            | Type::Array(_)
+            | Type::Optional(_)
+            | Type::Union(_)
+            | Type::GenericInstance { .. }
+    )
+}
+
+/// Get the size in bytes for a type (for memory allocation)
+#[allow(dead_code)]
+pub fn type_size_bytes(fusion_type: &Type) -> u32 {
+    match fusion_type {
+        Type::Integer => 8,                // i64
+        Type::Float => 8,                  // f64
+        Type::Boolean => 4,                // i32
+        Type::String => 4,                 // pointer
+        Type::Custom(_) => 4,              // pointer
+        Type::Array(_) => 4,               // pointer
+        Type::Optional(_) => 4,            // pointer
+        Type::Union(_) => 4,               // pointer
+        Type::Function { .. } => 4,        // function index
+        Type::GenericInstance { .. } => 4, // pointer
+        Type::Void => 0,
+        Type::TypeParameter(_) => 4, // pointer
+        Type::Unknown => 0,
+    }
+}

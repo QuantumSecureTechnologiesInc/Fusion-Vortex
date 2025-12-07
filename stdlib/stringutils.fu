@@ -1,0 +1,149 @@
+// StringUtils - Common string manipulation utilities
+
+class StringUtils {
+    // Compare two strings for equality (returns 1 if equal, 0 if not)
+    fn equals(s1: int, s2: int) -> int {
+        let len1 = strlen(s1);
+        let len2 = strlen(s2);
+        
+        if (len1 != len2) {
+            return 0;
+        }
+        
+        let mut i = 0;
+        while (i < len1) {
+            let c1 = ptr_read::<int>(s1, i);
+            let c2 = ptr_read::<int>(s2, i);
+            if (c1 != c2) {
+                return 0;
+            }
+            i = i + 1;
+        }
+        
+        return 1;
+    }
+    
+    // Concatenate two strings and return new allocation
+    fn concat(s1: int, s2: int) -> int {
+        let len1 = strlen(s1);
+        let len2 = strlen(s2);
+        let total_len = len1 + len2;
+        
+        let result = malloc(total_len + 1);
+        memcpy(result, s1, len1);
+        memcpy(ptr_add(result, len1), s2, len2 + 1);  // +1 for null terminator
+        
+        return result;
+    }
+    
+    // Check if string starts with prefix (returns 1 if yes, 0 if no)
+    fn starts_with(s: int, prefix: int) -> int {
+        let s_len = strlen(s);
+        let prefix_len = strlen(prefix);
+        
+        if (prefix_len > s_len) {
+            return 0;
+        }
+        
+        let mut i = 0;
+        while (i < prefix_len) {
+            let c1 = ptr_read::<int>(s, i);
+            let c2 = ptr_read::<int>(prefix, i);
+            if (c1 != c2) {
+                return 0;
+            }
+            i = i + 1;
+        }
+        
+        return 1;
+    }
+    
+    // Check if string ends with suffix (returns 1 if yes, 0 if no)
+    fn ends_with(s: int, suffix: int) -> int {
+        let s_len = strlen(s);
+        let suffix_len = strlen(suffix);
+        
+        if (suffix_len > s_len) {
+            return 0;
+        }
+        
+        let offset = s_len - suffix_len;
+        let mut i = 0;
+        while (i < suffix_len) {
+            let c1 = ptr_read::<int>(ptr_add(s, offset + i), 0);
+            let c2 = ptr_read::<int>(ptr_add(suffix, i), 0);
+            if (c1 != c2) {
+                return 0;
+            }
+            i = i + 1;
+        }
+        
+        return 1;
+    }
+    
+    // Find first occurrence of character in string
+    fn index_of_char(s: int, ch: int) -> int {
+        let len = strlen(s);
+        let mut i = 0;
+        while (i < len) {
+            let c = ptr_read::<int>(s, i);
+            if (c == ch) {
+                return i;
+            }
+            i = i + 1;
+        }
+        return -1;  // Not found
+    }
+    
+    // Duplicate a string
+    fn duplicate(s: int) -> int {
+        let len = strlen(s);
+        let result = malloc(len + 1);
+        memcpy(result, s, len + 1);
+        return result;
+    }
+    
+    // Convert string to uppercase (ASCII only)
+    fn to_uppercase(s: int) -> int {
+        let len = strlen(s);
+        let result = malloc(len + 1);
+        
+        let mut i = 0;
+        while (i < len) {
+            let c = ptr_read::<int>(s, i);
+            // If lowercase letter (97-122 = 'a'-'z'), convert to uppercase
+            if (c >= 97 && c <= 122) {
+                ptr_write::<int>(result, i, c - 32);
+            } else {
+                ptr_write::<int>(result, i, c);
+            }
+            i = i + 1;
+        }
+        
+        // Null terminate
+        ptr_write::<int>(result, len, 0);
+        return result;
+    }
+    
+    // Convert string to lowercase (ASCII only)
+    fn to_lowercase(s: int) -> int {
+        let len = strlen(s);
+        let result = malloc(len + 1);
+        
+        let mut i = 0;
+        while (i < len) {
+            let c = ptr_read::<int>(s, i);
+            // If uppercase letter (65-90 = 'A'-'Z'), convert to lowercase
+            if (c >= 65 && c <= 90) {
+                ptr_write::<int>(result, i, c + 32);
+            } else {
+                ptr_write::<int>(result, i, c);
+            }
+            i = i + 1;
+        }
+        
+        // Null terminate
+        ptr_write::<int>(result, len, 0);
+        return result;
+    }
+}

@@ -1,0 +1,66 @@
+// stdlib/hash.fu - Hash trait for collections
+
+// Hash trait - types that can be hashed
+trait Hash {
+    fn hash(self) -> int;
+}
+
+// Implement Hash for built-in types
+impl Hash for int {
+    fn hash(self) -> int {
+        return self;
+    }
+}
+
+impl Hash for bool {
+    fn hash(self) -> int {
+        if self {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+}
+
+// FNV-1a hash for strings
+fn hash_string(s: string) -> int {
+    // FNV-1a constants
+    let hash = 2166136261;
+    let prime = 16777619;
+    
+    // Note: This is a stub - actual string hashing would require
+    // character iteration which needs runtime support
+    return hash;
+}
+
+impl Hash for string {
+    fn hash(self) -> int {
+        return hash_string(self);
+    }
+}
+
+// Eq trait - types that can be compared for equality
+trait Eq {
+    fn eq(self, other: Self) -> bool;
+    fn ne(self, other: Self) -> bool;
+}
+
+impl Eq for int {
+    fn eq(self, other: int) -> bool {
+        return self == other;
+    }
+    
+    fn ne(self, other: int) -> bool {
+        return self != other;
+    }
+}
+
+impl Eq for bool {
+    fn eq(self, other: bool) -> bool {
+        return self == other;
+    }
+    
+    fn ne(self, other: bool) -> bool {
+        return self != other;
+    }
+}

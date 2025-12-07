@@ -1,0 +1,29 @@
+    Checking fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+warning: unused import: `crate::lexer::Token`
+ --> src\lsp\server.rs:4:5
+  |
+4 | use crate::lexer::Token;
+  |     ^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `logos::Logos`
+ --> src\lsp\server.rs:8:5
+  |
+8 | use logos::Logos;
+  |     ^^^^^^^^^^^^
+
+error[E0596]: cannot borrow `analyzer` as mutable, as it is not declared as mutable
+  --> src\lsp\server.rs:70:15
+   |
+70 |         match analyzer.analyze(_ast) {
+   |               ^^^^^^^^ cannot borrow as mutable
+   |
+help: consider changing this to be mutable
+   |
+69 |         let mut analyzer = SemanticAnalyzer::new();
+   |             +++
+
+For more information about this error, try `rustc --explain E0596`.
+warning: `fusion_lang` (lib) generated 2 warnings
+error: could not compile `fusion_lang` (lib) due to 1 previous error; 2 warnings emitted

@@ -1,0 +1,351 @@
+// stdlib/ml/losses.fu - Loss functions and metrics
+
+use ml::tensor::Tensor;
+use ml::tensor::scalar_multiply;
+use ml::tensor::add_tensors;
+use vector::Vector;
+use option::Option;
+
+// Mean Squared Error loss
+class MSELoss {
+    reduction: string;  // "mean", "sum", or "none"
+}
+
+impl MSELoss {
+    fn new() -> MSELoss {
+        return MSELoss {
+            reduction: "mean"
+        };
+    }
+    
+    fn with_reduction(reduction: string) -> MSELoss {
+        return MSELoss {
+            reduction: reduction
+        };
+    }
+    
+    fn forward(self, predicted: Tensor, target: Tensor) -> float {
+        // MSE = mean((predicted - target)^2)
+        let mut sum = 0.0;
+        let mut i = 0;
+        
+        while i < predicted.total_size() {
+            let pred_val = predicted.get_at(i).unwrap();
+            let target_val = target.get_at(i).unwrap();
+            let diff = pred_val - target_val;
+            sum = sum + (diff * diff);
+            i = i + 1;
+        }
+        
+        if self.reduction == "mean" {
+            return sum / predicted.total_size();
+        } else if self.reduction == "sum" {
+            return sum;
+        } else {
+            return sum;  // "none" would return tensor, simplified
+        }
+    }
+    
+    fn backward(self, predicted: Tensor, target: Tensor) -> Tensor {
+        // Gradient: 2 * (predicted - target) / n
+        let mut grad = Tensor::zeros(predicted.get_shape());
+        let n = predicted.total_size();
+        
+        let mut i = 0;
+        while i < n {
+            let pred_val = predicted.get_at(i).unwrap();
+            let target_val = target.get_at(i).unwrap();
+            let grad_val = 2.0 * (pred_val - target_val) / n;
+            grad.set_at(i, grad_val);
+            i = i + 1;
+        }
+        
+        return grad;
+    }
+}
+
+// Binary Cross-Entropy loss
+class BCELoss {
+    epsilon: float;  // Small constant for numerical stability
+}
+
+impl BCELoss {
+    fn new() -> BCELoss {
+        return BCELoss {
+            epsilon: 0.00000001
+        };
+    }
+    
+    fn forward(self, predicted: Tensor, target: Tensor) -> float {
+        // BCE = -mean(target * log(pred) + (1 - target) * log(1 - pred))
+        let mut sum = 0.0;
+        let mut i = 0;
+        
+        while i < predicted.total_size() {
+            let pred_val = predicted.get_at(i).unwrap();
+            let target_val = target.get_at(i).unwrap();
+            
+            // Clip predictions to avoid log(0)
+            let pred_clipped = if pred_val < self.epsilon {
+                self.epsilon
+            } else if pred_val > 1.0 - self.epsilon {
+                1.0 - self.epsilon
+            } else {
+                pred_val
+            };
+            
+            // BCE formula (simplified without actual log)
+            let loss = -(target_val * pred_clipped + (1.0 - target_val) * (1.0 - pred_clipped));
+            sum = sum + loss;
+            
+            i = i + 1;
+        }
+        
+        return sum / predicted.total_size();
+    }
+    
+    fn backward(self, predicted: Tensor, target: Tensor) -> Tensor {
+        // Gradient: (predicted - target) / (predicted * (1 - predicted))
+        // Simplified: predicted - target
+        let mut grad = Tensor::zeros(predicted.get_shape());
+        
+        let mut i = 0;
+        while i < predicted.total_size() {
+            let pred_val = predicted.get_at(i).unwrap();
+            let target_val = target.get_at(i).unwrap();
+            grad.set_at(i, pred_val - target_val);
+            i = i + 1;
+        }
+        
+        return grad;
+    }
+}
+
+// Cross-Entropy loss (for multi-class classification)
+class CrossEntropyLoss {
+    epsilon: float;
+}
+
+impl CrossEntropyLoss {
+    fn new() -> CrossEntropyLoss {
+        return CrossEntropyLoss {
+            epsilon: 0.00000001
+        };
+    }
+    
+    fn forward(self, predicted: Tensor, target_class: int) -> float {
+        // CE = -log(predicted[target_class])
+        let pred_val = predicted.get_at(target_class).unwrap();
+        
+        // Clip to avoid log(0)
+        let pred_clipped = if pred_val < self.epsilon {
+            self.epsilon
+        } else {
+            pred_val
+        };
+        
+        // Simplified (without actual log): return negative value
+        return -pred_clipped;
+    }
+    
+    fn backward(self, predicted: Tensor, target_class: int) -> Tensor {
+        // Gradient: predicted - one_hot(target)
+        let mut grad = predicted;
+        
+        let current_val = grad.get_at(target_class).unwrap();
+        grad.set_at(target_class, current_val - 1.0);
+        
+        return grad;
+    }
+}
+
+// Evaluation metrics
+class Metrics {
+    // Placeholder for metrics tracking
+}
+
+impl Metrics {
+    fn new() -> Metrics {
+        return Metrics {};
+    }
+    
+    // Accuracy metric
+    fn accuracy(predicted: Vector<int>, target: Vector<int>) -> float {
+        let mut correct = 0;
+        let mut total = 0;
+        
+        let mut i = 0;
+        while i < predicted.len() {
+            if predicted.get(i).unwrap() == target.get(i).unwrap() {
+                correct = correct + 1;
+            }
+            total = total + 1;
+            i = i + 1;
+        }
+        
+        return (correct * 100) / total;
+    }
+    
+    // Precision metric
+    fn precision(predicted: Vector<int>, target: Vector<int>, positive_class: int) -> float {
+        let mut true_positive = 0;
+        let mut false_positive = 0;
+        
+        let mut i = 0;
+        while i < predicted.len() {
+            let pred = predicted.get(i).unwrap();
+            let targ = target.get(i).unwrap();
+            
+            if pred == positive_class {
+                if targ == positive_class {
+                    true_positive = true_positive + 1;
+                } else {
+                    false_positive = false_positive + 1;
+                }
+            }
+            
+            i = i + 1;
+        }
+        
+        if true_positive + false_positive == 0 {
+            return 0.0;
+        }
+        
+        return (true_positive * 100) / (true_positive + false_positive);
+    }
+    
+    // Recall metric
+    fn recall(predicted: Vector<int>, target: Vector<int>, positive_class: int) -> float {
+        let mut true_positive = 0;
+        let mut false_negative = 0;
+        
+        let mut i = 0;
+        while i < predicted.len() {
+            let pred = predicted.get(i).unwrap();
+            let targ = target.get(i).unwrap();
+            
+            if targ == positive_class {
+                if pred == positive_class {
+                    true_positive = true_positive + 1;
+                } else {
+                    false_negative = false_negative + 1;
+                }
+            }
+            
+            i = i + 1;
+        }
+        
+        if true_positive + false_negative == 0 {
+            return 0.0;
+        }
+        
+        return (true_positive * 100) / (true_positive + false_negative);
+    }
+    
+    // F1 Score
+    fn f1_score(predicted: Vector<int>, target: Vector<int>, positive_class: int) -> float {
+        let prec = Metrics::precision(predicted, target, positive_class);
+        let rec = Metrics::recall(predicted, target, positive_class);
+        
+        if prec + rec == 0.0 {
+            return 0.0;
+        }
+        
+        return (2.0 * prec * rec) / (prec + rec);
+    }
+    
+    // Confusion matrix (simplified)
+    fn confusion_matrix(predicted: Vector<int>, target: Vector<int>, num_classes: int) -> Vector<Vector<int>> {
+        // Create num_classes x num_classes matrix
+        let mut matrix = Vector::new();
+        
+        let mut i = 0;
+        while i < num_classes {
+            let mut row = Vector::new();
+            let mut j = 0;
+            while j < num_classes {
+                row.push(0);
+                j = j + 1;
+            }
+            matrix.push(row);
+            i = i + 1;
+        }
+        
+        // Fill confusion matrix
+        i = 0;
+        while i < predicted.len() {
+            let pred = predicted.get(i).unwrap();
+            let targ = target.get(i).unwrap();
+            
+            if pred < num_classes && targ < num_classes {
+                let row = matrix.get(targ).unwrap();
+                let current = row.get(pred).unwrap();
+                row.set(pred, current + 1);
+                matrix.set(targ, row);
+            }
+            
+            i = i + 1;
+        }
+        
+        return matrix;
+    }
+}
+
+// Training utilities
+class TrainingUtils {
+    // Placeholder
+}
+
+impl TrainingUtils {
+    fn new() -> TrainingUtils {
+        return TrainingUtils {};
+    }
+    
+    // Split data into train/validation sets
+    fn train_val_split(data_size: int, val_ratio: float) -> TrainValSplit {
+        let val_size = (data_size * val_ratio);
+        let train_size = data_size - val_size;
+        
+        return TrainValSplit {
+            train_size: train_size,
+            val_size: val_size,
+            train_indices: Vector::new(),
+            val_indices: Vector::new()
+        };
+    }
+    
+    // Learning rate scheduler
+    fn step_lr(initial_lr: float, epoch: int, step_size: int, gamma: float) -> float {
+        // Reduce learning rate every step_size epochs
+        let steps = epoch / step_size;
+        let mut lr = initial_lr;
+        
+        let mut i = 0;
+        while i < steps {
+            lr = lr * gamma;
+            i = i + 1;
+        }
+        
+        return lr;
+    }
+    
+    // Exponential LR decay
+    fn exp_lr(initial_lr: float, epoch: int, decay_rate: float) -> float {
+        let mut lr = initial_lr;
+        
+        let mut i = 0;
+        while i < epoch {
+            lr = lr * decay_rate;
+            i = i + 1;
+        }
+        
+        return lr;
+    }
+}
+
+class TrainValSplit {
+    train_size: int;
+    val_size: int;
+    train_indices: Vector<int>;
+    val_indices: Vector<int>;
+}

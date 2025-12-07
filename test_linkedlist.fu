@@ -1,0 +1,27 @@
+// Test LinkedList<T> implementation
+
+fn main() -> int {
+    let list = LinkedList::<int>::new();
+    
+    list.push_back(10);
+    list.push_back(20);
+    list.push_front(5);
+    
+    print("LinkedList length:");
+    print(list.len());
+    
+    let first = list.pop_front();
+    print("Popped element:");
+    print(first);
+    
+    print("New length:");
+    print(list.len());
+    
+    list.clear();
+    
+    print("After clear, is_empty:");
+    let empty = list.is_empty();
+    print(empty);
+    
+    return 0;
+}

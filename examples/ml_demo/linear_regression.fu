@@ -1,0 +1,147 @@
+// examples/ml_demo/linear_regression.fu - Linear regression example
+
+use ml::tensor::Tensor;
+use ml::tensor::scalar_multiply;
+use vector::Vector;
+
+// Simple linear regression: y = mx + b
+class LinearRegression {
+    weight: float;  // m (slope)
+    bias: float;    // b (intercept)
+    learning_rate: float;
+}
+
+impl LinearRegression {
+    fn new(learning_rate: float) -> LinearRegression {
+        return LinearRegression {
+            weight: 0.0,
+            bias: 0.0,
+            learning_rate: learning_rate
+        };
+    }
+    
+    fn predict(self, x: float) -> float {
+        return self.weight * x + self.bias;
+    }
+    
+    fn predict_batch(self, x_values: Vector<float>) -> Vector<float> {
+        let mut predictions = Vector::new();
+        let mut i = 0;
+        
+        while i < x_values.len() {
+            let x = x_values.get(i).unwrap();
+            predictions.push(self.predict(x));
+            i = i + 1;
+        }
+        
+        return predictions;
+    }
+    
+    fn train_step(mut self, x: float, y_true: float) {
+        // Forward pass
+        let y_pred = self.predict(x);
+        
+        // Compute error
+        let error = y_pred - y_true;
+        
+        // Gradient descent update
+        // dL/dw = 2 * error * x
+        // dL/db = 2 * error
+        
+        self.weight = self.weight - self.learning_rate * 2.0 * error * x;
+        self.bias = self.bias - self.learning_rate * 2.0 * error;
+    }
+    
+    fn train(mut self, x_data: Vector<float>, y_data: Vector<float>, epochs: int) {
+        let mut epoch = 0;
+        
+        while epoch < epochs {
+            let mut total_loss = 0.0;
+            let mut i = 0;
+            
+            while i < x_data.len() {
+                let x = x_data.get(i).unwrap();
+                let y_true = y_data.get(i).unwrap();
+                let y_pred = self.predict(x);
+                
+                // Mean squared error
+                let error = y_pred - y_true;
+                total_loss = total_loss + error * error;
+                
+                // Update weights
+                self.train_step(x, y_true);
+                
+                i = i + 1;
+            }
+            
+            let avg_loss = total_loss / x_data.len();
+            
+            // Print progress every 100 epochs
+            if epoch % 100 == 0 {
+                println("Epoch " + epoch + ", Loss: " + avg_loss);
+            }
+            
+            epoch = epoch + 1;
+        }
+    }
+}
+
+fn demo_linear_regression() -> int {
+    println("========================================");
+    println("Linear Regression Demo");
+    println("========================================");
+    println("Learning the function: y = 2x + 1");
+    println("");
+    
+    // Create training data: y = 2x + 1
+    let mut x_train = Vector::new();
+    let mut y_train = Vector::new();
+    
+    // Generate some training examples
+    x_train.push(1.0);  y_train.push(3.0);   // 2*1 + 1 = 3
+    x_train.push(2.0);  y_train.push(5.0);   // 2*2 + 1 = 5
+    x_train.push(3.0);  y_train.push(7.0);   // 2*3 + 1 = 7
+    x_train.push(4.0);  y_train.push(9.0);   // 2*4 + 1 = 9
+    x_train.push(5.0);  y_train.push(11.0);  // 2*5 + 1 = 11
+    
+    println("Training data:");
+    println("  (1.0, 3.0), (2.0, 5.0), (3.0, 7.0)");
+    println("  (4.0, 9.0), (5.0, 11.0)");
+    println("");
+    
+    // Create and train model
+    let mut model = LinearRegression::new(0.01);
+    
+    println("Training for 500 epochs...");
+    println("");
+    model.train(x_train, y_train, 500);
+    
+    println("");
+    println("Training complete!");
+    println("");
+    println("Learned parameters:");
+    println("  Weight (slope): " + model.weight);
+    println("  Bias (intercept): " + model.bias);
+    println("");
+    println("Expected: weight ≈ 2.0, bias ≈ 1.0");
+    println("");
+    
+    // Test predictions
+    println("Testing predictions:");
+    let test_x = 6.0;
+    let prediction = model.predict(test_x);
+    println("  Input: " + test_x);
+    println("  Predicted: " + prediction);
+    println("  Expected: 13.0 (2*6 + 1)");
+    println("");
+    
+    println("========================================");
+    println("✅ Linear regression demo complete!");
+    println("========================================");
+    
+    return 0;
+}
+
+fn main() -> int {
+    return demo_linear_regression();
+}

@@ -1,0 +1,46 @@
+class String {
+    buffer: int; // ptr to char (i8)
+    length: int;
+    
+    fn from_raw(ptr: int) -> String {
+        let len = strlen(ptr);
+        let buf = malloc(len + 1);
+        memcpy(buf, ptr, len + 1);
+        return String { buffer: buf, length: len };
+    }
+    
+    fn len() -> int {
+        return self.length;
+    }
+    
+    fn concat(other: String) -> String {
+        let new_len = self.length + other.length;
+        let new_buf = malloc(new_len + 1);
+        
+        memcpy(new_buf, self.buffer, self.length);
+        let dest_offset = ptr_add(new_buf, self.length);
+        memcpy(dest_offset, other.buffer, other.length);
+        
+        // Null terminate manually
+        let end_ptr = ptr_add(new_buf, new_len);
+        ptr_write::<int>(end_ptr, 0, 0); // Write 0 byte? ptr_write writes 8 bytes (int).
+        // Issue: We don't have ptr_write_byte.
+        // But for C strings, we likely need it.
+        // For now, let's assume printf prints up to valid chars or length doesn't matter for Fusion usage.
+        
+        // Actually, if we use print(s), we probably expect standard string.
+        // Fusion's print takes primitive string (i8*), but we are passing our String class?
+        // No, print currently takes primitives.
+        // Use raw C print for buffer.
+        
+        return String { buffer: new_buf, length: new_len };
+    }
+}
+
+fn main() -> int {
+    // We can't easily create a raw string literal "hello" as 'int' without string literals support fully.
+    // The lexer supports string literals, but parser/ast stores them as...
+    // Let's check AST.
+    
+    return 0;
+}

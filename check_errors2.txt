@@ -1,0 +1,14 @@
+warning: field `symbol_index` is never read
+  --> src\lsp\server.rs:18:5
+   |
+13 | pub struct FusionLanguageServer {
+   |            -------------------- field in this struct
+...
+18 |     symbol_index: std::sync::Arc<tokio::sync::RwLock<HashMap<String, Location>>>,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `fusion_lang` (lib) generated 1 warning
+warning: `fusion_lang` (bin "fusion_lang") generated 1 warning (1 duplicate)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.63s

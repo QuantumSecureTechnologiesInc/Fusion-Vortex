@@ -1,0 +1,390 @@
+// test_collections_complete.fu - Comprehensive tests for complete collections
+
+use hashmap_v2::HashMap;
+use hashset_v2::HashSet;
+use iterator::range;
+use iterator::sum;
+
+// ============================================================================
+// HashMap Tests
+// ============================================================================
+
+fn test_hashmap_basic_operations() -> bool {
+    let mut map = HashMap::<int, string>::new();
+    
+    // Test insert
+    let old1 = map.insert(1, "one");
+    assert(old1.is_none(), "First insert should return None");
+    assert(map.len() == 1, "Length should be 1");
+    
+    // Test insert duplicate (update)
+    let old2 = map.insert(1, "ONE");
+    assert(old2.is_some(), "Update should return old value");
+    assert(map.len() == 1, "Length should still be 1");
+    
+    // Test get
+    let value = map.get(1);
+    assert(value.is_some(), "Should find key 1");
+    
+    // Test contains_key
+    assert(map.contains_key(1), "Should contain key 1");
+    assert(!map.contains_key(2), "Should not contain key 2");
+    
+    // Test remove
+    let removed = map.remove(1);
+    assert(removed.is_some(), "Remove should return value");
+    assert(map.len() == 0, "Length should be 0 after remove");
+    assert(!map.contains_key(1), "Should not contain key 1 after remove");
+    
+    return true;
+}
+
+fn test_hashmap_multiple_entries() -> bool {
+    let mut map = HashMap::<int, int>::new();
+    
+    // Insert multiple entries
+    map.insert(1, 10);
+    map.insert(2, 20);
+    map.insert(3, 30);
+    map.insert(4, 40);
+    map.insert(5, 50);
+    
+    assert(map.len() == 5, "Should have 5 entries");
+    
+    // Verify all entries
+    assert(map.get(1).unwrap() == 10, "Key 1 should map to 10");
+    assert(map.get(2).unwrap() == 20, "Key 2 should map to 20");
+    assert(map.get(3).unwrap() == 30, "Key 3 should map to 30");
+    assert(map.get(4).unwrap() == 40, "Key 4 should map to 40");
+    assert(map.get(5).unwrap() == 50, "Key 5 should map to 50");
+    
+    return true;
+}
+
+fn test_hashmap_collisions() -> bool {
+    let mut map = HashMap::<int, string>::with_capacity(4);
+    
+    // These keys should cause collisions in a small capacity map
+    map.insert(1, "a");
+    map.insert(5, "b");   // 5 % 4 = 1 (collision with key 1)
+    map.insert(9, "c");   // 9 % 4 = 1 (collision with keys 1 and 5)
+    
+    assert(map.len() == 3, "Should have 3 entries despite collisions");
+    assert(map.get(1).unwrap() == "a", "Should retrieve correct value for key 1");
+    assert(map.get(5).unwrap() == "b", "Should retrieve correct value for key 5");
+    assert(map.get(9).unwrap() == "c", "Should retrieve correct value for key 9");
+    
+    return true;
+}
+
+fn test_hashmap_resize() -> bool {
+    let mut map = HashMap::<int, int>::with_capacity(4);
+    let initial_capacity = map.capacity();
+    
+    // Insert enough to trigger resize (load factor = 0.75, so 4 * 0.75 = 3)
+    map.insert(1, 10);
+    map.insert(2, 20);
+    map.insert(3, 30);
+    map.insert(4, 40);  // Should trigger resize
+    
+    let new_capacity = map.capacity();
+    assert(new_capacity == initial_capacity * 2, "Capacity should double");
+    
+    // Verify all entries still accessible after resize
+    assert(map.get(1).unwrap() == 10, "Key 1 still accessible");
+    assert(map.get(2).unwrap() == 20, "Key 2 still accessible");
+    assert(map.get(3).unwrap() == 30, "Key 3 still accessible");
+    assert(map.get(4).unwrap() == 40, "Key 4 still accessible" );
+    
+    return true;
+}
+
+fn test_hashmap_clear() -> bool {
+    let mut map = HashMap::<int, string>::new();
+    
+    map.insert(1, "one");
+    map.insert(2, "two");
+    map.insert(3, "three");
+    
+    assert(map.len() == 3, "Should have 3 entries");
+    
+    map.clear();
+    
+    assert(map.len() == 0, "Should be empty after clear");
+    assert(map.is_empty(), "is_empty should return true");
+    assert(!map.contains_key(1), "Should not contain any keys");
+    
+    return true;
+}
+
+fn test_hashmap_iterator() -> bool {
+    let mut map = HashMap::<int, int>::new();
+    
+    map.insert(1, 10);
+    map.insert(2, 20);
+    map.insert(3, 30);
+    
+    let mut count = 0;
+    let mut keys_iter = map.keys();
+    
+    while keys_iter.has_next() {
+        let key = keys_iter.next();
+        assert(key.is_some(), "Iterator should return Some");
+        count = count + 1;
+    }
+    
+    assert(count == 3, "Iterator should yield 3 keys");
+    
+    return true;
+}
+
+// ============================================================================
+// HashSet Tests
+// ============================================================================
+
+fn test_hashset_basic_operations() -> bool {
+    let mut set = HashSet::<int>::new();
+    
+    // Test insert
+    let inserted1 = set.insert(1);
+    assert(inserted1, "First insert should return true");
+    assert(set.len() == 1, "Length should be 1");
+    
+    // Test insert duplicate
+    let inserted2 = set.insert(1);
+    assert(!inserted2, "Duplicate insert should return false");
+    assert(set.len() == 1, "Length should still be 1");
+    
+    // Test contains
+    assert(set.contains(1), "Should contain 1");
+    assert(!set.contains(2), "Should not contain 2");
+    
+    // Test remove
+    let removed = set.remove(1);
+    assert(removed, "Remove should return true");
+    assert(set.len() == 0, "Length should be 0");
+    assert(!set.contains(1), "Should not contain 1");
+    
+    return true;
+}
+
+fn test_hashset_multiple_values() -> bool {
+    let mut set = HashSet::<int>::new();
+    
+    set.insert(1);
+    set.insert(2);
+    set.insert(3);
+    set.insert(4);
+    set.insert(5);
+    
+    assert(set.len() == 5, "Should have 5 values");
+    
+    // Try adding duplicates
+    set.insert(1);
+    set.insert(2);
+    set.insert(3);
+    
+    assert(set.len() == 5, "Duplicates should not increase size");
+    
+    return true;
+}
+
+fn test_hashset_union() -> bool {
+    let mut set1 = HashSet::<int>::new();
+    set1.insert(1);
+    set1.insert(2);
+    set1.insert(3);
+    
+    let mut set2 = HashSet::<int>::new();
+    set2.insert(3);
+    set2.insert(4);
+    set2.insert(5);
+    
+    let union = set1.union(set2);
+    
+    assert(union.len() == 5, "Union should have 5 elements");
+    assert(union.contains(1), "Should contain 1");
+    assert(union.contains(2), "Should contain 2");
+    assert(union.contains(3), "Should contain 3");
+    assert(union.contains(4), "Should contain 4");
+    assert(union.contains(5), "Should contain 5");
+    
+    return true;
+}
+
+fn test_hashset_intersection() -> bool {
+    let mut set1 = HashSet::<int>::new();
+    set1.insert(1);
+    set1.insert(2);
+    set1.insert(3);
+    
+    let mut set2 = HashSet::<int>::new();
+    set2.insert(2);
+    set2.insert(3);
+    set2.insert(4);
+    
+    let intersection = set1.intersection(set2);
+    
+    assert(intersection.len() == 2, "Intersection should have 2 elements");
+    assert(intersection.contains(2), "Should contain 2");
+    assert(intersection.contains(3), "Should contain 3");
+    assert(!intersection.contains(1), "Should not contain 1");
+    assert(!intersection.contains(4), "Should not contain 4");
+    
+    return true;
+}
+
+fn test_hashset_difference() -> bool {
+    let mut set1 = HashSet::<int>::new();
+    set1.insert(1);
+    set1.insert(2);
+    set1.insert(3);
+    
+    let mut set2 = HashSet::<int>::new();
+    set2.insert(2);
+    set2.insert(3);
+    set2.insert(4);
+    
+    let difference = set1.difference(set2);
+    
+    assert(difference.len() == 1, "Difference should have 1 element");
+    assert(difference.contains(1), "Should contain 1");
+    assert(!difference.contains(2), "Should not contain 2");
+    assert(!difference.contains(3), "Should not contain 3");
+    
+    return true;
+}
+
+fn test_hashset_subset() -> bool {
+    let mut set1 = HashSet::<int>::new();
+    set1.insert(1);
+    set1.insert(2);
+    
+    let mut set2 = HashSet::<int>::new();
+    set2.insert(1);
+    set2.insert(2);
+    set2.insert(3);
+    
+    assert(set1.is_subset(set2), "set1 should be subset of set2");
+    assert(!set2.is_subset(set1), "set2 should not be subset of set1");
+    assert(set2.is_superset(set1), "set2 should be superset of set1");
+    
+    return true;
+}
+
+fn test_hashset_disjoint() -> bool {
+    let mut set1 = HashSet::<int>::new();
+    set1.insert(1);
+    set1.insert(2);
+    
+    let mut set2 = HashSet::<int>::new();
+    set2.insert(3);
+    set2.insert(4);
+    
+    assert(set1.is_disjoint(set2), "Sets should be disjoint");
+    
+    set2.insert(2);  // Add overlap
+    assert(!set1.is_disjoint(set2), "Sets should not be disjoint");
+    
+    return true;
+}
+
+fn test_hashset_iterator() -> bool {
+    let mut set = HashSet::<int>::new();
+    
+    set.insert(1);
+    set.insert(2);
+    set.insert(3);
+    
+    let mut count = 0;
+    let mut iter = set.iter();
+    
+    while iter.has_next() {
+        let value = iter.next();
+        assert(value.is_some(), "Iterator should return Some");
+        count = count + 1;
+    }
+    
+    assert(count == 3, "Iterator should yield 3 values");
+    
+    return true;
+}
+
+// ============================================================================
+// Integration Tests
+// ============================================================================
+
+fn test_real_world_usage() -> bool {
+    // Simulate word count
+    let mut word_count = HashMap::<string, int>::new();
+    
+    word_count.insert("hello", 1);
+    word_count.insert("world", 1);
+    word_count.insert("hello", 2);  // Update count
+    
+    assert(word_count.get("hello").unwrap() == 2, "hello count should be 2");
+    assert(word_count.get("world").unwrap() == 1, "world count should be 1");
+    
+    return true;
+}
+
+fn test_prime_sieve() -> bool {
+    // Simple prime checker using HashSet
+    let mut primes = HashSet::<int>::new();
+    primes.insert(2);
+    primes.insert(3);
+    primes.insert(5);
+    primes.insert(7);
+    primes.insert(11);
+    
+    assert(primes.contains(7), "7 should be prime");
+    assert(!primes.contains(6), "6 should not be prime");
+    assert(!primes.contains(9), "9 should not be prime");
+    
+    return true;
+}
+
+// ============================================================================
+// Main Test Runner
+// ============================================================================
+
+fn main() -> int {
+    let mut passed = 0;
+    let mut failed = 0;
+    
+    println("Running HashMap Tests...");
+    if test_hashmap_basic_operations() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashmap_multiple_entries() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashmap_collisions() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashmap_resize() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashmap_clear() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashmap_iterator() { passed = passed + 1; } else { failed = failed + 1; }
+    
+    println("Running HashSet Tests...");
+    if test_hashset_basic_operations() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_multiple_values() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_union() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_intersection() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_difference() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_subset() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_disjoint() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_hashset_iterator() { passed = passed + 1; } else { failed = failed + 1; }
+    
+    println("Running Integration Tests...");
+    if test_real_world_usage() { passed = passed + 1; } else { failed = failed + 1; }
+    if test_prime_sieve() { passed = passed + 1; } else { failed = failed + 1; }
+    
+    println("========================================");
+    println("Test Results:");
+    println("  Passed: " + passed);
+    println("  Failed: " + failed);
+    println("========================================");
+    
+    if failed == 0 {
+        println("✅ All tests passed!");
+        return 0;
+    } else {
+        println("❌ Some tests failed");
+        return 1;
+    }
+}

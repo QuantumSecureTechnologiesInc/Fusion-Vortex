@@ -1,0 +1,30 @@
+// Test all new parser features: boolean literals, negative numbers, logical AND
+
+fn main() -> int {
+    // Test boolean literals
+    let truth = true;
+    let falsehood = false;
+    
+    print("Boolean true as int:");
+    print(truth);
+    print("Boolean false as int:");
+    print(falsehood);
+    
+    // Test negative literals
+    let neg = -1;
+    let pos = 42;
+    
+    print("Negative number:");
+    print(neg);
+    print("Positive number:");
+    print(pos);
+    
+    // Test logical AND (already supported via parse_logical_and)
+    let a = 5;
+    let b = 10;
+    if (a < b && b > 0) {
+        print("Logical AND works!");
+    }
+    
+    return 0;
+}

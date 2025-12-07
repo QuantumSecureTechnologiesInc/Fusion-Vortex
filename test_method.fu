@@ -1,0 +1,15 @@
+class Rectangle {
+    width: int;
+    height: int;
+
+    fn area(self: Rectangle) -> int {
+        return self.width * self.height;
+    }
+}
+
+fn main() -> int {
+    let r: Rectangle = Rectangle { width: 10, height: 20 };
+    let a: int = r.area();
+    print(a);
+    return 0;
+}
