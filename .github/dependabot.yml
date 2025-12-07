@@ -11,10 +11,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-      timezone: "UTC"
     open-pull-requests-limit: 10
-    reviewers:
-      - "QuantumSecureTechnologiesInc"
     labels:
       - "dependencies"
       - "rust"
@@ -31,15 +28,6 @@ updates:
           - "dev-dependencies:*"
       dev-dependencies:
         dependency-type: "development"
-    # Security updates get priority
-    allow:
-      - dependency-type: "direct"
-      - dependency-type: "indirect"
-    # Ignore specific dependencies if needed
-    ignore:
-      # Example: ignore specific versions
-      # - dependency-name: "some-crate"
-      #   versions: ["1.x", "2.x"]
 
   # npm dependencies (VS Code extension)
   - package-ecosystem: "npm"
@@ -48,10 +36,7 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "09:00"
-      timezone: "UTC"
     open-pull-requests-limit: 10
-    reviewers:
-      - "QuantumSecureTechnologiesInc"
     labels:
       - "dependencies"
       - "npm"
@@ -71,9 +56,6 @@ updates:
           - "@typescript-eslint/*"
       dev-dependencies:
         dependency-type: "development"
-    allow:
-      - dependency-type: "direct"
-      - dependency-type: "indirect"
 
   # GitHub Actions workflows
   - package-ecosystem: "github-actions"
@@ -82,10 +64,7 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "09:00"
-      timezone: "UTC"
     open-pull-requests-limit: 5
-    reviewers:
-      - "QuantumSecureTechnologiesInc"
     labels:
       - "dependencies"
       - "github-actions"
@@ -99,15 +78,6 @@ updates:
         patterns:
           - "*"
 
-  # Docker (if we add Dockerfiles in the future)
-  # - package-ecosystem: "docker"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #     day: "thursday"
-  #   labels:
-  #     - "dependencies"
-  #     - "docker"
 # Security updates are automatically enabled and get higher priority
 # They will be created immediately when vulnerabilities are detected
 # regardless of the schedule above
