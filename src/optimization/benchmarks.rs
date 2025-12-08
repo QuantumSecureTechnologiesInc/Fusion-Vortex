@@ -1,0 +1,426 @@
+// src/optimization/benchmarks.rs - Comprehensive Performance Benchmarking
+#![allow(dead_code)]
+// Tracks compilation speed, runtime performance, and optimization effectiveness
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::{Duration, Instant};
+
+/// Benchmark category
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum BenchmarkCategory {
+    /// Compiler performance
+    Compilation,
+    /// Runtime performance
+    Runtime,
+    /// Memory usage
+    Memory,
+    /// Optimization effectiveness
+    Optimization,
+}
+
+/// Individual benchmark result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkResult {
+    /// Benchmark name
+    pub name: String,
+    /// Category
+    pub category: BenchmarkCategory,
+    /// Duration in nanoseconds
+    pub duration_ns: u64,
+    /// Memory used in bytes (if applicable)
+    pub memory_bytes: Option<usize>,
+    /// Throughput (operations per second)
+    pub throughput: Option<f64>,
+    /// Custom metrics
+    pub custom_metrics: HashMap<String, f64>,
+}
+
+impl BenchmarkResult {
+    /// Create a new benchmark result
+    pub fn new(name: impl Into<String>, category: BenchmarkCategory, duration: Duration) -> Self {
+        Self {
+            name: name.into(),
+            category,
+            duration_ns: duration.as_nanos() as u64,
+            memory_bytes: None,
+            throughput: None,
+            custom_metrics: HashMap::new(),
+        }
+    }
+
+    /// Add memory usage
+    pub fn with_memory(mut self, bytes: usize) -> Self {
+        self.memory_bytes = Some(bytes);
+        self
+    }
+
+    /// Add throughput
+    pub fn with_throughput(mut self, ops_per_sec: f64) -> Self {
+        self.throughput = Some(ops_per_sec);
+        self
+    }
+
+    /// Add custom metric
+    pub fn with_metric(mut self, name: impl Into<String>, value: f64) -> Self {
+        self.custom_metrics.insert(name.into(), value);
+        self
+    }
+
+    /// Get duration in milliseconds
+    pub fn duration_ms(&self) -> f64 {
+        self.duration_ns as f64 / 1_000_000.0
+    }
+
+    /// Get duration in seconds
+    pub fn duration_sec(&self) -> f64 {
+        self.duration_ns as f64 / 1_000_000_000.0
+    }
+
+    /// Print formatted result
+    pub fn print(&self) {
+        print!("  ⏱️  {}: {:.2}ms", self.name, self.duration_ms());
+
+        if let Some(mem) = self.memory_bytes {
+            print!(" | 💾 {:.2}KB", mem as f64 / 1024.0);
+        }
+
+        if let Some(throughput) = self.throughput {
+            print!(" | 🚀 {:.2} ops/sec", throughput);
+        }
+
+        println!();
+
+        for (metric_name, value) in &self.custom_metrics {
+            println!("      {} {:.2}", metric_name, value);
+        }
+    }
+}
+
+/// Benchmark suite
+pub struct BenchmarkSuite {
+    /// Suite name
+    name: String,
+    /// Benchmark results
+    results: Vec<BenchmarkResult>,
+    /// Baseline results for comparison
+    baseline: Option<HashMap<String, BenchmarkResult>>,
+}
+
+impl BenchmarkSuite {
+    /// Create a new benchmark suite
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            results: Vec::new(),
+            baseline: None,
+        }
+    }
+
+    /// Run a benchmark
+    pub fn bench<F>(
+        &mut self,
+        name: impl Into<String>,
+        category: BenchmarkCategory,
+        f: F,
+    ) -> Duration
+    where
+        F: FnOnce(),
+    {
+        let start = Instant::now();
+        f();
+        let duration = start.elapsed();
+
+        let result = BenchmarkResult::new(name, category, duration);
+        self.results.push(result);
+
+        duration
+    }
+
+    /// Run a benchmark with result
+    pub fn bench_with_result<F>(
+        &mut self,
+        _name: impl Into<String>,
+        _category: BenchmarkCategory,
+        f: F,
+    ) -> BenchmarkResult
+    where
+        F: FnOnce() -> BenchmarkResult,
+    {
+        let result = f();
+        self.results.push(result.clone());
+        result
+    }
+
+    /// Add a pre-computed result
+    pub fn add_result(&mut self, result: BenchmarkResult) {
+        self.results.push(result);
+    }
+
+    /// Load baseline results for comparison
+    pub fn load_baseline(&mut self, baseline: HashMap<String, BenchmarkResult>) {
+        self.baseline = Some(baseline);
+    }
+
+    /// Get statistics
+    pub fn stats(&self) -> SuiteStats {
+        let mut by_category: HashMap<BenchmarkCategory, usize> = HashMap::new();
+
+        for result in &self.results {
+            *by_category.entry(result.category.clone()).or_insert(0) += 1;
+        }
+
+        let total_duration: u64 = self.results.iter().map(|r| r.duration_ns).sum();
+        let total_memory: usize = self.results.iter().filter_map(|r| r.memory_bytes).sum();
+
+        SuiteStats {
+            total_benchmarks: self.results.len(),
+            by_category,
+            total_duration_ms: total_duration as f64 / 1_000_000.0,
+            total_memory_kb: total_memory as f64 / 1024.0,
+        }
+    }
+
+    /// Print all results
+    pub fn print_results(&self) {
+        println!("\n📊 Benchmark Suite: {}", self.name);
+        println!("═══════════════════════════════════════════════");
+
+        // Group by category
+        let mut by_category: HashMap<BenchmarkCategory, Vec<&BenchmarkResult>> = HashMap::new();
+        for result in &self.results {
+            by_category
+                .entry(result.category.clone())
+                .or_insert_with(Vec::new)
+                .push(result);
+        }
+
+        for (category, results) in by_category {
+            println!("\n{:?} Benchmarks:", category);
+            for result in results {
+                result.print();
+
+                // Show comparison with baseline if available
+                if let Some(ref baseline_map) = self.baseline {
+                    if let Some(baseline) = baseline_map.get(&result.name) {
+                        let speedup = baseline.duration_ns as f64 / result.duration_ns as f64;
+                        if speedup > 1.0 {
+                            println!("      🚀 {:.2}x faster than baseline", speedup);
+                        } else if speedup < 1.0 {
+                            println!("      🐌 {:.2}x slower than baseline", 1.0 / speedup);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Print summary
+        let stats = self.stats();
+        println!("\n═══════════════════════════════════════════════");
+        println!("Summary:");
+        println!("  Total benchmarks: {}", stats.total_benchmarks);
+        println!("  Total time: {:.2}ms", stats.total_duration_ms);
+        println!("  Total memory: {:.2}KB", stats.total_memory_kb);
+    }
+
+    /// Export results as JSON
+    pub fn export_json(&self) -> Result<String, String> {
+        serde_json::to_string_pretty(&self.results)
+            .map_err(|e| format!("Failed to serialize results: {}", e))
+    }
+
+    /// Save results to file
+    pub fn save_to_file(&self, path: &str) -> Result<(), String> {
+        let json = self.export_json()?;
+        std::fs::write(path, json).map_err(|e| format!("Failed to write file: {}", e))
+    }
+
+    /// Load results from file
+    pub fn load_from_file(path: &str) -> Result<Vec<BenchmarkResult>, String> {
+        let content =
+            std::fs::read_to_string(path).map_err(|e| format!("Failed to read file: {}", e))?;
+
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse JSON: {}", e))
+    }
+}
+
+/// Suite statistics
+pub struct SuiteStats {
+    pub total_benchmarks: usize,
+    pub by_category: HashMap<BenchmarkCategory, usize>,
+    pub total_duration_ms: f64,
+    pub total_memory_kb: f64,
+}
+
+/// Benchmark builder for fluent API
+pub struct BenchmarkBuilder {
+    name: String,
+    category: BenchmarkCategory,
+    memory_bytes: Option<usize>,
+    custom_metrics: HashMap<String, f64>,
+}
+
+impl BenchmarkBuilder {
+    pub fn new(name: impl Into<String>, category: BenchmarkCategory) -> Self {
+        Self {
+            name: name.into(),
+            category,
+            memory_bytes: None,
+            custom_metrics: HashMap::new(),
+        }
+    }
+
+    pub fn memory(mut self, bytes: usize) -> Self {
+        self.memory_bytes = Some(bytes);
+        self
+    }
+
+    pub fn metric(mut self, name: impl Into<String>, value: f64) -> Self {
+        self.custom_metrics.insert(name.into(), value);
+        self
+    }
+
+    pub fn run<F>(self, f: F) -> BenchmarkResult
+    where
+        F: FnOnce(),
+    {
+        let start = Instant::now();
+        f();
+        let duration = start.elapsed();
+
+        let mut result = BenchmarkResult::new(self.name, self.category, duration);
+
+        if let Some(mem) = self.memory_bytes {
+            result = result.with_memory(mem);
+        }
+
+        for (name, value) in self.custom_metrics {
+            result = result.with_metric(name, value);
+        }
+
+        result
+    }
+}
+
+/// Compilation benchmark helpers
+pub mod compilation {
+    use super::*;
+
+    /// Benchmark full compilation pipeline
+    pub fn bench_full_compilation<F>(_suite: &mut BenchmarkSuite, source_size: usize, f: F)
+    where
+        F: FnOnce(),
+    {
+        BenchmarkBuilder::new("Full Compilation", BenchmarkCategory::Compilation)
+            .metric("📄 Source size (KB)", source_size as f64 / 1024.0)
+            .run(f);
+    }
+
+    /// Benchmark parsing only
+    pub fn bench_parsing<F>(suite: &mut BenchmarkSuite, f: F) -> Duration
+    where
+        F: FnOnce(),
+    {
+        suite.bench("Parsing", BenchmarkCategory::Compilation, f)
+    }
+
+    /// Benchmark semantic analysis
+    pub fn bench_semantic_analysis<F>(suite: &mut BenchmarkSuite, f: F) -> Duration
+    where
+        F: FnOnce(),
+    {
+        suite.bench("Semantic Analysis", BenchmarkCategory::Compilation, f)
+    }
+
+    /// Benchmark code generation
+    pub fn bench_codegen<F>(suite: &mut BenchmarkSuite, f: F) -> Duration
+    where
+        F: FnOnce(),
+    {
+        suite.bench("Code Generation", BenchmarkCategory::Compilation, f)
+    }
+
+    /// Benchmark optimization pipeline
+    pub fn bench_optimization<F>(suite: &mut BenchmarkSuite, f: F) -> Duration
+    where
+        F: FnOnce(),
+    {
+        suite.bench("Optimization", BenchmarkCategory::Optimization, f)
+    }
+}
+
+/// Runtime benchmark helpers
+pub mod runtime {
+    use super::*;
+
+    /// Benchmark execution performance
+    pub fn bench_execution<F>(
+        suite: &mut BenchmarkSuite,
+        name: impl Into<String>,
+        iterations: u64,
+        f: F,
+    ) -> Duration
+    where
+        F: FnOnce(),
+    {
+        let start = Instant::now();
+        f();
+        let duration = start.elapsed();
+
+        let throughput = iterations as f64 / duration.as_secs_f64();
+
+        let result = BenchmarkResult::new(name, BenchmarkCategory::Runtime, duration)
+            .with_throughput(throughput)
+            .with_metric("🔁 Iterations", iterations as f64);
+
+        suite.add_result(result);
+        duration
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_benchmark_result() {
+        let result = BenchmarkResult::new(
+            "test",
+            BenchmarkCategory::Compilation,
+            Duration::from_millis(100),
+        );
+
+        assert_eq!(result.name, "test");
+        assert!(result.duration_ms() > 99.0 && result.duration_ms() < 101.0);
+    }
+
+    #[test]
+    fn test_benchmark_suite() {
+        let mut suite = BenchmarkSuite::new("Test Suite");
+        suite.bench("Test 1", BenchmarkCategory::Compilation, || {
+            std::thread::sleep(Duration::from_millis(10));
+        });
+
+        assert_eq!(suite.results.len(), 1);
+    }
+
+    #[test]
+    fn test_benchmark_builder() {
+        let result = BenchmarkBuilder::new("test", BenchmarkCategory::Runtime)
+            .memory(1024)
+            .metric("custom", 42.0)
+            .run(|| {});
+
+        assert_eq!(result.memory_bytes, Some(1024));
+        assert_eq!(result.custom_metrics.get("custom"), Some(&42.0));
+    }
+
+    #[test]
+    fn test_json_export() {
+        let mut suite = BenchmarkSuite::new("Test");
+        suite.bench("Test", BenchmarkCategory::Compilation, || {});
+
+        let json = suite.export_json();
+        assert!(json.is_ok());
+    }
+}

@@ -1,6 +1,6 @@
 [package]
 name = "fusion_lang"
-version = "0.1.0"
+version = "0.2.0-beta.1"
 edition = "2021"
 authors = ["QuantumSecure Technologies Ltd"]
 description = "Fusion Programming Language Compiler"

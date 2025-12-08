@@ -1,0 +1,131 @@
+// tests/test_autodiff.rs - Tests for AutoDiff Engine
+
+use fusion_lang::ml::autodiff::{AutoDiff, Node};
+use fusion_lang::ml::tensor::Tensor;
+
+#[test]
+fn test_add_backward() {
+    // z = x + y
+    // x = 2.0, y = 3.0
+    // dz/dx = 1.0, dz/dy = 1.0
+
+    let x_data = Tensor::new(vec![2.0], vec![1]).unwrap();
+    let y_data = Tensor::new(vec![3.0], vec![1]).unwrap();
+
+    let x = Node::new(x_data);
+    let y = Node::new(y_data);
+
+    let z = Node::add(x.clone(), y.clone());
+
+    // Check forward pass
+    assert_eq!(z.borrow().data.get(&[0]).unwrap(), &5.0);
+
+    // Backward pass
+    AutoDiff::backward(z.clone());
+
+    // Check gradients
+    let x_grad = x.borrow().grad.clone().unwrap();
+    let y_grad = y.borrow().grad.clone().unwrap();
+
+    assert_eq!(x_grad.get(&[0]).unwrap(), &1.0);
+    assert_eq!(y_grad.get(&[0]).unwrap(), &1.0);
+}
+
+#[test]
+fn test_mul_backward() {
+    // z = x * y
+    // x = 2.0, y = 3.0
+    // dz/dx = y = 3.0
+    // dz/dy = x = 2.0
+
+    let x_data = Tensor::new(vec![2.0], vec![1]).unwrap();
+    let y_data = Tensor::new(vec![3.0], vec![1]).unwrap();
+
+    let x = Node::new(x_data);
+    let y = Node::new(y_data);
+
+    let z = Node::mul(x.clone(), y.clone());
+
+    assert_eq!(z.borrow().data.get(&[0]).unwrap(), &6.0);
+
+    AutoDiff::backward(z.clone());
+
+    let x_grad = x.borrow().grad.clone().unwrap();
+    let y_grad = y.borrow().grad.clone().unwrap();
+
+    assert_eq!(x_grad.get(&[0]).unwrap(), &3.0);
+    assert_eq!(y_grad.get(&[0]).unwrap(), &2.0);
+}
+
+#[test]
+fn test_complex_graph() {
+    // z = x * y + x
+    // x = 2.0, y = 3.0
+    // z = 2 * 3 + 2 = 8
+    // dz/dx = y + 1 = 4
+    // dz/dy = x = 2
+
+    let x_data = Tensor::new(vec![2.0], vec![1]).unwrap();
+    let y_data = Tensor::new(vec![3.0], vec![1]).unwrap();
+
+    let x = Node::new(x_data);
+    let y = Node::new(y_data);
+
+    let xy = Node::mul(x.clone(), y.clone());
+    let z = Node::add(xy, x.clone());
+
+    assert_eq!(z.borrow().data.get(&[0]).unwrap(), &8.0);
+
+    AutoDiff::backward(z);
+
+    let x_grad = x.borrow().grad.clone().unwrap();
+    let y_grad = y.borrow().grad.clone().unwrap();
+
+    assert_eq!(x_grad.get(&[0]).unwrap(), &4.0);
+    assert_eq!(y_grad.get(&[0]).unwrap(), &2.0);
+}
+
+#[test]
+fn test_matmul_backward() {
+    // A = [[1, 2], [3, 4]] (2x2)
+    // B = [[1, 0], [0, 1]] (2x2) Identity
+    // C = A @ B = A
+    // dC/dA = B^T = I
+    // dC/dB = A^T
+
+    /*
+      For scalar, if L = sum(C), then dL/dA = dL/dC @ B^T
+      Here backward() sets dL/dC to ones.
+      C = [[1, 2], [3, 4]]
+      dL/dC = [[1, 1], [1, 1]]
+
+      dL/dA = [[1, 1], [1, 1]] @ [[1, 0], [0, 1]] = [[1, 1], [1, 1]]
+      dL/dB = A^T @ [[1, 1], [1, 1]] = [[1, 3], [2, 4]] @ [[1, 1], [1, 1]]
+            = [[1+3, 1+3], [2+4, 2+4]] = [[4, 4], [6, 6]]
+    */
+
+    let a_data = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
+    let b_data = Tensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+
+    let a = Node::new(a_data);
+    let b = Node::new(b_data);
+
+    let c = Node::matmul(a.clone(), b.clone());
+
+    AutoDiff::backward(c);
+
+    let a_grad = a.borrow().grad.clone().unwrap();
+    let b_grad = b.borrow().grad.clone().unwrap();
+
+    // Verify A grad
+    assert_eq!(a_grad.get(&[0, 0]).unwrap(), &1.0);
+    assert_eq!(a_grad.get(&[0, 1]).unwrap(), &1.0);
+    assert_eq!(a_grad.get(&[1, 0]).unwrap(), &1.0);
+    assert_eq!(a_grad.get(&[1, 1]).unwrap(), &1.0);
+
+    // Verify B grad
+    assert_eq!(b_grad.get(&[0, 0]).unwrap(), &4.0);
+    assert_eq!(b_grad.get(&[0, 1]).unwrap(), &4.0);
+    assert_eq!(b_grad.get(&[1, 0]).unwrap(), &6.0);
+    assert_eq!(b_grad.get(&[1, 1]).unwrap(), &6.0);
+}

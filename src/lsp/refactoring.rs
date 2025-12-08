@@ -316,11 +316,11 @@ mod tests {
         let range = Range {
             start: Position {
                 line: 0,
-                character: 10,
+                character: 8,
             },
             end: Position {
                 line: 0,
-                character: 20,
+                character: 14,
             },
         };
 

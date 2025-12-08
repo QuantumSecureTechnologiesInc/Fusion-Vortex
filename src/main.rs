@@ -4,17 +4,25 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 mod ast;
+mod async_runtime;
 mod borrow_checker;
 mod codegen;
 mod crypto;
+mod docs;
 mod lexer;
 mod lsp;
+mod ml;
 mod module_resolver;
+mod optimization;
 mod package_manager;
 mod parser;
+mod quantum;
+mod registry;
+mod security;
 mod semantic_analyzer;
 mod stdlib;
 mod wasm;
+mod web;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -38,6 +46,10 @@ struct Args {
     /// Output file path
     #[arg(short, long)]
     output: Option<String>,
+
+    /// Run a feature demo (quantum, ml, async)
+    #[arg(long)]
+    demo: Option<String>,
 }
 
 fn main() {
@@ -51,6 +63,112 @@ fn main() {
             .block_on(async {
                 lsp::server::run_server().await;
             });
+        return;
+    }
+
+    // Run feature demos
+    if let Some(demo_name) = args.demo {
+        match demo_name.as_str() {
+            "quantum" => {
+                println!("⚛️ Fusion Quantum Computing Demo\n");
+
+                // 1. Build Bell State Circuit
+                println!("1. Building Bell State Circuit (|00> + |11>) / sqrt(2)...");
+                let circuit = quantum::circuit::CircuitBuilder::bell_state();
+                circuit.print_diagram();
+
+                // 2. Run Simulation
+                println!("\n2. Running Simulation...");
+                let mut sim = quantum::simulator::QuantumSimulator::new(circuit.num_qubits());
+                match sim.run(&circuit) {
+                    Ok(_result) => {
+                        println!("   Simulation successful.");
+
+                        // 3. Measure
+                        let shots = 1000;
+                        println!("\n3. Measuring {} shots...", shots);
+                        let counts = sim.measure_shots(shots);
+                        counts.print_histogram();
+                    }
+                    Err(e) => eprintln!("Simulation failed: {}", e),
+                }
+            }
+            "ml" => {
+                println!("🧠 Fusion ML & GPU Demo\n");
+                println!("Device: {:?}", ml::Device::default());
+
+                // 1. Create a Linear Layer (2 inputs -> 1 output)
+                println!("1. Creating Linear Layer (2 -> 1)...");
+                use ml::nn::Module; // Import Module trait
+                let layer = ml::nn::layers::Linear::new(2, 1, false);
+
+                // 2. Create Input Tensor (Batch size 1, 2 features)
+                // Input: [1.0, 2.0]
+                println!("2. Creating Input Tensor [1.0, 2.0]...");
+                let input = ml::tensor::Tensor::new(vec![1.0, 2.0], vec![1, 2]).unwrap();
+
+                // 3. Forward Pass
+                // Weights are initialized to 1.0, so: [1, 2] * [1, 1]^T = 1*1 + 2*1 = 3
+                println!("3. Performing Forward Pass...");
+                match layer.forward(&input) {
+                    Ok(output) => {
+                        println!("   Output Shape: {:?}", output.shape);
+                        // Access internal data if visible or via Debug
+                        println!("   Output Data: {:?}", output);
+                    }
+                    Err(e) => eprintln!("   Forward pass failed: {}", e),
+                }
+            }
+            "async" => {
+                println!("⚡ Fusion Async Runtime Demo\n");
+
+                // 1. Create a Channel
+                let (tx, rx) = async_runtime::channels::channel();
+                println!("1. Channel created.");
+
+                // 2. Spawning Sender Thread
+                println!("2. Spawning sender thread...");
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    println!("   [Sender] Sending value 42...");
+                    tx.send(42);
+                });
+
+                // 3. Manual Async Receiver Poll Loop
+                println!("3. Waiting for message (Async Poll)...");
+                let mut attempts = 0;
+                loop {
+                    // Use try_recv() for polling
+                    if let Some(val) = rx.try_recv() {
+                        println!("   [Receiver] Received: {}", val);
+                        break;
+                    } else {
+                        attempts += 1;
+                        if attempts % 5 == 0 {
+                            println!("   [Receiver] ... waiting ...");
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(50));
+                    }
+                }
+            }
+            "web" => {
+                println!("🌐 Fusion Web Framework Demo\n");
+                let req = web::http::Request::new(
+                    web::http::Method::GET,
+                    "/api/users?id=123&active=true".to_string(),
+                    vec![],
+                );
+
+                println!("Parsed Request: {:?}", req.path);
+                println!("Query Params: {:?}", req.query_params);
+            }
+            _ => {
+                eprintln!(
+                    "Unknown demo: '{}'. Available: quantum, ml, async, web",
+                    demo_name
+                );
+            }
+        }
         return;
     }
 

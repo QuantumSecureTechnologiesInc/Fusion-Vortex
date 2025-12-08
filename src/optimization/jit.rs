@@ -1,0 +1,405 @@
+// src/optimization/jit.rs - Just-In-Time Compilation Runtime
+#![allow(dead_code)]
+// Enables dynamic compilation and execution of Fusion code
+
+use std::collections::HashMap;
+
+/// JIT compilation mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JITMode {
+    /// Interpret bytecode (slower, but instant startup)
+    Interpreter,
+    /// Compile to native code on first execution
+    LazyCompilation,
+    /// Compile everything immediately
+    EagerCompilation,
+    /// Adaptive - starts with interpreter, compiles hot paths
+    Adaptive,
+}
+
+/// JIT execution statistics
+#[derive(Debug, Default, Clone)]
+pub struct JITStats {
+    /// Number of functions compiled
+    pub functions_compiled: usize,
+    /// Number of functions interpreted
+    pub functions_interpreted: usize,
+    /// Total execution time (microseconds)
+    pub total_execution_time_us: u64,
+    /// Compilation time (microseconds)
+    pub compilation_time_us: u64,
+    /// Number of cache hits
+    pub cache_hits: usize,
+    /// Hot function calls (threshold for compilation)
+    pub hot_function_calls: HashMap<String, usize>,
+}
+
+impl JITStats {
+    /// Print JIT statistics
+    pub fn print_summary(&self) {
+        println!("\n⚡ JIT Runtime Statistics:");
+        println!("  🔨 Functions compiled: {}", self.functions_compiled);
+        println!("  📖 Functions interpreted: {}", self.functions_interpreted);
+        println!("  ⏱️  Execution time: {}μs", self.total_execution_time_us);
+        println!("  🔧 Compilation time: {}μs", self.compilation_time_us);
+        println!("  💾 Cache hits: {}", self.cache_hits);
+
+        if !self.hot_function_calls.is_empty() {
+            println!("\n  🔥 Hot functions:");
+            let mut hot_funcs: Vec<_> = self.hot_function_calls.iter().collect();
+            hot_funcs.sort_by(|a, b| b.1.cmp(a.1));
+            for (name, count) in hot_funcs.iter().take(10) {
+                println!("    - {}: {} calls", name, count);
+            }
+        }
+    }
+
+    /// Calculate compilation overhead percentage
+    pub fn compilation_overhead(&self) -> f32 {
+        if self.total_execution_time_us == 0 {
+            return 0.0;
+        }
+        (self.compilation_time_us as f32 / self.total_execution_time_us as f32) * 100.0
+    }
+}
+
+/// JIT engine configuration
+#[derive(Debug, Clone)]
+pub struct JITConfig {
+    /// JIT mode
+    pub mode: JITMode,
+    /// Hot function threshold (calls before compilation)
+    pub hot_threshold: usize,
+    /// Enable caching of compiled code
+    pub enable_cache: bool,
+    /// Optimization level for JIT
+    pub optimization_level: u32,
+}
+
+impl Default for JITConfig {
+    fn default() -> Self {
+        Self {
+            mode: JITMode::Adaptive,
+            hot_threshold: 100,
+            enable_cache: true,
+            optimization_level: 2,
+        }
+    }
+}
+
+/// Compiled function entry
+#[allow(dead_code)]
+struct CompiledFunction {
+    /// Function name
+    name: String,
+    /// Native code pointer (placeholder)
+    code_ptr: usize,
+    /// Execution count
+    execution_count: usize,
+}
+
+/// JIT execution engine
+pub struct JITEngine {
+    config: JITConfig,
+    stats: JITStats,
+    /// Cache of compiled functions
+    compiled_cache: HashMap<String, CompiledFunction>,
+    /// Source code cache (for recompilation)
+    source_cache: HashMap<String, String>,
+}
+
+impl JITEngine {
+    /// Create a new JIT engine
+    pub fn new(config: JITConfig) -> Self {
+        Self {
+            config,
+            stats: JITStats::default(),
+            compiled_cache: HashMap::new(),
+            source_cache: HashMap::new(),
+        }
+    }
+
+    /// Create with default configuration
+    pub fn default() -> Self {
+        Self::new(JITConfig::default())
+    }
+
+    /// Register a function for potential JIT compilation
+    pub fn register_function(&mut self, name: String, llvm_ir: String) {
+        self.source_cache.insert(name, llvm_ir);
+    }
+
+    /// Execute a function by name
+    pub fn execute_function(&mut self, name: &str, args: &[i64]) -> Result<i64, String> {
+        let start_time = std::time::Instant::now();
+
+        // Check if function is already compiled
+        if let Some(compiled) = self.compiled_cache.get_mut(name) {
+            compiled.execution_count += 1;
+            self.stats.cache_hits += 1;
+
+            // Execute native code (placeholder)
+            let result = Self::execute_native(compiled, args)?;
+
+            self.stats.total_execution_time_us += start_time.elapsed().as_micros() as u64;
+            return Ok(result);
+        }
+
+        // Function not compiled yet - decide what to do based on mode
+        match self.config.mode {
+            JITMode::Interpreter => self.interpret_function(name, args, start_time),
+            JITMode::LazyCompilation => self.compile_and_execute(name, args, start_time),
+            JITMode::EagerCompilation => self.compile_and_execute(name, args, start_time),
+            JITMode::Adaptive => self.adaptive_execute(name, args, start_time),
+        }
+    }
+
+    /// Interpret function (fallback)
+    fn interpret_function(
+        &mut self,
+        name: &str,
+        _args: &[i64],
+        start_time: std::time::Instant,
+    ) -> Result<i64, String> {
+        self.stats.functions_interpreted += 1;
+
+        // Update hot function tracking
+        *self
+            .stats
+            .hot_function_calls
+            .entry(name.to_string())
+            .or_insert(0) += 1;
+
+        // Placeholder interpreter - return dummy value
+        let result = 0;
+
+        self.stats.total_execution_time_us += start_time.elapsed().as_micros() as u64;
+        Ok(result)
+    }
+
+    /// Compile and execute function
+    fn compile_and_execute(
+        &mut self,
+        name: &str,
+        args: &[i64],
+        start_time: std::time::Instant,
+    ) -> Result<i64, String> {
+        // Compile the function
+        let compile_start = std::time::Instant::now();
+        self.compile_function(name)?;
+        self.stats.compilation_time_us += compile_start.elapsed().as_micros() as u64;
+
+        // Now execute it
+        if let Some(compiled) = self.compiled_cache.get_mut(name) {
+            compiled.execution_count += 1;
+            let result = Self::execute_native(compiled, args)?;
+            self.stats.total_execution_time_us += start_time.elapsed().as_micros() as u64;
+            Ok(result)
+        } else {
+            Err(format!("Failed to compile function: {}", name))
+        }
+    }
+
+    /// Adaptive execution - interpret first, compile when hot
+    fn adaptive_execute(
+        &mut self,
+        name: &str,
+        args: &[i64],
+        start_time: std::time::Instant,
+    ) -> Result<i64, String> {
+        // Track function calls
+        let call_count = *self
+            .stats
+            .hot_function_calls
+            .entry(name.to_string())
+            .or_insert(0);
+        *self.stats.hot_function_calls.get_mut(name).unwrap() += 1;
+
+        // If function is hot, compile it
+        if call_count >= self.config.hot_threshold {
+            self.compile_and_execute(name, args, start_time)
+        } else {
+            self.interpret_function(name, args, start_time)
+        }
+    }
+
+    /// Compile a function to native code
+    fn compile_function(&mut self, name: &str) -> Result<(), String> {
+        let _llvm_ir = self
+            .source_cache
+            .get(name)
+            .ok_or_else(|| format!("Function '{}' not found in source cache", name))?;
+
+        // Placeholder compilation - in real implementation, this would:
+        // 1. Parse LLVM IR
+        // 2. Run optimization passes
+        // 3. Generate native machine code
+        // 4. Load into executable memory
+        // 5. Return function pointer
+
+        let compiled = CompiledFunction {
+            name: name.to_string(),
+            code_ptr: 0, // Placeholder
+            execution_count: 0,
+        };
+
+        self.compiled_cache.insert(name.to_string(), compiled);
+        self.stats.functions_compiled += 1;
+
+        Ok(())
+    }
+
+    /// Execute native compiled code
+    fn execute_native(_compiled: &CompiledFunction, _args: &[i64]) -> Result<i64, String> {
+        // Placeholder - in real implementation, this would:
+        // 1. Set up stack frame
+        // 2. Call native function pointer
+        // 3. Return result
+
+        Ok(0)
+    }
+
+    /// Get JIT statistics
+    pub fn get_stats(&self) -> &JITStats {
+        &self.stats
+    }
+
+    /// Print JIT statistics
+    pub fn print_stats(&self) {
+        self.stats.print_summary();
+        println!(
+            "  📊 Compilation overhead: {:.2}%",
+            self.stats.compilation_overhead()
+        );
+    }
+
+    /// Clear compiled cache
+    pub fn clear_cache(&mut self) {
+        self.compiled_cache.clear();
+        println!("🗑️  JIT cache cleared");
+    }
+
+    /// Get number of compiled functions
+    pub fn compiled_count(&self) -> usize {
+        self.compiled_cache.len()
+    }
+
+    /// Check if function is compiled
+    pub fn is_compiled(&self, name: &str) -> bool {
+        self.compiled_cache.contains_key(name)
+    }
+}
+
+/// JIT builder for fluent API
+pub struct JITBuilder {
+    config: JITConfig,
+}
+
+impl JITBuilder {
+    pub fn new() -> Self {
+        Self {
+            config: JITConfig::default(),
+        }
+    }
+
+    pub fn mode(mut self, mode: JITMode) -> Self {
+        self.config.mode = mode;
+        self
+    }
+
+    pub fn hot_threshold(mut self, threshold: usize) -> Self {
+        self.config.hot_threshold = threshold;
+        self
+    }
+
+    pub fn optimization_level(mut self, level: u32) -> Self {
+        self.config.optimization_level = level;
+        self
+    }
+
+    pub fn enable_cache(mut self, enable: bool) -> Self {
+        self.config.enable_cache = enable;
+        self
+    }
+
+    pub fn build(self) -> JITEngine {
+        JITEngine::new(self.config)
+    }
+}
+
+impl Default for JITBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_jit_config_defaults() {
+        let config = JITConfig::default();
+        assert_eq!(config.mode, JITMode::Adaptive);
+        assert_eq!(config.hot_threshold, 100);
+        assert!(config.enable_cache);
+    }
+
+    #[test]
+    fn test_jit_engine_creation() {
+        let engine = JITEngine::default();
+        assert_eq!(engine.compiled_count(), 0);
+    }
+
+    #[test]
+    fn test_function_registration() {
+        let mut engine = JITEngine::default();
+        engine.register_function(
+            "test".to_string(),
+            "define i32 @test() { ret i32 0 }".to_string(),
+        );
+        assert!(engine.source_cache.contains_key("test"));
+    }
+
+    #[test]
+    fn test_adaptive_compilation() {
+        let mut config = JITConfig::default();
+        config.mode = JITMode::Adaptive;
+        config.hot_threshold = 5;
+
+        let mut engine = JITEngine::new(config);
+        engine.register_function("hot_func".to_string(), "".to_string());
+
+        // Execute multiple times
+        for _ in 0..10 {
+            let _ = engine.execute_function("hot_func", &[]);
+        }
+
+        // Function should be compiled after threshold
+        assert!(engine.is_compiled("hot_func"));
+    }
+
+    #[test]
+    fn test_jit_builder() {
+        let engine = JITBuilder::new()
+            .mode(JITMode::LazyCompilation)
+            .hot_threshold(50)
+            .optimization_level(3)
+            .build();
+
+        assert_eq!(engine.config.mode, JITMode::LazyCompilation);
+        assert_eq!(engine.config.hot_threshold, 50);
+        assert_eq!(engine.config.optimization_level, 3);
+    }
+
+    #[test]
+    fn test_stats_compilation_overhead() {
+        let stats = JITStats {
+            total_execution_time_us: 1000,
+            compilation_time_us: 200,
+            ..Default::default()
+        };
+
+        assert_eq!(stats.compilation_overhead(), 20.0);
+    }
+}

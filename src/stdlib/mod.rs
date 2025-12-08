@@ -8,12 +8,8 @@ extern fn memcpy(dest: int, src: int, n: int) -> void;
 extern fn strlen(s: string) -> int;
 "#;
 
-pub mod io {
-    #[allow(dead_code)]
-    pub fn print(s: &str) {
-        println!("{}", s);
-    }
-}
+pub mod fs;
+pub mod io;
 
 pub mod types {
     // Basic types are built-in, but we can define wrappers here

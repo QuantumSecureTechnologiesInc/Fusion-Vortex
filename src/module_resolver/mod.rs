@@ -21,6 +21,7 @@ pub struct Module {
 #[allow(dead_code)]
 pub struct ModuleResolver {
     modules: HashMap<String, Module>,
+    resolving: HashSet<String>,
     entry_point: PathBuf,
 }
 
@@ -29,6 +30,7 @@ impl ModuleResolver {
     pub fn new(entry_point: PathBuf) -> Self {
         ModuleResolver {
             modules: HashMap::new(),
+            resolving: HashSet::new(),
             entry_point,
         }
     }
@@ -51,6 +53,7 @@ impl ModuleResolver {
             .ok_or("Invalid entry point filename")?
             .to_string();
 
+        self.resolving.clear();
         self.resolve_module(&entry_name, &base_dir, false)?;
 
         // Build compilation order via topological sort
@@ -58,6 +61,7 @@ impl ModuleResolver {
     }
 
     /// Recursively resolve a single module and its dependencies
+
     #[allow(dead_code)]
     fn resolve_module(
         &mut self,
@@ -65,10 +69,19 @@ impl ModuleResolver {
         base_dir: &Path,
         is_public: bool,
     ) -> Result<(), String> {
+        if self.resolving.contains(module_name) {
+            return Err(format!(
+                "Circular dependency detected involving module '{}'",
+                module_name
+            ));
+        }
+
         // Check if already resolved
         if self.modules.contains_key(module_name) {
             return Ok(());
         }
+
+        self.resolving.insert(module_name.to_string());
 
         // Find the module file
         let module_path = self.find_module_file(module_name, base_dir)?;
@@ -157,7 +170,7 @@ impl ModuleResolver {
             }
         }
 
-        order.reverse(); // Reverse to get correct dependency order
+        // order.reverse(); // Standard DFS post-order gives dependency-first (utils, then main)
         Ok(order)
     }
 
@@ -231,12 +244,12 @@ mod tests {
         let mut main_file = fs::File::create(&main_path).unwrap();
         writeln!(main_file, "pub mod utils;").unwrap();
         writeln!(main_file, "use utils::helper;").unwrap();
-        writeln!(main_file, "fn main() -> int {{ return 0; }}").unwrap();
+        writeln!(main_file, "fn main() -> i32 {{ return 0; }}").unwrap();
 
         // Create utils.fu
         let utils_path = base_path.join("utils.fu");
         let mut utils_file = fs::File::create(&utils_path).unwrap();
-        writeln!(utils_file, "pub fn helper() -> int {{ return 42; }}").unwrap();
+        writeln!(utils_file, "pub fn helper() -> i32 {{ return 42; }}").unwrap();
 
         // Resolve modules
         let mut resolver = ModuleResolver::new(main_path);

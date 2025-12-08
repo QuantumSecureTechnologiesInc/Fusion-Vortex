@@ -1,17 +1,5 @@
-// src/lib.rs - Updated with package manager integration
-
-pub mod ast;
-pub mod borrow_checker;
-pub mod codegen;
-pub mod lexer;
-pub mod lsp;
-pub mod module_resolver;
-pub mod package_manager; // NEW: Package manager module
-pub mod parser;
-pub mod semantic_analyzer;
-pub mod stdlib;
-pub mod wasm;
-
+// src/lib_integration.rs - Helper for integration
+use crate::package_manager;
 use std::path::Path;
 
 /// Compile a Fusion source file with package management support
@@ -34,7 +22,8 @@ pub fn compile_with_packages(
                 .to_string()
         });
 
-        let mut pm = PackageManager::new(cache_dir.into());
+        // Initialize PackageManager (unused variable for now, prefixed with _)
+        let _pm = PackageManager::new(cache_dir.into());
 
         // Read fusion.toml if exists
         let manifest_path = source_path
@@ -61,9 +50,9 @@ pub enum CompileTarget {
 
 /// Existing compile function
 pub fn compile_file(
-    source_path: &Path,
-    output_path: &Path,
-    target: CompileTarget,
+    _source_path: &Path,
+    _output_path: &Path,
+    _target: CompileTarget,
 ) -> Result<(), String> {
     // Existing compilation logic
     Ok(())

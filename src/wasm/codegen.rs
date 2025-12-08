@@ -129,6 +129,8 @@ impl WasmCodeGenerator {
             self.generate_statement(stmt, &mut func_body)?;
         }
 
+        func_body.instruction(&Instruction::End);
+
         // Add function to code section
         self.code_section.function(&func_body);
 
@@ -285,9 +287,7 @@ mod tests {
         };
 
         let result = generator.generate(&[decl]);
-        assert!(result.is_ok());
-
-        let wasm_bytes = result.unwrap();
+        let wasm_bytes = result.expect("WASM generation failed");
         assert!(!wasm_bytes.is_empty());
 
         // Validate the WASM module
