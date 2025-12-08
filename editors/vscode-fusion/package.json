@@ -17,7 +17,7 @@
     "machine learning"
   ],
   "activationEvents": [
-    "onLanguage:fusion"
+    
   ],
   "main": "./out/extension.js",
   "contributes": {

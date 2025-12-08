@@ -9,7 +9,7 @@ param(
     [switch]$DryRun
 )
 
-function Fix-AdvancedMarkdownIssues {
+function Repair-AdvancedMarkdownIssues {
     param([string]$FilePath)
     
     Write-Host "Processing: $FilePath" -ForegroundColor Cyan
@@ -69,7 +69,7 @@ Write-Host ""
 
 $fixedCount = 0
 foreach ($file in $markdownFiles) {
-    if (Fix-AdvancedMarkdownIssues -FilePath $file.FullName) {
+    if (Repair-AdvancedMarkdownIssues -FilePath $file.FullName) {
         $fixedCount++
     }
 }
