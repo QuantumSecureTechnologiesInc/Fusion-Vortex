@@ -1,6 +1,6 @@
 # Phase 4 Testing Guide
 
-**Status**: ✅ Infrastructure Complete  
+**Status**: ✅ Infrastructure Complete
 **Coverage**: Package Manager, ML Library, Integration
 
 ---
@@ -8,13 +8,15 @@
 ## Test Organization
 
 ### Rust Tests (Package Manager)
-**Location**: `tests/test_package_manager.rs`  
-**Framework**: Rust built-in testing  
+
+**Location**: `tests/test_package_manager.rs`
+**Framework**: Rust built-in testing
 **Coverage**: 10+ test cases
 
 ### Fusion Tests (ML Library)
-**Location**: `examples/ml_demo/` and `examples/advanced/`  
-**Framework**: Manual verification  
+
+**Location**: `examples/ml_demo/` and `examples/advanced/`
+**Framework**: Manual verification
 **Coverage**: Multiple working examples
 
 ---
@@ -23,21 +25,26 @@
 
 ### Package Manager Tests
 
-```bash
+```
+
 # Run all package manager tests
+
 cargo test test_package_manager
 
 # Run specific test
+
 cargo test test_version_parsing
 
 # Run with output
+
 cargo test test_package_manager -- --nocapture
 ```
 
 ### Expected Results
 
 All tests should pass:
-```
+
+```text
 running 10 tests
 test package_manager_tests::test_version_parsing ... ok
 test package_manager_tests::test_version_comparison ... ok
@@ -81,48 +88,64 @@ test result: ok. 10 passed; 0 failed
 
 ### Package Manager CLI
 
-```bash
+```
+
 # Create new project
+
 fusion new my-project
 cd my-project
 
-# Should create:
+# Should create
+
 # - fusion.toml
+
 # - src/main.fu
+
 # - README.md
 
 # Initialize in existing directory
+
 fusion init
 
 # Add dependency
+
 fusion add collections
 
 # Remove dependency
+
 fusion remove collections
 
 # Update dependencies
+
 fusion update
 
 # Build project
+
 fusion build
 
 # Run project
+
 fusion run
 
 # Publish package
+
 fusion publish
 ```
 
 ### ML Examples
 
-```bash
+```
+
 # Neural network demo
+
 fusion_lang -i examples/ml_demo/neural_network.fu
 
 # Linear regression demo
+
 fusion_lang -i examples/ml_demo/linear_regression.fu
 
 # Fibonacci ML demo
+
 fusion_lang -i examples/advanced/fibonacci_ml.fu
 ```
 
@@ -143,14 +166,16 @@ fusion_lang -i examples/advanced/fibonacci_ml.fu
 ### Dependency Resolution
 
 **Simple**:
-```
+
+```text
 Project depends on: A ^1.0
 Available: A 1.0.0
 Result: A 1.0.0
 ```
 
 **Transitive**:
-```
+
+```text
 Project depends on: A ^1.0
 A depends on: B ^1.0
 Available: A 1.0.0, B 1.0.0
@@ -158,7 +183,8 @@ Result: A 1.0.0, B 1.0.0
 ```
 
 **Conflict** (should error):
-```
+
+```text
 A depends on: C ^1.0
 B depends on: C ^2.0
 Result: Version conflict error
@@ -170,8 +196,10 @@ Result: Version conflict error
 
 ### Recommended CI Setup
 
-```yaml
+```
+
 # .github/workflows/test.yml
+
 name: Tests
 
 on: [push, pull_request]
@@ -180,10 +208,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
       - run: cargo test
       - run: cargo test --package fusion_lang
 ```
@@ -234,11 +264,13 @@ jobs:
 ## Known Limitations
 
 ### Package Manager
+
 - Registry not yet available (mocked)
 - Download functionality stubbed
 - Authentication not implemented
 
 ### ML Library
+
 - No backpropagation yet
 - CPU-only execution
 - Simplified matrix operations
@@ -248,6 +280,7 @@ jobs:
 ## Future Tests
 
 ### Phase 4.2 (Planned)
+
 - [ ] GPU kernel tests
 - [ ] Backpropagation tests
 - [ ] Large-scale dependency graphs
@@ -255,6 +288,7 @@ jobs:
 - [ ] Stress tests
 
 ### Phase 4.3 (Planned)
+
 - [ ] End-to-end integration tests
 - [ ] Multi-platform tests
 - [ ] Security tests
@@ -267,16 +301,19 @@ jobs:
 ### Common Issues
 
 **Version parsing fails**:
+
 - Check input format (X.Y.Z)
 - Ensure numeric values
 - Handle edge cases (0.0.0)
 
 **Dependency resolution fails**:
+
 - Check for circular dependencies
 - Verify version requirements
 - Check package availability
 
 **CLI tests fail**:
+
 - Verify file system permissions
 - Check temporary directory
 - Ensure cleanup after tests
@@ -287,11 +324,14 @@ jobs:
 
 ### Coverage Report
 
-```bash
+```
+
 # Generate coverage report (requires tarpaulin)
+
 cargo tarpaulin --out Html
 
 # View report
+
 open tarpaulin-report.html
 ```
 
@@ -303,7 +343,7 @@ open tarpaulin-report.html
 
 ---
 
-**Testing Status**: ✅ **COMPREHENSIVE**  
-**Test Count**: **10+ automated**  
-**Example Count**: **3+ manual**  
+**Testing Status**: ✅ **COMPREHENSIVE**
+**Test Count**: **10+ automated**
+**Example Count**: **3+ manual**
 **Quality**: **PRODUCTION-GRADE**

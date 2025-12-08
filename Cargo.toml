@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["QuantumSecure Technologies Ltd"]
 description = "Fusion Programming Language Compiler"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)'] }
+
 [dependencies]
 # Core Dependencies
 logos = "0.14"

@@ -1,7 +1,7 @@
 # ML Demo Examples
 
-**Location**: `examples/ml_demo/`  
-**Status**: ✅ Working demonstrations  
+**Location**: `examples/ml_demo/`
+**Status**: ✅ Working demonstrations
 **Purpose**: Showcase Fusion's ML capabilities
 
 ---
@@ -19,22 +19,26 @@ These examples demonstrate Fusion's machine learning library with practical, run
 **Description**: Simple feedforward neural network for XOR problem
 
 **Features**:
+
 - Dense layer implementation
 - Forward pass computation
 - ReLU and Sigmoid activations
 - Multi-layer network
 
 **Usage**:
+
 ```bash
 fusion_lang -i examples/ml_demo/neural_network.fu
 ```
 
 **Output**:
+
 - Network architecture summary
 - Forward pass results
 - Activation outputs
 
 **Learning Goals**:
+
 - Understanding neural network layers
 - Forward propagation
 - Activation functions
@@ -47,6 +51,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu
 **Description**: Linear regression with gradient descent
 
 **Features**:
+
 - Simple linear model (y = mx + b)
 - Gradient descent optimization
 - Training loop
@@ -54,23 +59,27 @@ fusion_lang -i examples/ml_demo/neural_network.fu
 - Prediction
 
 **Usage**:
+
 ```bash
 fusion_lang -i examples/ml_demo/linear_regression.fu
 ```
 
 **Output**:
+
 - Training progress (loss per epoch)
 - Learned parameters (weight, bias)
 - Test predictions
 
 **Learning Goals**:
+
 - Gradient descent
 - Loss functions
 - Parameter updates
 - Model training
 
 **Example Output**:
-```
+
+```text
 ========================================
 Linear Regression Demo
 ========================================
@@ -111,17 +120,20 @@ Testing predictions:
 ## ML Library Features Used
 
 ### Tensor Operations
+
 - `Tensor::new()` - Create tensor
 - `Tensor::zeros()` - Zero-initialized tensor
 - `Tensor::get_at()` - Element access
 - `Tensor::set_at()` - Element modification
 
 ### Activation Functions
+
 - `relu()` - Rectified Linear Unit
 - `sigmoid()` - Sigmoid activation
 - `tanh_approx()` - Tanh approximation
 
 ### Operations
+
 - `add_tensors()` - Element-wise addition
 - `multiply_tensors()` - Element-wise multiplication
 - `scalar_multiply()` - Scalar multiplication
@@ -169,6 +181,7 @@ impl LinearRegression {
 ## Running the Examples
 
 ### Prerequisites
+
 - Fusion compiler installed
 - Standard library available
 - ML library (stdlib/ml/)
@@ -176,12 +189,14 @@ impl LinearRegression {
 ### Compilation
 
 **Native (LLVM)**:
+
 ```bash
 fusion_lang -i examples/ml_demo/neural_network.fu
 fusion_lang -i examples/ml_demo/linear_regression.fu
 ```
 
 **WebAssembly** (future):
+
 ```bash
 fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 ```
@@ -191,6 +206,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 ## Future Enhancements
 
 ### Planned Examples
+
 - [ ] Logistic regression (binary classification)
 - [ ] K-means clustering
 - [ ] Convolutional neural network (CNN)
@@ -199,6 +215,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 - [ ] Transfer learning demo
 
 ### Planned Features
+
 - [ ] GPU acceleration (@gpu_accelerated)
 - [ ] Automatic differentiation
 - [ ] Training visualization
@@ -210,12 +227,14 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 ## Performance Notes
 
 **Current Implementation**:
+
 - CPU-only execution
 - Vector-based tensor storage
 - Simple gradient decent
 - Forward pass only (no backprop yet)
 
 **Future Optimizations**:
+
 - GPU kernel generation
 - SIMD vectorization
 - Batch processing
@@ -226,6 +245,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 ## Learning Resources
 
 **Concepts Demonstrated**:
+
 - Neural network architecture
 - Forward propagation
 - Gradient descent
@@ -234,6 +254,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 - Parameter optimization
 
 **Next Steps**:
+
 1. Run the examples
 2. Modify parameters (learning rate, epochs)
 3. Try different architectures
@@ -245,6 +266,7 @@ fusion_lang -i examples/ml_demo/neural_network.fu --target wasm -o nn.wasm
 ## Contributing
 
 Want to add more examples?
+
 1. Create new .fu file in examples/ml_demo/
 2. Follow the existing structure
 3. Add documentation
@@ -252,9 +274,9 @@ Want to add more examples?
 
 ---
 
-**Status**: ✅ **2 Working Examples**  
-**Difficulty**: Beginner to Intermediate  
-**Estimated Time**: 15-30 minutes  
+**Status**: ✅ **2 Working Examples**
+**Difficulty**: Beginner to Intermediate
+**Estimated Time**: 15-30 minutes
 **Prerequisites**: Basic ML knowledge helpful
 
 **These examples showcase Fusion's potential for machine learning applications!** 🚀

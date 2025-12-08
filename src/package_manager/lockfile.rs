@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use super::{Dependency, Package, Version};
+use super::{Package, Version};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;

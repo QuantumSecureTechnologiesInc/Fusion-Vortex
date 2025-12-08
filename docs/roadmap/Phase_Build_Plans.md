@@ -19,7 +19,7 @@
 - **Sub-tasks**:
   - [x] Implement Borrow Checker (Basic Copy/Move Semantics).
   - [ ] Expand Standard Library:
-    - `Vector<T>`, `LinkedList<T>` (Collections).
+    - `VectorT`, `LinkedListT` (Collections).
     - `StringUtils` (String manipulation).
   - Integrate `Hybrid Cryptography Module.rs` for 50/50 security.
   - Validate with `Test Hybrid Crypto Logic.rs`.

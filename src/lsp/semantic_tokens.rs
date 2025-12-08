@@ -80,12 +80,10 @@ impl SemanticTokensProvider {
     /// Tokenize source code
     fn tokenize(&self, text: &str) -> Vec<SemanticToken> {
         let mut tokens = Vec::new();
-        let mut line = 0;
-        let mut start_char = 0;
 
         // Simple tokenization (in reality would use full parser)
         for (idx, text_line) in text.lines().enumerate() {
-            line = idx as u32;
+            let line = idx as u32;
             let line_tokens = self.tokenize_line(text_line, line);
             tokens.extend(line_tokens);
         }

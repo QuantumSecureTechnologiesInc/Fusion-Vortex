@@ -7,13 +7,15 @@
 ### Features
 
 #### Syntax Highlighting
+
 - Complete TextMate grammar for Fusion language
 - Keywords: `fn`, `class`, `pub`, `mod`, `use`, `let`, `if`, `else`, `while`, `for`, `return`
 - Type annotations: `int`, `float`, `bool`, `string`, custom types
 - Operators, literals, comments, and punctuation
-- Generic type support with `<T>` syntax
+- Generic type support with `T` syntax
 
 #### Language Server Protocol (LSP) Integration
+
 - Real-time diagnostics and error reporting
 - Auto-completion for stdlib types and functions
 - Hover information (framework)
@@ -21,6 +23,7 @@
 - Document synchronization
 
 #### Editor Features
+
 - Auto-closing brackets, quotes, and parentheses
 - Comment toggling (Ctrl+/)
 - Code folding for functions and classes
@@ -28,6 +31,7 @@
 - Smart indentation
 
 #### Status & Commands
+
 - Status bar indicator showing LSP server status
 - `Fusion: Restart Language Server` command
 - `Fusion: Show Output` command
@@ -36,6 +40,7 @@
 ### Configuration
 
 Available settings:
+
 - `fusion.server.path`: Path to fusion_lang executable
 - `fusion.server.args`: Additional arguments for the LSP server
 - `fusion.trace.server`: Trace level for LSP communication
@@ -70,6 +75,6 @@ Report issues at: https://github.com/your-org/fusion-lang/issues
 
 ---
 
-**Author**: Fusion Language Team  
-**License**: MIT  
+**Author**: Fusion Language Team
+**License**: MIT
 **Repository**: https://github.com/your-org/fusion-lang

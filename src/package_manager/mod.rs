@@ -12,8 +12,9 @@ pub mod registry;
 pub mod resolver;
 pub mod utils;
 
-pub use lockfile::{LockFile, LockedPackage, PackageSource};
-pub use manifest::{Manifest, PackageInfo};
+// Note: Re-exports available but currently unused
+// pub use lockfile::{LockFile, LockedPackage, PackageSource};
+// pub use manifest::{Manifest, PackageInfo};
 
 /// Package structure
 #[derive(Debug, Clone)]

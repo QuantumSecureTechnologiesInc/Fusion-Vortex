@@ -1,8 +1,8 @@
 # Phase 4 Development Roadmap - Advanced Features
 
-**Date**: 2025-12-07  
-**Status**: ⏳ Planning Phase  
-**Previous**: Phase 3 - 80% Complete (8 systems delivered)  
+**Date**: 2025-12-07
+**Status**: ⏳ Planning Phase
+**Previous**: Phase 3 - 80% Complete (8 systems delivered)
 **Target**: Month 15-18 Advanced Features
 
 ---
@@ -68,18 +68,18 @@ Building upon the exceptional Phase 3 foundation (LSP, VS Code, Module System, W
 #### 1. Tensor Type (3 hours)
 
 ```fusion
-class Tensor<T> {
-    data: Vector<T>;
+class TensorT {
+    data: VectorT;
     shape: Vector<int>;
     strides: Vector<int>;
 }
 
-impl<T> Tensor<T> {
-    fn new(shape: Vector<int>) -> Tensor<T>;
-    fn from_array(data: Vector<T>, shape: Vector<int>) -> Tensor<T>;
+implT TensorT {
+    fn new(shape: Vector<int>) -> TensorT;
+    fn from_array(data: VectorT, shape: Vector<int>) -> TensorT;
     fn reshape(mut self, new_shape: Vector<int>) -> Result<(), string>;
-    fn transpose(self) -> Tensor<T>;
-    fn slice(self, ranges: Vector<(int, int)>) -> Tensor<T>;
+    fn transpose(self) -> TensorT;
+    fn slice(self, ranges: Vector<(int, int)>) -> TensorT;
 }
 ```
 
@@ -87,12 +87,12 @@ impl<T> Tensor<T> {
 
 ```fusion
 @gpu_accelerated
-fn matmul<T>(a: Tensor<T>, b: Tensor<T>) -> Tensor<T> {
+fn matmulT(a: TensorT, b: TensorT) -> TensorT {
     // GPU-accelerated matrix multiplication
 }
 
 @gpu_accelerated
-fn dot<T>(a: Tensor<T>, b: Tensor<T>) -> T {
+fn dotT(a: TensorT, b: TensorT) -> T {
     // GPU-accelerated dot product
 }
 ```
@@ -113,7 +113,7 @@ class ReLU implements Activation {
 class Linear {
     weights: Tensor<float>;
     bias: Tensor<float>;
-    
+
     fn forward(x: Tensor<float>) -> Tensor<float>;
 }
 ```
@@ -150,7 +150,7 @@ fn toffoli() -> QuantumGate;
 class QuantumCircuit {
     qubits: int;
     gates: Vector<(QuantumGate, Vector<int>)>;
-    
+
     fn apply(mut self, gate: QuantumGate, targets: Vector<int>);
     fn measure(self, qubit: int) -> int;
     fn simulate(self) -> Tensor<Complex>;
@@ -178,6 +178,7 @@ fn vqe_optimizer(hamiltonian: Tensor<Complex>) -> float;
 #### 1. Project Configuration (2 hours)
 
 **fusion.toml**:
+
 ```toml
 [package]
 name = "my-project"
@@ -280,6 +281,7 @@ fusion publish                  # Publish to registry
 ### Immediate (Next Session)
 
 **Option 4**: Complete Collections Library (2-3 hours)
+
 - Finishes existing work
 - Unblocks practical development
 - Quick win
@@ -287,22 +289,26 @@ fusion publish                  # Publish to registry
 ### Short-term (Week 1)
 
 **Option 3**: Package Manager (10-12 hours)
+
 - Critical for ecosystem
 - Enables code sharing
 - Professional feature
 
 **Option 5**: Enhanced LSP (3-4 hours)
+
 - Improves developer experience
 - Builds on existing LSP
 
 ### Medium-term (Weeks 2-3)
 
 **Option 1**: ML Library (8-10 hours)
+
 - Key differentiator
 - Attracts ML developers
 - Showcases GPU acceleration
 
 **Option 2**: Quantum Library (6-8 hours)
+
 - Unique feature
 - Academic interest
 - Future-forward
@@ -314,30 +320,35 @@ fusion publish                  # Publish to registry
 ### For Each Option
 
 **Collections**:
+
 - [ ] HashMap stores actual key-value pairs
 - [ ] HashSet deduplicates correctly
 - [ ] Iterators work over collections
 - [ ] Performance benchmarks meet targets
 
 **Package Manager**:
+
 - [ ] Can create new projects
 - [ ] Dependency resolution works
 - [ ] Can build multi-package projects
 - [ ] Registry client functional
 
 **ML Library**:
+
 - [ ] Tensor operations work
 - [ ] GPU acceleration functional
 - [ ] Can build simple neural network
 - [ ] Performance competitive with NumPy
 
 **Quantum Library**:
+
 - [ ] Can define quantum circuits
 - [ ] Simulation produces correct results
 - [ ] Implements 2-3 algorithms
 - [ ] Backend integration works
 
 **Enhanced LSP**:
+
 - [ ] Go-to-definition crosses modules
 - [ ] Rename symbol works
 - [ ] Find references accurate
@@ -361,16 +372,16 @@ fusion publish                  # Publish to registry
 
 ## Next Steps Decision
 
-**What would you like to focus on next?**
+<!-- What would you like to focus on next? -->
 
-**Option A**: Complete Collections Library (quick win, 2-3 hours)  
-**Option B**: Start Package Manager (ecosystem critical, 10-12 hours)  
-**Option C**: Build ML Library (key differentiator, 8-10 hours)  
-**Option D**: Enhanced LSP Features (developer experience, 3-4 hours)  
+**Option A**: Complete Collections Library (quick win, 2-3 hours)
+**Option B**: Start Package Manager (ecosystem critical, 10-12 hours)
+**Option C**: Build ML Library (key differentiator, 8-10 hours)
+**Option D**: Enhanced LSP Features (developer experience, 3-4 hours)
 **Option E**: Quantum Circuit Library (unique feature, 6-8 hours)
 
 ---
 
-**Status**: ⏳ Awaiting Direction  
-**Phase 3**: ✅ 80% Complete (Exceptional Success)  
+**Status**: ⏳ Awaiting Direction
+**Phase 3**: ✅ 80% Complete (Exceptional Success)
 **Next Milestone**: TBD based on selection

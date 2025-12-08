@@ -26,15 +26,19 @@ Welcome to Fusion! This tutorial will guide you through the basics of the Fusion
 
 ### Building Fusion
 
-```bash
+```
+
 # Clone the repository
+
 git clone https://github.com/your-org/fusion-lang
 cd fusion-lang
 
 # Build the compiler
+
 cargo build --release
 
 # Verify installation
+
 ./target/release/fusion_lang --version
 ```
 
@@ -82,11 +86,11 @@ fn variables_demo() -> int {
     // Immutable by default
     let x = 42;
     let name = "Fusion";
-    
+
     // Mutable with 'mut'
     let mut counter = 0;
     counter = counter + 1;
-    
+
     return counter;
 }
 ```
@@ -117,6 +121,7 @@ fn greet(name: string) -> string {
 ### Control Flow
 
 **If/Else**:
+
 ```fusion
 fn check_number(x: int) -> string {
     if x > 0 {
@@ -130,6 +135,7 @@ fn check_number(x: int) -> string {
 ```
 
 **While Loops**:
+
 ```fusion
 fn count_to_five() -> int {
     let mut i = 0;
@@ -142,20 +148,21 @@ fn count_to_five() -> int {
 ```
 
 **For Loops** (with iterator):
+
 ```fusion
 use iterator::range;
 
 fn sum_to_ten() -> int {
     let mut total = 0;
     let iter = range(1, 11);
-    
+
     while iter.has_next() {
         let num = iter.next();
         if num.is_some() {
             total = total + num.unwrap();
         }
     }
-    
+
     return total;  // 55
 }
 ```
@@ -175,11 +182,11 @@ impl Person {
             age: age
         };
     }
-    
+
     fn greet(self) -> string {
         return "Hi, I'm " + self.name;
     }
-    
+
     fn birthday(mut self) {
         self.age = self.age + 1;
     }
@@ -212,7 +219,7 @@ impl Printable for Person {
 
 ### Project Structure
 
-```
+```text
 my-project/
 ├── main.fu
 └── utils.fu
@@ -246,10 +253,10 @@ pub mod utils;
 fn main() -> int {
     let fib = utils::fibonacci(10);    // 55
     let fact = utils::factorial(5);     // 120
-    
+
     println("Fibonacci(10) = " + fib);
     println("Factorial(5) = " + fact);
-    
+
     return 0;
 }
 ```
@@ -271,21 +278,21 @@ use collections::HashMap;
 
 fn hashmap_example() {
     let mut scores = HashMap::<string, int>::new();
-    
+
     // Insert key-value pairs
     scores.insert("Alice", 95);
     scores.insert("Bob", 87);
     scores.insert("Charlie", 92);
-    
+
     // Get values
     let alice_score = scores.get("Alice");
-    
+
     // Check if key exists
     let has_bob = scores.contains_key("Bob");
-    
+
     // Remove entry
     scores.remove("Charlie");
-    
+
     // Get size
     let count = scores.len();
 }
@@ -298,23 +305,23 @@ use collections::HashSet;
 
 fn hashset_example() {
     let mut primes = HashSet::<int>::new();
-    
+
     // Insert values (duplicates ignored)
     primes.insert(2);
     primes.insert(3);
     primes.insert(5);
     primes.insert(2);  // Duplicate, no effect
-    
+
     // Check membership
     let has_five = primes.contains(5);    // true
     let has_six = primes.contains(6);     // false
-    
+
     // Set operations
     let mut evens = HashSet::<int>::new();
     evens.insert(2);
     evens.insert(4);
     evens.insert(6);
-    
+
     let intersection = primes.intersection(evens);  // {2}
     let union = primes.union(evens);                // {2, 3, 4, 5, 6}
 }
@@ -330,14 +337,14 @@ use iterator::count;
 fn iterator_example() -> int {
     // Range iterator
     let numbers = range(1, 11);  // 1..10
-    
+
     // Sum all numbers
     let total = sum(numbers);    // 55
-    
+
     // Count elements
     let iter2 = range(0, 100);
     let size = count(iter2);     // 100
-    
+
     return total;
 }
 ```
@@ -349,6 +356,7 @@ fn iterator_example() -> int {
 ### Creating a WASM Module
 
 **calculator.fu**:
+
 ```fusion
 fn add(a: int, b: int) -> int {
     return a + b;
@@ -379,6 +387,7 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
 ### Using in the Browser
 
 **index.html**:
+
 ```html
 <!DOCTYPE html>
 <html>
@@ -387,7 +396,7 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
 </head>
 <body>
     <h1>Fusion WebAssembly Calculator</h1>
-    
+
     <div>
         <input type="number" id="num1" value="10">
         <select id="operation">
@@ -400,10 +409,10 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
         <button onclick="calculate()">Calculate</button>
         <span id="result"></span>
     </div>
-    
+
     <script>
         let wasmModule;
-        
+
         // Load WebAssembly module
         fetch('calculator.wasm')
             .then(response => response.arrayBuffer())
@@ -412,17 +421,17 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
                 wasmModule = results.instance.exports;
                 console.log('WASM module loaded!');
             });
-        
+
         function calculate() {
             if (!wasmModule) {
                 alert('WASM not loaded yet');
                 return;
             }
-            
+
             const num1 = parseInt(document.getElementById('num1').value);
             const num2 = parseInt(document.getElementById('num2').value);
             const operation = document.getElementById('operation').value;
-            
+
             let result;
             switch(operation) {
                 case 'add':
@@ -438,7 +447,7 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
                     result = wasmModule.divide(num1, num2);
                     break;
             }
-            
+
             document.getElementById('result').textContent = '= ' + result;
         }
     </script>
@@ -448,11 +457,14 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
 
 ### Run Locally
 
-```bash
+```
+
 # Start a simple HTTP server
+
 python3 -m http.server 8000
 
 # Open browser to http://localhost:8000
+
 ```
 
 ---
@@ -462,9 +474,10 @@ python3 -m http.server 8000
 ### VS Code Setup
 
 1. **Install Extension**:
+
    ```bash
    code --install-extension fusion-language-0.1.0.vsix
-   ```
+```
 
 2. **Features Available**:
    - ✅ Syntax highlighting
@@ -476,6 +489,7 @@ python3 -m http.server 8000
 ### Using Auto-completion
 
 **Type `fn` and press Tab**:
+
 ```fusion
 fn ${1:name}(${2:params}) -> ${3:type} {
     $0
@@ -483,11 +497,13 @@ fn ${1:name}(${2:params}) -> ${3:type} {
 ```
 
 **Type `HashMap` for instant creation**:
+
 ```fusion
 HashMap<${1:K}, ${2:V}>::new()
 ```
 
 **Type `class` for class template**:
+
 ```fusion
 class ${1:Name} {
     $0

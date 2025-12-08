@@ -1,8 +1,8 @@
 # Fusion Core Type System Design
 
-**Document Version**: 1.0  
-**Date**: December 7, 2025  
-**Status**: Design Specification  
+**Document Version**: 1.0
+**Date**: December 7, 2025
+**Status**: Design Specification
 **Module**: `fusion_core`
 
 ---
@@ -10,6 +10,7 @@
 ## Executive Summary
 
 The **Fusion Core Type System** is a unified, type-safe framework that enables simultaneous representation and manipulation of:
+
 1. **Classical data** (primitives, structures, collections)
 2. **Tensors** (dense multi-dimensional arrays for ML/numerical computing)
 3. **Quantum circuits** (quantum gates, qubits, measurements)
@@ -23,6 +24,7 @@ This design document specifies the fundamental type hierarchy, API, and implemen
 ### 1.1 Type System Goals
 
 **Primary Objectives**:
+
 - ✅ **Type Safety**: Prevent classical/tensor/quantum type confusion at compile time
 - ✅ **Expressiveness**: Represent all three computational paradigms naturally
 - ✅ **Interoperability**: Enable seamless data flow between paradigms
@@ -31,7 +33,7 @@ This design document specifies the fundamental type hierarchy, API, and implemen
 
 ### 1.2 Computational Paradigm Hierarchy
 
-```
+```text
 FusionType (Root)
 ├── ClassicalType
 │   ├── PrimitiveType (int, float, bool, string)
@@ -54,6 +56,7 @@ FusionType (Root)
 ### 1.3 Type Safety Invariants
 
 **Compile-Time Guarantees**:
+
 1. **No Implicit Conversions**: Classical → Tensor → Quantum require explicit casts
 2. **Quantum No-Cloning**: Cannot copy quantum states (enforced by type system)
 3. **Measurement Irreversibility**: Measured qubits become classical (type change)
@@ -95,7 +98,7 @@ struct Point {
 }
 
 // Enums (algebraic data types)
-enum Option<T> {
+enum OptionT {
     Some(T),
     None
 }
@@ -108,10 +111,10 @@ type Pair<A, B> = (A, B);
 
 ```fusion
 // Standard collections
-type Vector<T> = Vec<T>;           // Dynamic array
+type VectorT = VecT;           // Dynamic array
 type HashMap<K, V> = Map<K, V>;    // Hash table
-type HashSet<T> = Set<T>;          // Set
-type LinkedList<T> = List<T>;      // Linked list
+type HashSetT = SetT;          // Set
+type LinkedListT = ListT;      // Linked list
 ```
 
 ---
@@ -122,21 +125,21 @@ type LinkedList<T> = List<T>;      // Linked list
 
 ```fusion
 // Generic tensor type
-struct Tensor<T, const RANK: usize> 
-where T: Numeric 
+struct Tensor<T, const RANK: usize>
+where T: Numeric
 {
-    data: Vector<T>,          // Flattened data storage
+    data: VectorT,          // Flattened data storage
     shape: [usize; RANK],     // Dimensions
     strides: [usize; RANK],   // Memory layout
     dtype: DataType,          // Runtime type info
 }
 
 // Type-level rank constraints
-type Scalar<T> = Tensor<T, 0>;     // 0D tensor (single value)
-type Vector1D<T> = Tensor<T, 1>;   // 1D tensor (vector)
-type Matrix<T> = Tensor<T, 2>;     // 2D tensor (matrix)
-type Tensor3D<T> = Tensor<T, 3>;   // 3D tensor (volume)
-type TensorND<T> = Tensor<T, N>;   // ND tensor (arbitrary rank)
+type ScalarT = Tensor<T, 0>;     // 0D tensor (single value)
+type Vector1DT = Tensor<T, 1>;   // 1D tensor (vector)
+type MatrixT = Tensor<T, 2>;     // 2D tensor (matrix)
+type Tensor3DT = Tensor<T, 3>;   // 3D tensor (volume)
+type TensorNDT = Tensor<T, N>;   // ND tensor (arbitrary rank)
 ```
 
 ### 3.2 Tensor Data Types
@@ -167,25 +170,25 @@ impl<T: Numeric, const RANK: usize> Tensor<T, RANK> {
     // Creation
     fn zeros(shape: [usize; RANK]) -> Self;
     fn ones(shape: [usize; RANK]) -> Self;
-    fn from_vec(data: Vector<T>, shape: [usize; RANK]) -> Self;
-    
+    fn from_vec(data: VectorT, shape: [usize; RANK]) -> Self;
+
     // Shape operations
-    fn reshape<const NEW_RANK: usize>(self, new_shape: [usize; NEW_RANK]) 
+    fn reshape<const NEW_RANK: usize>(self, new_shape: [usize; NEW_RANK])
         -> Tensor<T, NEW_RANK>;
     fn transpose(self) -> Tensor<T, RANK>;
     fn squeeze(self) -> Tensor<T, RANK-1>;  // Remove dimensions of size 1
     fn unsqueeze(self, axis: usize) -> Tensor<T, RANK+1>;  // Add dimension
-    
+
     // Element access
     fn get(self, indices: [usize; RANK]) -> T;
     fn set(mut self, indices: [usize; RANK], value: T);
     fn slice(self, ranges: [Range; RANK]) -> Tensor<T, RANK>;
-    
+
     // Math operations
     fn add(self, other: Tensor<T, RANK>) -> Tensor<T, RANK>;
     fn mul(self, other: Tensor<T, RANK>) -> Tensor<T, RANK>;
     fn scalar_mul(self, scalar: T) -> Tensor<T, RANK>;
-    
+
     // Reductions
     fn sum(self) -> T;
     fn mean(self) -> T;
@@ -194,11 +197,11 @@ impl<T: Numeric, const RANK: usize> Tensor<T, RANK> {
 }
 
 // Matrix-specific operations
-impl<T: Numeric> Matrix<T> {
-    fn matmul(self, other: Matrix<T>) -> Matrix<T>;
-    fn dot(self, other: Matrix<T>) -> Matrix<T>;
+impl<T: Numeric> MatrixT {
+    fn matmul(self, other: MatrixT) -> MatrixT;
+    fn dot(self, other: MatrixT) -> MatrixT;
     fn determinant(self) -> T;
-    fn inverse(self) -> Option<Matrix<T>>;
+    fn inverse(self) -> Option<MatrixT>;
 }
 ```
 
@@ -223,10 +226,10 @@ struct Qubit {
 impl Qubit {
     // Creation (always in |0⟩ state)
     fn new() -> Self;
-    
+
     // Cannot clone or copy (quantum no-cloning)
     // fn clone(&self) -> Self;  // ❌ NOT IMPLEMENTED
-    
+
     // Measurement (consumes qubit, returns classical bit)
     fn measure(self) -> bool;  // Takes ownership, returns classical value
 }
@@ -244,14 +247,14 @@ struct QubitRegister {
 impl QubitRegister {
     // Create register of n qubits (all in |0⟩)
     fn new(n: usize) -> Self;
-    
+
     // Access individual qubit (borrows, doesn't move)
     fn get(&self, index: usize) -> &Qubit;
     fn get_mut(&mut self, index: usize) -> &mut Qubit;
-    
+
     // Measure all qubits (consumes register)
     fn measure_all(self) -> Vector<bool>;
-    
+
     // Measure specific qubits (partial measurement)
     fn measure_qubits(mut self, indices: Vector<usize>) -> Vector<bool>;
 }
@@ -279,21 +282,21 @@ impl QuantumGate {
     fn rotation_z(theta: float) -> Self; // Rz gate
     fn t_gate() -> Self;                // T gate
     fn s_gate() -> Self;                // S gate
-    
+
     // Two-qubit gates
     fn cnot() -> Self;                  // Controlled-NOT
     fn cz() -> Self;                    // Controlled-Z
     fn swap() -> Self;                  // SWAP gate
-    
+
     // Three-qubit gates
     fn toffoli() -> Self;               // Controlled-CNOT
     fn fredkin() -> Self;               // Controlled-SWAP
-    
+
     // Custom gates
     fn custom(matrix: Matrix<complex>) -> Result<Self, string>;
-    
+
     // Apply gate (checks matrix is unitary)
-    fn apply(&self, qubits: &mut QubitRegister, targets: Vector<usize>) 
+    fn apply(&self, qubits: &mut QubitRegister, targets: Vector<usize>)
         -> Result<(), string>;
 }
 ```
@@ -328,23 +331,23 @@ enum MeasurementBasis {
 impl QuantumCircuit {
     // Create circuit for n qubits
     fn new(num_qubits: usize) -> Self;
-    
+
     // Add gate to circuit
     fn apply_gate(&mut self, gate: QuantumGate, targets: Vector<usize>);
-    fn apply_controlled(&mut self, gate: QuantumGate, 
-                        controls: Vector<usize>, 
+    fn apply_controlled(&mut self, gate: QuantumGate,
+                        controls: Vector<usize>,
                         targets: Vector<usize>);
-    
+
     // Add measurement
     fn measure(&mut self, qubit: usize, basis: MeasurementBasis);
     fn measure_all(&mut self);
-    
+
     // Execute circuit
     fn run(self, register: QubitRegister) -> CircuitResult;
-    
+
     // Simulate circuit (classical simulation)
     fn simulate(self) -> QuantumState;
-    
+
     // Optimize circuit
     fn optimize(&mut self);  // Gate fusion, cancellation, etc.
 }
@@ -367,24 +370,24 @@ struct QuantumState {
 impl QuantumState {
     // Create |0...0⟩ state
     fn zeros(num_qubits: usize) -> Self;
-    
+
     // Create superposition state
     fn superposition(num_qubits: usize) -> Self;  // |+...+⟩
-    
+
     // Create custom state
     fn from_amplitudes(amplitudes: Vector<complex>) -> Result<Self, string>;
-    
+
     // State properties
     fn normalize(&mut self);
     fn is_normalized(&self) -> bool;
     fn probability(&self, basis_state: usize) -> float;
-    
+
     // Apply gate
     fn apply_gate(&mut self, gate: QuantumGate, targets: Vector<usize>);
-    
+
     // Measure (collapses state)
     fn measure(&mut self, qubit: usize) -> bool;
-    
+
     // Entanglement entropy
     fn entanglement_entropy(&self, partition: Vector<usize>) -> float;
 }
@@ -398,20 +401,20 @@ impl QuantumState {
 
 ```fusion
 // Classical ↔ Tensor conversions
-impl<T: Numeric> From<T> for Scalar<T> {
-    fn from(value: T) -> Scalar<T> {
+impl<T: Numeric> FromT for ScalarT {
+    fn from(value: T) -> ScalarT {
         Scalar::from_value(value)
     }
 }
 
-impl<T: Numeric> From<Scalar<T>> for T {
-    fn from(tensor: Scalar<T>) -> T {
+impl<T: Numeric> From<ScalarT> for T {
+    fn from(tensor: ScalarT) -> T {
         tensor.to_scalar()
     }
 }
 
-impl<T: Numeric> From<Vector<T>> for Vector1D<T> {
-    fn from(vec: Vector<T>) -> Vector1D<T> {
+impl<T: Numeric> From<VectorT> for Vector1DT {
+    fn from(vec: VectorT) -> Vector1DT {
         Vector1D::from_vec(vec)
     }
 }
@@ -510,7 +513,7 @@ enum TypeError {
 
 ### 6.1 Core Module Structure
 
-```
+```text
 fusion_core/
 ├── types/
 │   ├── classical.rs      # Classical types
@@ -539,13 +542,13 @@ fusion_core/
 pub mod types {
     // Classical types
     pub use classical::{int, float, bool, string, Vector, HashMap, HashSet};
-    
+
     // Tensor types
     pub use tensor::{Tensor, Scalar, Vector1D, Matrix, TensorND, DataType};
-    
+
     // Quantum types
     pub use quantum::{Qubit, QubitRegister, QuantumGate, QuantumCircuit, QuantumState};
-    
+
     // Hybrid types
     pub use hybrid::{HybridValue, FusionType};
 }
@@ -553,10 +556,10 @@ pub mod types {
 pub mod ops {
     // Tensor operations
     pub use tensor_ops::{matmul, dot, transpose, reshape};
-    
+
     // Quantum operations
     pub use quantum_ops::{hadamard, cnot, measure, simulate};
-    
+
     // Conversions
     pub use conversions::{to_tensor, to_classical, to_quantum};
 }
@@ -564,7 +567,7 @@ pub mod ops {
 pub mod runtime {
     // Execution
     pub use executor::{execute, execute_async};
-    
+
     // Simulation
     pub use quantum_sim::{Simulator, simulate_circuit};
 }
@@ -587,13 +590,13 @@ impl SemanticAnalyzer {
             // Classical expressions
             Expression::IntLiteral(n) => Ok(FusionType::Classical(ClassicalType::Int)),
             Expression::BinaryOp(op, left, right) => self.check_binary_op(op, left, right),
-            
+
             // Tensor expressions
             Expression::TensorCreation(shape, dtype) => {
                 Ok(FusionType::Tensor(TensorType::new(shape.len(), dtype)))
             },
             Expression::MatMul(a, b) => self.check_matmul(a, b),
-            
+
             // Quantum expressions
             Expression::QubitAlloc(n) => {
                 Ok(FusionType::Quantum(QuantumType::Register(n)))
@@ -606,16 +609,16 @@ impl SemanticAnalyzer {
                 self.check_measurement(qubit)?;
                 Ok(FusionType::Classical(ClassicalType::Bool))
             },
-            
+
             _ => Err(TypeError::UnsupportedExpression),
         }
     }
-    
-    fn check_matmul(&mut self, a: &Expression, b: &Expression) 
+
+    fn check_matmul(&mut self, a: &Expression, b: &Expression)
         -> Result<FusionType, TypeError> {
         let type_a = self.check_expression(a)?;
         let type_b = self.check_expression(b)?;
-        
+
         match (type_a, type_b) {
             (FusionType::Tensor(t1), FusionType::Tensor(t2)) => {
                 // Check shape compatibility
@@ -645,8 +648,8 @@ impl SemanticAnalyzer {
             }),
         }
     }
-    
-    fn check_gate_application(&mut self, gate: &QuantumGate, qubits: &Vec<QubitRef>) 
+
+    fn check_gate_application(&mut self, gate: &QuantumGate, qubits: &Vec<QubitRef>)
         -> Result<FusionType, TypeError> {
         // Verify qubits are quantum type
         for qubit_ref in qubits {
@@ -658,7 +661,7 @@ impl SemanticAnalyzer {
                 });
             }
         }
-        
+
         // Verify gate has correct number of qubits
         if qubits.len() != gate.num_qubits {
             return Err(TypeError::QuantumGateArity {
@@ -667,7 +670,7 @@ impl SemanticAnalyzer {
                 found: qubits.len(),
             });
         }
-        
+
         // Gate application returns Unit (side effect on qubits)
         Ok(FusionType::Classical(ClassicalType::Unit))
     }
@@ -680,6 +683,7 @@ impl SemanticAnalyzer {
 // src/runtime/value.rs
 
 #[derive(Debug, Clone)]
+
 pub enum RuntimeValue {
     // Classical values (heap-allocated)
     Int(i64),
@@ -688,7 +692,7 @@ pub enum RuntimeValue {
     String(String),
     Struct(HashMap<String, RuntimeValue>),
     Vector(Vec<RuntimeValue>),
-    
+
     // Tensor values (heap-allocated, potentially GPU memory)
     TensorData {
         data_ptr: *mut f64,        // Pointer to data (host or GPU)
@@ -697,7 +701,7 @@ pub enum RuntimeValue {
         dtype: DataType,
         location: MemoryLocation,  // CPU, GPU, etc.
     },
-    
+
     // Quantum values (simulator state or hardware reference)
     QuantumState {
         amplitudes: Vec<Complex64>,  // State vector (for simulation)
@@ -748,7 +752,7 @@ fn fibonacci(n: int) -> int {
 ```fusion
 use tensor::{Matrix, matmul};
 
-fn neural_layer(input: Matrix<float>, weights: Matrix<float>, bias: Matrix<float>) 
+fn neural_layer(input: Matrix<float>, weights: Matrix<float>, bias: Matrix<float>)
     -> Matrix<float> {
     let output = matmul(input, weights);
     return output + bias;  // Broadcasting
@@ -763,13 +767,13 @@ use quantum::{Qubit, hadamard, cnot, measure};
 fn bell_state() -> (bool, bool) {
     let q1 = Qubit::new();  // |0⟩
     let q2 = Qubit::new();  // |0⟩
-    
+
     hadamard().apply(&mut q1);  // (|0⟩ + |1⟩) / √2
     cnot().apply(&mut q1, &mut q2);  // Entangled state
-    
+
     let m1 = q1.measure();  // Collapse
     let m2 = q2.measure();  // Always same as m1
-    
+
     return (m1, m2);
 }
 ```
@@ -781,22 +785,22 @@ use tensor::{Tensor, Vector1D};
 
 fn train_model(data: Vector1D<float>, labels: Vector1D<int>, epochs: int) {
     let mut weights = Vector1D::random(data.shape());
-    
+
     let mut epoch = 0;
     while epoch < epochs {
         // Forward pass (tensor ops)
         let predictions = data.dot(weights);
-        
+
         // Loss calculation (classical + tensor)
         let loss = mean_squared_error(predictions, labels);
-        
+
         // Print (classical)
         println("Epoch: ", epoch, " Loss: ", loss);
-        
+
         // Backward pass (tensor ops)
         let gradients = compute_gradients(data, labels, weights);
         weights = weights - (0.01 * gradients);
-        
+
         epoch = epoch + 1;
     }
 }
@@ -811,43 +815,43 @@ use tensor::{Matrix, eigenvalues};
 fn vqe(hamiltonian: Matrix<complex>, iterations: int) -> float {
     let num_qubits = 4;
     let mut params = Vector::random(8);  // Classical parameters
-    
+
     let mut iter = 0;
     while iter < iterations {
         // Quantum part: Build parameterized circuit
         let circuit = build_ansatz(num_qubits, params);
-        
+
         // Quantum execution
         let state = circuit.simulate();
-        
+
         // Classical part: Compute expectation value
         let energy = expectation_value(hamiltonian, state);
-        
+
         // Classical optimization
         params = gradient_descent(params, energy);
-        
+
         println("Iteration: ", iter, " Energy: ", energy);
-        
+
         iter = iter + 1;
     }
-    
+
     return energy;
 }
 
 fn build_ansatz(n: int, params: Vector<float>) -> QuantumCircuit {
     let circuit = QuantumCircuit::new(n);
-    
+
     // Quantum gates with classical parameters
     let mut i = 0;
     while i < n {
         circuit.apply(rotation_y(params[i]), i);
         i = i + 1;
     }
-    
+
     circuit.apply(cnot(), [0, 1]);
     circuit.apply(cnot(), [1, 2]);
     circuit.apply(cnot(), [2, 3]);
-    
+
     return circuit;
 }
 ```
@@ -859,12 +863,14 @@ fn build_ansatz(n: int, params: Vector<float>) -> QuantumCircuit {
 ### 9.1 Tensor Performance
 
 **LLVM Optimizations**:
+
 - Loop vectorization (SIMD)
 - Loop fusion
 - Memory access optimization
 - Cache locality improvements
 
 **GPU Acceleration**:
+
 ```rust
 // Automatic GPU dispatch for large tensors
 impl<T: Numeric> Tensor<T, N> {
@@ -883,11 +889,13 @@ impl<T: Numeric> Tensor<T, N> {
 ### 9.2 Quantum Simulation Performance
 
 **State Vector Optimization**:
+
 - Sparse state tracking (for low-entanglement circuits)
 - GPU-accelerated state vector simulation
 - Distributed simulation for >30 qubits
 
 **Circuit Optimization**:
+
 - Gate fusion (combine sequential gates)
 - Dead gate elimination
 - Circuit rewriting (canonical forms)
@@ -900,7 +908,9 @@ impl<T: Numeric> Tensor<T, N> {
 
 ```fusion
 // Test: Type safety enforcement
+
 #[test]
+
 fn test_no_quantum_cloning() {
     let q = Qubit::new();
     let q_copy = q;  // Move, not copy
@@ -909,6 +919,7 @@ fn test_no_quantum_cloning() {
 }
 
 #[test]
+
 fn test_measurement_type_change() {
     let q = Qubit::new();  // Type: Qubit
     hadamard().apply(&mut q);
@@ -917,6 +928,7 @@ fn test_measurement_type_change() {
 }
 
 #[test]
+
 fn test_tensor_shape_safety() {
     let a = Matrix::zeros([3, 4]);
     let b = Matrix::zeros([5, 6]);
@@ -926,12 +938,14 @@ fn test_tensor_shape_safety() {
 
 ### 10.2 Runtime Tests
 
-```rust
+```
+
 #[test]
+
 fn test_quantum_simulator_accuracy() {
     let circuit = bell_state_circuit();
     let state = circuit.simulate();
-    
+
     // Expected: (|00⟩ + |11⟩) / √2
     assert_close(state.probability(0b00), 0.5);  // |00⟩
     assert_close(state.probability(0b11), 0.5);  // |11⟩
@@ -940,13 +954,14 @@ fn test_quantum_simulator_accuracy() {
 }
 
 #[test]
+
 fn test_tensor_gpu_equivalence() {
     let a = Matrix::random([100, 100]);
     let b = Matrix::random([100, 100]);
-    
+
     let cpu_result = cpu_matmul(&a, &b);
     let gpu_result = gpu_matmul(&a, &b);
-    
+
     assert_tensors_equal(cpu_result, gpu_result, eps=1e-6);
 }
 ```
@@ -977,12 +992,13 @@ fn test_tensor_gpu_equivalence() {
 /// - Automatically uses GPU for matrices larger than 1000×1000
 /// - SIMD vectorization on CPU
 /// - Cache-optimized memory access
-fn matmul<T: Numeric>(a: Matrix<T>, b: Matrix<T>) -> Matrix<T>;
+fn matmul<T: Numeric>(a: MatrixT, b: MatrixT) -> MatrixT;
 ```
 
 ### 11.2 User Guide Sections
 
 **Required Documentation**:
+
 1. Type System Overview
 2. Classical Programming Guide
 3. Tensor Operations Guide
@@ -997,24 +1013,28 @@ fn matmul<T: Numeric>(a: Matrix<T>, b: Matrix<T>) -> Matrix<T>;
 ## 12. Roadmap
 
 ### Phase 1: Classical + Tensor (Months 1-2)
+
 - ✅ Implement classical type system
 - ✅ Implement tensor type system
 - ✅ Basic tensor operations
 - ✅ GPU backend integration
 
 ### Phase 2: Quantum Foundations (Months 3-4)
+
 - 🔄 Implement qubit types
 - 🔄 Implement quantum gates
 - 🔄 Build quantum circuit framework
 - 🔄 Quantum simulator
 
 ### Phase 3: Hybrid Integration (Months 5-6)
+
 - ⏳ Type checker for hybrid programs
 - ⏳ Runtime hybrid execution
 - ⏳ Optimization passes
 - ⏳ End-to-end examples
 
 ### Phase 4: Production Hardening (Months 7-8)
+
 - ⏳ Performance benchmarking
 - ⏳ Quantum hardware backends
 - ⏳ Comprehensive documentation
@@ -1026,15 +1046,15 @@ fn matmul<T: Numeric>(a: Matrix<T>, b: Matrix<T>) -> Matrix<T>;
 
 The Fusion Core Type System provides a **unified, type-safe framework** for representing and manipulating classical, tensor, and quantum data simultaneously. This design enables:
 
-✅ **Type Safety**: Compile-time prevention of classical/quantum confusion  
-✅ **Performance**: Zero-cost abstractions, GPU acceleration  
-✅ **Expressiveness**: Natural representation of all three paradigms  
-✅ **Future-Proof**: Ready for quantum hardware and advanced algorithms  
+✅ **Type Safety**: Compile-time prevention of classical/quantum confusion
+✅ **Performance**: Zero-cost abstractions, GPU acceleration
+✅ **Expressiveness**: Natural representation of all three paradigms
+✅ **Future-Proof**: Ready for quantum hardware and advanced algorithms
 
 This makes Fusion the **world's first truly quantum-native programming language** with production-grade type safety and performance.
 
 ---
 
-**Document Status**: ✅ Complete Design Specification  
-**Next Steps**: Implementation in `fusion_core` module  
+**Document Status**: ✅ Complete Design Specification
+**Next Steps**: Implementation in `fusion_core` module
 **Target**: v0.2.0 Release

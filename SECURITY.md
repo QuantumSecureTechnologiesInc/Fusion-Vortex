@@ -12,7 +12,7 @@ The Fusion team takes security vulnerabilities seriously. We appreciate your eff
 
 ### How to Report
 
-**Please DO NOT report security vulnerabilities through public GitHub issues.**
+<!-- Please DO NOT report security vulnerabilities through public GitHub issues. -->
 
 Instead, please report them via email to: [security@fusion-lang.org](mailto:security@fusion-lang.org) (coming soon)
 

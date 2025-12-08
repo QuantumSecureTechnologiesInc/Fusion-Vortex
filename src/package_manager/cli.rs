@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use super::{Manifest, Version, VersionRequirement};
+use super::{manifest::Manifest, Version, VersionRequirement};
 use std::path::Path;
 use std::path::PathBuf;
 

@@ -1,0 +1,40 @@
+﻿NSA Commercial National Security Algorithm (CNSA) Suite 2.0 Compliance Brief
+Fusion Programming Language Toolchain and Runtime (v1.0)
+Reference Standard: CNSA Suite 2.0 (Post-Quantum Ready)
+Applicability: Data in transit, data at rest, and digital signatures for national security systems.
+Organization: QuantumSecure Technologies Ltd
+Date: December 3, 2025
+1. Executive Summary
+The Fusion Programming Language and its integrated Cryptography Module (FCM) are engineered for full compliance with the NSA's Commercial National Security Algorithm (CNSA) Suite 2.0. Fusion achieves this compliance by mandating the use of its 50/50 Hybrid Cryptography module, which utilizes the exact Post-Quantum Cryptography (PQC) standards identified by NIST for quantum-resistance.
+2. Compliance Mapping
+Fusion mandates the use of the following algorithms via its core fusion::crypto module, ensuring strict adherence to the CNSA Suite 2.0 guidelines:
+CNSA Suite 2.0 Function
+	Required Algorithm
+	Fusion Implementation
+	Status
+	Key Establishment
+	CRYSTALS-Kyber (ML-KEM)
+	Primary PQC component of hybrid_kdf and key exchange.
+	Compliant
+	Digital Signatures
+	CRYSTALS-Dilithium (ML-DSA)
+	Primary PQC component of hybrid_sign and hybrid_verify.
+	Compliant
+	Symmetric Encryption
+	AES-256
+	Mandated algorithm for all data at rest and in transit (via AES-GCM).
+	Compliant
+	Hashing
+	SHA-384/512 (FIPS 202)
+	Used for key derivation, integrity, and message digests.
+	Compliant
+	Fusion's Hybrid Advantage (Mandatory)
+Fusion enhances CNSA compliance through mandatory Hybrid Mode. While CNSA 2.0 permits migration to PQC-only algorithms, Fusion ensures a robust defense-in-depth posture by requiring the simultaneous use of both PQC (Kyber/Dilithium) and legacy (X25519/ECDSA) algorithms until such a migration is explicitly supported and necessary.
+3. Toolchain Enforcement and Verification
+CNSA compliance in Fusion is not elective; it is enforced by the compilation toolchain itself:
+1. Compiler Guardrails: The Semantic Analyzer (fusion::semantic_analyzer) blocks compilation if non-CNSA compliant algorithms are requested for security-critical functions.
+2. Constant-Time Verification: The LLVM backend's @constant_time attribute verifies that all relevant cryptographic operations are side-channel resistant, a requirement implicitly tied to secure government systems.
+3. Application Hardening: The fusion::security::hardening library provides automated functions to check system configurations against NSA CNSA guidelines prior to deployment.
+4. Deployment Readiness
+Fusion applications are ready for deployment into CNSA-required environments due to the inherent cryptographic safety and the multi-platform targeting capability (Native, WASM).
+The Fusion commitment is to actively update its PQC primitives as new NIST standards are released or mandated by the NSA, ensuring forward compatibility and regulatory adherence.

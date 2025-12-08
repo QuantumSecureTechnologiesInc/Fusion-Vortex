@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn test_variable_hints() {
-        let mut provider = InlayHintsProvider::new();
+        let provider = InlayHintsProvider::new();
         let line = "let x = 42;";
 
         let hints = provider.analyze_variables(line, 0);

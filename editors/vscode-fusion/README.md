@@ -7,6 +7,7 @@ Official Visual Studio Code extension for the Fusion programming language, provi
 ### Syntax Highlighting
 
 Full syntax highlighting for Fusion code including:
+
 - Keywords (`fn`, `class`, `let`, `mut`, `if`, `while`, `for`, etc.)
 - Types (primitive and generic)
 - Functions and methods
@@ -16,6 +17,7 @@ Full syntax highlighting for Fusion code including:
 ### IntelliSense & Code Completion
 
 Context-aware code completion powered by the Fusion LSP server:
+
 - Standard library types (`Vector`, `Option`, `Result`, `LinkedList`)
 - Built-in functions (`println`, `malloc`, `free`)
 - Local variables and function parameters
@@ -24,6 +26,7 @@ Context-aware code completion powered by the Fusion LSP server:
 ### Real-Time Diagnostics
 
 Instant feedback on your code:
+
 - **Parse errors** - Syntax mistakes highlighted as you type
 - **Semantic errors** - Type mismatches, borrow checker violations
 - **Warnings** - Unused variables, unreachable code
@@ -31,6 +34,7 @@ Instant feedback on your code:
 ### Go-to-Definition
 
 Navigate to symbol definitions with `F12`:
+
 - Jump to function declarations
 - Navigate to class definitions
 - Find variable declarations
@@ -38,6 +42,7 @@ Navigate to symbol definitions with `F12`:
 ### Hover Information
 
 See type information by hovering over symbols:
+
 - Function signatures
 - Variable types
 - Documentation (when available)
@@ -116,7 +121,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](../../CONTRIBUTING.md) f
 
 ### 0.1.0 (2025-12-07)
 
-**Initial Release**
+<!-- Initial Release -->
 
 - ✅ Fusion syntax highlighting
 - ✅ LSP client integration
@@ -132,6 +137,6 @@ MIT - See [LICENSE](../../LICENSE) for details
 
 ---
 
-**Developed by**: QuantumSecure Technologies Ltd  
-**Language**: Fusion Programming Language  
+**Developed by**: QuantumSecure Technologies Ltd
+**Language**: Fusion Programming Language
 **Website**: [fusion-lang.org](https://fusion-lang.org)

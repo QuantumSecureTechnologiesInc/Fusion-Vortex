@@ -4,17 +4,22 @@ This directory contains the Visual Studio Code extension for Fusion language sup
 
 ## Development
 
-```bash
+```
+
 # Install dependencies
+
 npm install
 
 # Compile TypeScript
+
 npm run compile
 
 # Watch for changes
+
 npm run watch
 
 # Package extension
+
 npm run package
 ```
 
@@ -26,7 +31,7 @@ npm run package
 
 ## Directory Structure
 
-```
+```text
 vscode-fusion/
 ├── src/
 │   └── extension.ts       # Extension entry point
@@ -36,4 +41,4 @@ vscode-fusion/
 ├── tsconfig.json          # TypeScript configuration
 ├── language-configuration.json  # Language features config
 └── README.md              # User-facing documentation
-```
+```text

@@ -28,6 +28,7 @@ Then open `index.html` in a browser to use the calculator.
 ## Code Highlights
 
 **Function Definition**:
+
 ```fusion
 fn add(a: int, b: int) -> int {
     return a + b;
@@ -35,6 +36,7 @@ fn add(a: int, b: int) -> int {
 ```
 
 **Error Handling**:
+
 ```fusion
 fn divide(a: int, b: int) -> int {
     if b == 0 {
@@ -46,16 +48,17 @@ fn divide(a: int, b: int) -> int {
 ```
 
 **Loops**:
+
 ```fusion
 fn power(base: int, exponent: int) -> int {
     let mut result = base;
     let mut i = 1;
-    
+
     while i < exponent {
         result = result * base;
         i = i + 1;
     }
-    
+
     return result;
 }
 ```
@@ -70,5 +73,5 @@ fn power(base: int, exponent: int) -> int {
 
 ---
 
-**Difficulty**: Beginner  
+**Difficulty**: Beginner
 **Concepts**: Functions, Control Flow, Variables

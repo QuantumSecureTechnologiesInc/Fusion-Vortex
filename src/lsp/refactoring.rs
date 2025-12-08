@@ -243,7 +243,7 @@ impl RefactoringEngine {
         // Simplified variable analysis
         // Would use full semantic analysis in reality
         let mut input_vars = Vec::new();
-        let mut output_vars = Vec::new();
+        let output_vars = Vec::new();
 
         // Parse for variable references (simplified)
         for word in code.split_whitespace() {

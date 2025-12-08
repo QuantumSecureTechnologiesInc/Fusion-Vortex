@@ -22,18 +22,23 @@ Thank you for your interest in contributing to the Fusion Programming Language! 
 
 ### Building
 
-```bash
+```
+
 # Clone the repository
+
 git clone https://github.com/your-org/fusion-lang
 cd fusion-lang
 
 # Build the compiler
+
 cargo build --release
 
 # Run tests
+
 cargo test
 
 # Build VS Code extension
+
 cd editors/vscode-fusion
 npm install
 npm run compile

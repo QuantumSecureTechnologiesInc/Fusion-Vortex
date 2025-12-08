@@ -1,0 +1,152 @@
+﻿Fusion Developer's Guide: Setup, Internals, and Contribution (v1.0)
+Version: 1.0 (Viper Release)
+Goal: This guide covers the complete lifecycle of developing with and contributing to the Fusion Programming Language—from environment setup and internal architecture to security response and community workflows.
+1. Getting Started
+1.1. Setup and Building
+The Fusion toolchain is distributed via pre-built binaries or compiled directly from source. Fusion requires LLVM v16+ due to dependencies on specific IR generation and optimization passes.
+* Installing the Pre-built Toolchain (Recommended): Use the official installer script, which sets up the necessary LLVM and WASI libraries.
+curl --proto '=https' --tlsv1.2 -sSf [https://sh.fusion-lang.org](https://sh.fusion-lang.org) | sh
+
+* Building Fusion from Source (LLVM Integration): This is required for contributors or when targeting custom hardware. Compilation involves configuring the build to link against local LLVM libraries.
+git clone [https://github.com/fusion-lang/fusion-toolchain.git](https://github.com/fusion-lang/fusion-toolchain.git)
+cd fusion-toolchain
+./configure --with-llvm-prefix=/usr/lib/llvm-17
+make && make install
+
+1.2. Fixing "Easy" Issues (and Beyond)
+The fastest path to contribution is resolving issues tagged good-first-issue or easy-bug on the GitHub issue tracker. These typically involve documentation fixes, simple test coverage gaps, or small patches to the standard library (stdlib).
+2. Command Line and Environment
+2.1. The fusion and fusionc CLI
+The fusion binary serves as the project and package manager, while fusionc is the direct compiler driver, often used for debugging.
+Tool
+	Purpose
+	Key Commands
+	fusion
+	Project creation, dependency management, testing, and security auditing.
+	new, add, build, test, security scan
+	fusionc
+	Debugging and advanced compilation targeting.
+	compile, --emit llvm-ir, --emit asm
+	2.2. Environment Variables
+Environment variables globally specify build defaults and enable advanced security or performance features.
+Variable
+	Description
+	Usage
+	FUSION_GPU_DEVICE
+	Specifies the GPU device (e.g., cuda:0) for @gpu_accelerated functions.
+	export FUSION_GPU_DEVICE=cuda:0
+	FUSION_PQC_MODE
+	Debug setting to control PQC fallback policy; defaults to FIPS_140_2_Strict.
+	
+
+	2.3. Configuring the Fusion Toolchain
+Configuration is declarative via the project manifest:
+   * The Manifest (Fusion.toml): Defines metadata, dependencies, and build requirements.
+   * Compiler Attributes: Used in source code to guide compilation (e.g., @constant_time, @strict_types, @gpu_accelerated).
+2.4. Compiler and Linker Flags
+The opt_level setting in Fusion.toml controls LLVM optimization, directly affecting performance and security hardening.
+Flag (Fusion.toml)
+	Effect
+	LLVM Equivalent
+	opt_level = "Aggressive"
+	Enables maximum optimization, LTO, and hardware acceleration passes.
+	-O3 + Fusion Custom Passes
+	security_profile = "FIPS_140_2_Strict"
+	Enforces hybrid cryptography, constant-time checks, and stack protectors.
+	-ffunction-sections, Stack Protectors
+	3. Development Workflow and Lifecycle
+3.1. Development Workflow and CI/CD
+Fusion's development model is based on automated security and performance validation through GitHub Actions.
+
+
+
+
+ Image of Development CI/CD Workflow 
+
+Shutterstock
+Explore
+All development must be conducted on feature branches.
+3.2. Lifecycle of a Pull Request (PR)
+The PR process is gated by automated security and performance checks:
+   1. Open PR: Developer pushes a change and opens a PR.
+   2. CI Build: Automatic compilation across all major targets (x86-64, WASM, RISC-V).
+   3. Security Gates: Mandatory SAST/SCA scan runs. If a Critical/High vulnerability is found, the PR is blocked.
+   4. Performance Check: Integrated benchmarks run. If performance degrades by >2%, the PR fails the check.
+   5. Review: Core team or relevant experts review the code, focusing on the Borrow Checker and @constant_time integrity for security modules.
+   6. Merge: Changes are merged only when all automated and human reviews pass.
+3.3. Git Bootcamp and Cheat Sheet
+Contributors should use concise, atomic commits. The project uses the rebase workflow for clean history.
+   * git rebase -i main: Used to clean up the commit history before opening a PR.
+   * git blame <file>: Essential for tracking the introduction of potential bugs or security issues.
+3.4. Where to Get Help
+   * Primary Discussion: GitHub Discussions and the Fusion Discord server.
+   * Urgent Bugs: Issue tracker with p0-critical label.
+   * Security Issues: Report immediately to the Fusion Security Response Team (FSRT).
+4. Using Fusion on Specific Platforms
+4.1. Using Fusion on Unix-like Platforms (Linux/BSD)
+Building from source requires configuring the LLVM prefix. The WASI Target (wasm32-wasi) allows deploying sandboxed Fusion utilities via runtimes like Wasmtime.
+4.2. Using Fusion on Windows
+Fusion is distributed via a standard MSI installer. Visual Studio Code (VS Code) is the recommended IDE due to superior LSP Integration. Developers must ensure Long Path Support (MAX_PATH) is enabled to prevent build failures in deeply nested dependency structures.
+4.3. Using Fusion on macOS (Darwin)
+Installation is managed via Homebrew. When deploying native applications, developers must ensure Code Signing and Notarization procedures are followed for macOS Gatekeeper compliance.
+4.4. Porting to a New Platform (RISC-V/ARM)
+Porting Fusion involves configuring the LLVM backend for the new architecture's target triple (e.g., riscv32-unknown-none-elf). This is often done to deploy the Hybrid Cryptography Module on bare-metal Embedded/IoT systems.
+5. Fusion's Internals: Compiler and Runtime
+5.1. Fusion Source Code (Rust/LLVM)
+The majority of the compiler and runtime core is written in Rust, leveraging its speed and inherent safety features to build a secure toolchain.
+5.2. Compiler Design and the Middle-End
+The Middle-End is the core intellectual property of Fusion.
+   * Semantic Analyzer: Responsible for Type Checking, Generic Trait Resolution, and verifying all compiler attributes (e.g., ensuring a function marked @constant_time does not contain secret-dependent branches).
+   * LLVM IR Generation: Maps the verified AST directly to high-performance LLVM IR, maximizing optimization potential.
+5.3. The Bytecode / LLVM IR Interpreter
+Fusion does not use a traditional bytecode interpreter like CPython. Instead, compiled code executes as native machine code or as highly optimized WASM bytecode (which is JIT-compiled by the browser or runtime). The LLVM IR acts as the primary intermediate format.
+5.4. Borrow Checker Design and Ownership Semantics
+The Borrow Checker operates during semantic analysis. It tracks three states for any owned variable: Owned, Immutably Borrowed, or Mutably Borrowed. The key rule, "One Mutable XOR Many Immutable," is strictly enforced across function boundaries and mutable assignments.
+5.5. Garbage Collector (GC) Design
+The GC is designed to be concurrent and generational, minimizing pause times for high-level application code. It operates only on values not managed by the Borrow Checker (values that do not have active references or are not within an @unsafe block).
+6. Ecosystem and Language Evolution
+6.1. Adding to the Standard Library (stdlib)
+New stdlib modules must demonstrate high test coverage (95%+) and adhere to the project's security standards (e.g., using fusion::crypto for any internal cryptographic primitives).
+6.2. Changing Fusion's C API (FFI)
+The Foreign Function Interface (FFI) is the bridge to C/C++ libraries. All FFI calls must be wrapped in @unsafe blocks, requiring the developer to manually ensure memory safety and resource management.
+6.3. Changing Fusion’s Grammar (ANTLR)
+The grammar is defined in an ANTLR4 specification. Any proposed syntax change requires an RFC (Request For Comments), followed by modifications to the ANTLR grammar, the Lexer, and the Parser.
+6.4. Generative AI Tools and Policy
+The Core Team actively develops Generative AI tooling (powered by fusion::ml) to assist with code completion, static analysis, and code review. Contributors must adhere to the policy prohibiting the use of unvetted AI tools for security-critical components to maintain the codebase's integrity.
+7. Security and Issues Management
+7.1. Fusion Security Response Team (FSRT)
+The FSRT is responsible for managing and patching security vulnerabilities reported in the Fusion toolchain or standard library.
+
+
+
+
+ Image of Security Incident Response Workflow 
+
+Shutterstock
+Explore
+   * Policy: Responsible Disclosure is strictly followed.
+   * Process: Reports are handled privately, patches are prepared, and simultaneous public release (patch + advisory) is executed.
+7.2. Software Bill-of-Materials (SBOM)
+Fusion generates a detailed SBOM for every final binary, listing all direct and transitive dependencies and their versions. This is crucial for SCA (Software Composition Analysis) compliance and is enforced in the CI pipeline.
+7.3. Issues and Triaging (Issue Tracker & GitHub Labels)
+The issue tracker is the single source of truth for all bugs and feature requests.
+   * Labels: Issues are categorized by scope (compiler, stdlib, docs), priority (p0-critical to p3-low), and type (bug, feature, security).
+7.4. Triage Team
+The Triage Team is responsible for initial assessment, label assignment, and severity ranking of new issues, moving them from the intake queue to the appropriate working group.
+8. Testing and Development Tools
+8.1. Running and Writing Tests
+Tests are defined using the #[test] attribute and executed via fusion test. Benchmarks are defined using #[bench] and tracked in CI to prevent performance regression.
+8.2. Testing and Buildbots (Working with Buildbot Workers)
+Buildbots are used for continuous testing on platforms where GitHub Actions cannot run natively (e.g., older OS versions, specialized RISC-V targets).
+8.3. Dynamic Analysis with Clang and GDB
+Developers use GDB and LLVM-integrated tools like AddressSanitizer and ThreadSanitizer (via Clang tooling) for dynamic analysis of C/C++ FFI code and runtime integrity checks.
+8.4. Development Tools (Argument Clinic & Clang Tidy)
+Fusion uses integrated LLVM tools for maintaining code quality and minimizing compiler warnings. Clang Tidy is used to enforce coding standards across the compiler codebase.
+9. Documentation and Community
+9.1. Documentation Style Guide (reStructuredText Markup)
+The official documentation uses reStructuredText (RST) for consistency and automated generation.
+9.2. Helping with Documentation and Translations
+Documentation contributions are highly valued. The Translation Team manages localization efforts for the User Guide and core error messages.
+9.3. Core Team, Experts Index, and Affiliations
+The Core Team maintains the language and architecture. The Experts Index maps Core Team members and contributors to specific domains (e.g., Hybrid Cryptography, WASM, LLVM Passes) to streamline code review and decision-making.
+Completion Status: The Fusion Developer's Guide is now comprehensive, integrating all technical, security, and community aspects of the project.

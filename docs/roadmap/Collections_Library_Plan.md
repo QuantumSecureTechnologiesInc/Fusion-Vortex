@@ -1,8 +1,8 @@
 # Collections Library Implementation Plan
 
-**Date**: 2025-12-07  
-**Status**: ⏳ In Progress  
-**Priority**: High (Core functionality)  
+**Date**: 2025-12-07
+**Status**: ⏳ In Progress
+**Priority**: High (Core functionality)
 **Estimated Time**: 4-6 hours
 
 ---
@@ -15,18 +15,18 @@ Implement a comprehensive collections library for Fusion, providing HashMap, Has
 
 ### Module Structure
 
-```
+```text
 stdlib/
 ├── hashmap.fu      # HashMap<K, V> implementation
-├── hashset.fu      # HashSet<T> implementation  
+├── hashset.fu      # HashSetT implementation
 └── iterator.fu     # Iterator trait and implementations
 ```
 
 ### Core Components
 
 1. **HashMap<K, V>** - Key-value hash table
-2. **HashSet<T>** - Unique value set
-3. **Iterator<T>** - Iteration trait
+2. **HashSetT** - Unique value set
+3. **IteratorT** - Iteration trait
 4. **Hash trait** - Hashing interface
 
 ---
@@ -60,16 +60,16 @@ impl Hash for string {
 ### Iterator Trait
 
 ```fusion
-trait Iterator<T> {
-    fn next(mut self) -> Option<T>;
+trait IteratorT {
+    fn next(mut self) -> OptionT;
     fn has_next(self) -> bool;
 }
 
 // Helper methods
-trait IteratorExt<T>: Iterator<T> {
-    fn collect(mut self) -> Vector<T>;
+trait IteratorExtT: IteratorT {
+    fn collect(mut self) -> VectorT;
     fn map<U>(mut self, f: fn(T) -> U) -> MapIterator<T, U>;
-    fn filter(mut self, f: fn(T) -> bool) -> FilterIterator<T>;
+    fn filter(mut self, f: fn(T) -> bool) -> FilterIteratorT;
     fn count(mut self) -> int;
 }
 ```
@@ -99,17 +99,19 @@ class HashMap<K, V> where K: Hash {
 ### Core Operations
 
 **Insert** - O(1) average:
+
 ```fusion
 fn insert(mut self, key: K, value: V) -> Option<V> {
     let hash = key.hash();
     let index = hash % self.capacity;
-    
+
     // Handle collision with chaining
     // Return old value if key exists
 }
 ```
 
 **Get** - O(1) average:
+
 ```fusion
 fn get(self, key: K) -> Option<V> {
     let hash = key.hash();
@@ -119,6 +121,7 @@ fn get(self, key: K) -> Option<V> {
 ```
 
 **Remove** - O(1) average:
+
 ```fusion
 fn remove(mut self, key: K) -> Option<V> {
     // Remove and return old value
@@ -126,6 +129,7 @@ fn remove(mut self, key: K) -> Option<V> {
 ```
 
 **Resize** - O(n):
+
 ```fusion
 fn resize(mut self) {
     // Double capacity when load factor > 0.75
@@ -150,7 +154,7 @@ fn resize(mut self) {
 ### Data Structure
 
 ```fusion
-class HashSet<T> where T: Hash {
+class HashSetT where T: Hash {
     map: HashMap<T, bool>;  // Use HashMap internally
 }
 ```
@@ -175,11 +179,11 @@ fn remove(mut self, value: T) -> bool {
 
 ### Set Operations
 
-- `union(other: HashSet<T>) -> HashSet<T>`
-- `intersection(other: HashSet<T>) -> HashSet<T>`
-- `difference(other: HashSet<T>) -> HashSet<T>`
-- `is_subset(other: HashSet<T>) -> bool`
-- `is_superset(other: HashSet<T>) -> bool`
+- `union(other: HashSetT) -> HashSetT`
+- `intersection(other: HashSetT) -> HashSetT`
+- `difference(other: HashSetT) -> HashSetT`
+- `is_subset(other: HashSetT) -> bool`
+- `is_superset(other: HashSetT) -> bool`
 
 ---
 
@@ -192,7 +196,7 @@ fn test_hashmap_insert() {
     let mut map = HashMap::<int, string>::new();
     map.insert(1, "one");
     map.insert(2, "two");
-    
+
     assert(map.get(1) == Some("one"));
     assert(map.get(2) == Some("two"));
     assert(map.get(3) == None);
@@ -253,6 +257,7 @@ fn test_iterator() {
 ### Hash Algorithm
 
 Use **FNV-1a** for strings:
+
 - Fast
 - Good distribution
 - Simple to implement
@@ -260,6 +265,7 @@ Use **FNV-1a** for strings:
 ### Collision Resolution
 
 Use **separate chaining**:
+
 - Simpler than open addressing
 - Better for high load factors
 - Easier to implement
@@ -267,12 +273,14 @@ Use **separate chaining**:
 ### Load Factor
 
 Use **0.75** as threshold:
+
 - Industry standard
 - Good balance of space/time
 
 ### Initial Capacity
 
 Use **16** buckets:
+
 - Powers of 2 for efficient modulo
 - Reasonable starting size
 
@@ -303,5 +311,5 @@ Use **16** buckets:
 
 ---
 
-**Status**: Ready to implement  
+**Status**: Ready to implement
 **Next Step**: Create hash trait and iterator infrastructure

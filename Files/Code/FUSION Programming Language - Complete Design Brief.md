@@ -1,8 +1,8 @@
 # FUSION Programming Language: Complete Design Brief
 
-**Version:** 1.0  
-**Date:** November 8, 2025  
-**Status:** Design Specification  
+**Version:** 1.0
+**Date:** November 8, 2025
+**Status:** Design Specification
 **Organization:** QuantumSecure Technologies Ltd
 
 ---
@@ -41,32 +41,38 @@
 
 ### Core Principles
 
-**Progressive Complexity**
+<!-- Progressive Complexity -->
+
 - Simple syntax for beginners that scales to advanced features
 - Batteries-included standard library reducing external dependencies
 - Gradual migration path from dynamic to static typing
 
-**Memory Safety by Default**
+<!-- Memory Safety by Default -->
+
 - Automatic garbage collection for high-level code
 - Optional ownership semantics via Rust-inspired borrow checker
 - Zero-cost abstractions eliminating performance penalties
 
-**Cryptographic Resilience**
+<!-- Cryptographic Resilience -->
+
 - Post-quantum cryptography as first-class citizen
 - Hybrid algorithms protecting against both classical and quantum threats
 - Constant-time guarantees preventing timing side-channels
 
-**Quantum-Classical Coexistence**
+<!-- Quantum-Classical Coexistence -->
+
 - Seamless integration of quantum and classical algorithms
 - Hybrid quantum-classical workflows for optimization problems
 - Cloud-based quantum processor access (IBM, Azure Quantum, AWS Braket)
 
-**Write Once, Deploy Everywhere**
+<!-- Write Once, Deploy Everywhere -->
+
 - Single codebase compiling to native (x86-64, ARM, RISC-V), WebAssembly, and embedded targets
 - Unified cryptographic stack across all platforms
 - Consistent AI/ML model deployment via ONNX
 
-**Security-First Architecture**
+<!-- Security-First Architecture -->
+
 - Zero-trust principles built into language runtime
 - Automatic security hardening based on DevSecOps patterns
 - Runtime verification of cryptographic operations
@@ -107,6 +113,7 @@ fn production_code(data: List<int>) -> Result<int>:
 ### Type System
 
 **Strong Static Typing** with powerful type inference:
+
 - Generic types with constraints
 - Union types eliminating null pointer errors
 - Gradual typing for migration
@@ -117,7 +124,7 @@ fn process<T where T: Serializable>(item: T) -> Result<String>:
     return Ok(serialize(item))
 
 // Union types
-type Result<T> = Ok<T> | Err<String>
+type ResultT = OkT | Err<String>
 
 // Optional types (no null)
 let maybe_value: int? = None
@@ -135,24 +142,28 @@ fn calling_code():
 
 ### Paradigm Support
 
-**Procedural Programming**
+<!-- Procedural Programming -->
+
 - First-class functions, structured control flow
 - C-like direct memory access in `@unsafe` blocks
 - Explicit resource management
 
-**Object-Oriented Programming**
+<!-- Object-Oriented Programming -->
+
 - Classes with single inheritance
 - Interfaces with multiple implementation
 - Traits/mixins for code reuse
 - Access modifiers (public, private, protected)
 
-**Functional Programming**
+<!-- Functional Programming -->
+
 - Pure functions with immutability by default
 - First-class functions and closures
 - Pattern matching and algebraic data types
 - Lazy evaluation support
 
-**Concurrent & Asynchronous**
+<!-- Concurrent & Asynchronous -->
+
 - Built-in async/await syntax
 - Green threads and lightweight tasks
 - Message-passing channels
@@ -169,7 +180,7 @@ fn map_with_filter(data: List<int>, pred: fn(int) -> bool) -> List<int>:
 // OOP approach
 class DataProcessor:
     data: List<int>
-    
+
     fn process(self) -> List<int>:
         return self.data.map(|x| x * 2)
 
@@ -182,10 +193,10 @@ async fn fetch_multiple(urls: List<String>) -> Result<List<String>>:
 // Actor model
 actor DataCache:
     cache: Map<String, Data>
-    
+
     fn get(self, key: String) -> Result<Data>:
         return Ok(self.cache.get(key)?)
-    
+
     fn set(self, key: String, data: Data):
         self.cache.insert(key, data)
 ```
@@ -198,31 +209,36 @@ actor DataCache:
 
 #### Key Encapsulation Mechanisms (KEMs)
 
-**Classical (50%)**
+<!-- Classical (50%) -->
+
 - X25519: Elliptic-curve Diffie-Hellman key exchange
 - ECDH-P256: Standards-based elliptic curve cryptography
 - ChaCha20-Poly1305: AEAD authenticated encryption
 
-**Post-Quantum (50%)**
+<!-- Post-Quantum (50%) -->
+
 - ML-KEM (CRYSTALS-Kyber): Lattice-based KEM (NIST FIPS 203)
 - HQC (Hamming Quasi-Cyclic): Code-based KEM (NIST standard)
 - ML-KEM-Hybrid Mode: Parallel encryption combining Kyber and HQC
 
 #### Digital Signature Schemes
 
-**Classical (50%)**
+<!-- Classical (50%) -->
+
 - ECDSA (P-256): Elliptic curve digital signature algorithm
 - RSA-2048: Traditional signature scheme
 - Ed25519: Edwards curve digital signature
 
-**Post-Quantum (50%)**
+<!-- Post-Quantum (50%) -->
+
 - ML-DSA (CRYSTALS-Dilithium): Lattice-based signatures (NIST FIPS 204)
 - SLH-DSA (SPHINCS+): Hash-based signatures (NIST FIPS 205)
 - FN-DSA (FALCON): FFT-optimized NTRU lattice signatures
 
 #### Symmetric Encryption
 
-**Classical + Post-Quantum**
+<!-- Classical + Post-Quantum -->
+
 - AES-256: Quantum-safe with key size against Grover's algorithm
 - SHA-3/SHAKE256: Quantum-resistant hashing
 - Parallel classical/PQC operations for defense-in-depth
@@ -244,14 +260,14 @@ fn adaptive_encapsulate(pub_key: HybridPublicKey, context: CryptoContext) -> Res
         case CryptoContext::HighSecurity:
             // Enterprise: triple encryption (X25519 + ML-KEM + HQC)
             return triple_encapsulate(pub_key)?
-        
+
         case CryptoContext::Standard:
             // Standard: 50/50 classical + PQC
             let (ss_classical, ct_classical) = classical::x25519_encapsulate(pub_key.x25519)?
             let (ss_pqc, ct_pqc) = pqc::ml_kem::encapsulate(pub_key.ml_kem)?
             let combined = hybrid::combine_secrets(ss_classical, ss_pqc)?
             return Ok((combined, HybridCiphertext { ct_classical, ct_pqc }))
-        
+
         case CryptoContext::PerformanceCritical:
             // IoT: lazy-evaluated PQC
             let (ss, ct) = classical::x25519_encapsulate(pub_key.x25519)?
@@ -325,7 +341,7 @@ fn build_model() -> Sequential:
 fn train_model(model: Sequential, training_data: Dataset, epochs: int) -> Sequential:
     let optimizer = Adam { learning_rate: 0.001 }
     let loss_fn = CrossEntropy::new()
-    
+
     for epoch in 0..epochs:
         let batch_size = 32
         for batch in training_data.batch(batch_size):
@@ -333,14 +349,14 @@ fn train_model(model: Sequential, training_data: Dataset, epochs: int) -> Sequen
             let loss = loss_fn(predictions, batch.y)
             model.backward(loss)
             optimizer.step(model)
-    
+
     return model
 
 // Model inference with ONNX export
 fn export_and_inference(model: Sequential, test_data: &[f32]) -> Result<Vec<f32>>:
     // Export to ONNX format
     model.save_onnx("model.onnx")?
-    
+
     // Load and run with ONNX runtime
     let onnx_model = OnnxModel::load("model.onnx")?
     return onnx_model.predict(test_data)
@@ -352,14 +368,14 @@ fn auto_tune_hyperparameters(model: Sequential, train_data: Dataset) -> AutoTune
         batch_size: [16, 32, 64],
         hidden_units: [64, 128, 256],
     }
-    
+
     let best_config = AutoML::grid_search(
         &search_space,
         model,
         train_data,
         metric: "accuracy"
     )
-    
+
     return best_config
 ```
 
@@ -393,7 +409,7 @@ fn train_rl_agent() -> Result<Agent>:
         action_dim: env.action_space.n,
         hidden_layers: [128, 64],
     )
-    
+
     for episode in 0..1000:
         let mut state = env.reset()
         for step in 0..500:
@@ -404,22 +420,22 @@ fn train_rl_agent() -> Result<Agent>:
             state = next_state
             if done:
                 break
-    
+
     return Ok(agent)
 
 // Fine-tune LLM on custom data
 fn finetune_language_model(base_model: String, training_data: Dataset) -> Result<()>:
     let model = LanguageModel::load(base_model)?
     let tokenizer = Tokenizer::auto_load()?
-    
+
     let trainer = FineTuning::new()
         .learning_rate(2e-5)
         .batch_size(8)
         .epochs(3)
-    
+
     trainer.train(model, training_data, tokenizer)?
     model.save("finetuned_model")?
-    
+
     return Ok(())
 
 // Text generation with constraints
@@ -429,7 +445,7 @@ fn generate_text_constrained(
     temperature: f32,
 ) -> Result<String>:
     let model = GenerativeAI::load("gpt2")?
-    
+
     let generated = model.generate(
         prompt,
         max_tokens: max_length,
@@ -437,7 +453,7 @@ fn generate_text_constrained(
         top_p: 0.95,
         stop_sequences: ["\n\n"],
     )?
-    
+
     return Ok(generated)
 ```
 
@@ -470,44 +486,44 @@ fn simulate_circuit(circuit: QuantumCircuit) -> Result<QuantumResult>:
         shots: 1024,
         seed: 42,
     )?
-    
+
     return Ok(result)
 
 // VQE algorithm for quantum chemistry
 fn solve_molecular_energy(molecule: MoleculeData) -> Result<f32>:
     let ansatz = VariationalCircuit::new(num_qubits: 4, depth: 3)
-    
+
     let vqe = VQE::new()
         .ansatz(ansatz)
         .optimizer(Adam { learning_rate: 0.01 })
         .max_iterations(100)
-    
+
     let backend = IBMQuantum::new(api_token: env("IBM_QUANTUM_TOKEN"))?
     let energy = vqe.run(molecule, backend)?
-    
+
     return Ok(energy)
 
 // Hybrid classical-quantum algorithm
 fn hybrid_optimization(objective: fn(Vec<f32>) -> f32) -> Result<OptimizationResult>:
     let hybrid = HybridAlgorithm::new()
-    
+
     // Classical preprocessing
     let initial_params = preprocess_classical(objective)
-    
+
     // Quantum optimization loop
     for iteration in 0..100:
         // Quantum circuit evaluation
         let circuit = create_ansatz(initial_params)
         let backend = AzureQuantum::new()?
         let quantum_result = execute_quantum(circuit, backend)?
-        
+
         // Classical optimization
         let gradient = compute_gradient_classical(quantum_result)
         let updated_params = gradient_descent(initial_params, gradient)
-        
+
         if converged(updated_params, initial_params):
             return Ok(OptimizationResult { params: updated_params })
-    
+
     return Ok(OptimizationResult { params: initial_params })
 
 // QAOA for combinatorial optimization
@@ -516,10 +532,10 @@ fn solve_max_cut(graph: Graph) -> Result<f32>:
         .problem_hamiltonian(create_max_cut_hamiltonian(graph))
         .mixer_hamiltonian(create_mixer_hamiltonian(graph.num_vertices))
         .depth(3)
-    
+
     let backend = IBMQuantum::new(api_token: env("IBM_QUANTUM_TOKEN"))?
     let solution = qaoa.run(backend)?
-    
+
     return Ok(solution.energy)
 
 // Execute on real quantum hardware
@@ -530,17 +546,17 @@ fn run_on_hardware(circuit: QuantumCircuit) -> Result<QuantumResult>:
         group: "open",
         project: "main",
     )?
-    
+
     // Select least busy backend
     let device = backend.get_least_busy_device()?
-    
+
     // Run with error mitigation
     let result = device.run(
         circuit,
         shots: 1024,
         error_mitigation: ErrorMitigation::ZneExtrapolation,
     )?
-    
+
     return Ok(result)
 
 // Noisy simulation
@@ -548,10 +564,10 @@ fn simulate_with_noise(circuit: QuantumCircuit) -> Result<QuantumResult>:
     let noise_model = NoiseModel::new()
         .add_depolarizing_error(0.001, gates: [H, CNOT])
         .add_readout_error([0.01, 0.02])
-    
+
     let simulator = Simulator::new(backend: Backend::Aer)
         .with_noise_model(noise_model)
-    
+
     return simulator.run(circuit, shots: 1024)
 ```
 
@@ -573,24 +589,24 @@ use fusion::zkp::{
 fn prove_knowledge_of_discrete_log() -> Circuit:
     // Private input: secret (witness)
     let secret = CircuitVariable::private("secret")
-    
+
     // Public input: public_key = generator^secret
     let public_key = CircuitVariable::public("public_key")
     let generator = CircuitVariable::constant(9, field: 23)  // Example field
-    
+
     // Constraint: public_key = generator^secret
     let computed = generator.pow(secret)
     Constraint::equal(computed, public_key)
-    
+
     return Circuit::new()
 
 // Generate and verify proof
 fn generate_and_verify_zkp(secret: i64, generator: i64, public_key: i64) -> Result<(Proof, bool)>:
     let circuit = prove_knowledge_of_discrete_log()
-    
+
     // Trusted setup (only needed once per circuit)
     let (proving_key, verifying_key) = Groth16::setup(circuit)?
-    
+
     // Prove knowledge without revealing secret
     let prover = Prover::new(proving_key)
     let proof = prover.prove(
@@ -600,7 +616,7 @@ fn generate_and_verify_zkp(secret: i64, generator: i64, public_key: i64) -> Resu
             "generator": generator,
         },
     )?
-    
+
     // Verify proof
     let verifier = Verifier::new(verifying_key)
     let is_valid = verifier.verify(
@@ -610,7 +626,7 @@ fn generate_and_verify_zkp(secret: i64, generator: i64, public_key: i64) -> Resu
             "generator": generator,
         },
     )?
-    
+
     return Ok((proof, is_valid))
 
 // Bulletproofs for range proofs (no trusted setup)
@@ -619,39 +635,39 @@ fn prove_balance_range(balance: u64, max_balance: u64) -> Result<Proof>:
         .value(balance)
         .max_value(max_balance)
         .prove()?
-    
+
     return Ok(range_proof)
 
 // Plonky2 for recursive proofs
 fn create_recursive_proof_system() -> Result<()>:
     let circuit = Circuit::new()
         .add_constraint(...)  // Some constraint
-    
+
     let (pk, vk) = Plonky2::setup(circuit)?
-    
+
     // Inner proof
     let inner_proof = Plonky2::prove(pk, inner_input)?
-    
+
     // Outer proof that verifies inner proof
     let outer_circuit = Circuit::new()
         .add_verifier_constraint(vk, inner_proof)
-    
+
     let outer_proof = Plonky2::prove(outer_pk, outer_input)?
-    
+
     return Ok(())
 
 // Privacy-preserving computation: prove correct computation without revealing inputs
 @zkp_circuit
 fn verify_correct_sum(inputs: &[i64]) -> Circuit:
     let mut sum = CircuitVariable::constant(0, field: BigInt)
-    
+
     for input in inputs:
         let x = CircuitVariable::private("input")
         sum = sum + x
-    
+
     let total = CircuitVariable::public("total")
     Constraint::equal(sum, total)
-    
+
     return Circuit::new()
 ```
 
@@ -690,7 +706,7 @@ fn establish_secure_connection(user_id: String, device_id: String) -> Result<Ses
         user_id,
         factors: [Factor::Password, Factor::Biometric, Factor::HardwareToken],
     )?
-    
+
     // Step 2: Device posture validation
     let device_trust_score = iam.evaluate_device_posture(
         device_id,
@@ -702,29 +718,29 @@ fn establish_secure_connection(user_id: String, device_id: String) -> Result<Ses
             "encryption_enabled",
         ],
     )?
-    
+
     if device_trust_score < 0.8:
         return Err("Device security posture below threshold")
-    
+
     // Step 3: Continuous verification
     let policy = ZeroTrustPolicy::new()
         .require_mfa()
         .enforce_least_privilege()
         .enable_continuous_monitoring()
-    
+
     let session = policy.create_session(user_id, device_id)?
-    
+
     return Ok(session)
 
 // Microsegmentation with policy enforcement
 fn setup_microsegmentation(network_topology: &NetworkTopology) -> Result<()>:
     let policy_engine = PolicyEngine::new()
-    
+
     // Define security zones
     let internet_zone = SecurityZone::new("internet", risk_level: High)
     let application_zone = SecurityZone::new("applications", risk_level: Medium)
     let database_zone = SecurityZone::new("databases", risk_level: Critical)
-    
+
     // Define traffic policies between zones
     let internet_to_app = TrafficPolicy::new()
         .source(internet_zone)
@@ -732,17 +748,17 @@ fn setup_microsegmentation(network_topology: &NetworkTopology) -> Result<()>:
         .allow_ports([80, 443])
         .require_tls(version: "1.3")
         .rate_limit(requests_per_second: 1000)
-    
+
     let app_to_db = TrafficPolicy::new()
         .source(application_zone)
         .destination(database_zone)
         .allow_ports([3306, 5432])  // MySQL, PostgreSQL
         .require_mutual_tls()
         .enable_encryption(algorithm: AES_256_GCM)
-    
+
     // Enforce policies
     policy_engine.apply([internet_to_app, app_to_db])?
-    
+
     return Ok(())
 
 // Secrets management with automatic rotation
@@ -751,20 +767,20 @@ fn initialize_secrets_vault() -> Result<SecretsVault>:
         .backend(VaultBackend::AWS_SecretsManager)
         .encryption(cipher: "AES-256-GCM")
         .enable_audit_logging()
-    
+
     // Define rotation policies
     vault.set_rotation_policy(
         secret_type: "database_credentials",
         rotation_interval: Duration::days(30),
         rotation_strategy: RotationStrategy::BlueGreen,
     )?
-    
+
     vault.set_rotation_policy(
         secret_type: "api_keys",
         rotation_interval: Duration::days(90),
         rotation_strategy: RotationStrategy::Gradual,
     )?
-    
+
     return Ok(vault)
 
 // Application security scanning (SAST/DAST/SCA)
@@ -780,19 +796,19 @@ fn run_security_scans(codebase_path: String) -> Result<SecurityReport>:
             "hardcoded_secrets",
         ],
     )?
-    
+
     // Software composition analysis (open source vulnerabilities)
     let sca_results = SCA::analyze(
         codebase_path,
         databases: [NVD, GitHub_Advisories, Snyk],
     )?
-    
+
     // Generate report
     let report = SecurityReport::new()
         .add_sast_findings(sast_results)
         .add_sca_findings(sca_results)
         .prioritize_by_severity()
-    
+
     return Ok(report)
 
 // Input validation and sanitization
@@ -805,7 +821,7 @@ fn process_user_input(input: String, allowed_charset: String) -> Result<String>:
             Regex::new("^<script")?,  // XSS prevention
             Regex::new("(?i:union|select|insert|update|delete)")?,  // SQLi prevention
         ])
-    
+
     return sanitizer.validate_and_sanitize(input)
 
 // SIEM & Behavioral Analytics
@@ -814,10 +830,10 @@ async fn monitor_security_events() -> Result<()>:
     let analytics = BehavioralAnalytics::new()
         .baseline_period(Duration::days(30))
         .anomaly_threshold(2.5)  // 2.5 sigma
-    
+
     loop {
         let events = siem.collect_events(timeout: Duration::seconds(5)).await?
-        
+
         for event in events:
             // Behavioral analysis
             if analytics.is_anomalous(&event)?:
@@ -827,72 +843,79 @@ async fn monitor_security_events() -> Result<()>:
                     event: event,
                     reason: "Behavioral anomaly detected",
                 )
-                
+
                 // Automated response
                 trigger_incident_response(alert).await?
-        
+
         // Update baseline
         analytics.update_baseline(events)?
 
 // System hardening with compliance checking
 fn harden_system(system: &mut SystemConfiguration) -> Result<HardeningReport>:
     let hardener = SystemHardening::new()
-    
+
     // Apply NIST guidelines
     hardener.apply_compliance_framework(NIST_CNSM_2_0)?
-    
+
     // CIS Benchmark hardening
     hardener.apply_cis_benchmark(
         benchmark: "CIS_Ubuntu_Linux_22.04_Benchmark",
         level: BenchmarkLevel::Level2,
     )?
-    
+
     // FIPS 140-2 compliance
     system.enable_fips_mode()?
     system.disable_weak_ciphers()?
     system.enforce_strong_key_generation()?
-    
+
     // Generate compliance report
     let report = hardener.verify_compliance(system)?
-    
+
     return Ok(report)
 ```
 
 ### 6. Additional Core Libraries
 
 **Data Structures & Collections** (`fusion::collections`)
+
 - Vectors, arrays, hash maps, sets, queues, stacks
 - Custom allocators with arena support
 - Concurrent data structures for multi-threading
 
 **Async Runtime** (`fusion::async`)
+
 - Tokio-inspired async/await execution
 - Green threads and lightweight tasks
 - Channel-based message passing
 
 **Web Framework** (`fusion::web`)
+
 - HTTP/HTTPS server and client
 - WebSocket support
 - REST API patterns with automatic serialization
 - DOM manipulation for browser-side execution
 
 **Networking** (`fusion::net`)
+
 - TCP/UDP sockets
 - TLS/mTLS connections
 - DNS resolution
 - Load balancing primitives
 
 **File System & I/O** (`fusion::io`)
+
 - File operations with automatic resource management
 - Streaming I/O for large datasets
 - Compression (zlib, brotli, lz4)
 
 **Serialization** (`fusion::serde`)
+
 - JSON, MessagePack, Protocol Buffers, CBOR
 - Automatic derive macros for structures
 - Binary serialization with schema versioning
 
 **Math & Numerics** (`fusion::math`)
+
 - Linear algebra (BLAS, LAPACK wrappers)
 - Statistical distributions
 - Optimization algorithms (gradient descent, conjugate gradient)
@@ -920,6 +943,7 @@ Concrete Syntax Tree (CST)
 Abstract Syntax Tree (AST)
     ↓
 [SEMANTIC ANALYSIS]
+
   - Type checking
   - Scope resolution
   - Borrow checking (if ownership mode)
@@ -928,6 +952,7 @@ Abstract Syntax Tree (AST)
 Annotated AST (with type information)
     ↓
 [MIDDLE-END OPTIMIZATION]
+
   - Constant folding
   - Dead code elimination
   - Loop unrolling
@@ -940,6 +965,7 @@ Optimized AST
 LLVM Intermediate Representation
     ↓
 [LLVM PASSES]
+
   - Function inlining
   - Memory optimizations
   - Vectorization
@@ -961,23 +987,23 @@ Optimized LLVM IR
 const LLVM_CONFIG = {
     // Optimization levels: None, Less, Default, Aggressive
     opt_level: OptimizationLevel::Default,
-    
+
     // Link-time optimization
     enable_lto: true,
     lto_mode: LTOMode::Full,
-    
+
     // CPU-specific optimizations
     target_cpu: "native",
     target_features: "+avx2,+aes",  // Enable AES-NI, AVX2
-    
+
     // Hardware acceleration
     enable_simd: true,
     enable_vectorization: true,
-    
+
     // Security options
     enable_fortify_source: true,
     stack_protector: StackProtector::All,
-    
+
     // Debug information
     emit_debug_info: true,
     debug_format: DebugFormat::DWARF,
@@ -987,29 +1013,32 @@ const LLVM_CONFIG = {
 fn use_llvm_intrinsics():
     // AES-NI intrinsics
     llvm::aes_encrypt_intrinsic(plaintext, key, round_key)
-    
+
     // Constant-time comparison
     llvm::ct_select(a, b, condition)
-    
+
     // Cryptographic operations
     llvm::bitshift_circular_left(x, n)
 ```
 
 ### Target Platform Support
 
-**Native Compilation**
+<!-- Native Compilation -->
+
 - x86-64: Desktop/server Linux, macOS, Windows
 - ARM64: Apple Silicon, Raspberry Pi, mobile SoCs
 - RISC-V: Open instruction set architecture
 - PowerPC: Enterprise servers
 - s390x: IBM mainframes
 
-**WebAssembly**
+<!-- WebAssembly -->
+
 - Binary format for browser execution
 - Node.js WASM runtime
 - WASI (WebAssembly System Interface) for system access
 
-**Embedded Systems**
+<!-- Embedded Systems -->
+
 - Bare-metal ARM Cortex-M (M0, M3, M4, M7)
 - RISC-V microcontrollers
 - Custom RTOS integration
@@ -1025,32 +1054,32 @@ fn use_llvm_intrinsics():
 struct GarbageCollector:
     young_generation: Arena
     old_generation: Arena
-    
+
     constant_time_enabled: bool
     collection_strategy: CollectionStrategy
-    
+
     fn collect(self) -> Result<()>:
         // Mark phase (constant-time to prevent timing leaks)
         if self.constant_time_enabled:
             self.mark_constant_time()
         else:
             self.mark_standard()
-        
+
         // Sweep phase
         self.sweep()
-        
+
         return Ok(())
 
 // Memory safety with optional ownership
 struct MemoryManager:
     gc: GarbageCollector
     borrow_checker: BorrowChecker
-    
+
     @manual_memory
     fn allocate_owned(size: usize) -> owned *mut u8:
         // RAII: automatic cleanup at scope end
         return unsafe { libc::malloc(size) }
-    
+
     @gc_managed
     fn allocate_gc(size: usize) -> *mut u8:
         // GC-tracked allocation
@@ -1064,7 +1093,7 @@ struct MemoryManager:
 struct TypeChecker:
     symbol_table: SymbolTable
     type_constraints: Vec<TypeConstraint>
-    
+
     fn check_expression(expr: Expression) -> Result<Type>:
         match expr:
             case IntLiteral(value):
@@ -1081,7 +1110,7 @@ struct BorrowChecker:
     borrowed_values: Set<ValueId>
     mutable_borrows: Set<ValueId>
     immutable_borrows: Set<ValueId>
-    
+
     fn check_borrow(value_id: ValueId, is_mutable: bool) -> Result<()>:
         if is_mutable:
             if self.mutable_borrows.contains(value_id):
@@ -1093,7 +1122,7 @@ struct BorrowChecker:
             if self.mutable_borrows.contains(value_id):
                 return Err("Value is mutably borrowed")
             self.immutable_borrows.insert(value_id)
-        
+
         return Ok(())
 ```
 
@@ -1105,7 +1134,7 @@ struct FusionLanguageServer:
     workspace: Workspace
     index: SymbolIndex
     type_checker: TypeChecker
-    
+
     async fn on_initialize(params: InitializeParams) -> Result<InitializeResult>:
         return Ok(InitializeResult {
             capabilities: ServerCapabilities {
@@ -1127,17 +1156,17 @@ struct FusionLanguageServer:
                 }),
             },
         })
-    
+
     async fn on_completion(params: CompletionParams) -> Result<Vec<CompletionItem>>:
         let position = params.text_document_position_params.position
         let document = self.workspace.get_document(params.text_document)?
-        
+
         let completions = self.index.get_completions_at_position(
             document, position
         )?
-        
+
         return Ok(completions)
-    
+
     async fn on_definition(params: DefinitionParams) -> Result<Location>:
         let position = params.text_document_position_params.position
         let symbol = self.workspace.get_symbol_at(position)?
@@ -1148,33 +1177,41 @@ struct FusionLanguageServer:
 
 ```fusion
 // Unit testing
+
 #[test]
+
 fn test_hybrid_kdf():
     let ss1 = X25519::shared_secret(...)
     let ss2 = ML_KEM::shared_secret(...)
     let combined = hybrid::kdf(ss1, ss2)
-    
+
     assert_eq!(combined.len(), 32)
 
 // Benchmark testing
+
 #[bench]
+
 fn bench_ml_kem_encapsulate():
     let pub_key = ml_kem::generate_public_key()
-    
+
     benchmark(|| {
         ml_kem::encapsulate(pub_key)
     })
 
 // Property-based testing
+
 #[property_test]
+
 fn kdf_deterministic(seed: [u8; 32]):
     let result1 = hybrid::kdf_from_seed(seed)
     let result2 = hybrid::kdf_from_seed(seed)
-    
+
     assert_eq!(result1, result2)
 
 // Fuzzing
+
 #[fuzz_target]
+
 fn fuzz_parse_message(data: &[u8]):
     if let Ok(msg) = Message::parse(data):
         let _ = msg.validate()
@@ -1207,7 +1244,8 @@ $ fusion search cryptography
 
 ### 6. Build System (Bazel)
 
-```bazel
+```
+
 # BUILD file for Fusion project
 
 fusion_binary(
@@ -1247,7 +1285,8 @@ fusion_wasm_binary(
 
 ### Phase 1: Foundation & Core Language (Months 1-6)
 
-**Deliverables:**
+<!-- Deliverables: -->
+
 - Language specification (complete syntax and semantics)
 - ANTLR grammar for lexer and parser
 - Basic LLVM IR generation for x86-64
@@ -1256,7 +1295,8 @@ fusion_wasm_binary(
 - Command-line compiler (fusionc)
 - Basic error handling and diagnostics
 
-**Key Milestones:**
+<!-- Key Milestones: -->
+
 - Month 1: Grammar completed, parser generation automated
 - Month 2: Type system and AST transformation operational
 - Month 3: LLVM IR generation for basic constructs
@@ -1264,14 +1304,16 @@ fusion_wasm_binary(
 - Month 5: Functions and variable scoping
 - Month 6: Beta release with Hello World examples
 
-**Success Criteria:**
+<!-- Success Criteria: -->
+
 - Compiler compiles simple Fusion programs to native binaries
 - Performance within 5% of C for arithmetic-heavy code
 - Clear error messages with line/column information
 
 ### Phase 2: Advanced Language Features & Cryptography (Months 7-12)
 
-**Deliverables:**
+<!-- Deliverables: -->
+
 - Ownership system and borrow checker (optional @manual_memory mode)
 - Generic types and trait system
 - Cryptography module (hybrid classical/PQC)
@@ -1282,7 +1324,8 @@ fusion_wasm_binary(
 - Web framework basics (HTTP, WebSocket)
 - LSP server for IDE support (VS Code, IntelliJ)
 
-**Key Milestones:**
+<!-- Key Milestones: -->
+
 - Month 7: Ownership system design and implementation
 - Month 8: Trait/interface system complete
 - Month 9: Hybrid cryptography module fully functional
@@ -1290,14 +1333,16 @@ fusion_wasm_binary(
 - Month 11: LSP server MVP
 - Month 12: Web framework alpha
 
-**Success Criteria:**
+<!-- Success Criteria: -->
+
 - TLS 1.3 connection using hybrid cryptography
 - WebAssembly module runs in browser
 - IDE autocomplete and go-to-definition working
 
 ### Phase 3: AI/ML & Quantum Computing (Months 13-18)
 
-**Deliverables:**
+<!-- Deliverables: -->
+
 - Machine learning library with neural networks
   - Dense, Conv2D, LSTM layers
   - Adam, SGD optimizers
@@ -1312,7 +1357,8 @@ fusion_wasm_binary(
 - Expanded standard library
 - Production-ready package manager
 
-**Key Milestones:**
+<!-- Key Milestones: -->
+
 - Month 13: Neural network building blocks
 - Month 14: GPU acceleration via CUDA/OpenCL
 - Month 15: Quantum circuit simulation
@@ -1320,14 +1366,16 @@ fusion_wasm_binary(
 - Month 17: Package manager infrastructure
 - Month 18: Public package registry launch
 
-**Success Criteria:**
+<!-- Success Criteria: -->
+
 - Train image classifier on MNIST with 99%+ accuracy
 - Execute quantum circuit on real quantum hardware
 - 50+ community packages published to registry
 
 ### Phase 4: Security & Production Hardening (Months 19-24)
 
-**Deliverables:**
+<!-- Deliverables: -->
+
 - Zero-knowledge proof library (Groth16, Plonky2, Bulletproofs)
 - Zero-trust security architecture
   - IAM integration
@@ -1345,7 +1393,8 @@ fusion_wasm_binary(
 - Performance profiler and benchmarking tools
 - Comprehensive documentation
 
-**Key Milestones:**
+<!-- Key Milestones: -->
+
 - Month 19: ZKP circuit compiler
 - Month 20: Zero-trust IAM implementation
 - Month 21: Security scanning framework
@@ -1353,7 +1402,8 @@ fusion_wasm_binary(
 - Month 23: Compliance certification preparation
 - Month 24: Production release (v1.0)
 
-**Success Criteria:**
+<!-- Success Criteria: -->
+
 - FIPS 140-2 validation (cryptographic module)
 - NSA CNSM 2.0 compliance verification
 - 100+ enterprise deployments
@@ -1361,7 +1411,8 @@ fusion_wasm_binary(
 
 ### Phase 5: Ecosystem Maturation (Months 25+)
 
-**Ongoing Activities:**
+<!-- Ongoing Activities: -->
+
 - Community contribution guidelines
 - Release management (monthly stable releases)
 - Security advisory process
@@ -1397,19 +1448,19 @@ use codegen::LLVMCodeGenerator;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    
+
     if args.len() < 2 {
         eprintln!("Usage: fusionc <input.fu> [-o <output>] [options]");
         std::process::exit(1);
     }
-    
+
     let input_file = &args[1];
     let output_file = if args.len() > 3 && args[2] == "-o" {
         &args[3]
     } else {
         "a.out"
     };
-    
+
     match compile_fusion(input_file, output_file) {
         Ok(_) => println!("Compiled successfully: {}", output_file),
         Err(e) => {
@@ -1423,32 +1474,32 @@ fn compile_fusion(input_file: &str, output_file: &str) -> Result<(), String> {
     // Step 1: Lexing (Tokenization)
     let input_stream = FileStream::new(input_file)
         .map_err(|e| format!("Failed to read file: {}", e))?;
-    
+
     let mut lexer = FusionLexer::new(Box::new(input_stream));
     let token_stream = CommonTokenFactory::new();
     lexer.set_token_factory(token_stream);
-    
+
     let token_stream = antlr_rust::token_stream::CommonTokenStream::new(Box::new(lexer));
-    
+
     // Step 2: Parsing (AST Generation)
     let mut parser = FusionParser::new(Box::new(token_stream));
     let parse_tree = parser.program()
         .map_err(|e| format!("Parse error: {}", e))?;
-    
+
     // Step 3: Semantic Analysis
     let mut analyzer = SemanticAnalyzer::new();
     let ast = analyzer.analyze(parse_tree)
         .map_err(|e| format!("Semantic error: {}", e))?;
-    
+
     // Step 4: Code Generation (LLVM IR)
     let mut codegen = LLVMCodeGenerator::new();
     let llvm_module = codegen.generate(&ast)
         .map_err(|e| format!("Code generation error: {}", e))?;
-    
+
     // Step 5: LLVM Optimization and Link
     codegen.compile_to_binary(&llvm_module, output_file)
         .map_err(|e| format!("Compilation error: {}", e))?;
-    
+
     Ok(())
 }
 ```
@@ -1461,7 +1512,7 @@ grammar Fusion;
 // Top-level program structure
 program: declaration* EOF;
 
-declaration: 
+declaration:
     functionDecl
     | classDecl
     | traitDecl
@@ -1619,6 +1670,7 @@ COMMENT: '//' ~[\r\n]* -> skip;
 // src/ast/mod.rs - Abstract Syntax Tree Definitions
 
 #[derive(Debug, Clone)]
+
 pub enum Declaration {
     Function {
         name: String,
@@ -1643,18 +1695,21 @@ pub enum Declaration {
 }
 
 #[derive(Debug, Clone)]
+
 pub struct Parameter {
     pub name: String,
     pub param_type: Type,
 }
 
 #[derive(Debug, Clone)]
+
 pub struct Field {
     pub name: String,
     pub field_type: Type,
 }
 
 #[derive(Debug, Clone)]
+
 pub struct MethodSignature {
     pub name: String,
     pub params: Vec<Parameter>,
@@ -1662,11 +1717,13 @@ pub struct MethodSignature {
 }
 
 #[derive(Debug, Clone)]
+
 pub struct Block {
     pub statements: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]
+
 pub enum Statement {
     VariableDeclaration {
         name: String,
@@ -1698,6 +1755,7 @@ pub enum Statement {
 }
 
 #[derive(Debug, Clone)]
+
 pub enum Expression {
     Literal(Literal),
     Variable(String),
@@ -1728,6 +1786,7 @@ pub enum Expression {
 }
 
 #[derive(Debug, Clone)]
+
 pub enum Literal {
     Integer(i64),
     Float(f64),
@@ -1736,6 +1795,7 @@ pub enum Literal {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+
 pub enum BinaryOp {
     Add,
     Subtract,
@@ -1753,12 +1813,14 @@ pub enum BinaryOp {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+
 pub enum UnaryOp {
     Negate,
     Not,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+
 pub enum Type {
     Integer,
     Float,
@@ -1792,6 +1854,7 @@ struct SymbolTable {
 }
 
 #[derive(Clone, Debug)]
+
 struct Symbol {
     name: String,
     symbol_type: Type,
@@ -1810,7 +1873,7 @@ impl SemanticAnalyzer {
         for decl in declarations {
             self.check_declaration(&decl)?;
         }
-        
+
         if self.type_errors.is_empty() {
             Ok(declarations)
         } else {
@@ -1822,7 +1885,7 @@ impl SemanticAnalyzer {
         match decl {
             Declaration::Function { name, params, return_type, body } => {
                 self.symbol_table.push_scope();
-                
+
                 // Register parameters
                 for param in params {
                     self.symbol_table.define(
@@ -1834,16 +1897,16 @@ impl SemanticAnalyzer {
                         },
                     );
                 }
-                
+
                 // Type-check function body
                 self.check_block(body)?;
-                
+
                 self.symbol_table.pop_scope();
                 Ok(())
             }
             Declaration::Class { name, fields, methods } => {
                 self.symbol_table.push_scope();
-                
+
                 // Register fields
                 for field in fields {
                     self.symbol_table.define(
@@ -1855,12 +1918,12 @@ impl SemanticAnalyzer {
                         },
                     );
                 }
-                
+
                 // Check methods
                 for method in methods {
                     self.check_declaration(method)?;
                 }
-                
+
                 self.symbol_table.pop_scope();
                 Ok(())
             }
@@ -1879,7 +1942,7 @@ impl SemanticAnalyzer {
         match stmt {
             Statement::VariableDeclaration { name, var_type, initializer } => {
                 let expr_type = self.check_expression(initializer)?;
-                
+
                 if let Some(declared_type) = var_type {
                     if !self.types_compatible(&expr_type, declared_type) {
                         self.type_errors.push(format!(
@@ -1888,7 +1951,7 @@ impl SemanticAnalyzer {
                         ));
                     }
                 }
-                
+
                 self.symbol_table.define(
                     name.clone(),
                     Symbol {
@@ -1897,7 +1960,7 @@ impl SemanticAnalyzer {
                         is_mutable: true,
                     },
                 );
-                
+
                 Ok(expr_type)
             }
             Statement::If { condition, then_block, else_block } => {
@@ -1905,12 +1968,12 @@ impl SemanticAnalyzer {
                 if !matches!(cond_type, Type::Boolean) {
                     self.type_errors.push("If condition must be boolean".to_string());
                 }
-                
+
                 self.check_block(then_block)?;
                 if let Some(else_b) = else_block {
                     self.check_block(else_b)?;
                 }
-                
+
                 Ok(Type::Boolean)
             }
             _ => Ok(Type::Boolean),
@@ -1928,7 +1991,7 @@ impl SemanticAnalyzer {
             Expression::BinaryOp { left, op, right } => {
                 let left_type = self.check_expression(left)?;
                 let right_type = self.check_expression(right)?;
-                
+
                 self.check_binary_operation(&left_type, op, &right_type)
             }
             _ => Ok(Type::Boolean),
@@ -2011,7 +2074,7 @@ impl LLVMCodeGenerator {
         let context = llvm::Context::new();
         let module = Module::new("fusion_module", &context);
         let builder = Builder::new(&context);
-        
+
         LLVMCodeGenerator {
             context,
             module,
@@ -2023,7 +2086,7 @@ impl LLVMCodeGenerator {
         for decl in declarations {
             self.generate_declaration(decl)?;
         }
-        
+
         Ok(self.module.clone())
     }
 
@@ -2035,22 +2098,22 @@ impl LLVMCodeGenerator {
                     .iter()
                     .map(|p| self.type_to_llvm(&p.param_type))
                     .collect::<Result<_, _>>()?;
-                
+
                 let return_type_llvm = return_type
                     .as_ref()
                     .map(|t| self.type_to_llvm(t))
                     .unwrap_or_else(|| Ok(VoidType::new()))?;
-                
+
                 // Create function
                 let fn_type = FunctionType::new(&param_types, return_type_llvm);
                 let function = self.module.add_function(name, fn_type);
-                
+
                 // Generate function body
                 let entry_block = function.append_basic_block("entry");
                 self.builder.position_at_end(entry_block);
-                
+
                 self.generate_block(body)?;
-                
+
                 Ok(())
             }
             _ => Ok(()),
@@ -2085,7 +2148,7 @@ impl LLVMCodeGenerator {
             Expression::BinaryOp { left, op, right } => {
                 let left_val = self.generate_expression(left)?;
                 let right_val = self.generate_expression(right)?;
-                
+
                 match op {
                     BinaryOp::Add => Ok(self.builder.build_add(left_val, right_val)),
                     BinaryOp::Subtract => Ok(self.builder.build_sub(left_val, right_val)),
@@ -2158,10 +2221,10 @@ pub struct HybridSignature {
 pub fn generate_hybrid_keypair() -> Result<HybridKeypair, String> {
     // Generate classical keypair (X25519)
     let classical_key = generate_x25519_keypair()?;
-    
+
     // Generate post-quantum keypair (ML-KEM/Kyber)
     let pqc_key = generate_ml_kem_keypair()?;
-    
+
     Ok(HybridKeypair {
         classical_key,
         pqc_key,
@@ -2186,14 +2249,14 @@ fn generate_ml_kem_keypair() -> Result<PQCKeypair, String> {
 
 pub fn hybrid_kdf(ss_classical: &[u8], ss_pqc: &[u8]) -> Result<Vec<u8>, String> {
     let mut hasher = Sha3_256::new();
-    
+
     // Combine both shared secrets
     hasher.update(b"classical");
     hasher.update(ss_classical);
-    
+
     hasher.update(b"pqc");
     hasher.update(ss_pqc);
-    
+
     let result = hasher.finalize();
     Ok(result.to_vec())
 }
@@ -2205,10 +2268,10 @@ pub fn hybrid_sign(
 ) -> Result<HybridSignature, String> {
     // Classical signature (ECDSA-P256)
     let classical_sig = ecdsa_sign(message, classical_sk)?;
-    
+
     // Post-quantum signature (ML-DSA)
     let pqc_sig = ml_dsa_sign(message, pqc_sk)?;
-    
+
     Ok(HybridSignature {
         classical_sig,
         pqc_sig,
@@ -2223,10 +2286,10 @@ pub fn hybrid_verify(
 ) -> Result<bool, String> {
     // Verify classical signature
     let classical_valid = ecdsa_verify(message, &sig.classical_sig, classical_pk)?;
-    
+
     // Verify post-quantum signature
     let pqc_valid = ml_dsa_verify(message, &sig.pqc_sig, pqc_pk)?;
-    
+
     // Both must be valid
     Ok(classical_valid && pqc_valid)
 }
@@ -2298,7 +2361,8 @@ With post-quantum cryptography as a first-class feature, integrated machine lear
 
 ---
 
-**Document Version Control:**
+<!-- Document Version Control: -->
+
 - v1.0 (November 8, 2025): Initial complete design brief compilation
 - Status: Ready for Phase 1 implementation
 - Next Review: After Phase 1 completion

@@ -1,8 +1,8 @@
 # WebAssembly Backend Implementation Plan
 
-**Date**: 2025-12-07  
-**Phase**: Phase 3 - WebAssembly Backend  
-**Status**: ⏳ In Progress  
+**Date**: 2025-12-07
+**Phase**: Phase 3 - WebAssembly Backend
+**Status**: ⏳ In Progress
 **Priority**: High (Deployment flexibility)
 
 ---
@@ -25,7 +25,7 @@ Implement a WebAssembly (WASM) code generation backend for Fusion, enabling comp
 
 ### Code Generation Pipeline
 
-```
+```text
 Fusion Source Code
     ↓ Parser
 AST (Abstract Syntax Tree)
@@ -42,7 +42,7 @@ Safe AST
 
 ### Module Structure
 
-```
+```text
 src/
 └── wasm/
     ├── mod.rs           # Module exports
@@ -70,11 +70,13 @@ src/
 ### Memory Model
 
 **Linear Memory**:
+
 - Single contiguous array of bytes
 - Grow dynamically with `memory.grow`
 - Accessed via `i32.load` / `i32.store`
 
 **Stack**:
+
 - WASM operand stack
 - Function-local variables
 - No explicit stack management needed
@@ -88,6 +90,7 @@ src/
 **Goal**: Generate WASM for simple functions
 
 **Example**:
+
 ```fusion
 fn add(a: int, b: int) -> int {
     return a + b;
@@ -95,6 +98,7 @@ fn add(a: int, b: int) -> int {
 ```
 
 **WASM Output** (WAT format):
+
 ```wasm
 (module
   (func $add (param $a i64) (param $b i64) (result i64)
@@ -107,6 +111,7 @@ fn add(a: int, b: int) -> int {
 ```
 
 **Implementation**:
+
 - WASM module builder
 - Function code generation
 - Basic arithmetic operations
@@ -117,11 +122,13 @@ fn add(a: int, b: int) -> int {
 **Goal**: Handle if/else, loops, return
 
 **WASM Instructions**:
+
 - `if` / `else` / `end`
 - `block` / `loop` / `br` / `br_if`
 - `return`
 
 **Example**:
+
 ```fusion
 fn max(a: int, b: int) -> int {
     if a > b {
@@ -137,12 +144,14 @@ fn max(a: int, b: int) -> int {
 **Goal**: Heap allocation and strings
 
 **Components**:
+
 - Memory section definition
 - `malloc` / `free` implementation
 - String handling
 - Array/Vector support
 
 **Example**:
+
 ```fusion
 fn create_string() -> string {
     return "Hello, WASM!";
@@ -154,6 +163,7 @@ fn create_string() -> string {
 **Goal**: Function calls and imports
 
 **WASM Features**:
+
 - Call table
 - Imported functions
 - Exported functions
@@ -164,6 +174,7 @@ fn create_string() -> string {
 **Goal**: CLI flag and build system
 
 **Updates**:
+
 - Add `--target wasm` flag
 - Binary output to `.wasm` file
 - Optional WAT text output
@@ -208,12 +219,15 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
+
 # WebAssembly code generation
+
 wasm-encoder = "0.219"  # Build WASM binary format
 wasmparser = "0.219"    # Parse and validate WASM
 ```
 
 Optional (for text format):
+
 ```toml
 wat = "1.216"  # Convert WAT ↔ WASM
 ```
@@ -224,11 +238,14 @@ wat = "1.216"  # Convert WAT ↔ WASM
 
 ### Compilation
 
-```bash
+```
+
 # Compile to WASM
+
 fusion_lang -i program.fu --target wasm -o program.wasm
 
 # Compile to WAT (text format)
+
 fusion_lang -i program.fu --target wasm --emit wat -o program.wat
 ```
 
@@ -268,20 +285,22 @@ WebAssembly.instantiate(wasmBuffer).then(obj => {
 
 ### Unit Tests
 
-```rust
+```
+
 #[test]
+
 fn test_wasm_simple_function() {
     let source = r#"
         fn add(a: int, b: int) -> int {
             return a + b;
         }
     "#;
-    
+
     let wasm = compile_to_wasm(source).unwrap();
-    
+
     // Validate WASM module
     assert!(wasmparser::validate(&wasm).is_ok());
-    
+
     // Execute and test
     let result = execute_wasm(&wasm, "add", &[5, 3]).unwrap();
     assert_eq!(result, 8);
@@ -291,6 +310,7 @@ fn test_wasm_simple_function() {
 ### Integration Tests
 
 **Test Programs**:
+
 1. Arithmetic operations
 2. Control flow (if/else)
 3. Loops (while, for)
@@ -320,12 +340,14 @@ fn test_wasm_simple_function() {
 ## WASI Integration (Future)
 
 **WASI** (WebAssembly System Interface) for:
+
 - File I/O
 - Environment variables
 - Command-line arguments
 - Network sockets
 
 **Example**:
+
 ```fusion
 extern fn fd_write(fd: int, iovs: int, iovs_len: int, nwritten: int) -> int;
 
@@ -373,5 +395,5 @@ fn println(msg: string) {
 
 ---
 
-**Status**: ⏳ Ready to Implement  
+**Status**: ⏳ Ready to Implement
 **Next Step**: Add dependencies and create module structure

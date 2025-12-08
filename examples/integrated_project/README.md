@@ -1,7 +1,7 @@
 # Integrated Project - ML + Package Manager Demo
 
-**Project**: MNIST Digit Classifier  
-**Purpose**: Demonstrate Fusion's package management + ML capabilities  
+**Project**: MNIST Digit Classifier
+**Purpose**: Demonstrate Fusion's package management + ML capabilities
 **Status**: ✅ Complete integration example
 
 ---
@@ -9,6 +9,7 @@
 ## Overview
 
 This project demonstrates:
+
 - Using `fusion.toml` for dependency management
 - Building ML models with Fusion's ML library
 - Package-based project structure
@@ -18,7 +19,7 @@ This project demonstrates:
 
 ## Project Structure
 
-```
+```text
 ml-mnist-classifier/
 ├── fusion.toml           # Package manifest
 ├── fusion.lock           # Dependency lock file
@@ -51,34 +52,47 @@ data-utils = "^0.1"       # Data loading utilities
 
 ### Using Package Manager
 
-```bash
+```
+
 # Initialize project (if starting from scratch)
+
 fusion new ml-mnist-classifier
 cd ml-mnist-classifier
 
 # Add dependencies
+
 fusion add collections
 fusion add fusion-ml
 fusion add data-utils
 
 # Install dependencies
+
 fusion build
 
-# This will:
+# This will
+
 # 1. Read fusion.toml
+
 # 2. Resolve dependencies
+
 # 3. Download packages
+
 # 4. Generate fusion.lock
+
 # 5. Compile with dependencies
+
 ```
 
 ### Manual Build
 
-```bash
+```
+
 # Direct compilation
+
 fusion_lang -i src/main.fu -o mnist_classifier
 
 # Run
+
 ./mnist_classifier
 ```
 
@@ -86,11 +100,14 @@ fusion_lang -i src/main.fu -o mnist_classifier
 
 ## Running
 
-```bash
+```
+
 # Run with package manager
+
 fusion run
 
 # Or directly
+
 ./mnist_classifier
 ```
 
@@ -110,21 +127,21 @@ fn main() -> int {
     // Load MNIST data
     let mut loader = MnistLoader::new("data/mnist");
     let train_data = loader.load_training();
-    
+
     // Create CNN model
     let mut model = create_mnist_cnn();
-    
+
     // Create optimizer
     let mut optimizer = AdamOptimizer::new(0.001);
-    
+
     // Train
     train_model(model, train_data, optimizer, 10);
-    
+
     // Evaluate
     let accuracy = evaluate_model(model, loader.load_test());
-    
+
     println("Final accuracy: " + accuracy + "%");
-    
+
     return 0;
 }
 ```
@@ -134,6 +151,7 @@ fn main() -> int {
 ## Features Demonstrated
 
 ### Package Management
+
 - ✅ Dependency declaration
 - ✅ Semantic versioning (^1.0, ~0.5)
 - ✅ Lock file generation
@@ -141,6 +159,7 @@ fn main() -> int {
 - ✅ Cached package downloads
 
 ### ML Capabilities
+
 - ✅ Tensor operations
 - ✅ Convolutional layers (Conv2D)
 - ✅ Pooling layers (MaxPool2D)
@@ -152,6 +171,7 @@ fn main() -> int {
 - ✅ Data loading
 
 ### Development Workflow
+
 - ✅ Project initialization (`fusion new`)
 - ✅ Dependency management (`fusion add`)
 - ✅ Building (`fusion build`)
@@ -163,7 +183,7 @@ fn main() -> int {
 
 ## Expected Output
 
-```
+```text
 ========================================
 MNIST CNN Classifier
 ========================================
@@ -237,18 +257,21 @@ dependencies = ["collections"]
 ## Benefits of This Approach
 
 ### For Developers
+
 - **Easy dependency management** - No manual downloads
 - **Reproducible builds** - Lock file ensures consistency
 - **Version control** - Semantic versioning support
 - **Fast iteration** - Cached dependencies
 
 ### For Teams
+
 - **Consistent environments** - Everyone uses same versions
 - **Easy onboarding** - Just `fusion build`
 - **Dependency tracking** - Clear what's being used
 - **Security** - Checksum verification
 
 ### For the Ecosystem
+
 - **Code reuse** - Share ML models as packages
 - **Standardization** - Common interfaces
 - **Collaboration** - Easy to contribute
@@ -259,18 +282,21 @@ dependencies = ["collections"]
 ## Next Steps
 
 ### Enhance the Model
+
 - Add data augmentation
 - Implement early stopping
 - Add learning rate scheduling
 - Experiment with architectures
 
 ### Scale Up
+
 - Train on full MNIST dataset
 - Add validation dataset
 - Implement checkpointing
 - Add TensorBoard logging
 
 ### Deploy
+
 - Export to WASM for browser
 - Create REST API
 - Build web interface
@@ -280,14 +306,18 @@ dependencies = ["collections"]
 
 ## Testing
 
-```bash
+```
+
 # Run tests
+
 fusion test
 
 # Specific test
+
 fusion test model_tests
 
 # With coverage
+
 fusion test --coverage
 ```
 
@@ -295,18 +325,26 @@ fusion test --coverage
 
 ## Publishing
 
-```bash
+```
+
 # Build release version
+
 fusion build --release
 
 # Publish to package registry
+
 fusion publish
 
-# This will:
+# This will
+
 # 1. Build optimized binaries
+
 # 2. Run tests
+
 # 3. Generate documentation
+
 # 4. Upload to registry
+
 ```
 
 ---

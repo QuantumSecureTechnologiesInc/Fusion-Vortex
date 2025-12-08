@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+#[allow(unused_imports)] // Used in #[cfg(test)]
 use super::{Dependency, Package, Version, VersionRequirement};
 use std::collections::{HashMap, HashSet};
 

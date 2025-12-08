@@ -1,0 +1,232 @@
+﻿Fusion Programming Language: The Complete Developer Manual (v1.0)
+Applicability: Fusion Compiler (fusionc) v1.0 and Runtime
+Goal: A comprehensive guide covering language fundamentals, security features, and advanced computational modules.
+1. Getting Started: Installation and Fundamentals
+1.1 Project Setup and Dependencies
+The Fusion Package Manager (fusion) is used to manage projects, dependencies, and build configurations.
+# Start a new project (creates main.fu and Fusion.toml)
+$ fusion new secure-service
+
+# Add dependencies (e.g., web framework, security module)
+$ fusion add fusion-web@1.0 fusion-crypto@1.0
+
+1.2 The Manifest (Fusion.toml)
+The Fusion.toml file controls project metadata and compiler behavior, including security and optimization profiles.
+[package]
+name = "secure-service"
+version = "1.0.0"
+edition = "2025"
+
+[dependencies]
+fusion-crypto = { version = "1.0" }
+fusion-ml = { version = "1.0", features = ["gpu"] }
+
+[build-options]
+target = "wasm32-wasi"         # WASM or x86-64
+opt_level = "Aggressive"
+security_profile = "FIPS_140_2_Strict"
+
+2. Fusion Language Fundamentals
+Fusion is a multi-paradigm language with Python-like readability and strong static safety.
+2.1 Variables and Hybrid Typing
+Fusion supports Strong Static Typing with implicit type inference and Gradual Typing at module boundaries.
+Declaration
+	Example
+	Description
+	Immutable
+	let pi: float = 3.14159;
+	Default; prevents modification after assignment.
+	Mutable
+	let mut counter = 0;
+	Requires the mut keyword; subject to the Borrow Checker.
+	Inference
+	let name = "Fusion";
+	Type (String) is inferred by the compiler.
+	Optional
+	let maybe_user: User? = None;
+	Use T? instead of null.
+	2.2 Ownership and Borrowing
+Fusion enforces the single-owner rule for memory safety in its static mode, preventing data races and use-after-free errors.
+* Move: Assigning a complex value transfers ownership (prevents reuse).
+* Borrowing: Use the & operator to borrow for reading (immutable) or &mut for writing (mutable).
+ Image of Borrow Checker Flowchart Shutterstock
+Explore
+fn handle_data(data: Data) {
+   let mut server_config = Config::load();
+   
+   // Immutable borrow (read-only)
+   let ref_imm = &server_config;
+   // let ref_mut = &mut server_config; // ERROR: Cannot have mutable borrow while immutable borrow exists
+   
+   // Assignment requires the variable to not be borrowed.
+   // server_config.status = "locked"; // ERROR: Cannot assign to server_config while ref_imm is in use
+   
+   ref_imm.get_status(); // OK to read
+   
+   // ref_imm goes out of scope here.
+   server_config.status = "unlocked"; // OK: Borrow released
+}
+
+2.3 Control Flow and Error Handling
+Fusion uses indentation (Python-style) or optional braces (C++/Rust-style) for blocks.
+// Indentation-based conditional
+fn check_input(value: int) -> Result<String>:
+   if value < 0:
+       return Err("Value cannot be negative")
+   
+   match value:
+       case 0:
+           return Ok("Zero input")
+       case 1..100:
+           return Ok(format!("Small value: {}", value))
+       default:
+           return Ok("Large value")
+
+// Optional unwrapping with default value
+let result: int = maybe_value ?? 0;
+
+3. Security and Compliance Features
+Fusion's core strength lies in its security enforcement, integrated at the compiler level.
+3.1 Hybrid Cryptography (fusion::crypto)
+All cryptography is hybrid by default, ensuring Post-Quantum (PQC) resilience. Critical functions must use the @constant_time attribute.
+use fusion::crypto::{hybrid_sign, HybridKeypair};
+
+// This function is verified by the compiler to prevent timing side-channels.
+@constant_time
+fn generate_secure_signature(payload_hash: List<u8>) -> HybridSignature {
+   let keys = HybridKeypair::load_server_keys();
+   
+   // This signature uses both CRYSTALS-Dilithium (PQC) and ECDSA (Classical).
+   let signature = hybrid_sign(
+       payload_hash, 
+       &keys.classical_sig.private_key, 
+       &keys.pqc_sig.private_key
+   ).expect("Hybrid signing failed");
+   
+   return signature;
+}
+
+3.2 Zero-Knowledge Proofs (ZKP)
+The fusion::zkp module allows defining a verifiable computation (a circuit) without revealing the inputs (witnesses).
+use fusion::zkp::circuit::{CircuitVariable, Constraint};
+use fusion::zkp::protocols::Groth16;
+
+fn prove_balance_range() -> Result<(Proof, bool)>:
+   // Define inputs: 'balance' is private, 'max_balance' is public
+   let balance = CircuitVariable::private("balance");
+   let max_balance = CircuitVariable::public("max_balance");
+   
+   // Constraint: balance must be less than or equal to max_balance
+   // (This requires complex range constraints in a real ZKP system)
+   // Constraint::less_than_or_equal(balance, max_balance); 
+
+   let circuit = Circuit::new("RangeCheck").add_constraint(...);
+   let (pk, vk) = Groth16::setup(circuit)?;
+   
+   // Proof is generated using the private 'balance' value
+   let proof = Groth16::prove(pk, witness_values: { "balance": 100 }, public_values: { "max_balance": 500 })?;
+   
+   return Groth16::verify(vk, proof, public_values: { "max_balance": 500 });
+
+3.3 Zero-Trust and Microsegmentation
+The fusion::security module defines and enforces network and access policies.
+// src/security_policy.fu
+
+use fusion::security::segmentation::{SecurityZone, TrafficPolicy, PolicyEngine};
+
+fn setup_microsegmentation() -> Result<()> {
+   let frontend = SecurityZone::web_frontend();
+   let database = SecurityZone::database_tier();
+   
+   // Policy: Frontend can only talk to DB on port 5432 and MUST use mTLS.
+   let db_access_policy = TrafficPolicy::new(frontend, database)
+       .allow_ports([PortRange::new(5432, 5432)]) 
+       .require_mtls();
+
+   PolicyEngine::new([db_access_policy])
+       .apply_policies()?;
+       
+   // The runtime now blocks any unencrypted or non-mTLS connections between these zones.
+   return Ok(())
+}
+
+4. Advanced Computation
+Fusion leverages compiler attributes and dedicated modules for performance-intensive workloads.
+4.1 AI/ML and GPU Acceleration (fusion::ml)
+The @gpu_accelerated attribute instructs the LLVM backend to offload computation to CUDA/OpenCL kernels, bypassing the CPU for significant performance gains.
+use fusion::ml::{Sequential, Dense, Adam};
+
+// Function performing the heavy matrix multiplication during training
+@gpu_accelerated("cuda")
+fn run_training(model: Sequential, data: Dataset) -> Result<Sequential> {
+   println!("Executing training on dedicated CUDA kernels...");
+   return model.train(data, epochs: 10);
+}
+
+fn build_model() -> Sequential {
+   let optimizer = Adam::new(0.001);
+   return Sequential::new(optimizer)
+       .add(Dense { units: 128, activation: ActivationFunction::ReLU })
+       .add(Dense { units: 10, activation: ActivationFunction::Softmax });
+}
+
+4.2 Quantum Computing (fusion::quantum)
+Define circuits and execute them on local simulators or cloud hardware (IBM, Azure, AWS).
+
+
+
+
+ Image of Quantum Circuit Diagram 
+
+Shutterstock
+Explore
+use fusion::quantum::{QuantumCircuit, QuantumRunner, BackendType};
+
+async fn create_bell_state_circuit() -> Result<QuantumResult> {
+   let circuit = QuantumCircuit::new(num_qubits: 2)
+       .h(0)           // Hadamard gate on Qubit 0 (creates superposition)
+       .cnot(0, 1)     // CNOT gate (entangles Qubit 0 and 1)
+       .measure_all(ClassicalRegister { id: 0, size: 2 });
+
+   // Use a local simulator for quick results
+   let runner = QuantumRunner::new(backend: BackendType::LocalSimulator);
+   
+   let options = RunOptions { shots: 1024, seed: Some(42) };
+   
+   let result = runner.run(circuit, options).await?;
+   
+   return Ok(result);
+}
+
+5. Tooling, Hardening, and Deployment
+5.1 Integrated Development Environment (IDE)
+Fusion supports all major IDEs (VS Code, IntelliJ) via the Language Server Protocol (LSP), providing:
+   * Real-time Type and Borrow checking diagnostics.
+   * Intelligent code completion (aware of generic constraints).
+   * Go-to-definition and symbol search.
+5.2 Security Hardening Tools
+These tools are integrated into the fusion CLI for automated auditing:
+Tool
+	CLI Command
+	Purpose
+	SAST
+	fusion security scan --sast
+	Static Analysis (checks code for XSS, SQLi, InsecureCrypto).
+	SCA
+	fusion security scan --sca
+	Dependency Scanning (checks Fusion.toml dependencies against CVE databases).
+	Fuzzing
+	fusion fuzz --target-fn parse_input
+	Generates random inputs to find memory corruption or crash vulnerabilities in parsers/serializers.
+	5.3 Compilation and Deployment
+The final build command compiles the source code through the LLVM backend to the specified target.
+# Compilation for WebAssembly (small, secure module)
+$ fusion build --target wasm32-wasi
+
+# Compilation for Native Server (maximum performance)
+$ fusion build --target x86-64
+
+# Output: target/wasm32-wasi/release/quantum_secure_service.wasm
+# Output: target/x86-64/release/quantum_secure_service
+
+The resulting artifact is a highly optimized, statically linked binary or WASM module, ready for secure deployment.

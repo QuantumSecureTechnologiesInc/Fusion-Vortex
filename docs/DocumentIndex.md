@@ -1,7 +1,7 @@
 # Fusion Programming Language - Document Index
 
-**Last Updated**: December 7, 2025  
-**Project**: Fusion Programming Language  
+**Last Updated**: December 7, 2025
+**Project**: Fusion Programming Language
 **Version**: v0.1.0 (Complete) → v0.2.0 (Planning)
 
 ---
@@ -268,8 +268,8 @@ This index is maintained by the Fusion Development Team and updated:
 - ✅ At major release milestones
 - ✅ Monthly review cycle
 
-**Last Reviewed**: December 7, 2025  
-**Next Review**: December 14, 2025  
+**Last Reviewed**: December 7, 2025
+**Next Review**: December 14, 2025
 **Maintainer**: Fusion Core Team
 
 ---

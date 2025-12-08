@@ -1,8 +1,8 @@
 # Module System Implementation Plan
 
-**Date**: 2025-12-07  
-**Phase**: Phase 3 - Multi-file Compilation  
-**Status**: ⏳ In Progress  
+**Date**: 2025-12-07
+**Phase**: Phase 3 - Multi-file Compilation
+**Status**: ⏳ In Progress
 **Priority**: High (Foundation for larger projects)
 
 ---
@@ -51,8 +51,9 @@ fn main() -> int {
 
 ### Module Files
 
-**Option 1: File-based modules**
-```
+<!-- Option 1: File-based modules -->
+
+```text
 project/
 ├── main.fu
 ├── lib.fu
@@ -60,8 +61,9 @@ project/
 └── types.fu        // Corresponds to "mod types"
 ```
 
-**Option 2: Directory modules**
-```
+<!-- Option 2: Directory modules -->
+
+```text
 project/
 ├── main.fu
 ├── lib.fu
@@ -100,19 +102,23 @@ pub enum Declaration {
 **New module**: `src/module_resolver/mod.rs`
 
 **Responsibilities**:
+
 1. Find module files based on declarations
 2. Build dependency graph
 3. Detect circular dependencies
 4. Determine compilation order
 
 **Algorithm**:
+
 ```
+
 1. Start from entry point (main.fu or lib.fu)
 2. Parse top-level declarations
 3. For each "mod" declaration:
    a. Locate corresponding .fu file
    b. Parse that file recursively
    c. Add to module graph
+
 4. Topological sort to get compilation order
 5. Detect cycles (error if found)
 ```
@@ -122,6 +128,7 @@ pub enum Declaration {
 **New module**: `src/namespace/mod.rs`
 
 **Symbol Resolution**:
+
 ```rust
 struct Namespace {
     modules: HashMap<String, Module>,
@@ -136,6 +143,7 @@ struct Module {
 ```
 
 **Resolution Rules**:
+
 1. Local symbols take precedence
 2. Imported symbols checked next
 3. Qualified names (e.g., `utils::func`) always resolve to specific module
@@ -144,15 +152,21 @@ struct Module {
 ### Phase 4: Lexer/Parser Updates
 
 **Add tokens**:
+
 ```rust
 // lexer.rs
+
 #[token("mod")]
+
 Mod,
+
 #[token("use")]
+
 Use,
 ```
 
 **Add parsing**:
+
 ```rust
 // parser/mod.rs
 fn parse_mod_declaration(&mut self) -> Result<Declaration, String>
@@ -176,7 +190,7 @@ fn parse_use_declaration(&mut self) -> Result<Declaration, String>
 fn compile_project(entry_point: &str) -> Result<(), String> {
     // 1. Module resolution
     let module_graph = ModuleResolver::resolve(entry_point)?;
-    
+
     // 2. Compile in dependency order
     let mut compiled_modules = HashMap::new();
     for module_path in module_graph.topological_order() {
@@ -185,10 +199,10 @@ fn compile_project(entry_point: &str) -> Result<(), String> {
         let ir = codegen(&checked_ast)?;
         compiled_modules.insert(module_path, ir);
     }
-    
+
     // 3. Link all modules
     let final_ir = link_modules(compiled_modules)?;
-    
+
     Ok(())
 }
 ```
@@ -200,6 +214,7 @@ fn compile_project(entry_point: &str) -> Result<(), String> {
 ### Example 1: Simple Two-File Project
 
 **main.fu**:
+
 ```fusion
 use utils;
 
@@ -211,6 +226,7 @@ fn main() -> int {
 ```
 
 **utils.fu**:
+
 ```fusion
 pub fn add(a: int, b: int) -> int {
     return a + b;
@@ -222,14 +238,18 @@ pub fn multiply(a: int, b: int) -> int {
 ```
 
 **Compilation**:
+
 ```bash
 fusion_lang -i main.fu
+
 # Automatically finds and compiles utils.fu
+
 ```
 
 ### Example 2: Multi-Module Library
 
 **lib.fu**:
+
 ```fusion
 pub mod math;
 pub mod string_utils;
@@ -240,6 +260,7 @@ pub fn library_version() -> int {
 ```
 
 **math.fu**:
+
 ```fusion
 pub fn abs(x: int) -> int {
     if x < 0 {
@@ -250,6 +271,7 @@ pub fn abs(x: int) -> int {
 ```
 
 **string_utils.fu**:
+
 ```fusion
 pub fn length(s: string) -> int {
     return strlen(s);
@@ -257,6 +279,7 @@ pub fn length(s: string) -> int {
 ```
 
 **main.fu**:
+
 ```fusion
 use lib::math;
 use lib::string_utils;
@@ -283,7 +306,8 @@ use a;  // ERROR: Circular dependency detected: a -> b -> a
 ```
 
 **Error Message**:
-```
+
+```text
 error: circular module dependency detected
   --> b.fu:1:1
    |
@@ -304,7 +328,8 @@ use nonexistent;  // ERROR: Module 'nonexistent' not found
 ```
 
 **Error Message**:
-```
+
+```text
 error: could not find module 'nonexistent'
   --> main.fu:1:5
    |
@@ -340,7 +365,7 @@ help: create a file named 'nonexistent.fu' in the same directory
 
 **Test Projects**:
 
-```
+```text
 tests/multi_file/
 ├── simple/
 │   ├── main.fu
@@ -356,6 +381,7 @@ tests/multi_file/
 ```
 
 **Test Command**:
+
 ```bash
 cargo test --test multi_file_compilation
 ```
@@ -369,6 +395,7 @@ cargo test --test multi_file_compilation
 **Problem**: Recompiling all files on every change is slow
 
 **Solution**: Module-level caching
+
 ```rust
 struct ModuleCache {
     ast_cache: HashMap<PathBuf, (SystemTime, AST)>,
@@ -379,7 +406,7 @@ impl ModuleCache {
     fn get_ast(&self, path: &Path) -> Option<AST> {
         let metadata = fs::metadata(path).ok()?;
         let modified = metadata.modified().ok()?;
-        
+
         if let Some((cached_time, cached_ast)) = self.ast_cache.get(path) {
             if *cached_time == modified {
                 return Some(cached_ast.clone());
@@ -393,6 +420,7 @@ impl ModuleCache {
 ### Parallel Compilation
 
 **Independent modules can compile in parallel**:
+
 ```rust
 use rayon::prelude::*;
 
@@ -409,18 +437,25 @@ let irs: Vec<String> = compilation_order
 ### Backward Compatibility
 
 **Single-file programs continue to work**:
-```bash
+
+```
+
 # Old way (still works)
+
 fusion_lang -i hello.fu
 
 # New way (also works)
+
 fusion_lang -i main.fu
+
 # (automatically finds and compiles imported modules)
+
 ```
 
 ### Standard Library
 
 **Stdlib becomes a module**:
+
 ```fusion
 // Before (implicit)
 let v = Vector::new();
@@ -461,5 +496,5 @@ let v = Vector::new();
 
 ---
 
-**Status**: ⏳ Ready to Implement  
+**Status**: ⏳ Ready to Implement
 **Next Step**: Update lexer with `mod` and `use` tokens

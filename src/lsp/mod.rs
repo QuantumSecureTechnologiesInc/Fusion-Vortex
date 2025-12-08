@@ -9,5 +9,4 @@ pub mod semantic_tokens;
 pub mod server;
 
 // Re-export main types
-pub use enhanced::{CodeActionProvider, RenameOperation, SymbolIndex, SymbolInfo};
-pub use server::FusionLanguageServer;
+// Note: Re-exports currently unused but available for future LSP server implementation

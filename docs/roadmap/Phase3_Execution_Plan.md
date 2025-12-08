@@ -1,8 +1,8 @@
 # Phase 3: AI/ML & Quantum - Execution Plan
 
-**Date**: 2025-12-07  
-**Status**: ⏳ In Progress  
-**Estimated Duration**: Months 13-18  
+**Date**: 2025-12-07
+**Status**: ⏳ In Progress
+**Estimated Duration**: Months 13-18
 **Starting Point**: Phase 2 Complete (100%)
 
 ---
@@ -14,7 +14,7 @@ Phase 3 will expand Fusion's capabilities into specialized workloads: **AI/ML** 
 ### Strategic Goals
 
 1. **Enable GPU-Accelerated Machine Learning** - Build ML primitives with `@gpu_accelerated` annotation
-2. **Quantum Circuit Programming** - Create quantum computing abstractions  
+2. **Quantum Circuit Programming** - Create quantum computing abstractions
 3. **Developer Tooling** - LSP server for IDE integration
 4. **WebAssembly Backend** - Browser and edge deployment
 5. **Advanced Collections** - HashMap, HashSet, Iterator support
@@ -155,13 +155,13 @@ Build machine learning primitives with GPU acceleration support, enabling neural
 1. **`stdlib/ml/tensor.fu`** - Core Tensor type
 
    ```fusion
-   class Tensor<T> {
-       fn new(shape: Vector<int>, data: Vector<T>) -> Tensor<T>
+   class TensorT {
+       fn new(shape: Vector<int>, data: VectorT) -> TensorT
        fn shape() -> Vector<int>
-       fn matmul(other: Tensor<T>) -> Tensor<T>
-       fn add(other: Tensor<T>) -> Tensor<T>
+       fn matmul(other: TensorT) -> TensorT
+       fn add(other: TensorT) -> TensorT
    }
-   ```
+```
 
 2. **`stdlib/ml/layer.fu`** - Neural network layers
 
@@ -170,10 +170,10 @@ Build machine learning primitives with GPU acceleration support, enabling neural
        fn forward(input: Tensor<f32>) -> Tensor<f32>
        fn backward(grad: Tensor<f32>) -> Tensor<f32>
    }
-   
+
    class Dense implements Layer { ... }
    class Conv2D implements Layer { ... }
-   ```
+```
 
 3. **`stdlib/ml/optimizer.fu`** - Training optimizers
 
@@ -181,10 +181,10 @@ Build machine learning primitives with GPU acceleration support, enabling neural
    trait Optimizer {
        fn step(gradients: Vector<Tensor<f32>>) -> void
    }
-   
+
    class Adam implements Optimizer { ... }
    class SGD implements Optimizer { ... }
-   ```
+```
 
 4. **`stdlib/ml/model.fu`** - Model container
 
@@ -195,7 +195,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
        @gpu_accelerated("cuda")
        fn train(data: Dataset, epochs: int) -> Result<Sequential, String>
    }
-   ```
+```
 
 **Status**: ⏳ Not Started
 
@@ -255,7 +255,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
        fn cnot(control: int, target: int) -> QuantumCircuit
        fn measure_all() -> QuantumCircuit
    }
-   ```
+```
 
 2. **`stdlib/quantum/gates.fu`** - Quantum gates
 
@@ -264,7 +264,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
    class X { target: int }
    class CNOT { control: int, target: int }
    class Rz { target: int, angle: float }
-   ```
+```
 
 3. **`stdlib/quantum/backend.fu`** - Quantum execution
 
@@ -272,10 +272,10 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
    trait QuantumBackend {
        fn execute(circuit: QuantumCircuit, shots: int) -> Result<Vector<int>, String>
    }
-   
+
    class IBMQBackend implements QuantumBackend { ... }
    class Simulator implements QuantumBackend { ... }
-   ```
+```
 
 **Status**: ⏳ Not Started
 
@@ -339,7 +339,7 @@ Expand standard library with hash-based collections and iterator support.
 
 **Methods**:
 
-- `new() -> HashSet<T>`
+- `new() -> HashSetT`
 - `insert(value: T) -> void`
 - `contains(value: T) -> bool`
 - `remove(value: T) -> bool`
@@ -353,10 +353,10 @@ Expand standard library with hash-based collections and iterator support.
 **Trait**:
 
 ```fusion
-trait Iterator<T> {
-    fn next() -> Option<T>
+trait IteratorT {
+    fn next() -> OptionT
     fn map<U>(f: fn(T) -> U) -> Iterator<U>   // Requires first-class functions
-    fn filter(f: fn(T) -> bool) -> Iterator<T>
+    fn filter(f: fn(T) -> bool) -> IteratorT
 }
 ```
 
@@ -385,7 +385,7 @@ trait Iterator<T> {
 
    ```fusion
    fn process<T: Display>(item: T) -> void
-   ```
+```
 
 3. **For-Each Loops** (requires Iterator)
 
@@ -393,7 +393,7 @@ trait Iterator<T> {
    for item in vector {
        println(item);
    }
-   ```
+```
 
 ### Compiler Improvements
 
@@ -494,20 +494,25 @@ trait Iterator<T> {
 
 ### Rust Crates (add to Cargo.toml)
 
-```toml
+```
+
 # WebAssembly
+
 walrus = "0.20"
 wasm-encoder = "0.39"
 
 # LSP
+
 tower-lsp = "0.20"
 tokio = { version = "1.35", features = ["full"] }
 
 # GPU (optional)
+
 cuda-sys = "0.3"
 opencl-sys = "0.2"
 
 # Quantum (optional)
+
 qiskit-ffi = "0.1"  # Hypothetical binding
 ```
 
@@ -546,12 +551,12 @@ qiskit-ffi = "0.1"  # Hypothetical binding
 
 Phase 3 represents a major expansion of Fusion's capabilities into cutting-edge domains: **AI/ML** and **Quantum Computing**. Combined with robust developer tooling (LSP) and deployment flexibility (WASM), this phase will position Fusion as a unique language for specialized workloads.
 
-**Current Status**: Phase 2 complete (100%), Phase 3 planning complete  
-**Next Action**: Begin LSP server implementation  
+**Current Status**: Phase 2 complete (100%), Phase 3 planning complete
+**Next Action**: Begin LSP server implementation
 **Expected Completion**: Month 18
 
 ---
 
-**Document Status**: ✅ Complete  
-**Last Updated**: 2025-12-07  
+**Document Status**: ✅ Complete
+**Last Updated**: 2025-12-07
 **Author**: Antigravity AI Assistant

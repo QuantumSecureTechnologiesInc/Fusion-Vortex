@@ -11,7 +11,7 @@ This project uses GitHub Dependabot to automatically manage and update dependenc
 - **Directory**: `/` (root)
 - **Schedule**: Weekly on Mondays at 09:00 UTC
 - **Max PRs**: 10
-- **Grouping**: 
+- **Grouping**:
   - Production dependencies grouped together
   - Development dependencies grouped separately
 
@@ -20,7 +20,7 @@ This project uses GitHub Dependabot to automatically manage and update dependenc
 - **Directory**: `/editors/vscode-fusion`
 - **Schedule**: Weekly on Tuesdays at 09:00 UTC
 - **Max PRs**: 10
-- **Grouping**: 
+- **Grouping**:
   - Production dependencies grouped together
   - Dev dependencies (`@types/*`, `@typescript-eslint/*`) grouped separately
 
@@ -118,7 +118,7 @@ Comprehensive CI pipeline that runs on all PRs:
 
 Navigate to the repository and filter pull requests:
 
-```
+```text
 is:pr is:open author:app/dependabot
 ```
 
@@ -143,12 +143,18 @@ You can manually trigger Dependabot updates from the GitHub UI:
 
 If you want to dismiss a Dependabot PR:
 
-```bash
+```
+
 # Comment on the PR
+
 @dependabot ignore this dependency
+
 # or
+
 @dependabot ignore this major version
+
 # or
+
 @dependabot ignore this minor version
 ```
 
@@ -156,8 +162,10 @@ If you want to dismiss a Dependabot PR:
 
 If a Dependabot PR has conflicts:
 
-```bash
+```
+
 # Comment on the PR
+
 @dependabot rebase
 ```
 
@@ -165,8 +173,10 @@ If a Dependabot PR has conflicts:
 
 If you closed a PR but want it back:
 
-```bash
+```
+
 # Comment on the closed PR
+
 @dependabot recreate
 ```
 
@@ -176,11 +186,14 @@ To ignore specific dependencies or versions, update `.github/dependabot.yml`:
 
 ```yaml
 updates:
+
   - package-ecosystem: "cargo"
     directory: "/"
     ignore:
+
       - dependency-name: "some-crate"
         versions: ["1.x"]  # Ignore 1.x versions
+
       - dependency-name: "another-crate"
         update-types: ["version-update:semver-major"]  # Ignore major updates
 ```
@@ -230,5 +243,5 @@ For issues or questions about Dependabot configuration, please open an issue in 
 
 ---
 
-**Last Updated**: December 7, 2025  
+**Last Updated**: December 7, 2025
 **Maintainer**: Quantum Secure Technologies Inc.
