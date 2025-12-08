@@ -319,6 +319,7 @@ code --install-extension fusion-language-0.1.0.vsix
    ```bash
    cd editors/vscode-fusion
    code --extensionDevelopmentPath=.
+
 ```
 
 2. **Create Test File**
@@ -332,7 +333,7 @@ code --install-extension fusion-language-0.1.0.vsix
    }
 ```
 
-3. **Verify Features**
+1. **Verify Features**
    - ✅ Syntax highlighting (keywords, types, strings)
    - ✅ Auto-closing brackets
    - ✅ Comment toggling (`Ctrl+/`)
@@ -432,6 +433,7 @@ code --install-extension fusion-language-0.1.0.vsix
 
    ```bash
    npm run package
+
 ```
 
    Creates `.vsix` for distribution
@@ -442,7 +444,7 @@ code --install-extension fusion-language-0.1.0.vsix
    code --install-extension fusion-language-0.1.0.vsix
 ```
 
-3. **Create Sample Project**
+1. **Create Sample Project**
    - Folder with `.fu` files
    - Test all LSP features
    - Verify syntax highlighting themes
@@ -468,17 +470,17 @@ code --install-extension fusion-language-0.1.0.vsix
 
 **Medium Priority**:
 
-4. **Snippets**
+1. **Snippets**
    - Function templates
    - Class templates
    - Common patterns
 
-5. **Debugging Support**
+2. **Debugging Support**
    - Debug Adapter Protocol (DAP)
    - Breakpoints and stepping
    - Variable inspection
 
-6. **Extension Testing**
+3. **Extension Testing**
    - VS Code extension test suite
    - CI/CD integration
 

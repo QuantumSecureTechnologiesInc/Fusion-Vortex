@@ -161,6 +161,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
        fn matmul(other: TensorT) -> TensorT
        fn add(other: TensorT) -> TensorT
    }
+
 ```
 
 2. **`stdlib/ml/layer.fu`** - Neural network layers
@@ -175,7 +176,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
    class Conv2D implements Layer { ... }
 ```
 
-3. **`stdlib/ml/optimizer.fu`** - Training optimizers
+1. **`stdlib/ml/optimizer.fu`** - Training optimizers
 
    ```fusion
    trait Optimizer {
@@ -184,6 +185,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
 
    class Adam implements Optimizer { ... }
    class SGD implements Optimizer { ... }
+
 ```
 
 4. **`stdlib/ml/model.fu`** - Model container
@@ -255,6 +257,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
        fn cnot(control: int, target: int) -> QuantumCircuit
        fn measure_all() -> QuantumCircuit
    }
+
 ```
 
 2. **`stdlib/quantum/gates.fu`** - Quantum gates
@@ -266,7 +269,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
    class Rz { target: int, angle: float }
 ```
 
-3. **`stdlib/quantum/backend.fu`** - Quantum execution
+1. **`stdlib/quantum/backend.fu`** - Quantum execution
 
    ```fusion
    trait QuantumBackend {
@@ -275,6 +278,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
 
    class IBMQBackend implements QuantumBackend { ... }
    class Simulator implements QuantumBackend { ... }
+
 ```
 
 **Status**: ⏳ Not Started
@@ -385,6 +389,7 @@ trait IteratorT {
 
    ```fusion
    fn process<T: Display>(item: T) -> void
+
 ```
 
 3. **For-Each Loops** (requires Iterator)

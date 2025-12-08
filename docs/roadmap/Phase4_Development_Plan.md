@@ -37,19 +37,19 @@ Building upon the exceptional Phase 3 foundation (LSP, VS Code, Module System, W
 
 ### Secondary Objectives (Months 17-18)
 
-4. **Enhanced Optimizations**
+1. **Enhanced Optimizations**
    - LLVM optimization passes
    - Dead code elimination
    - Constant folding
    - Inline expansion
 
-5. **Enhanced Standard Library**
+2. **Enhanced Standard Library**
    - File I/O operations
    - Networking (TCP/UDP)
    - JSON parsing
    - Regular expressions
 
-6. **Debugging Support**
+3. **Debugging Support**
    - DWARF debug info generation
    - Breakpoint support
    - Variable inspection

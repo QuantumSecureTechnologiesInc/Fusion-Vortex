@@ -488,10 +488,10 @@ All notable changes to the Fusion Programming Language project will be documente
 
 ## Next Phase
 
-  - ML standard library with GPU acceleration (`@gpu_accelerated`) (⏳ Phase 4)
-  - ML standard library with GPU acceleration (`@gpu_accelerated`) (⏳ Planned)
-  - Quantum circuit library with backend integration (⏳ Planned)
-  - HashMap/HashSet and Iterator support (⏳ Planned)
+- ML standard library with GPU acceleration (`@gpu_accelerated`) (⏳ Phase 4)
+- ML standard library with GPU acceleration (`@gpu_accelerated`) (⏳ Planned)
+- Quantum circuit library with backend integration (⏳ Planned)
+- HashMap/HashSet and Iterator support (⏳ Planned)
 
 ### Added
 

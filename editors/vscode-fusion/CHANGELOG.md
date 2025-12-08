@@ -71,10 +71,10 @@ Available settings:
 
 ### Feedback
 
-Report issues at: https://github.com/your-org/fusion-lang/issues
+Report issues at: <https://github.com/your-org/fusion-lang/issues>
 
 ---
 
 **Author**: Fusion Language Team
 **License**: MIT
-**Repository**: https://github.com/your-org/fusion-lang
+**Repository**: <https://github.com/your-org/fusion-lang>

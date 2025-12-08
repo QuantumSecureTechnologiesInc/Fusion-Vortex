@@ -366,9 +366,9 @@ MIT License - See LICENSE file
 
 ## Support
 
-- Documentation: https://fusion-lang.org/docs
-- Issues: https://github.com/fusion-lang/fusion/issues
-- Community: https://discord.gg/fusion-lang
+- Documentation: <https://fusion-lang.org/docs>
+- Issues: <https://github.com/fusion-lang/fusion/issues>
+- Community: <https://discord.gg/fusion-lang>
 
 ---
 

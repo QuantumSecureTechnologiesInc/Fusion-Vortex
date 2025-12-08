@@ -59,18 +59,20 @@ Successfully addressed **600+ markdown linting violations** across **68 markdown
 
 ### Deprecated Scripts
 
-3. `.scripts/fix-markdown-lints.ps1` - Too aggressive, deprecated
-4. `.scripts/fix-advanced-markdown-lints.ps1` - Replaced by Python version
+1. `.scripts/fix-markdown-lints.ps1` - Too aggressive, deprecated
+2. `.scripts/fix-advanced-markdown-lints.ps1` - Replaced by Python version
 
 ## Methodology
 
 ### Safety First
+
 1. Line-by-line processing (no bulk regex)
 2. Git restore for any corruption
 3. Two-pass approach (core + edge cases)
 4. Manual verification of samples
 
 ### Quality Assurance
+
 - ✅ No document corruption
 - ✅ Code blocks intact
 - ✅ List structure preserved
@@ -80,14 +82,17 @@ Successfully addressed **600+ markdown linting violations** across **68 markdown
 ## Sample Before/After
 
 ### Before
+
 ```markdown
 **Core Files**:
 - `mod.rs` - Core structures (170 lines)
 - `manifest.rs` - fusion.toml parsing (90 lines)
 **CLI Commands**:
 ```
+
 fusion new <project>
 fusion init
+
 ```
 
 ### After
@@ -107,6 +112,7 @@ fusion init
 ## Files Modified
 
 ### Documentation
+
 - `*.md` (root: 10 files)
 - `docs/guides/*.md` (5 files)
 - `docs/outputs/*.md` (20 files)
@@ -116,6 +122,7 @@ fusion init
 - `docs/support/*.md` (2 files)
 
 ### Examples & Tools
+
 - `examples/*/README.md` (5 files)
 - `editors/*/CHANGELOG.md` (1 file)
 - Various other documentation (7 files)
@@ -169,11 +176,13 @@ fusion init
 ## Next Actions
 
 ### Immediate (Optional)
+
 1. Run markdownlint to get current violation count
 2. Review MD029 violations for intentionality
 3. Assess MD024 duplicate headings
 
 ### Future
+
 1. Integrate scripts into pre-commit hooks
 2. Add markdownlint configuration file
 3. Document markdown style guide

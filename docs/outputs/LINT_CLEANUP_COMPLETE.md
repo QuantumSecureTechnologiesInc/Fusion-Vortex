@@ -25,12 +25,12 @@ All 14 corrupted files have been **fully restored** with proper headers, imports
 
 #### Enhanced LSP (6 files)
 
-9. ✅ `src/lsp/navigation.rs` - Restored with symbol indexing
-10. ✅ `src/lsp/diagnostics.rs` - Restored with diagnostic engine
-11. ✅ `src/lsp/semantic_tokens.rs` - Restored with tokenization provider
-12. ✅ `src/lsp/inlay_hints.rs` - Restored with hints provider
-13. ✅ `src/lsp/refactoring.rs` - Restored with refactoring engine
-14. ✅ `src/lsp/enhanced.rs` - Restored with proper type imports
+1. ✅ `src/lsp/navigation.rs` - Restored with symbol indexing
+2. ✅ `src/lsp/diagnostics.rs` - Restored with diagnostic engine
+3. ✅ `src/lsp/semantic_tokens.rs` - Restored with tokenization provider
+4. ✅ `src/lsp/inlay_hints.rs` - Restored with hints provider
+5. ✅ `src/lsp/refactoring.rs` - Restored with refactoring engine
+6. ✅ `src/lsp/enhanced.rs` - Restored with proper type imports
 
 ### Restoration Approach
 
@@ -41,6 +41,7 @@ Each file was restored using the `write_to_file` or `replace_file_content` tools
    ```rust
    #![allow(dead_code)]
    #![allow(unused_variables)]
+
 ```
 
 2. **Correct imports** for each module's specific needs

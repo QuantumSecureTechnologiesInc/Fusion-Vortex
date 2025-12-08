@@ -99,7 +99,7 @@ fusion run                # Run project
 fusion publish            # Publish to registry
 ```
 
-####2. ML Library (80% Complete) - 2,000+ lines
+#### 2. ML Library (80% Complete) - 2,000+ lines
 
 **Files** (3):
 

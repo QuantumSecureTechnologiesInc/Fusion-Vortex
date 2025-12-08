@@ -253,10 +253,10 @@ fn add(a: int, b: int) -> int {
 
 ### Remaining (40%)
 
-5. ⏳ HashMap/HashSet Collections - 0%
-6. ⏳ ML Library with GPU - 0%
-7. ⏳ Quantum Circuit Library - 0%
-8. ⏳ Iterator trait - 0%
+1. ⏳ HashMap/HashSet Collections - 0%
+2. ⏳ ML Library with GPU - 0%
+3. ⏳ Quantum Circuit Library - 0%
+4. ⏳ Iterator trait - 0%
 
 ### Month 13-14 Goals: Foundation & Tooling
 

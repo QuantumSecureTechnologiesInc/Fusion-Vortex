@@ -477,6 +477,7 @@ python3 -m http.server 8000
 
    ```bash
    code --install-extension fusion-language-0.1.0.vsix
+
 ```
 
 2. **Features Available**:

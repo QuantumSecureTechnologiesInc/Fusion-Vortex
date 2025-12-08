@@ -13,6 +13,7 @@
    ```bash
     git clone https://github.com/QuantumSecureTechnologies/fusion-lang.git
     cd fusion-lang
+
 ```
 
 2. **Build the Compiler**
@@ -21,12 +22,13 @@
     cargo build --release
 ```
 
-3. **Add to PATH**
+1. **Add to PATH**
 
    Add the release binary to your system PATH.
 
    ```bash
     export PATH=$PATH:$(pwd)/target/release
+
 ```
 
 ## Creating a New Project

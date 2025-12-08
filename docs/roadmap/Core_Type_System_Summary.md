@@ -255,10 +255,10 @@ let b = Matrix::zeros([5, 6]);
 
 ### Coming in v0.2.0
 
-4. ⏳ API Reference Documentation
-5. ⏳ User Guide (Classical/Tensor/Quantum programming)
-6. ⏳ Hybrid Programming Guide
-7. ⏳ Performance Optimization Guide
+1. ⏳ API Reference Documentation
+2. ⏳ User Guide (Classical/Tensor/Quantum programming)
+3. ⏳ Hybrid Programming Guide
+4. ⏳ Performance Optimization Guide
 
 ---
 
@@ -272,7 +272,7 @@ let b = Matrix::zeros([5, 6]);
 2. Check the [Implementation Plan](Core_Type_System_Implementation_Plan.md)
 3 Start with Week 1: Classical Types
 
-4. Submit PRs to `fusion-lang/fusion`
+3. Submit PRs to `fusion-lang/fusion`
 
 ### For Users
 
