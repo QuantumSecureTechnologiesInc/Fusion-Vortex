@@ -1,0 +1,261 @@
+// stdlib/ml/mod.fu - Machine Learning Library Foundation
+// Traits and interfaces for ML operations with GPU acceleration
+
+// Tensor trait - Foundation for all ML operations
+trait Tensor<T> {
+    fn shape(self) -> Vector<int>;
+    fn rank(self) -> int;
+    fn size(self) -> int;
+    fn reshape(mut self, new_shape: Vector<int>) -> Result<(), string>;
+}
+
+// Activation function trait
+trait Activation {
+    fn forward(x: Tensor<float>) -> Tensor<float>;
+    fn backward(grad: Tensor<float>) -> Tensor<float>;
+}
+
+// Loss function trait  
+trait Loss {
+    fn compute(predicted: Tensor<float>, target: Tensor<float>) -> float;
+    fn gradient(predicted: Tensor<float>, target: Tensor<float>) -> Tensor<float>;
+}
+
+// Optimizer trait
+trait Optimizer {
+    fn step(mut self, params: Vector<Tensor<float>>, grads: Vector<Tensor<float>>);
+    fn zero_grad(mut self);
+}
+
+// GPU-accelerated annotation (compiler directive)
+// Usage: @gpu_accelerated
+// This tells the compiler to generate GPU kernel code
+
+// Example tensor operations (stubs for future implementation)
+
+/// Matrix multiplication with optional GPU acceleration
+/// @gpu_accelerated
+fn matmul(a: Tensor<float>, b: Tensor<float>) -> Tensor<float> {
+    // TODO: Implement matrix multiplication
+    // - Check dimensions compatible
+    // - Allocate result tensor
+    // - Perform multiplication (GEMM)
+    // - If GPU available, use CUDA/OpenCL kernel
+    
+    return a; // Stub
+}
+
+/// Element-wise operations
+/// @gpu_accelerated  
+fn add_tensors(a: Tensor<float>, b: Tensor<float>) -> Tensor<float> {
+    // TODO: Element-wise addition
+    return a; // Stub
+}
+
+/// @gpu_accelerated
+fn multiply_tensors(a: Tensor<float>, b: Tensor<float>) -> Tensor<float> {
+    // TODO: Element-wise multiplication
+    return a; // Stub
+}
+
+// Common activation functions
+
+class ReLU implements Activation {
+    fn forward(x: Tensor<float>) -> Tensor<float> {
+        // TODO: max(0, x) element-wise
+        return x;
+    }
+    
+    fn backward(grad: Tensor<float>) -> Tensor<float> {
+        // TODO: gradient is 1 where x > 0, else 0
+        return grad;
+    }
+}
+
+class Sigmoid implements Activation {
+    fn forward(x: Tensor<float>) -> Tensor<float> {
+        // TODO: 1 / (1 + exp(-x))
+        return x;
+    }
+    
+    fn backward(grad: Tensor<float>) -> Tensor<float> {
+        // TODO: sigmoid(x) * (1 - sigmoid(x))
+        return grad;
+    }
+}
+
+class Tanh implements Activation {
+    fn forward(x: Tensor<float>) -> Tensor<float> {
+        // TODO: tanh(x)
+        return x;
+    }
+    
+    fn backward(grad: Tensor<float>) -> Tensor<float> {
+        // TODO: 1 - tanh(x)^2
+        return grad;
+    }
+}
+
+// Loss functions
+
+class MSELoss implements Loss {
+    fn compute(predicted: Tensor<float>, target: Tensor<float>) -> float {
+        // TODO: Mean Squared Error
+        // mean((predicted - target)^2)
+        return 0.0;
+    }
+    
+    fn gradient(predicted: Tensor<float>, target: Tensor<float>) -> Tensor<float> {
+        // TODO: 2 * (predicted - target) / n
+        return predicted;
+    }
+}
+
+class CrossEntropyLoss implements Loss {
+    fn compute(predicted: Tensor<float>, target: Tensor<float>) -> float {
+        // TODO: -sum(target * log(predicted))
+        return 0.0;
+    }
+    
+    fn gradient(predicted: Tensor<float>, target: Tensor<float>) -> Tensor<float> {
+        // TODO: predicted - target (for softmax + CE)
+        return predicted;
+    }
+}
+
+// Optimizers
+
+class SGD implements Optimizer {
+    learning_rate: float;
+    momentum: float;
+    
+    fn new(learning_rate: float) -> SGD {
+        return SGD {
+            learning_rate: learning_rate,
+            momentum: 0.0
+        };
+    }
+    
+    fn step(mut self, params: Vector<Tensor<float>>, grads: Vector<Tensor<float>>) {
+        // TODO: Update parameters
+        // params -= learning_rate * grads
+    }
+    
+    fn zero_grad(mut self) {
+        // TODO: Clear gradients
+    }
+}
+
+class Adam implements Optimizer {
+    learning_rate: float;
+    beta1: float;
+    beta2: float;
+    epsilon: float;
+    
+    fn new(learning_rate: float) -> Adam {
+        return Adam {
+            learning_rate: learning_rate,
+            beta1: 0.9,
+            beta2: 0.999,
+            epsilon: 0.00000001
+        };
+    }
+    
+    fn step(mut self, params: Vector<Tensor<float>>, grads: Vector<Tensor<float>>) {
+        // TODO: Adam update rule
+        // m = beta1 * m + (1 - beta1) * grad
+        // v = beta2 * v + (1 - beta2) * grad^2
+        // param -= lr * m / (sqrt(v) + epsilon)
+    }
+    
+    fn zero_grad(mut self) {
+        // TODO: Clear gradients
+    }
+}
+
+// Neural network layer interface
+
+trait Layer {
+    fn forward(self, input: Tensor<float>) -> Tensor<float>;
+    fn backward(mut self, grad: Tensor<float>) -> Tensor<float>;
+    fn parameters(self) -> Vector<Tensor<float>>;
+}
+
+// Example: Linear layer
+class Linear implements Layer {
+    weights: Tensor<float>;
+    bias: Tensor<float>;
+    input_size: int;
+    output_size: int;
+    
+    fn new(input_size: int, output_size: int) -> Linear {
+        // TODO: Initialize weights and bias
+        // weights: random initialization (Xavier/He)
+        // bias: zeros
+        
+        return Linear {
+            weights: dummy_tensor(),
+            bias: dummy_tensor(),
+            input_size: input_size,
+            output_size: output_size
+        };
+    }
+    
+    fn forward(self, input: Tensor<float>) -> Tensor<float> {
+        // TODO: output = input @ weights + bias
+        return input;
+    }
+    
+   fn backward(mut self, grad: Tensor<float>) -> Tensor<float> {
+        // TODO: Compute gradients
+        // grad_input = grad @ weights^T
+        // grad_weights = input^T @ grad
+        // grad_bias = sum(grad, axis=0)
+        return grad;
+    }
+    
+    fn parameters(self) -> Vector<Tensor<float>> {
+        let mut params = Vector::new();
+        params.push(self.weights);
+        params.push(self.bias);
+        return params;
+    }
+}
+
+// Stub function for tensor creation
+fn dummy_tensor() -> Tensor<float> {
+    // TODO: Return actual tensor
+    // This is a placeholder
+}
+
+// Example usage (commented out as it needs full implementation):
+//
+// fn train_model() {
+//     // Create model
+//     let layer1 = Linear::new(784, 128);
+//     let activation = ReLU {};
+//     let layer2 = Linear::new(128, 10);
+//     
+//     // Create optimizer
+//     let mut optimizer = Adam::new(0.001);
+//     
+//     // Training loop
+//     let mut epoch = 0;
+//     while epoch < 10 {
+//         // Forward pass
+//         let hidden = activation.forward(layer1.forward(input));
+//         let output = layer2.forward(hidden);
+//         
+//         // Compute loss
+//         let loss = CrossEntropyLoss::compute(output, target);
+//         
+//         // Backward pass
+//         let grad = CrossEntropyLoss::gradient(output, target);
+//         // ... backpropagate through layers
+//         
+//         // Update weights
+//         optimizer.step(params, grads);
+//         
+//         epoch = epoch + 1;
+//     }
+// }

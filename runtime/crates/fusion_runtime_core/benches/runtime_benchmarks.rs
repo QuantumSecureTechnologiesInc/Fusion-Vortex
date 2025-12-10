@@ -1,0 +1,25 @@
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use fusion_runtime_core::Runtime;
+
+fn bench_runtime_creation(c: &mut Criterion) {
+    c.bench_function("runtime_creation", |b| {
+        b.iter(|| {
+            black_box(Runtime::new());
+        });
+    });
+}
+
+fn bench_task_spawn(c: &mut Criterion) {
+    let runtime = Runtime::new();
+
+    c.bench_function("task_spawn", |b| {
+        b.iter(|| {
+            runtime.spawn(async {
+                black_box(42);
+            });
+        });
+    });
+}
+
+criterion_group!(benches, bench_runtime_creation, bench_task_spawn);
+criterion_main!(benches);

@@ -1,0 +1,72 @@
+﻿FIPS 140-2 Security Policy
+Fusion Cryptography Module (FCM) v1.0
+Module Name: Fusion Cryptography Module (FCM)
+Module Version: 1.0
+Security Level: Overall Level 2 (Minimum requirement for secure communications)
+Organization: QuantumSecure Technologies Ltd
+Date: December 3, 2025
+1. Introduction
+This document constitutes the FIPS 140-2 Security Policy for the Fusion Cryptography Module (FCM) software. The FCM is a multi-platform software module intended to provide robust, hybrid classical/post-quantum cryptographic services. The FCM is designed to operate in a multi-user, general-purpose operating environment.
+2. Cryptographic Module Specification
+2.1 Ports and Interfaces
+The FCM operates through a high-level API (fusion::crypto), exposing the following logical interfaces as defined by FIPS 140-2:
+Interface
+	Description
+	Fusion API Reference
+	Data Input
+	Input data (plaintext, public keys, verification messages).
+	hybrid_sign(message), hybrid_verify(message).
+	Data Output
+	Output data (ciphertext, shared secrets, signatures).
+	hybrid_sign() -> HybridSignature, hybrid_kdf() -> AesKey.
+	Control Input
+	Functional API calls controlling module operation.
+	generate_hybrid_keypair(), hybrid_kdf().
+	Status Output
+	Return values indicating success or failure status.
+	Fusion's Result<T> type and error messages.
+	2.2 Roles and Services
+The FCM supports two primary FIPS 140-2 roles:
+Role
+	Supported Services
+	Authentication
+	User
+	Data encryption/decryption, digital signature verification, key derivation (KDF).
+	Role is implicitly assumed when accessing FCM API via authenticated Fusion runtime (fusion::security::iam).
+	Crypto-Officer
+	Key generation (pair generation), self-tests, integrity checks, zeroizing critical security parameters (CSPs).
+	Role requires authentication via fusion::security::iam and specific privilege checks.
+	3. Approved Security Functions
+The FCM utilizes a 50/50 Hybrid Cryptography approach, where security relies on the output of both classical and post-quantum algorithms.
+Function Category
+	Approved Algorithms
+	Usage / Caveats
+	Key Derivation
+	SHA-3 (SHAKE256, FIPS 202)
+	Used in hybrid_kdf to combine shared secrets.
+	Symmetric Encryption
+	AES-256 (FIPS 197)
+	Used in Galois/Counter Mode (GCM). Key size (256-bit) is deemed quantum-resistant (against Grover's).
+	Classical Key Exchange
+	X25519, ECDSA (NIST P-256)
+	Used in the hybrid pair for classical security assurance.
+	Post-Quantum KEM
+	CRYSTALS-Kyber (NIST FIPS 203)
+	Lattice-based key encapsulation mechanism.
+	Post-Quantum Signature
+	CRYSTALS-Dilithium (NIST FIPS 204)
+	Lattice-based digital signature algorithm.
+	Random Number Gen.
+	CTR_DRBG using AES-256
+	FIPS 140-2 compliant Deterministic Random Bit Generator.
+	3.1 Non-Approved Algorithms
+The FCM does not support non-approved algorithms in its certified mode. Any attempt to use insecure or legacy ciphers (e.g., DES, RSA-1024) will be prevented by the compiler's SAST Analyzer (fusion::security::analysis.fu) and runtime checks.
+4. Operational Requirements
+4.1 Security Rules
+1. Hybrid Mandate: All key establishment and signature operations MUST utilize the hybrid (classical + PQC) approach. Single-algorithm usage is considered non-FIPS compliant.
+2. CSPs Zeroization: The module MUST immediately zeroize (overwrite) all Critical Security Parameters (CSPs, i.e., private keys, seed material) upon deletion, failure, or module shutdown.
+3. Timing Side-Channel Resistance: The compiler MUST enforce the @constant_time attribute on all cryptographic operations to protect against timing analysis, as confirmed by the LLVM Code Generation passes.
+4.2 Physical Security
+As a software-only module, physical security is not applicable beyond the protection afforded by the underlying host operating system and hardware.
+5. Security Strength
+The security strength of the FCM is defined by the minimum strength of its two cryptographic components (Classical and PQC). Given the use of AES-256 (128-bit security against Grover's) and NIST P-256 (128-bit security), the overall security strength is 128 bits, meeting modern enterprise requirements.

@@ -1,0 +1,49 @@
+class Counter {
+    val: int;
+
+    fn init(self: Counter, start: int) -> Counter {
+        self.val = start;
+        return self;
+    }
+
+    fn increment(self: Counter) -> Counter {
+        self.val = self.val + 1;
+        return self;
+    }
+
+    fn get_value(self: Counter) -> int {
+        return self.val;
+    }
+}
+
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+fn main() -> int {
+    let c: Counter = Counter { val: 0 };
+    c = c.init(10);
+    print("Initial value:");
+    print(c.get_value());
+
+    let i: int = 0;
+    while (i < 5) {
+        c = c.increment();
+        i = i + 1;
+    }
+
+    print("After loop:");
+    let res: int = c.get_value();
+    print(res);
+
+    if (res > 12) {
+        print("Result is big");
+    } else {
+        print("Result is small");
+    }
+
+    print("Global Add:");
+    print(add(100, 200));
+
+    return 0;
+}

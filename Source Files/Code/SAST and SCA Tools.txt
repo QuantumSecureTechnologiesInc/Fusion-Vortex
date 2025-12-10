@@ -1,0 +1,54 @@
+// src/security/analysis.fu - Static Analysis (SAST) and Dependency Scanning (SCA)
+
+use fusion::collections::List;
+use fusion::runtime::Result;
+use fusion::pkg::Manifest; // Assumed Package Manager Manifest (Fusion.toml)
+
+// --- SAST (Static Analysis Security Testing) ---
+
+/// Performs deep analysis of Fusion source code for common code patterns that lead to vulnerabilities.
+struct SASTAnalyzer:
+    /// Analyzes the source code, leveraging the compiler's AST and Semantic Analyzer.
+    static fn analyze_source(codebase_path: String) -> Result<SecurityReport>:
+        let report = SecurityReport { tool_name: "Fusion SAST", findings: [] };
+        println!("Running SAST over AST for insecure patterns...");
+        
+        // --- Compiler Integration Points ---
+        // SAST looks for specific AST patterns defined by the Semantic Analyzer:
+        // 1. InsecureCrypto: Checks for usage of non-hybrid or non-constant-time crypto primitives.
+        // 2. SQLInjection/XSS: Looks for user input flowing directly into database/DOM sink functions.
+        // ------------------------------------
+        
+        // Mock finding: Found usage of a deprecated cipher
+        report.add_finding(SecurityFinding {
+            type: FindingType::InsecureCrypto,
+            severity: Severity::High,
+            message: "Usage of deprecated AES-128 cipher detected.",
+            location: Location { file_path: "src/main.fu", line: 50, column: 12 },
+            cve_id: None,
+        })
+        
+        return Ok(report)
+
+// --- SCA (Software Composition Analysis) ---
+
+/// Scans third-party dependencies against public vulnerability databases.
+struct SCAAnalyzer:
+    static fn analyze_dependencies(manifest: Manifest) -> Result<SecurityReport>:
+        let report = SecurityReport { tool_name: "Fusion SCA", findings: [] };
+        println!("Scanning {} dependencies against NVD/GitHub databases...", manifest.dependencies.len());
+
+        // --- Package Manager Integration ---
+        // SCA accesses the manifest to check all package dependencies and versions.
+        // ------------------------------------
+
+        // Mock finding: Found a critical vulnerability in a dependency
+        report.add_finding(SecurityFinding {
+            type: FindingType::DependencyVulnerability,
+            severity: Severity::Critical,
+            message: "Dependency 'fusion-net-http' (v0.3.1) is vulnerable to RCE.",
+            location: Location { file_path: "Fusion.toml", line: 12, column: 0 },
+            cve_id: Some("CVE-2025-4040".to_string()),
+        })
+
+        return Ok(report)

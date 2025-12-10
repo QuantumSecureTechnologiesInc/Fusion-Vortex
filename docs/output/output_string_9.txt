@@ -1,0 +1,290 @@
+   Compiling fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+warning: unused variable: `val_ty`
+   --> src\codegen\mod.rs:530:35
+    |
+530 |                     let (val_val, val_ty) = self.generate_expression(&args[2])?;
+    |                                   ^^^^^^ help: if this is intentional, prefix it with an underscore: `_val_ty`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `attributes` is never read
+ --> src\ast\mod.rs:7:9
+  |
+5 |     Function {
+  |     -------- field in this variant
+6 |         name: String,
+7 |         attributes: Vec<Attribute>,
+  |         ^^^^^^^^^^
+  |
+  = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `implements` is never read
+  --> src\ast\mod.rs:17:9
+   |
+14 |     Class {
+   |     ----- field in this variant
+...
+17 |         implements: Vec<String>,
+   |         ^^^^^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Trait`, `GlobalVariable`, and `Module` are never constructed
+  --> src\ast\mod.rs:21:5
+   |
+ 4 | pub enum Declaration {
+   |          ----------- variants in this enum
+...
+21 |     Trait {
+   |     ^^^^^
+...
+25 |     GlobalVariable {
+   |     ^^^^^^^^^^^^^^
+...
+35 |     Module {
+   |     ^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `params` and `return_type` are never read
+  --> src\ast\mod.rs:62:9
+   |
+60 | pub struct MethodSignature {
+   |            --------------- fields in this struct
+61 |     pub name: String,
+62 |     pub params: Vec<Parameter>,
+   |         ^^^^^^
+63 |     pub return_type: Option<Type>,
+   |         ^^^^^^^^^^^
+   |
+   = note: `MethodSignature` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `For`, `Break`, and `Continue` are never constructed
+  --> src\ast\mod.rs:91:5
+   |
+72 | pub enum Statement {
+   |          --------- variants in this enum
+...
+91 |     For {
+   |     ^^^
+...
+98 |     Break,
+   |     ^^^^^
+99 |     Continue,
+   |     ^^^^^^^^
+   |
+   = note: `Statement` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `object` and `index` are never read
+   --> src\ast\mod.rs:135:9
+    |
+134 |     Index {
+    |     ----- fields in this variant
+135 |         object: Box<Expression>,
+    |         ^^^^^^
+136 |         index: Box<Expression>,
+    |         ^^^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `UnaryOp`, `Array`, and `Map` are never constructed
+   --> src\ast\mod.rs:111:5
+    |
+103 | pub enum Expression {
+    |          ---------- variants in this enum
+...
+111 |     UnaryOp {
+    |     ^^^^^^^
+...
+138 |     Array(Vec<Expression>),
+    |     ^^^^^
+139 |     Map(Vec<(Expression, Expression)>),
+    |     ^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float` and `Boolean` are never constructed
+   --> src\ast\mod.rs:145:5
+    |
+143 | pub enum Literal {
+    |          ------- variants in this enum
+144 |     Integer(i64),
+145 |     Float(f64),
+    |     ^^^^^
+146 |     String(String),
+147 |     Boolean(bool),
+    |     ^^^^^^^
+    |
+    = note: `Literal` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Modulo`, `LessEqual`, and `GreaterEqual` are never constructed
+   --> src\ast\mod.rs:156:5
+    |
+151 | pub enum BinaryOp {
+    |          -------- variants in this enum
+...
+156 |     Modulo,
+    |     ^^^^^^
+...
+160 |     LessEqual,
+    |     ^^^^^^^^^
+161 |     GreaterThan,
+162 |     GreaterEqual,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `BinaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Negate` and `Not` are never constructed
+   --> src\ast\mod.rs:169:5
+    |
+168 | pub enum UnaryOp {
+    |          ------- variants in this enum
+169 |     Negate,
+    |     ^^^^^^
+170 |     Not,
+    |     ^^^
+    |
+    = note: `UnaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float`, `TypeParameter`, `Array`, `Optional`, `Union`, and `Function` are never constructed
+   --> src\ast\mod.rs:178:5
+    |
+174 | pub enum Type {
+    |          ---- variants in this enum
+...
+178 |     Float,
+    |     ^^^^^
+...
+182 |     TypeParameter(String), // New: Represents an unresolved generic type (e.g., 'T')
+    |     ^^^^^^^^^^^^^
+183 |     Array(Box<Type>),
+    |     ^^^^^
+184 |     Optional(Box<Type>),
+    |     ^^^^^^^^
+185 |     Union(Vec<Type>),
+    |     ^^^^^
+186 |     Function {
+    |     ^^^^^^^^
+    |
+    = note: `Type` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variant `HardwareAccelerated` is never constructed
+   --> src\ast\mod.rs:199:5
+    |
+198 | pub enum Attribute {
+    |          --------- variant in this enum
+199 |     HardwareAccelerated(String),
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `Attribute` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Borrowed` and `MutBorrowed` are never constructed
+ --> src\borrow_checker\mod.rs:8:5
+  |
+5 | enum OwnershipState {
+  |      -------------- variants in this enum
+...
+8 |     Borrowed,    // Immutable borrow coverage
+  |     ^^^^^^^^
+9 |     MutBorrowed, // Mutable borrow coverage
+  |     ^^^^^^^^^^^
+  |
+  = note: `OwnershipState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `print` is never used
+ --> src\stdlib\mod.rs:4:12
+  |
+4 |     pub fn print(s: &str) {
+  |            ^^^^^
+
+warning: `fusion_lang` (bin "fusion_lang") generated 15 warnings (run `cargo fix --bin "fusion_lang" -p fusion_lang` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.39s
+     Running `target\debug\fusion_lang.exe --input test_string_cast.fu`
+Compiling test_string_cast.fu...
+Parsed AST successfully.
+Semantic Analysis Passed
+Borrow Checker Passed
+LLVM IR Generated:
+declare i64 @malloc(i64)
+declare void @free(i64)
+declare void @memcpy(i64, i64, i64)
+declare i64 @strlen(i8*)
+@.str.17 = private unnamed_addr constant [12 x i8] c"Hello World\00", align 1
+@.str.21 = private unnamed_addr constant [16 x i8] c"Buffer Address:\00", align 1
+@.fmt.23 = private unnamed_addr constant [5 x i8] c"%lld\0A\00", align 1
+@.str.26 = private unnamed_addr constant [8 x i8] c"Length:\00", align 1
+@.fmt.28 = private unnamed_addr constant [5 x i8] c"%lld\0A\00", align 1
+; ModuleID = 'fusion_module'
+source_filename = "fusion_module"
+
+declare i32 @printf(i8*, ...)
+
+%StdString = type { i64, i64 }
+
+define %StdString @StdString_from_raw(%StdString %arg0, i8* %arg1) {
+entry:
+  %self = alloca %StdString
+  store %StdString %arg0, %StdString* %self
+  %s = alloca i8*
+  store i8* %arg1, i8** %s
+  %TMP0 = load i8*, i8** %s
+  %TMP1 = call i64 @strlen(i8* %TMP0)
+  %len = alloca i64
+  store i64 %TMP1, i64* %len
+  %TMP2 = load i64, i64* %len
+  %TMP3 = add nsw i64 %TMP2, 1
+  %TMP4 = call i64 @malloc(i64 %TMP3)
+  %buf = alloca i64
+  store i64 %TMP4, i64* %buf
+  %TMP5 = load i8*, i8** %s
+  %TMP6 = ptrtoint i8* %TMP5 to i64
+  %s_ptr = alloca i64
+  store i64 %TMP6, i64* %s_ptr
+  %TMP7 = load i64, i64* %buf
+  %TMP8 = load i64, i64* %s_ptr
+  %TMP9 = load i64, i64* %len
+  %TMP10 = add nsw i64 %TMP9, 1
+  call void @memcpy(i64 %TMP7, i64 %TMP8, i64 %TMP10)
+  %TMP11 = load i64, i64* %buf
+  %TMP12 = load i64, i64* %len
+  %TMP13 = insertvalue %StdString undef, i64 %TMP11, 0
+  %TMP14 = insertvalue %StdString %TMP13, i64 %TMP12, 1
+  ret %StdString %TMP14
+  ret %StdString 0
+}
+
+define i64 @StdString_get_buffer(%StdString %arg0) {
+entry:
+  %self = alloca %StdString
+  store %StdString %arg0, %StdString* %self
+  %TMP15 = load %StdString, %StdString* %self
+  %TMP16 = extractvalue %StdString %TMP15, 0
+  ret i64 %TMP16
+  ret i64 0
+}
+
+define i64 @main() {
+entry:
+  %TMP18 = call %StdString @StdString_from_raw(i8* i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.17, i64 0, i64 0))
+  %s = alloca %StdString
+  store %StdString %TMP18, %StdString* %s
+  %TMP19 = load %StdString, %StdString* %s
+  %TMP20 = call i64 @StdString_get_buffer(%StdString %TMP19)
+  %ptr = alloca i64
+  store i64 %TMP20, i64* %ptr
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.21, i64 0, i64 0))
+  %TMP22 = load i64, i64* %ptr
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.23, i64 0, i64 0), i64 %TMP22)
+  %TMP24 = load %StdString, %StdString* %s
+  %TMP25 = extractvalue %StdString %TMP24, 1
+  %len = alloca i64
+  store i64 %TMP25, i64* %len
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.26, i64 0, i64 0))
+  %TMP27 = load i64, i64* %len
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.28, i64 0, i64 0), i64 %TMP27)
+  ret i64 0
+  ret i64 0
+}
+
+

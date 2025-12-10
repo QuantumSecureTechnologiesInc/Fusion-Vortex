@@ -1,0 +1,308 @@
+   Compiling fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+warning: field `attributes` is never read
+ --> src\ast\mod.rs:7:9
+  |
+5 |     Function {
+  |     -------- field in this variant
+6 |         name: String,
+7 |         attributes: Vec<Attribute>,
+  |         ^^^^^^^^^^
+  |
+  = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `generic_params` and `implements` are never read
+  --> src\ast\mod.rs:16:9
+   |
+14 |     Class {
+   |     ----- fields in this variant
+15 |         name: String,
+16 |         generic_params: Vec<String>, // New: Generic Type Parameters for the class itself
+   |         ^^^^^^^^^^^^^^
+17 |         implements: Vec<String>,
+   |         ^^^^^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Trait`, `GlobalVariable`, and `Module` are never constructed
+  --> src\ast\mod.rs:21:5
+   |
+ 4 | pub enum Declaration {
+   |          ----------- variants in this enum
+...
+21 |     Trait {
+   |     ^^^^^
+...
+25 |     GlobalVariable {
+   |     ^^^^^^^^^^^^^^
+...
+30 |     Module {
+   |     ^^^^^^
+   |
+   = note: `Declaration` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `params` and `return_type` are never read
+  --> src\ast\mod.rs:57:9
+   |
+55 | pub struct MethodSignature {
+   |            --------------- fields in this struct
+56 |     pub name: String,
+57 |     pub params: Vec<Parameter>,
+   |         ^^^^^^
+58 |     pub return_type: Option<Type>,
+   |         ^^^^^^^^^^^
+   |
+   = note: `MethodSignature` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `For`, `Break`, and `Continue` are never constructed
+  --> src\ast\mod.rs:86:5
+   |
+67 | pub enum Statement {
+   |          --------- variants in this enum
+...
+86 |     For {
+   |     ^^^
+...
+93 |     Break,
+   |     ^^^^^
+94 |     Continue,
+   |     ^^^^^^^^
+   |
+   = note: `Statement` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `UnaryOp`, `Index`, `Array`, and `Map` are never constructed
+   --> src\ast\mod.rs:106:5
+    |
+ 98 | pub enum Expression {
+    |          ---------- variants in this enum
+...
+106 |     UnaryOp {
+    |     ^^^^^^^
+...
+127 |     Index {
+    |     ^^^^^
+...
+131 |     Array(Vec<Expression>),
+    |     ^^^^^
+132 |     Map(Vec<(Expression, Expression)>),
+    |     ^^^
+    |
+    = note: `Expression` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Float` and `Boolean` are never constructed
+   --> src\ast\mod.rs:138:5
+    |
+136 | pub enum Literal {
+    |          ------- variants in this enum
+137 |     Integer(i64),
+138 |     Float(f64),
+    |     ^^^^^
+139 |     String(String),
+140 |     Boolean(bool),
+    |     ^^^^^^^
+    |
+    = note: `Literal` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Modulo`, `LessEqual`, and `GreaterEqual` are never constructed
+   --> src\ast\mod.rs:149:5
+    |
+144 | pub enum BinaryOp {
+    |          -------- variants in this enum
+...
+149 |     Modulo,
+    |     ^^^^^^
+...
+153 |     LessEqual,
+    |     ^^^^^^^^^
+154 |     GreaterThan,
+155 |     GreaterEqual,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `BinaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Negate` and `Not` are never constructed
+   --> src\ast\mod.rs:162:5
+    |
+161 | pub enum UnaryOp {
+    |          ------- variants in this enum
+162 |     Negate,
+    |     ^^^^^^
+163 |     Not,
+    |     ^^^
+    |
+    = note: `UnaryOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: multiple variants are never constructed
+   --> src\ast\mod.rs:171:5
+    |
+167 | pub enum Type {
+    |          ---- variants in this enum
+...
+171 |     Float,
+    |     ^^^^^
+172 |     String,
+173 |     Boolean,
+    |     ^^^^^^^
+174 |     Custom(String),        // Named types (e.g., DataProcessor)
+175 |     TypeParameter(String), // New: Represents an unresolved generic type (e.g., 'T')
+    |     ^^^^^^^^^^^^^
+176 |     Array(Box<Type>),
+    |     ^^^^^
+177 |     Optional(Box<Type>),
+    |     ^^^^^^^^
+178 |     Union(Vec<Type>),
+    |     ^^^^^
+179 |     Function {
+    |     ^^^^^^^^
+...
+184 |     GenericInstance {
+    |     ^^^^^^^^^^^^^^^
+    |
+    = note: `Type` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variant `HardwareAccelerated` is never constructed
+   --> src\ast\mod.rs:192:5
+    |
+191 | pub enum Attribute {
+    |          --------- variant in this enum
+192 |     HardwareAccelerated(String),
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `Attribute` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `print` is never used
+ --> src\stdlib\mod.rs:4:12
+  |
+4 |     pub fn print(s: &str) {
+  |            ^^^^^
+
+warning: `fusion_lang` (bin "fusion_lang") generated 12 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.31s
+     Running `target\debug\fusion_lang.exe --input test_all.fu`
+Compiling test_all.fu...
+Parsed AST successfully.
+Semantic Analysis Passed
+LLVM IR Generated:
+@.str.13 = private unnamed_addr constant [15 x i8] c"Initial value:\00", align 1
+@.fmt.16 = private unnamed_addr constant [5 x i8] c"%lld\0A\00", align 1
+@.str.24 = private unnamed_addr constant [12 x i8] c"After loop:\00", align 1
+@.fmt.28 = private unnamed_addr constant [5 x i8] c"%lld\0A\00", align 1
+@.str.33 = private unnamed_addr constant [14 x i8] c"Result is big\00", align 1
+@.str.34 = private unnamed_addr constant [16 x i8] c"Result is small\00", align 1
+@.str.35 = private unnamed_addr constant [12 x i8] c"Global Add:\00", align 1
+@.fmt.37 = private unnamed_addr constant [5 x i8] c"%lld\0A\00", align 1
+; ModuleID = 'fusion_module'
+source_filename = "fusion_module"
+
+declare i32 @printf(i8*, ...)
+
+%Counter = type { i64 }
+
+define void @Counter_init(%Counter %arg0, i64 %arg1) {
+entry:
+  %self = alloca %Counter
+  store %Counter %arg0, %Counter* %self
+  %start = alloca i64
+  store i64 %arg1, i64* %start
+  %TMP0 = load i64, i64* %start
+  %TMP1 = getelementptr inbounds %Counter, %Counter* %self, i32 0, i32 0
+  store i64 %TMP0, i64* %TMP1
+  ret void
+}
+
+define void @Counter_increment(%Counter %arg0) {
+entry:
+  %self = alloca %Counter
+  store %Counter %arg0, %Counter* %self
+  %TMP2 = load %Counter, %Counter* %self
+  %TMP3 = extractvalue %Counter %TMP2, 0
+  %TMP4 = add nsw i64 %TMP3, 1
+  %TMP5 = getelementptr inbounds %Counter, %Counter* %self, i32 0, i32 0
+  store i64 %TMP4, i64* %TMP5
+  ret void
+}
+
+define i64 @Counter_get_value(%Counter %arg0) {
+entry:
+  %self = alloca %Counter
+  store %Counter %arg0, %Counter* %self
+  %TMP6 = load %Counter, %Counter* %self
+  %TMP7 = extractvalue %Counter %TMP6, 0
+  ret i64 %TMP7
+  ret i64 0
+}
+
+define i64 @add(i64 %arg0, i64 %arg1) {
+entry:
+  %a = alloca i64
+  store i64 %arg0, i64* %a
+  %b = alloca i64
+  store i64 %arg1, i64* %b
+  %TMP8 = load i64, i64* %a
+  %TMP9 = load i64, i64* %b
+  %TMP10 = add nsw i64 %TMP8, %TMP9
+  ret i64 %TMP10
+  ret i64 0
+}
+
+define i64 @main() {
+entry:
+  %TMP11 = insertvalue %Counter undef, i64 0, 0
+  %c = alloca %Counter
+  store %Counter %TMP11, %Counter* %c
+  %TMP12 = load %Counter, %Counter* %c
+  call void @Counter_init(%Counter %TMP12, i64 10)
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.13, i64 0, i64 0))
+  %TMP14 = load %Counter, %Counter* %c
+  %TMP15 = call i64 @Counter_get_value(%Counter %TMP14)
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.16, i64 0, i64 0), i64 %TMP15)
+  %i = alloca i64
+  store i64 0, i64* %i
+  br label %loop_cond_17
+
+loop_cond_17:
+  %TMP18 = load i64, i64* %i
+  %TMP19 = icmp slt i64 %TMP18, 5
+  %TMP20 = zext i1 %TMP19 to i64
+  %cmp_res_21 = icmp ne i64 %TMP20, 0
+  br i1 %cmp_res_21, label %loop_body_17, label %loop_end_17
+
+loop_body_17:
+  %TMP21 = load %Counter, %Counter* %c
+  call void @Counter_increment(%Counter %TMP21)
+  %TMP22 = load i64, i64* %i
+  %TMP23 = add nsw i64 %TMP22, 1
+  store i64 %TMP23, i64* %i
+  br label %loop_cond_17
+
+loop_end_17:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.24, i64 0, i64 0))
+  %TMP25 = load %Counter, %Counter* %c
+  %TMP26 = call i64 @Counter_get_value(%Counter %TMP25)
+  %res = alloca i64
+  store i64 %TMP26, i64* %res
+  %TMP27 = load i64, i64* %res
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.28, i64 0, i64 0), i64 %TMP27)
+  %TMP29 = load i64, i64* %res
+  %TMP30 = icmp sgt i64 %TMP29, 12
+  %TMP31 = zext i1 %TMP30 to i64
+  %cmp_res_33 = icmp ne i64 %TMP31, 0
+  br i1 %cmp_res_33, label %then_32, label %else_32
+
+then_32:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.33, i64 0, i64 0))
+  br label %merge_32
+
+else_32:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.34, i64 0, i64 0))
+  br label %merge_32
+
+merge_32:
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.35, i64 0, i64 0))
+  %TMP36 = call i64 @add(i64 100, i64 200)
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.37, i64 0, i64 0), i64 %TMP36)
+  ret i64 0
+  ret i64 0
+}
+
+

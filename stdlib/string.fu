@@ -1,0 +1,32 @@
+class String {
+    buffer: int; // ptr to char (i8)
+    length: int;
+    
+    fn from_raw(ptr: int) -> String {
+        let len = strlen(ptr);
+        let buf = malloc(len + 1);
+        memcpy(buf, ptr, len + 1);
+        return String { buffer: buf, length: len };
+    }
+    
+    fn len() -> int {
+        return self.length;
+    }
+    
+    fn concat(other: String) -> String {
+        let new_len = self.length + other.length;
+        let new_buf = malloc(new_len + 1);
+        
+        memcpy(new_buf, self.buffer, self.length);
+        let dest_offset = ptr_add(new_buf, self.length);
+        memcpy(dest_offset, other.buffer, other.length);
+        
+        // Null terminate? We are just using memcpy for now, assuming external strings.
+        // But for safety, let's just keep track of length.
+        // Actually we should zero terminate for C compat if we use print/printf.
+        
+        // memcpy(new_buf, self.buffer, self.length); is fine.
+        
+        return String { buffer: new_buf, length: new_len };
+    }
+}

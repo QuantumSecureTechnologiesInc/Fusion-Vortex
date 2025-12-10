@@ -1,0 +1,72 @@
+/// Foundational traits for the Fusion Type System.
+
+use std::fmt::Debug;
+use std::ops::{Add, Mul, Sub, Div};
+use crate::types::tensor::DataType;
+use num_complex::Complex64;
+
+/// Trait for types that can be elements of a Tensor.
+pub trait Numeric: 
+    Debug + 
+    Clone + 
+    Copy + 
+    PartialEq + 
+    Add<Output = Self> + 
+    Sub<Output = Self> + 
+    Mul<Output = Self> + 
+    Div<Output = Self> +
+    'static
+{
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn from_usize(n: usize) -> Self;
+    fn data_type() -> DataType;
+}
+
+// ... Existing implementations for f64, f32, i64, i32 ...
+impl Numeric for f64 {
+    fn zero() -> Self { 0.0 }
+    fn one() -> Self { 1.0 }
+    fn from_usize(n: usize) -> Self { n as f64 }
+    fn data_type() -> DataType { DataType::Float64 }
+}
+
+impl Numeric for f32 {
+    fn zero() -> Self { 0.0 }
+    fn one() -> Self { 1.0 }
+    fn from_usize(n: usize) -> Self { n as f32 }
+    fn data_type() -> DataType { DataType::Float32 }
+}
+
+impl Numeric for i64 {
+    fn zero() -> Self { 0 }
+    fn one() -> Self { 1 }
+    fn from_usize(n: usize) -> Self { n as i64 }
+    fn data_type() -> DataType { DataType::Int64 }
+}
+
+impl Numeric for i32 {
+    fn zero() -> Self { 0 }
+    fn one() -> Self { 1 }
+    fn from_usize(n: usize) -> Self { n as i32 }
+    fn data_type() -> DataType { DataType::Int32 }
+}
+
+// New implementation for Phase 3
+impl Numeric for Complex64 {
+    fn zero() -> Self { Complex64::new(0.0, 0.0) }
+    fn one() -> Self { Complex64::new(1.0, 0.0) }
+    fn from_usize(n: usize) -> Self { Complex64::new(n as f64, 0.0) }
+    fn data_type() -> DataType { DataType::Complex128 }
+}
+
+/// Trait for quantum objects that can be measured.
+pub trait Measurable {
+    fn measure(&mut self) -> bool;
+}
+
+/// Trait for unitary operations (Quantum Gates).
+pub trait Unitary {
+    fn matrix(&self) -> &crate::types::tensor::Matrix<Complex64>;
+    fn is_unitary(&self) -> bool;
+}

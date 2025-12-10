@@ -1,0 +1,309 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+use std::collections::HashMap;
+use tower_lsp::lsp_types::{
+    InlayHint, InlayHintKind, InlayHintLabel, InlayHintTooltip, Position, Range, Url,
+};
+
+/// Inlay hints provider for type and parameter hints
+pub struct InlayHintsProvider {
+    enabled: bool,
+    show_type_hints: bool,
+    show_parameter_hints: bool,
+    show_return_hints: bool,
+    hint_cache: HashMap<String, Vec<InlayHint>>,
+}
+
+impl InlayHintsProvider {
+    pub fn new() -> Self {
+        InlayHintsProvider {
+            enabled: true,
+            show_type_hints: true,
+            show_parameter_hints: true,
+            show_return_hints: true,
+            hint_cache: HashMap::new(),
+        }
+    }
+
+    /// Configure hint display options
+    pub fn configure(&mut self, show_types: bool, show_params: bool, show_returns: bool) {
+        self.show_type_hints = show_types;
+        self.show_parameter_hints = show_params;
+        self.show_return_hints = show_returns;
+    }
+
+    /// Provide inlay hints for a range
+    pub fn provide_hints(&mut self, uri: &Url, range: Range, text: &str) -> Vec<InlayHint> {
+        if !self.enabled {
+            return Vec::new();
+        }
+
+        // Check cache
+        let cache_key = format!("{}:{:?}", uri, range);
+        if let Some(cached) = self.hint_cache.get(&cache_key) {
+            return cached.clone();
+        }
+
+        let mut hints = Vec::new();
+
+        // Extract lines in range
+        let lines: Vec<&str> = text.lines().collect();
+        let start_line = range.start.line as usize;
+        let end_line = range.end.line.min(lines.len() as u32) as usize;
+
+        for line_num in start_line..=end_line {
+            if line_num < lines.len() {
+                let line = lines[line_num];
+                let line_hints = self.analyze_line(line, line_num as u32);
+                hints.extend(line_hints);
+            }
+        }
+
+        // Cache result
+        self.hint_cache.insert(cache_key, hints.clone());
+
+        hints
+    }
+
+    /// Analyze a line for hints
+    fn analyze_line(&self, line: &str, line_num: u32) -> Vec<InlayHint> {
+        let mut hints = Vec::new();
+
+        // Variable declarations with type inference
+        if self.show_type_hints {
+            if let Some(var_hints) = self.analyze_variables(line, line_num) {
+                hints.extend(var_hints);
+            }
+        }
+
+        // Function parameters
+        if self.show_parameter_hints {
+            if let Some(param_hints) = self.analyze_parameters(line, line_num) {
+                hints.extend(param_hints);
+            }
+        }
+
+        // Return types
+        if self.show_return_hints {
+            if let Some(return_hint) = self.analyze_return_type(line, line_num) {
+                hints.push(return_hint);
+            }
+        }
+
+        hints
+    }
+
+    /// Analyze variable declarations
+    fn analyze_variables(&self, line: &str, line_num: u32) -> Option<Vec<InlayHint>> {
+        // Pattern: let x = value;
+        if !line.trim().starts_with("let ") {
+            return None;
+        }
+
+        let mut hints = Vec::new();
+
+        // Simple pattern matching (would use full parser in reality)
+        if let Some(eq_pos) = line.find('=') {
+            if let Some(let_pos) = line.find("let ") {
+                let var_part = &line[let_pos + 4..eq_pos].trim();
+
+                // Check if type is not already specified
+                if !var_part.contains(':') {
+                    let var_name_end = var_part.find(' ').unwrap_or(var_part.len());
+                    let char_pos = let_pos + 4 + var_name_end;
+
+                    // Infer type from value (simplified)
+                    let value_part = line[eq_pos + 1..].trim();
+                    let inferred_type = self.infer_type(value_part);
+
+                    hints.push(InlayHint {
+                        position: Position {
+                            line: line_num,
+                            character: char_pos as u32,
+                        },
+                        label: InlayHintLabel::String(format!(": {}", inferred_type)),
+                        kind: Some(InlayHintKind::TYPE),
+                        text_edits: None,
+                        tooltip: Some(InlayHintTooltip::String(format!(
+                            "Inferred type: {}",
+                            inferred_type
+                        ))),
+                        padding_left: None,
+                        padding_right: Some(true),
+                        data: None,
+                    });
+                }
+            }
+        }
+
+        Some(hints)
+    }
+
+    /// Analyze function parameters
+    fn analyze_parameters(&self, line: &str, line_num: u32) -> Option<Vec<InlayHint>> {
+        // Pattern: function_call(value1, value2)
+        if !line.contains('(') {
+            return None;
+        }
+
+        let mut hints = Vec::new();
+
+        // Find function calls (simplified)
+        if let Some(paren_start) = line.find('(') {
+            if let Some(paren_end) = line.find(')') {
+                let params = &line[paren_start + 1..paren_end];
+
+                // Split parameters
+                for (idx, param) in params.split(',').enumerate() {
+                    let param_trimmed = param.trim();
+                    if !param_trimmed.is_empty() {
+                        // Find position of parameter
+                        if let Some(param_pos) = line.find(param_trimmed) {
+                            hints.push(InlayHint {
+                                position: Position {
+                                    line: line_num,
+                                    character: param_pos as u32,
+                                },
+                                label: InlayHintLabel::String(format!("param{}: ", idx)),
+                                kind: Some(InlayHintKind::PARAMETER),
+                                text_edits: None,
+                                tooltip: None,
+                                padding_left: None,
+                                padding_right: Some(true),
+                                data: None,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        if hints.is_empty() {
+            None
+        } else {
+            Some(hints)
+        }
+    }
+
+    /// Analyze return type
+    fn analyze_return_type(&self, line: &str, line_num: u32) -> Option<InlayHint> {
+        // Pattern: fn name(...) -> type
+        if !line.trim().starts_with("fn ") {
+            return None;
+        }
+
+        // Check if return type is not specified
+        if line.contains("->") {
+            return None; // Already has return type
+        }
+
+        // Find closing parenthesis
+        if let Some(paren_end) = line.rfind(')') {
+            // Infer return type would happen here
+            // For now, suggest common return type
+            let return_type = "Result<T, E>"; // Placeholder
+
+            Some(InlayHint {
+                position: Position {
+                    line: line_num,
+                    character: (paren_end + 1) as u32,
+                },
+                label: InlayHintLabel::String(format!(" -> {}", return_type)),
+                kind: Some(InlayHintKind::TYPE),
+                text_edits: None,
+                tooltip: Some(InlayHintTooltip::String(
+                    "Suggested return type".to_string(),
+                )),
+                padding_left: Some(true),
+                padding_right: None,
+                data: None,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Infer type from value (simplified)
+    fn infer_type(&self, value: &str) -> String {
+        let value = value.trim();
+
+        // Number
+        if value.parse::<i64>().is_ok() {
+            return "int".to_string();
+        }
+
+        if value.parse::<f64>().is_ok() {
+            return "float".to_string();
+        }
+
+        // String literal
+        if value.starts_with('"') && value.ends_with('"') {
+            return "string".to_string();
+        }
+
+        // Boolean
+        if value == "true" || value == "false" {
+            return "bool".to_string();
+        }
+
+        // Vector
+        if value.starts_with("Vector::") {
+            return "Vector<T>".to_string();
+        }
+
+        // Option
+        if value.starts_with("Option::") {
+            return "Option<T>".to_string();
+        }
+
+        // Result
+        if value.starts_with("Result::") {
+            return "Result<T, E>".to_string();
+        }
+
+        // Default
+        "T".to_string()
+    }
+
+    /// Clear cache for document
+    pub fn invalidate_cache(&mut self, uri: &Url) {
+        self.hint_cache
+            .retain(|key, _| !key.starts_with(uri.as_str()));
+    }
+
+    /// Clear entire cache
+    pub fn clear_cache(&mut self) {
+        self.hint_cache.clear();
+    }
+
+    /// Enable/disable hints
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.enabled = enabled;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_type_inference() {
+        let provider = InlayHintsProvider::new();
+
+        assert_eq!(provider.infer_type("42"), "int");
+        assert_eq!(provider.infer_type("3.14"), "float");
+        assert_eq!(provider.infer_type("\"hello\""), "string");
+        assert_eq!(provider.infer_type("true"), "bool");
+    }
+
+    #[test]
+    fn test_variable_hints() {
+        let provider = InlayHintsProvider::new();
+        let line = "let x = 42;";
+
+        let hints = provider.analyze_variables(line, 0);
+        assert!(hints.is_some());
+        assert_eq!(hints.unwrap().len(), 1);
+    }
+}

@@ -1,0 +1,17 @@
+class Box {
+    val: int;
+}
+
+fn main() -> int {
+    let a = Box { val: 10 };
+    let b = a; // Move a -> b
+    
+    // a is now invalid
+    let c = a; // Should fail
+    
+    let x = 10;
+    let y = x; // Copy (int)
+    let z = x; // OK
+    
+    return 0;
+}

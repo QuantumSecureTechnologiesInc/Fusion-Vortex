@@ -1,0 +1,152 @@
+[package]
+name = "fusion_lang"
+version = "0.2.0-beta.1"
+edition = "2021"
+authors = ["QuantumSecure Technologies Ltd"]
+description = "Fusion Programming Language Compiler"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)'] }
+
+[dependencies]
+# Core Dependencies
+logos = "0.14"
+clap = { version = "4.4", features = ["derive"] }
+lazy_static = "1.4"
+regex = "1.10"
+thiserror = "1.0"
+sha3 = "0.10"  # For hybrid cryptography module
+
+# Cryptography - Classical
+x25519-dalek = "2.0"
+ed25519-dalek = "2.1"
+rand = "0.8"
+
+# Cryptography - Post-Quantum
+pqcrypto-kyber = "0.8"
+pqcrypto-dilithium = "0.5"
+pqcrypto-traits = "0.3"
+
+# Phase 3: Language Server Protocol (LSP)
+tower-lsp = "0.20"
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+
+# Phase 3: WebAssembly Backend
+wasm-encoder = "0.219"
+wasmparser = "0.219"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[workspace]
+resolver = "2"
+members = [
+    "cmd/fusion",
+    "crates/agents",
+    "crates/ai-cli",
+    "crates/ai-core",
+    "crates/ai-daemon",
+    "crates/ai-models",
+    "crates/analyzer",
+    "crates/audit",
+    "crates/core",
+    "crates/debugger",
+    "crates/deploy",
+    "crates/docgen",
+    "crates/formatter",
+    "crates/fusion_ai_core",
+    "crates/fusion_core",
+    "crates/fusion_finance",
+    "crates/fusion_net",
+    "crates/fusion_quantum",
+    "crates/fusion_runtime_core",
+    "crates/fusion_runtime_hal",
+    "crates/fusion_runtime_mem_mgr",
+    "crates/fusion_runtime_scheduler",
+    "crates/github",
+    "crates/mcp",
+    "crates/pkgmgr",
+    "crates/profiler",
+    "crates/projects",
+    "crates/settings",
+    "crates/tester",
+    "crates/flux-resolve-engine",
+    "crates/toolchain",
+    "crates/haft-fusion",
+    "crates/k8s-operator",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+homepage = "https://fusion-lang.org"
+rust-version = "1.80"
+
+[workspace.dependencies]
+anyhow = "1.0.94"
+async-trait = "0.1.83"
+clap = { version = "4.5.23", features = ["derive"] }
+clap_complete = "4.5.38"
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = "1.0.133"
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"] }
+bytes = "1.9.0"
+futures = "0.3.31"
+thiserror = "2.0.6"
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+tempfile = "3.14.0"
+log = "0.4.22"
+url = "2.5.4"
+regex = "1.11.1"
+walkdir = "2.5.0"
+glob = "0.3.1"
+toml = "0.8.19"
+dirs = "5.0.1"
+once_cell = "1.20.2"
+parking_lot = "0.12.3"
+base64 = "0.22.1"
+rand = "0.8.5"
+sha2 = "0.10.8"
+hex = "0.4.3"
+which = "6.0.3"
+hyper = { version = "1.5.1", features = ["full"] }
+tower = { version = "0.5.1" }
+similar = "2.6.0"
+diff = "0.1.13"
+git2 = { version = "0.19.0", default-features = false }
+handlebars = "6.2.0"
+proptest = "1.6.0"
+
+# Crypto
+blake3 = "1.5.0"
+sha3 = "0.10.8"
+pqcrypto = "0.17.0"
+pqcrypto-dilithium = "0.5.0"
+pqcrypto-kyber = "0.8.0"
+pqcrypto-sphincsplus = "0.8.0"
+pqcrypto-falcon = "0.3.0"
+pqcrypto-classicmceliece = "0.3.0"
+ring = "0.17.8"
+
+# Additional from golden-singularity
+crossbeam = "0.8"
+dashmap = "5.5"
+libc = "0.2"
+memmap2 = "0.9"
+ash = "0.38" 
+metal = "0.28"
+cuda-sys = "0.3"
+socket2 = "0.5"
+pin-project-lite = "0.2"
+metrics = "0.21"
+criterion = "0.5"

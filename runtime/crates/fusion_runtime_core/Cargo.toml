@@ -1,0 +1,36 @@
+[package]
+name = "fusion_runtime_core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Custom heterogeneous runtime for Quantum/AI/Classical hybrid workloads"
+
+[dependencies]
+fusion_core = { path = "../fusion_core" }
+fusion_runtime_scheduler = { path = "../fusion_runtime_scheduler" }
+fusion_runtime_mem_mgr = { path = "../fusion_runtime_mem_mgr" }
+fusion_runtime_hal = { path = "../fusion_runtime_hal" }
+
+# ⭐ Phase 2/3: New fusion_core integration
+fusion_traits = { path = "../fusion_traits" }
+fusion_tensor_core = { path = "../fusion_tensor_core" }
+fusion_quantum_core = { path = "../fusion_quantum_core" }
+
+parking_lot = { workspace = true }
+crossbeam = { workspace = true }
+dashmap = { workspace = true }
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+metrics = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+proptest = { workspace = true }
+
+[[bench]]
+name = "runtime_benchmarks"
+harness = false

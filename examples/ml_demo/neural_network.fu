@@ -1,0 +1,149 @@
+// examples/ml_demo/neural_network.fu - Simple neural network example
+
+use ml::tensor::Tensor;
+use ml::tensor::add_tensors;
+use ml::tensor::multiply_tensors;
+use ml::tensor::scalar_multiply;
+use ml::tensor::relu;
+use ml::tensor::sigmoid;
+use vector::Vector;
+use result::Result;
+
+// Simple feedforward neural network layer
+class DenseLayer {
+    input_size: int;
+    output_size: int;
+    weights: Tensor;
+    bias: Tensor;
+    learning_rate: float;
+}
+
+impl DenseLayer {
+    fn new(input_size: int, output_size: int, learning_rate: float) -> DenseLayer {
+        // Create weight tensor (output_size x input_size)
+        let mut weight_shape = Vector::new();
+        weight_shape.push(output_size * input_size);
+        
+        let mut weights = Tensor::zeros(weight_shape);
+        
+        // Initialize with small random values (simplified - using constant for demo)
+        let mut i = 0;
+        while i < output_size * input_size {
+            weights.set_at(i, 0.1);  // In real impl, use random initialization
+            i = i + 1;
+        }
+        
+        // Create bias tensor
+        let mut bias_shape = Vector::new();
+        bias_shape.push(output_size);
+        let bias = Tensor::zeros(bias_shape);
+        
+        return DenseLayer {
+            input_size: input_size,
+            output_size: output_size,
+            weights: weights,
+            bias: bias,
+            learning_rate: learning_rate
+        };
+    }
+    
+    fn forward(self, input: Tensor) -> Tensor {
+        // Simplified forward pass: weights * input + bias
+        // In real implementation, this would be proper matrix multiplication
+        
+        let mut output_shape = Vector::new();
+        output_shape.push(self.output_size);
+        let mut output = Tensor::zeros(output_shape);
+        
+        // Simplified computation (not real matrix multiplication)
+        let mut i = 0;
+        while i < self.output_size {
+            let mut sum = self.bias.get_at(i).unwrap();
+            
+            let mut j = 0;
+            while j < self.input_size {
+                let weight_idx = i * self.input_size + j;
+                let weight = self.weights.get_at(weight_idx).unwrap();
+                let input_val = input.get_at(j).unwrap();
+                sum = sum + weight * input_val;
+                j = j + 1;
+            }
+            
+            output.set_at(i, sum);
+            i = i + 1;
+        }
+        
+        return output;
+    }
+}
+
+// Simple neural network for XOR problem
+fn train_xor_network() -> int {
+    println("========================================");
+    println("XOR Neural Network Demo");
+    println("========================================");
+    
+    // Create network: 2 inputs -> 4 hidden -> 1 output
+    let hidden_layer = DenseLayer::new(2, 4, 0.1);
+    let output_layer = DenseLayer::new(4, 1, 0.1);
+    
+    // Training data for XOR
+    // [0, 0] -> 0
+    // [0, 1] -> 1
+    // [1, 0] -> 1
+    // [1, 1] -> 0
+    
+    println("Network created:");
+    println("  Input layer: 2 neurons");
+    println("  Hidden layer: 4 neurons (ReLU)");
+    println("  Output layer: 1 neuron (Sigmoid)");
+    println("");
+    
+    // Create test input [1.0, 0.0]
+    let mut input_shape = Vector::new();
+    input_shape.push(2);
+    let mut test_input = Tensor::zeros(input_shape);
+    test_input.set_at(0, 1.0);
+    test_input.set_at(1, 0.0);
+    
+    println("Forward pass on input [1.0, 0.0]:");
+    
+    // Forward pass
+    let hidden_output = hidden_layer.forward(test_input);
+    println("  Hidden layer output:");
+    let mut i = 0;
+    while i < 4 {
+        let val = hidden_output.get_at(i).unwrap();
+        println("    neuron " + i + ": " + val);
+        i = i + 1;
+    }
+    
+    let hidden_activated = relu(hidden_output);
+    println("  After ReLU activation:");
+    i = 0;
+    while i < 4 {
+        let val = hidden_activated.get_at(i).unwrap();
+        println("    neuron " + i + ": " + val);
+        i = i + 1;
+    }
+    
+    let output = output_layer.forward(hidden_activated);
+    let final_output = sigmoid(output);
+    
+    let result = final_output.get_at(0).unwrap();
+    println("");
+    println("  Final output: " + result);
+    println("");
+    println("(Expected for XOR[1,0]: 1.0)");
+    println("(Actual output with random weights: varies)");
+    println("");
+    println("Note: Full training loop with backpropagation");
+    println("requires gradient computation (Phase 4.2)");
+    println("========================================");
+    
+    return 0;
+}
+
+fn main() -> int {
+    return train_xor_network();
+}

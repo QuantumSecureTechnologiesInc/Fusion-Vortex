@@ -1,0 +1,15 @@
+fn main() -> int {
+    let a: int = 10;
+    let b: int = 20;
+
+    if (a < b) {
+        print("a is less than b");
+    } else {
+        print("a is not less than b");
+    }
+
+    let c: int = a + b;
+    print(c);
+
+    return 0;
+}

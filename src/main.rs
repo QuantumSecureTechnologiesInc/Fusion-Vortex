@@ -1,0 +1,489 @@
+use ast::{Block, Declaration, Expression, Literal, Statement, Type};
+use clap::Parser;
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+mod ast;
+mod async_runtime;
+mod borrow_checker;
+mod codegen;
+mod crypto;
+mod docs;
+mod lexer;
+mod lsp;
+mod ml;
+mod module_resolver;
+mod optimization;
+mod package_manager;
+mod parser;
+mod quantum;
+mod registry;
+mod security;
+mod semantic_analyzer;
+mod stdlib;
+mod wasm;
+mod web;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Input file to compile
+    #[arg(short, long)]
+    input: Option<String>,
+
+    /// Start in Language Server Protocol mode
+    #[arg(long)]
+    lsp: bool,
+
+    /// Enable multi-file compilation mode
+    #[arg(long)]
+    multi_file: bool,
+
+    /// Target compilation backend (llvm or wasm)
+    #[arg(long, default_value = "llvm")]
+    target: String,
+
+    /// Output file path
+    #[arg(short, long)]
+    output: Option<String>,
+
+    /// Run a feature demo (quantum, ml, async)
+    #[arg(long)]
+    demo: Option<String>,
+}
+
+fn main() {
+    let args = Args::parse();
+
+    // Launch LSP server if --lsp flag is provided
+    if args.lsp {
+        println!("Starting Fusion Language Server...");
+        tokio::runtime::Runtime::new()
+            .expect("Failed to create tokio runtime")
+            .block_on(async {
+                lsp::server::run_server().await;
+            });
+        return;
+    }
+
+    // Run feature demos
+    if let Some(demo_name) = args.demo {
+        match demo_name.as_str() {
+            "quantum" => {
+                println!("⚛️ Fusion Quantum Computing Demo\n");
+
+                // 1. Build Bell State Circuit
+                println!("1. Building Bell State Circuit (|00> + |11>) / sqrt(2)...");
+                let circuit = quantum::circuit::CircuitBuilder::bell_state();
+                circuit.print_diagram();
+
+                // 2. Run Simulation
+                println!("\n2. Running Simulation...");
+                let mut sim = quantum::simulator::QuantumSimulator::new(circuit.num_qubits());
+                match sim.run(&circuit) {
+                    Ok(_result) => {
+                        println!("   Simulation successful.");
+
+                        // 3. Measure
+                        let shots = 1000;
+                        println!("\n3. Measuring {} shots...", shots);
+                        let counts = sim.measure_shots(shots);
+                        counts.print_histogram();
+                    }
+                    Err(e) => eprintln!("Simulation failed: {}", e),
+                }
+            }
+            "ml" => {
+                println!("🧠 Fusion ML & GPU Demo\n");
+                println!("Device: {:?}", ml::Device::default());
+
+                // 1. Create a Linear Layer (2 inputs -> 1 output)
+                println!("1. Creating Linear Layer (2 -> 1)...");
+                use ml::nn::Module; // Import Module trait
+                let layer = ml::nn::layers::Linear::new(2, 1, false);
+
+                // 2. Create Input Tensor (Batch size 1, 2 features)
+                // Input: [1.0, 2.0]
+                println!("2. Creating Input Tensor [1.0, 2.0]...");
+                let input = ml::tensor::Tensor::new(vec![1.0, 2.0], vec![1, 2]).unwrap();
+
+                // 3. Forward Pass
+                // Weights are initialized to 1.0, so: [1, 2] * [1, 1]^T = 1*1 + 2*1 = 3
+                println!("3. Performing Forward Pass...");
+                match layer.forward(&input) {
+                    Ok(output) => {
+                        println!("   Output Shape: {:?}", output.shape);
+                        // Access internal data if visible or via Debug
+                        println!("   Output Data: {:?}", output);
+                    }
+                    Err(e) => eprintln!("   Forward pass failed: {}", e),
+                }
+            }
+            "async" => {
+                println!("⚡ Fusion Async Runtime Demo\n");
+
+                // 1. Create a Channel
+                let (tx, rx) = async_runtime::channels::channel();
+                println!("1. Channel created.");
+
+                // 2. Spawning Sender Thread
+                println!("2. Spawning sender thread...");
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    println!("   [Sender] Sending value 42...");
+                    tx.send(42);
+                });
+
+                // 3. Manual Async Receiver Poll Loop
+                println!("3. Waiting for message (Async Poll)...");
+                let mut attempts = 0;
+                loop {
+                    // Use try_recv() for polling
+                    if let Some(val) = rx.try_recv() {
+                        println!("   [Receiver] Received: {}", val);
+                        break;
+                    } else {
+                        attempts += 1;
+                        if attempts % 5 == 0 {
+                            println!("   [Receiver] ... waiting ...");
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(50));
+                    }
+                }
+            }
+            "web" => {
+                println!("🌐 Fusion Web Framework Demo\n");
+                let req = web::http::Request::new(
+                    web::http::Method::GET,
+                    "/api/users?id=123&active=true".to_string(),
+                    vec![],
+                );
+
+                println!("Parsed Request: {:?}", req.path);
+                println!("Query Params: {:?}", req.query_params);
+            }
+            _ => {
+                eprintln!(
+                    "Unknown demo: '{}'. Available: quantum, ml, async, web",
+                    demo_name
+                );
+            }
+        }
+        return;
+    }
+
+    if let Some(input_file) = args.input {
+        // Check target
+        match args.target.as_str() {
+            "wasm" => {
+                // WebAssembly compilation
+                compile_to_wasm(&input_file, args.output.as_deref());
+            }
+            "llvm" => {
+                // LLVM IR compilation (default)
+                if args.multi_file {
+                    compile_multi_file(&input_file);
+                } else {
+                    compile_single_file(&input_file);
+                }
+            }
+            _ => {
+                eprintln!(
+                    "Error: Unknown target '{}'. Use 'llvm' or 'wasm'.",
+                    args.target
+                );
+                std::process::exit(1);
+            }
+        }
+    } else {
+        println!("Fusion Compiler v0.1.0 - Hello World Demo");
+
+        // 1. Manually construct AST for:
+        // fn main() {
+        //     return 0;
+        // }
+        let ast = vec![Declaration::Function {
+            name: "main".to_string(),
+            attributes: vec![],
+            generic_params: vec![],
+            where_bounds: vec![],
+            params: vec![],
+            return_type: Type::Void,
+            body: Block {
+                statements: vec![Statement::Return(Some(Expression::Literal(
+                    Literal::Integer(0),
+                )))],
+            },
+        }];
+
+        println!("\n[1] AST Constructed");
+
+        // 2. Semantic Analysis
+        let mut analyzer = semantic_analyzer::SemanticAnalyzer::new();
+        match analyzer.analyze(ast) {
+            Ok(checked_ast) => {
+                println!("[2] Semantic Analysis Passed");
+
+                // 3. Code Generation
+                let mut codegen = codegen::CodeGenerator::new();
+                match codegen.generate(&checked_ast) {
+                    Ok(ir) => {
+                        println!("[3] LLVM IR Generated:\n");
+                        println!("{}", ir);
+                    }
+                    Err(e) => eprintln!("Codegen Error: {}", e),
+                }
+            }
+            Err(e) => {
+                eprintln!("Semantic Error: {:?}", e);
+            }
+        }
+    }
+}
+
+/// Single-file compilation (legacy mode)
+fn compile_single_file(input_file: &str) {
+    println!("Compiling {}...", input_file);
+
+    let mut content = std::fs::read_to_string(&input_file).expect("Failed to read input file");
+
+    // Prepend Core Library Declarations
+    content = format!("{}{}", stdlib::CORE_LIBS, content);
+
+    let mut parser = parser::Parser::new(&content);
+    match parser.parse_program() {
+        Ok(ast) => {
+            println!("Parsed AST successfully.");
+            // 2. Semantic Analysis
+            let mut analyzer = semantic_analyzer::SemanticAnalyzer::new();
+            match analyzer.analyze(ast) {
+                Ok(checked_ast) => {
+                    println!("Semantic Analysis Passed");
+
+                    // 3. Borrow Checker
+                    let mut borrow_checker = borrow_checker::BorrowChecker::new();
+                    match borrow_checker.check(&checked_ast) {
+                        Ok(_) => {
+                            println!("Borrow Checker Passed");
+
+                            // 4. Code Generation
+                            let mut codegen = codegen::CodeGenerator::new();
+                            match codegen.generate(&checked_ast) {
+                                Ok(ir) => {
+                                    println!("LLVM IR Generated:\n{}", ir);
+                                }
+                                Err(e) => eprintln!("Codegen Error: {}", e),
+                            }
+                        }
+                        Err(errors) => {
+                            eprintln!("Borrow/Ownership Errors:");
+                            for err in errors {
+                                eprintln!(" - {}", err);
+                            }
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Semantic Error: {:?}", e),
+            }
+        }
+        Err(e) => eprintln!("Parse Error: {}", e),
+    }
+}
+
+/// Multi-file compilation mode
+fn compile_multi_file(entry_file: &str) {
+    println!("Multi-file compilation starting from {}...", entry_file);
+
+    // 1. Resolve module dependencies
+    let entry_path = PathBuf::from(entry_file);
+    let mut resolver = module_resolver::ModuleResolver::new(entry_path.clone());
+
+    let compilation_order = match resolver.resolve() {
+        Ok(order) => {
+            println!("Module resolution successful.");
+            println!("Compilation order:");
+            for (i, module_name) in order.iter().enumerate() {
+                println!("  {}. {}", i + 1, module_name);
+            }
+            order
+        }
+        Err(e) => {
+            eprintln!("Module resolution error: {}", e);
+            return;
+        }
+    };
+
+    // 2. Compile each module in dependency order
+    let mut module_irs: HashMap<String, String> = HashMap::new();
+
+    for module_name in &compilation_order {
+        let module = match resolver.get_module(module_name) {
+            Some(m) => m,
+            None => {
+                eprintln!(
+                    "Internal error: Module '{}' not found in resolver",
+                    module_name
+                );
+                return;
+            }
+        };
+
+        println!("\nCompiling module '{}'...", module_name);
+
+        // Read module source
+        let mut content = match std::fs::read_to_string(&module.path) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("Failed to read module '{}': {}", module_name, e);
+                return;
+            }
+        };
+
+        // Prepend stdlib for each module
+        content = format!("{}{}", stdlib::CORE_LIBS, content);
+
+        // Parse
+        let mut parser = parser::Parser::new(&content);
+        let ast = match parser.parse_program() {
+            Ok(ast) => {
+                println!("  Parsed successfully.");
+                ast
+            }
+            Err(e) => {
+                eprintln!("  Parse error in '{}': {}", module_name, e);
+                return;
+            }
+        };
+
+        // Semantic analysis
+        let mut analyzer = semantic_analyzer::SemanticAnalyzer::new();
+        let checked_ast = match analyzer.analyze(ast) {
+            Ok(ast) => {
+                println!("  Semantic analysis passed.");
+                ast
+            }
+            Err(e) => {
+                eprintln!("  Semantic error in '{}': {:?}", module_name, e);
+                return;
+            }
+        };
+
+        // Borrow checking
+        let mut borrow_checker = borrow_checker::BorrowChecker::new();
+        match borrow_checker.check(&checked_ast) {
+            Ok(_) => println!("  Borrow checker passed."),
+            Err(errors) => {
+                eprintln!("  Borrow checker errors in '{}':", module_name);
+                for err in errors {
+                    eprintln!("    - {}", err);
+                }
+                return;
+            }
+        }
+
+        // Code generation
+        let mut codegen = codegen::CodeGenerator::new();
+        let ir = match codegen.generate(&checked_ast) {
+            Ok(ir) => {
+                println!("  LLVM IR generated successfully.");
+                ir
+            }
+            Err(e) => {
+                eprintln!("  Codegen error in '{}': {}", module_name, e);
+                return;
+            }
+        };
+
+        module_irs.insert(module_name.clone(), ir);
+    }
+
+    // 3. Link all module IRs
+    println!("\n=== Linking {} modules ===", module_irs.len());
+
+    for module_name in &compilation_order {
+        if let Some(ir) = module_irs.get(module_name) {
+            println!("\n--- Module '{}' IR ---", module_name);
+            println!("{}", ir);
+        }
+    }
+
+    println!("\n✅ Multi-file compilation successful!");
+    println!("Compiled {} modules in total.", compilation_order.len());
+}
+
+/// WebAssembly compilation mode
+fn compile_to_wasm(input_file: &str, output_file: Option<&str>) {
+    use wasm::WasmCodeGenerator;
+
+    println!("Compiling {} to WebAssembly...", input_file);
+
+    // Read source file
+    let content = match std::fs::read_to_string(input_file) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Failed to read input file: {}", e);
+            return;
+        }
+    };
+
+    // Parse
+    let mut parser = parser::Parser::new(&content);
+    let ast = match parser.parse_program() {
+        Ok(ast) => {
+            println!("  ✅ Parsed successfully.");
+            ast
+        }
+        Err(e) => {
+            eprintln!("  ❌ Parse error: {}", e);
+            return;
+        }
+    };
+
+    // Semantic analysis
+    let mut analyzer = semantic_analyzer::SemanticAnalyzer::new();
+    let checked_ast = match analyzer.analyze(ast) {
+        Ok(ast) => {
+            println!("  ✅ Semantic analysis passed.");
+            ast
+        }
+        Err(e) => {
+            eprintln!("  ❌ Semantic error: {:?}", e);
+            return;
+        }
+    };
+
+    // Generate WASM
+    let mut wasm_generator = WasmCodeGenerator::new();
+    let wasm_bytes = match wasm_generator.generate(&checked_ast) {
+        Ok(bytes) => {
+            println!("  ✅ WebAssembly generated ({} bytes).", bytes.len());
+            bytes
+        }
+        Err(e) => {
+            eprintln!("  ❌ WASM generation error: {}", e);
+            return;
+        }
+    };
+
+    // Validate WASM
+    match wasmparser::validate(&wasm_bytes) {
+        Ok(_) => println!("  ✅ WASM validation passed."),
+        Err(e) => {
+            eprintln!("  ⚠️  WASM validation failed: {}", e);
+            eprintln!("  (Continuing anyway...)");
+        }
+    }
+
+    // Write output file
+    let output_path = output_file.unwrap_or("output.wasm");
+    match std::fs::write(output_path, &wasm_bytes) {
+        Ok(_) => {
+            println!("\n✅ WebAssembly compilation successful!");
+            println!("Output written to: {}", output_path);
+            println!("Size: {} bytes", wasm_bytes.len());
+        }
+        Err(e) => {
+            eprintln!("Failed to write output file: {}", e);
+        }
+    }
+}

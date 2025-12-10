@@ -1,0 +1,53 @@
+﻿Fusion Developer Guide: Architecture, CI/CD, and Extensibility
+1. Compiler Pipeline Stages
+The Fusion compiler (fusionc) operates as a modern, multi-stage pipeline, leveraging Rust for safety and LLVM for performance.
+Stage
+	Rust Component
+	Core Responsibility
+	Front-End
+	lexer, parser
+	Converts source code (.fu) into a Concrete Syntax Tree (CST).
+	Middle-End
+	semantic_analyzer
+	Enforces the Borrow Checker rules, performs Type Checking (including generics/traits), and verifies compiler attributes (@constant_time).
+	Back-End
+	codegen
+	Translates the optimized AST into LLVM IR, applying target-specific passes (e.g., WASM, x86-64, CUDA offload).
+	Tooling
+	lsp, pkg
+	Provides IDE integration and dependency management built on the middle-end analysis results.
+	2. Extending the Compiler (Implementing New Attributes)
+To integrate new hardware or compiler behaviors, developers extend the Attribute enum in src/ast/mod.rs and update the relevant checker and code generator.
+Example: Adding a new Memory Attribute
+1. AST Update: Add Attribute::ManualMemory to src/ast/mod.rs.
+2. Semantic Check: In semantic_analyzer::check_block, when Attribute::ManualMemory is detected, disable the default Garbage Collection logic and enforce stricter resource cleanup checks.
+3. Codegen Update: In codegen::generate_declaration, map manual memory allocation calls to C-style malloc/free through LLVM FFI imports.
+3. Continuous Integration and Security Hardening
+All Fusion projects must integrate with the standard CI pipeline, which includes mandatory security steps.
+
+
+
+
+ Image of DevSecOps Pipeline 
+
+Shutterstock
+Explore
+CI Stage
+	Tool/API
+	Enforcement Action
+	Build
+	fusionc --target wasm32-wasi
+	Multi-target compilation and performance benchmarking.
+	SAST/SCA
+	fusion security scan
+	Scans source code for vulnerabilities and checks dependencies for CVEs using the SCAAnalyzer.
+	Fuzzing
+	fusion fuzz --target-fn parse_input
+	Automatically generates and runs malformed inputs against designated targets to prevent crashes and buffer overflows.
+	Compliance
+	LLVM Passes
+	Verification that the @constant_time attribute correctly generated side-channel resistant assembly.
+	4. Contribution Guidelines
+* Codebase: Primarily written in Rust for stability and performance.
+* Testing: All pull requests must pass 90%+ code coverage verified by fusion test --coverage.
+* Licensing: Fusion is distributed under the Apache 2.0 License.

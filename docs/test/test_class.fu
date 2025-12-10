@@ -1,0 +1,9 @@
+class Point {
+    x: int;
+    y: int;
+}
+
+fn main() -> int {
+    print("Class parsed successfully (though not instantiated yet)");
+    return 0;
+}

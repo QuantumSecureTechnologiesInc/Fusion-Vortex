@@ -1,0 +1,86 @@
+// stdlib/iterator.fu - Iterator trait and utilities
+
+// Iterator trait - types that can be iterated
+trait Iterator<T> {
+    fn next(mut self) -> Option<T>;
+    fn has_next(self) -> bool;
+}
+
+// Range iterator for integers
+class RangeIterator {
+    current: int;
+    end: int;
+    step: int;
+}
+
+impl RangeIterator {
+    fn new(start: int, end: int) -> RangeIterator {
+        return RangeIterator {
+            current: start,
+            end: end,
+            step: 1
+        };
+    }
+    
+    fn with_step(start: int, end: int, step: int) -> RangeIterator {
+        return RangeIterator {
+            current: start,
+            end: end,
+            step: step
+        };
+    }
+}
+
+impl Iterator<int> for RangeIterator {
+    fn next(mut self) -> Option<int> {
+        if self.current < self.end {
+            let value = self.current;
+            self.current = self.current + self.step;
+            return Option::Some(value);
+        } else {
+            return Option::None;
+        }
+    }
+    
+    fn has_next(self) -> bool {
+        return self.current < self.end;
+    }
+}
+
+// Helper function to create range
+fn range(start: int, end: int) -> RangeIterator {
+    return RangeIterator::new(start, end);
+}
+
+// Iterator extension methods (will be implemented as functions for now)
+fn count<T, I: Iterator<T>>(mut iter: I) -> int {
+    let mut count = 0;
+    while iter.has_next() {
+        let _ = iter.next();
+        count = count + 1;
+    }
+    return count;
+}
+
+fn sum(mut iter: Iterator<int>) -> int {
+    let mut total = 0;
+    while iter.has_next() {
+        let value = iter.next();
+        if value.is_some() {
+            total = total + value.unwrap();
+        }
+    }
+    return total;
+}
+
+// Collect into Vector (stub - requires Vector implementation)
+// fn collect<T, I: Iterator<T>>(mut iter: I) -> Vector<T> {
+//     let mut vec = Vector::new();
+//     while iter.has_next() {
+//         let value = iter.next();
+//         if value.is_some() {
+//             vec.push(value.unwrap());
+//         }
+//     }
+//     return vec;
+// }

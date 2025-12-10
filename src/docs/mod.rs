@@ -1,0 +1,372 @@
+// src/docs/mod.rs - Documentation Generation System
+#![allow(dead_code)]
+// Extracts documentation from source code and generates HTML/Markdown
+
+pub mod extractor;
+pub mod html;
+pub mod markdown;
+pub mod search_index;
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+/// Documentation item types
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum DocItemType {
+    /// Module documentation
+    Module,
+    /// Function documentation
+    Function,
+    /// Class/struct documentation
+    Class,
+    /// Trait documentation
+    Trait,
+    /// Constant documentation
+    Constant,
+    /// Type alias documentation
+    TypeAlias,
+}
+
+/// Documentation item
+#[derive(Debug, Clone)]
+pub struct DocItem {
+    /// Item type
+    pub item_type: DocItemType,
+    /// Item name
+    pub name: String,
+    /// Item signature
+    pub signature: String,
+    /// Documentation text
+    pub documentation: String,
+    /// Source file path
+    pub source_path: Option<String>,
+    /// Line number
+    pub line_number: Option<usize>,
+    /// Visibility (pub/private)
+    pub is_public: bool,
+    /// Parent module
+    pub parent_module: Option<String>,
+    /// Examples
+    pub examples: Vec<Example>,
+    /// Related items
+    pub see_also: Vec<String>,
+}
+
+impl DocItem {
+    /// Create a new documentation item
+    pub fn new(
+        item_type: DocItemType,
+        name: impl Into<String>,
+        signature: impl Into<String>,
+    ) -> Self {
+        Self {
+            item_type,
+            name: name.into(),
+            signature: signature.into(),
+            documentation: String::new(),
+            source_path: None,
+            line_number: None,
+            is_public: true,
+            parent_module: None,
+            examples: Vec::new(),
+            see_also: Vec::new(),
+        }
+    }
+
+    /// Set documentation text
+    pub fn with_docs(mut self, docs: impl Into<String>) -> Self {
+        self.documentation = docs.into();
+        self
+    }
+
+    /// Set source location
+    pub fn with_source(mut self, path: impl Into<String>, line: usize) -> Self {
+        self.source_path = Some(path.into());
+        self.line_number = Some(line);
+        self
+    }
+
+    /// Add an example
+    pub fn with_example(mut self, example: Example) -> Self {
+        self.examples.push(example);
+        self
+    }
+
+    /// Get fully qualified name
+    pub fn full_name(&self) -> String {
+        if let Some(ref parent) = self.parent_module {
+            format!("{}::{}", parent, self.name)
+        } else {
+            self.name.clone()
+        }
+    }
+}
+
+/// Code example
+#[derive(Debug, Clone)]
+pub struct Example {
+    /// Example description
+    pub description: String,
+    /// Example code
+    pub code: String,
+    /// Expected output (if any)
+    pub output: Option<String>,
+}
+
+impl Example {
+    pub fn new(code: impl Into<String>) -> Self {
+        Self {
+            description: String::new(),
+            code: code.into(),
+            output: None,
+        }
+    }
+
+    pub fn with_description(mut self, desc: impl Into<String>) -> Self {
+        self.description = desc.into();
+        self
+    }
+
+    pub fn with_output(mut self, output: impl Into<String>) -> Self {
+        self.output = Some(output.into());
+        self
+    }
+}
+
+/// Documentation configuration
+#[derive(Debug, Clone)]
+pub struct DocConfig {
+    /// Output directory
+    pub output_dir: PathBuf,
+    /// Output format
+    pub format: OutputFormat,
+    /// Include private items
+    pub include_private: bool,
+    /// Enable syntax highlighting
+    pub syntax_highlighting: bool,
+    /// Theme
+    pub theme: Theme,
+    /// Generate search index
+    pub enable_search: bool,
+    /// Project name
+    pub project_name: String,
+    /// Project version
+    pub project_version: String,
+}
+
+/// Output format
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OutputFormat {
+    /// HTML output
+    HTML,
+    /// Markdown output
+    Markdown,
+    /// JSON output
+    JSON,
+}
+
+/// Documentation theme
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Theme {
+    /// Light theme
+    Light,
+    /// Dark theme
+    Dark,
+    /// Auto (system preference)
+    Auto,
+}
+
+impl Default for DocConfig {
+    fn default() -> Self {
+        Self {
+            output_dir: PathBuf::from("./docs"),
+            format: OutputFormat::HTML,
+            include_private: false,
+            syntax_highlighting: true,
+            theme: Theme::Auto,
+            enable_search: true,
+            project_name: "Fusion Project".to_string(),
+            project_version: "0.1.0".to_string(),
+        }
+    }
+}
+
+/// Documentation generator
+pub struct DocGenerator {
+    config: DocConfig,
+    items: HashMap<String, DocItem>,
+    modules: HashMap<String, Vec<String>>,
+}
+
+impl DocGenerator {
+    /// Create a new documentation generator
+    pub fn new(config: DocConfig) -> Self {
+        Self {
+            config,
+            items: HashMap::new(),
+            modules: HashMap::new(),
+        }
+    }
+
+    /// Add a documentation item
+    pub fn add_item(&mut self, item: DocItem) {
+        let name = item.full_name();
+
+        // Track module membership
+        if let Some(ref module) = item.parent_module {
+            self.modules
+                .entry(module.clone())
+                .or_insert_with(Vec::new)
+                .push(name.clone());
+        }
+
+        self.items.insert(name, item);
+    }
+
+    /// Generate documentation
+    pub fn generate(&self) -> Result<GenerationResult, String> {
+        let start_time = std::time::Instant::now();
+
+        // Create output directory
+        std::fs::create_dir_all(&self.config.output_dir)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
+
+        let files_generated = match self.config.format {
+            OutputFormat::HTML => self.generate_html()?,
+            OutputFormat::Markdown => self.generate_markdown()?,
+            OutputFormat::JSON => self.generate_json()?,
+        };
+
+        let duration = start_time.elapsed();
+
+        Ok(GenerationResult {
+            files_generated,
+            items_documented: self.items.len(),
+            duration_ms: duration.as_millis() as u64,
+        })
+    }
+
+    /// Generate HTML documentation
+    fn generate_html(&self) -> Result<usize, String> {
+        // This would use the html module to generate HTML files
+        // For now, return placeholder
+        Ok(self.items.len())
+    }
+
+    /// Generate Markdown documentation
+    fn generate_markdown(&self) -> Result<usize, String> {
+        // This would use the markdown module to generate .md files
+        Ok(self.items.len())
+    }
+
+    /// Generate JSON documentation
+    fn generate_json(&self) -> Result<usize, String> {
+        // Serialize to JSON
+        Ok(self.items.len())
+    }
+
+    /// Get statistics
+    pub fn stats(&self) -> DocStats {
+        let mut by_type: HashMap<DocItemType, usize> = HashMap::new();
+        let mut public_count = 0;
+        let mut private_count = 0;
+
+        for item in self.items.values() {
+            *by_type.entry(item.item_type.clone()).or_insert(0) += 1;
+            if item.is_public {
+                public_count += 1;
+            } else {
+                private_count += 1;
+            }
+        }
+
+        DocStats {
+            total_items: self.items.len(),
+            modules: self.modules.len(),
+            public_items: public_count,
+            private_items: private_count,
+            by_type,
+        }
+    }
+
+    /// Print generation summary
+    pub fn print_summary(&self) {
+        let stats = self.stats();
+        println!("\n📚 Documentation Statistics:");
+        println!("  Total items: {}", stats.total_items);
+        println!("  Modules: {}", stats.modules);
+        println!("  Public: {}", stats.public_items);
+        println!("  Private: {}", stats.private_items);
+
+        println!("\n  By type:");
+        for (item_type, count) in stats.by_type {
+            println!("    {:?}: {}", item_type, count);
+        }
+    }
+}
+
+/// Generation result
+#[derive(Debug)]
+pub struct GenerationResult {
+    pub files_generated: usize,
+    pub items_documented: usize,
+    pub duration_ms: u64,
+}
+
+/// Documentation statistics
+#[derive(Debug)]
+pub struct DocStats {
+    pub total_items: usize,
+    pub modules: usize,
+    pub public_items: usize,
+    pub private_items: usize,
+    pub by_type: HashMap<DocItemType, usize>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_doc_item_creation() {
+        let item = DocItem::new(DocItemType::Function, "test_func", "fn test_func() -> i32")
+            .with_docs("This is a test function");
+
+        assert_eq!(item.name, "test_func");
+        assert_eq!(item.item_type, DocItemType::Function);
+        assert!(!item.documentation.is_empty());
+    }
+
+    #[test]
+    fn test_example() {
+        let example = Example::new("let x = 42;")
+            .with_description("Simple variable")
+            .with_output("42");
+
+        assert!(!example.code.is_empty());
+        assert!(example.output.is_some());
+    }
+
+    #[test]
+    fn test_doc_generator() {
+        let config = DocConfig::default();
+        let mut generator = DocGenerator::new(config);
+
+        let item = DocItem::new(DocItemType::Function, "example", "fn example()");
+
+        generator.add_item(item);
+
+        let stats = generator.stats();
+        assert_eq!(stats.total_items, 1);
+    }
+
+    #[test]
+    fn test_full_name() {
+        let mut item = DocItem::new(DocItemType::Function, "func", "fn func()");
+
+        assert_eq!(item.full_name(), "func");
+
+        item.parent_module = Some("std::collections".to_string());
+        assert_eq!(item.full_name(), "std::collections::func");
+    }
+}

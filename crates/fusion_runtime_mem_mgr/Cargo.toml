@@ -1,0 +1,18 @@
+[package]
+name = "fusion_runtime_mem_mgr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Zero-copy memory manager for CPU/GPU/QPU unified memory"
+
+[dependencies]
+fusion_core = { path = "../fusion_core" }
+parking_lot = { workspace = true }
+libc = { workspace = true }
+memmap2 = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }

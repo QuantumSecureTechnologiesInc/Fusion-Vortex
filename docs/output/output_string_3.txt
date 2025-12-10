@@ -1,0 +1,23 @@
+   Compiling fusion_lang v0.1.0 (C:\Projects\Fusion - Programming Language)
+error: expected one of `!`, `.`, `::`, `;`, `?`, `{`, `}`, or an operator, found `,`
+   --> src\parser\mod.rs:631:29
+    |
+631 |                         args,
+    |                             ^ expected one of 8 possible tokens
+
+warning: unused variable: `target`
+   --> src\borrow_checker\mod.rs:134:37
+    |
+134 |             Statement::Assignment { target, value } => {
+    |                                     ^^^^^^ help: try ignoring the field: `target: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `val_ty`
+   --> src\codegen\mod.rs:530:35
+    |
+530 |                     let (val_val, val_ty) = self.generate_expression(&args[2])?;
+    |                                   ^^^^^^ help: if this is intentional, prefix it with an underscore: `_val_ty`
+
+warning: `fusion_lang` (bin "fusion_lang") generated 2 warnings
+error: could not compile `fusion_lang` (bin "fusion_lang") due to 1 previous error; 2 warnings emitted

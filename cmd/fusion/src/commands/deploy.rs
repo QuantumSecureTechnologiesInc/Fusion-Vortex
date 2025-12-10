@@ -1,0 +1,7 @@
+use anyhow::Result;
+use fusion_deploy;
+
+pub fn deploy(platform: &str, env: &str, config: Option<&str>) -> Result<()> {
+    fusion_deploy::deploy(platform, env, config)?;
+    Ok(())
+}

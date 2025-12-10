@@ -1,0 +1,6 @@
+fn main() -> int {
+    let answer: int = 42;
+    print("The answer is:");
+    print(answer);
+    return 0;
+}

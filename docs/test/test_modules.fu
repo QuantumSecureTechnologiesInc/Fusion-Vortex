@@ -1,0 +1,17 @@
+// Test file for module system parsing
+
+// Module declarations
+pub mod utils;
+mod internal;
+
+// Use declarations
+use std::Vector;
+use lib::math;
+use lib::string_utils::*;
+use async_lib::runtime as rt;
+
+// Regular function
+fn main() -> int {
+    let x = utils::helper();
+    return x;
+}

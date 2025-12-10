@@ -1,0 +1,267 @@
+// src/ml/tensor.rs - Core Tensor Implementation
+#![allow(dead_code)]
+
+use super::{Device, MLError};
+use std::rc::Rc;
+
+#[derive(Debug, Clone)]
+pub struct Tensor {
+    /// Data buffer (row-major)
+    data: Vec<f32>,
+    /// Tensor dimensions
+    pub shape: Vec<usize>,
+    /// Stride for indexing
+    strides: Vec<usize>,
+    /// Computation device
+    device: Device,
+    /// Gradient for backprop (optional)
+    grad: Option<Rc<Tensor>>,
+    /// Requires gradient calculation
+    requires_grad: bool,
+}
+
+impl Tensor {
+    /// Get tensor shape
+    pub fn shape(&self) -> &Vec<usize> {
+        &self.shape
+    }
+
+    /// Create new tensor from data and shape
+    pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Result<Self, MLError> {
+        let size: usize = shape.iter().product();
+        if data.len() != size {
+            return Err(MLError::InvalidShape(format!(
+                "Data size {} does not match shape {:?} size {}",
+                data.len(),
+                shape,
+                size
+            )));
+        }
+
+        let strides = Self::compute_strides(&shape);
+
+        Ok(Self {
+            data,
+            shape,
+            strides,
+            device: Device::CPU,
+            grad: None,
+            requires_grad: false,
+        })
+    }
+
+    /// Create tensor filled with zeros
+    pub fn zeros(shape: Vec<usize>) -> Self {
+        let size: usize = shape.iter().product();
+        let strides = Self::compute_strides(&shape);
+        Self {
+            data: vec![0.0; size],
+            shape,
+            strides,
+            device: Device::CPU,
+            grad: None,
+            requires_grad: false,
+        }
+    }
+
+    /// Create tensor filled with ones
+    pub fn ones(shape: Vec<usize>) -> Self {
+        let size: usize = shape.iter().product();
+        let strides = Self::compute_strides(&shape);
+        Self {
+            data: vec![1.0; size],
+            shape,
+            strides,
+            device: Device::CPU,
+            grad: None,
+            requires_grad: false,
+        }
+    }
+
+    /// Calculate strides from shape
+    fn compute_strides(shape: &[usize]) -> Vec<usize> {
+        let mut strides = vec![0; shape.len()];
+        let mut current_stride = 1;
+        for i in (0..shape.len()).rev() {
+            strides[i] = current_stride;
+            current_stride *= shape[i];
+        }
+        strides
+    }
+
+    /// Get value at indices
+    pub fn get(&self, indices: &[usize]) -> Option<&f32> {
+        if indices.len() != self.shape.len() {
+            return None;
+        }
+
+        let mut offset = 0;
+        for (i, &idx) in indices.iter().enumerate() {
+            if idx >= self.shape[i] {
+                return None;
+            }
+            offset += idx * self.strides[i];
+        }
+
+        self.data.get(offset)
+    }
+
+    /// Matrix multiplication
+    pub fn matmul(&self, other: &Tensor) -> Result<Tensor, MLError> {
+        if self.shape.len() != 2 || other.shape.len() != 2 {
+            return Err(MLError::InvalidShape(
+                "Matmul requires 2D tensors".to_string(),
+            ));
+        }
+
+        let (m, k) = (self.shape[0], self.shape[1]);
+        let (k2, n) = (other.shape[0], other.shape[1]);
+
+        if k != k2 {
+            return Err(MLError::DimensionMismatch {
+                expected: vec![m, k],
+                actual: vec![k2, n],
+            });
+        }
+
+        let mut result = Tensor::zeros(vec![m, n]);
+
+        // naive implementation for CPU
+        for i in 0..m {
+            for j in 0..n {
+                let mut sum = 0.0;
+                for l in 0..k {
+                    let a_val = self.get(&[i, l]).unwrap();
+                    let b_val = other.get(&[l, j]).unwrap();
+                    sum += a_val * b_val;
+                }
+                // Set result directly (we know the internal structure)
+                result.data[i * n + j] = sum;
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Add two tensors
+    pub fn add(&self, other: &Tensor) -> Result<Tensor, MLError> {
+        if self.shape != other.shape {
+            return Err(MLError::DimensionMismatch {
+                expected: self.shape.clone(),
+                actual: other.shape.clone(),
+            });
+        }
+
+        let data: Vec<f32> = self
+            .data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(a, b)| a + b)
+            .collect();
+
+        Tensor::new(data, self.shape.clone())
+    }
+
+    /// Multiply tensor by scalar
+    pub fn scale(&self, scalar: f32) -> Tensor {
+        let data: Vec<f32> = self.data.iter().map(|v| v * scalar).collect();
+        // Since input is valid, new one is valid
+        Tensor::new(data, self.shape.clone()).unwrap()
+    }
+
+    /// Move tensor to device
+    pub fn to(&mut self, device: Device) -> Result<(), MLError> {
+        if self.device == device {
+            return Ok(());
+        }
+
+        match device {
+            Device::CPU => {
+                // Already on CPU or would download from GPU
+                self.device = Device::CPU;
+                Ok(())
+            }
+            Device::CUDA(_) => {
+                // Placeholder for CUDA upload
+                // In production: cuda_malloc and cuda_memcpy
+                self.device = device;
+                Ok(())
+            }
+            _ => Err(MLError::GPUError(format!(
+                "Device {:?} not supported yet",
+                device
+            ))),
+        }
+    }
+
+    /// Element-wise multiplication
+    pub fn mul(&self, other: &Tensor) -> Result<Tensor, MLError> {
+        if self.shape != other.shape {
+            return Err(MLError::DimensionMismatch {
+                expected: self.shape.clone(),
+                actual: other.shape.clone(),
+            });
+        }
+
+        let data: Vec<f32> = self
+            .data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(a, b)| a * b)
+            .collect();
+
+        Tensor::new(data, self.shape.clone())
+    }
+
+    /// Transpose 2D tensor
+    pub fn transpose(&self) -> Result<Tensor, MLError> {
+        if self.shape.len() != 2 {
+            return Err(MLError::InvalidShape(
+                "Transpose currently only supports 2D tensors".to_string(),
+            ));
+        }
+
+        let rows = self.shape[0];
+        let cols = self.shape[1];
+        let mut result = vec![0.0; rows * cols];
+
+        for i in 0..rows {
+            for j in 0..cols {
+                // Input: [i, j] -> index i * cols + j
+                // Output: [j, i] -> index j * rows + i
+                result[j * rows + i] = self.data[i * cols + j];
+            }
+        }
+
+        Tensor::new(result, vec![cols, rows])
+    }
+
+    /// Map a function over the tensor data
+    pub fn map<F>(&self, f: F) -> Tensor
+    where
+        F: Fn(f32) -> f32,
+    {
+        let data: Vec<f32> = self.data.iter().map(|&x| f(x)).collect();
+        // Shape and strides remain same
+        Tensor {
+            data,
+            shape: self.shape.clone(),
+            strides: self.strides.clone(),
+            device: self.device.clone(),
+            grad: None,
+            requires_grad: self.requires_grad,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tensor_creation() {
+        let t = Tensor::zeros(vec![2, 3]);
+        assert_eq!(t.shape, vec![2, 3]);
+        assert_eq!(t.data.len(), 6);
+    }
+}

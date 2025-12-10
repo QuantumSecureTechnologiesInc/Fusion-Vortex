@@ -1,0 +1,18 @@
+[package]
+name = "fusion_tensor_core"
+version = "0.2.0"
+edition = "2021"
+authors = ["Quantum Secure Technologies Inc."]
+description = "High-performance tensor core for Fusion"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+fusion_traits = { path = "../fusion_traits" }
+# Removed fusion_runtime_core dependency to avoid circular dependency
+num-complex = "0.4"
+
+[dev-dependencies]
+
+[lib]
+name = "fusion_tensor_core"
+path = "src/lib.rs"

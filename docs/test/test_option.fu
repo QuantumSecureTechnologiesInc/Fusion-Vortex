@@ -1,0 +1,22 @@
+// Test Option<T> implementation
+
+fn main() -> int {
+    let some_value = Option::<int>::some(42);
+    let none_value = Option::<int>::none();
+    
+    print("some_value.is_some():");
+    print(some_value.is_some());
+    
+    print("none_value.is_none():");
+    print(none_value.is_none());
+    
+    let unwrapped = some_value.unwrap();
+    print("Unwrapped value:");
+    print(unwrapped);
+    
+    let default_val = none_value.unwrap_or(100);
+    print("Unwrap with default:");
+    print(default_val);
+    
+    return 0;
+}
