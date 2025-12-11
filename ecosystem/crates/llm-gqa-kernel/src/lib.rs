@@ -2,8 +2,8 @@
 ///
 /// Implements the Key/Value repetition logic for Grouped Query Attention.
 /// Essential for Mistral/Llama efficiency.
-use fusion_core::types::tensor::{Matrix, Tensor, Vector1D};
-use fusion_core::{FusionError, FusionResult};
+use fusion_core_compiler::types::tensor::{Matrix, Tensor, Vector1D};
+use fusion_core_compiler::{FusionError, FusionResult};
 
 pub struct GqaKernel;
 
@@ -48,3 +48,4 @@ impl GqaKernel {
         Tensor::new(new_data, [seq_len, new_dim])
     }
 }
+

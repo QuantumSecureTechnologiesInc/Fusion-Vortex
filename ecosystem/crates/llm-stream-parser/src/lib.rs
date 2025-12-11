@@ -1,7 +1,7 @@
 /// Production Streaming Parser.
 ///
 /// Implements a state machine for robust, non-blocking JSON parsing from LLM streams.
-use fusion_std::error::{StdError, StdResult};
+use fusion_core_compiler::error::{StdError, StdResult};
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -80,3 +80,4 @@ impl StreamingJsonParser {
         }
     }
 }
+

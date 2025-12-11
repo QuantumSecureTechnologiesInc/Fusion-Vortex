@@ -1,8 +1,8 @@
 /// Production Embedding Layers.
 /// Converts discrete indices (tokens) into dense, continuous vectors.
-use fusion_ai_core::{Layer, Linear, Variable};
-use fusion_core::types::tensor::{Matrix, Tensor};
-use fusion_core::FusionResult;
+use fusion_ai_core_adapters::{Layer, Linear, Variable};
+use fusion_core_compiler::types::tensor::{Matrix, Tensor};
+use fusion_core_compiler::FusionResult;
 
 pub struct Embedding {
     pub weight: Variable, // [VocabSize, EmbedDim] lookup table
@@ -36,3 +36,4 @@ impl Layer for Embedding {
         vec![self.weight.clone()]
     }
 }
+

@@ -5,7 +5,7 @@
 //! This crate leverages `fusion_runtime_core` for GPU scheduling and memory management,
 //! enabling true zero-copy data flow between training and inference.
 
-use fusion_core::{FusionType, TensorType, TensorDType};
+use fusion_core_compiler::{FusionType, TensorType, TensorDType};
 use tracing::{debug, trace};
 
 /// Tensor builder for AI/ML workloads
@@ -140,3 +140,4 @@ mod tests {
         assert_eq!(c.shape(), &[2, 4]);
     }
 }
+

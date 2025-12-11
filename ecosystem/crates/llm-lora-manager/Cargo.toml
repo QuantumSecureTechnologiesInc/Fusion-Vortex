@@ -1,0 +1,9 @@
+[package]
+name = "fusion_llm_lora_manager"
+version = "0.1.0"
+edition = "2021"
+description = "LoRA adapter manager for LLM models"
+license = "MIT"
+
+[dependencies]
+fusion-core = { path = "../../../crates/core", version = "0.1.0" }

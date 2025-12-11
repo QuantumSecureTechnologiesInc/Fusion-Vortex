@@ -2,7 +2,7 @@
 //!
 //! Quantum computing primitives leveraging fusion_runtime_core for QPU scheduling.
 
-use fusion_core::{FusionType, QuantumType, QuantumState};
+use fusion_core_compiler::{FusionType, QuantumType, QuantumState};
 use fusion_runtime_hal::{QuantumCircuit, QuantumGate};
 use tracing::{debug, trace};
 
@@ -167,3 +167,4 @@ mod tests {
         assert_eq!(circuit.gates.len(), 4);
     }
 }
+

@@ -6,4 +6,4 @@ description = "Training metrics calculation (Accuracy, F1, AUC, etc.)"
 license = "MIT"
 
 [dependencies]
-fusion_core = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { path = "../../../crates/core", version = "0.1.0" }

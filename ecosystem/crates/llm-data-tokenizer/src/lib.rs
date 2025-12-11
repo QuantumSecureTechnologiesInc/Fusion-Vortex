@@ -3,7 +3,7 @@ use fusion_llm_tokenizers::LLMTokenizer; // Assumed tokenizer interface
 ///
 /// High-throughput processing of large text datasets for training pipelines.
 /// Leverages tokio for parallel IO and tokenizers crate (simulated) for computation.
-use fusion_std::error::{StdError, StdResult};
+use fusion_core_compiler::error::{StdError, StdResult};
 use futures::stream::{self, StreamExt};
 use tokio::fs::File;
 use tokio::io::{self, AsyncReadExt, BufReader};
@@ -63,3 +63,4 @@ impl DataTokenizer {
         Ok(tokenized_chunks.into_iter().flatten().collect())
     }
 }
+

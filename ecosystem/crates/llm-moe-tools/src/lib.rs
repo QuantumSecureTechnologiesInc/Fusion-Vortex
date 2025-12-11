@@ -2,7 +2,7 @@
 /// 
 /// Monitors MoE expert usage and optimizes routing decisions.
 
-use fusion_std::error::{StdResult, StdError};
+use fusion_core_compiler::error::{StdResult, StdError};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -46,3 +46,4 @@ impl MoEDiagnostics {
            .collect())
     }
 }
+

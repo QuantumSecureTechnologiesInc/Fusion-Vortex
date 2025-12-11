@@ -1,0 +1,9 @@
+[package]
+name = "fusion-trie-search"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: fusion-trie-search"
+license = "MIT"
+
+[dependencies]

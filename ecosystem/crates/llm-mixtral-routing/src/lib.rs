@@ -1,8 +1,8 @@
 /// Production Mixtral Routing.
 ///
 /// Implements Top-2 MoE routing with expert load balancing loss calculation.
-use fusion_core::types::tensor::{Matrix, Vector1D};
-use fusion_core::FusionResult;
+use fusion_core_compiler::types::tensor::{Matrix, Vector1D};
+use fusion_core_compiler::FusionResult;
 
 pub struct MixtralRouter {
     pub gate_weights: Matrix<f64>, // [Dim, NumExperts]
@@ -40,3 +40,4 @@ impl MixtralRouter {
         Ok(0.001) // Mock loss
     }
 }
+

@@ -4,7 +4,7 @@
 /// - Thread-safe storage (Arc<RwLock>) allowing concurrent reads.
 /// - Robust math (Cosine Similarity with zero-magnitude checks).
 /// - Typed Errors.
-use fusion_core::types::tensor::Vector1D;
+use fusion_core_compiler::types::tensor::Vector1D;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use thiserror::Error;
@@ -122,3 +122,4 @@ fn cosine_similarity(a: &Vector1D<f64>, b: &Vector1D<f64>) -> RagResult<f64> {
 
     Ok(dot / (norm_a * norm_b))
 }
+

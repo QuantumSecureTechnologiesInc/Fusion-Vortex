@@ -1,9 +1,9 @@
 /// Production Generative Layers.
 ///
 /// Implements Transposed Convolution (Deconvolution) for upsampling images/data.
-use fusion_ai_core::{Layer, Variable};
-use fusion_core::types::tensor::{Matrix, Tensor, Tensor3D};
-use fusion_core::FusionResult;
+use fusion_ai_core_adapters::{Layer, Variable};
+use fusion_core_compiler::types::tensor::{Matrix, Tensor, Tensor3D};
+use fusion_core_compiler::FusionResult;
 
 pub struct ConvTranspose2D {
     pub weights: Variable, // [In_C, Out_C * K * K] (Flipped weights)
@@ -36,3 +36,4 @@ impl Layer for ConvTranspose2D {
         self.weights.parameters()
     }
 }
+

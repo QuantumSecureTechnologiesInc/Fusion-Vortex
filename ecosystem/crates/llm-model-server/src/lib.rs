@@ -4,7 +4,7 @@ use fusion_llm_lora_manager::LoraManager;
 /// Production LLM Inference Server.
 ///
 /// Integrates Paged KV Cache and LORA Manager for high-throughput, multi-tenant serving.
-use fusion_std::error::{StdError, StdResult};
+use fusion_core_compiler::error::{StdError, StdResult};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -46,3 +46,4 @@ impl InferenceServer {
         server.listen(addr).await
     }
 }
+

@@ -6,7 +6,7 @@ description = "Parsers for real-time structured streaming output (JSON, tool cal
 license = "MIT"
 
 [dependencies]
-fusion_std = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { path = "../../../crates/core", version = "0.1.0" }
 fusion_http = { path = "../http", version = "0.1.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }

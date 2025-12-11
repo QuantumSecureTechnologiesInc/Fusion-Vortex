@@ -1,9 +1,9 @@
 /// Production Radial Basis Function (RBF) Layer.
 ///
 /// Uses Gaussian activation for non-linearity (kernel methods).
-use fusion_ai_core::{Layer, Linear, Variable};
-use fusion_core::types::tensor::{Tensor, Vector1D};
-use fusion_core::FusionResult;
+use fusion_ai_core_adapters::{Layer, Linear, Variable};
+use fusion_core_compiler::types::tensor::{Tensor, Vector1D};
+use fusion_core_compiler::FusionResult;
 use std::f64::consts::E;
 
 pub struct RBF {
@@ -37,3 +37,4 @@ impl Layer for RBF {
         vec![self.centers.clone(), self.variance.clone()]
     }
 }
+

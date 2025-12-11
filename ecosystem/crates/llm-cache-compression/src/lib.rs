@@ -2,8 +2,8 @@
 ///
 /// Quantizes Key/Value tensors to INT8 format to save VRAM and increase throughput.
 /// Relies on fusion_llm_quantization for the core block-wise logic.
-use fusion_core::types::tensor::Matrix;
-use fusion_core::{FusionError, FusionResult};
+use fusion_core_compiler::types::tensor::Matrix;
+use fusion_core_compiler::{FusionError, FusionResult};
 use fusion_llm_quantization::int8::QuantizedMatrix;
 
 pub struct KvCacheCompressor;
@@ -38,3 +38,4 @@ impl KvCacheCompressor {
         Ok((k_comp.dequantize()?, v_comp.dequantize()?))
     }
 }
+

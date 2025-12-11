@@ -2,8 +2,8 @@
 ///
 /// Provides high-performance, in-place RoPE calculation for Q/K tensors.
 /// This implementation is designed to be mapped to highly efficient GPU compute kernels.
-use fusion_core::types::tensor::{Matrix, Tensor, Vector1D};
-use fusion_core::FusionResult;
+use fusion_core_compiler::types::tensor::{Matrix, Tensor, Vector1D};
+use fusion_core_compiler::FusionResult;
 use std::f64::consts::PI;
 
 pub struct RotaryKernel;
@@ -48,3 +48,4 @@ impl RotaryKernel {
         Ok(output)
     }
 }
+
