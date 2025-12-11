@@ -11,6 +11,7 @@ pub mod lib_integration; // Library integration traits
 pub mod lsp; // Language Server Protocol
 pub mod ml; // Machine Learning & GPU
 pub mod module_resolver; // Module resolution and dependency graph
+pub mod network; // Secure Networking
 pub mod optimization; // Optimization passes
 pub mod package_manager; // Package management
 pub mod parser;

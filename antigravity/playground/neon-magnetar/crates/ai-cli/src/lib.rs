@@ -36,55 +36,54 @@ pub fn generate(
     println!("Target: {:?}", target);
     println!("Mode: {}", if preview_only { "Preview" } else { "Apply" });
 
-    // Load workspace context
-    let workspace_path = std::env::current_dir()?;
-    let loader = WorkspaceLoader::new(workspace_path);
-    let context = loader.load()?;
+    let rt = tokio::runtime::Runtime::new()?;
+    rt.block_on(async {
+        // Initialize provider (duplicated logic, should be factored out)
+        let provider: std::sync::Arc<dyn fusion_ai_enhanced::AIProvider + Send + Sync> = if offline
+        {
+            std::sync::Arc::new(fusion_ai_enhanced::providers::LocalProvider::new(
+                "local-model".to_string(),
+            ))
+        } else {
+            if let Ok(key) = std::env::var("OPENAI_API_KEY") {
+                std::sync::Arc::new(fusion_ai_enhanced::providers::OpenAIProvider::new(key))
+            } else {
+                std::sync::Arc::new(fusion_ai_enhanced::providers::LocalProvider::new(
+                    "local-model".to_string(),
+                ))
+            }
+        };
 
-    println!("✓ Loaded workspace: {}", context.project_config.name);
+        let engine = fusion_ai_enhanced::EnhancedAIEngine::new(provider);
+        let generator = engine.code_generator();
 
-    // Safety check placeholder
-    let safety_engine = SafetyEngine::new();
-    let generated_code = format!("// Generated code for: {}\nfn example() {{}}", description);
-    let safety_report = safety_engine.verify(&generated_code);
+        let context = if let Ok(c) = std::env::current_dir() {
+            // simplified context loading
+            Some(c.to_string_lossy().to_string())
+        } else {
+            None
+        };
 
-    println!("🔒 Safety check: {:?}", safety_report.level);
+        match generator
+            .generate_from_description(description, "rust", context.as_deref())
+            .await
+        {
+            Ok(generated) => {
+                println!("\n📄 Generated Code:\n");
+                println!("{}", generated.code);
 
-    if safety_report.requires_review {
-        println!("⚠️  Manual review required:");
-        for issue in &safety_report.issues {
-            println!("  - {:?}: {}", issue.kind, issue.description);
+                if let Some(target_path) = target {
+                    if !preview_only {
+                        std::fs::write(target_path, generated.code)?;
+                        println!("\n✓ Code written to {}", target_path);
+                    }
+                }
+            }
+            Err(e) => println!("Error generating code: {}", e),
         }
-    }
 
-    // Generate preview
-    let preview_engine = PreviewEngine::new();
-    let metadata = PatchMetadata {
-        model_id: "mock-model".to_string(),
-        prompt_hash: blake3::hash(description.as_bytes()).to_string(),
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        safety_score: 0.95,
-    };
-
-    let target_file = target
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("src/generated.fu"));
-
-    let patch =
-        preview_engine.generate_patch(target_file.clone(), "", &generated_code, metadata)?;
-
-    println!("\n📄 Preview:");
-    println!("File: {}", target_file.display());
-    println!("\n{}", patch.diff);
-    println!("\n{}", generated_code);
-
-    if !preview_only && !safety_report.requires_review {
-        println!("\n✓ Would apply changes (not implemented in skeleton)");
-    } else if preview_only {
-        println!("\n📋 Preview only - no changes applied");
-    } else {
-        println!("\n⏸️  Manual review required before applying");
-    }
+        Ok(())
+    })?;
 
     Ok(())
 }

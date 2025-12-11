@@ -8,7 +8,7 @@ pub fn package(cmd: PackageCommands) -> Result<()> {
             fusion_pkgmgr::add(&package, version.as_deref())
         }
         PackageCommands::Remove { package } => fusion_pkgmgr::remove(&package),
-        PackageCommands::Update { all } => fusion_pkgmgr::update(all),
+        PackageCommands::Update { all } => fusion_pkgmgr::update(all).map(|_| ()),
         PackageCommands::List => fusion_pkgmgr::list(),
         PackageCommands::Publish { no_verify } => fusion_pkgmgr::publish(no_verify),
     }

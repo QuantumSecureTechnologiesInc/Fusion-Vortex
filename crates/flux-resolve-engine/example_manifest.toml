@@ -1,0 +1,6 @@
+[packages]
+core_lib = { deps = [] }
+utils = { deps = ["core_lib"] }
+network = { deps = ["core_lib", "utils"] }
+ui = { deps = ["utils"] }
+app = { deps = ["network", "ui"] }

@@ -38,11 +38,11 @@ enum Commands {
     New {
         /// Project name
         name: String,
-        
+
         /// Project template (binary, library, quantum, ai-app)
         #[arg(short, long, default_value = "binary")]
         template: String,
-        
+
         /// Target directory
         #[arg(short = 'p', long)]
         path: Option<String>,
@@ -53,11 +53,11 @@ enum Commands {
         /// Build in release mode
         #[arg(short, long)]
         release: bool,
-        
+
         /// Target architecture
         #[arg(short, long)]
         target: Option<String>,
-        
+
         /// Enable verbose output
         #[arg(short, long)]
         verbose: bool,
@@ -68,7 +68,7 @@ enum Commands {
         /// Build in release mode
         #[arg(short, long)]
         release: bool,
-        
+
         /// Arguments to pass to the program
         #[arg(last = true)]
         args: Vec<String>,
@@ -78,11 +78,11 @@ enum Commands {
     Test {
         /// Test filter pattern
         filter: Option<String>,
-        
+
         /// Run tests in release mode
         #[arg(short, long)]
         release: bool,
-        
+
         /// Enable benchmarking
         #[arg(short, long)]
         bench: bool,
@@ -93,7 +93,7 @@ enum Commands {
         /// Check formatting without modifying files
         #[arg(short, long)]
         check: bool,
-        
+
         /// Format all files in workspace
         #[arg(short, long)]
         all: bool,
@@ -111,7 +111,7 @@ enum Commands {
         /// Fix automatically fixable issues
         #[arg(short, long)]
         fix: bool,
-        
+
         /// Enable security-focused lints
         #[arg(short, long)]
         security: bool,
@@ -122,7 +122,7 @@ enum Commands {
         /// Open documentation in browser
         #[arg(short, long)]
         open: bool,
-        
+
         /// Include private items
         #[arg(short, long)]
         private: bool,
@@ -145,7 +145,7 @@ enum Commands {
         /// Profiling mode (cpu, memory, gpu)
         #[arg(short, long, default_value = "cpu")]
         mode: String,
-        
+
         /// Output format (json, flamegraph, trace)
         #[arg(short, long, default_value = "flamegraph")]
         output: String,
@@ -156,7 +156,7 @@ enum Commands {
         /// Generate detailed report
         #[arg(short, long)]
         report: bool,
-        
+
         /// Fail on vulnerabilities
         #[arg(short, long)]
         deny: bool,
@@ -167,11 +167,11 @@ enum Commands {
         /// Target platform (aws, azure, gcp, local)
         #[arg(short, long)]
         platform: String,
-        
+
         /// Deployment environment (dev, staging, production)
         #[arg(short, long, default_value = "dev")]
         env: String,
-        
+
         /// Configuration file
         #[arg(short, long)]
         config: Option<String>,
@@ -182,6 +182,91 @@ enum Commands {
         #[command(subcommand)]
         cmd: AiCommands,
     },
+
+    /// Manage MCP (Model Context Protocol) server
+    Mcp {
+        #[command(subcommand)]
+        cmd: McpCommands,
+    },
+
+    /// Manage VS Code extensions
+    Extensions {
+        #[command(subcommand)]
+        cmd: ExtensionCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum McpCommands {
+    /// Start MCP server
+    Serve {
+        /// Port to listen on
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
+
+        /// Enable extension support
+        #[arg(short, long)]
+        extensions: bool,
+    },
+
+    /// Manage context
+    Context {
+        #[command(subcommand)]
+        cmd: ContextCommands,
+    },
+
+    /// Manage tools
+    Tools {
+        #[command(subcommand)]
+        cmd: ToolCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ContextCommands {
+    /// Add context
+    Add {
+        /// Path to file or directory
+        path: String,
+
+        /// Recursive for directories
+        #[arg(short, long)]
+        recursive: bool,
+    },
+
+    /// List context
+    List,
+
+    /// Clear context
+    Clear,
+}
+
+#[derive(Subcommand, Debug)]
+enum ToolCommands {
+    /// List available tools
+    List,
+}
+
+#[derive(Subcommand, Debug)]
+enum ExtensionCommands {
+    /// List installed extensions
+    List,
+
+    /// Install an extension
+    Install {
+        /// Extension ID (publisher.name)
+        id: String,
+    },
+
+    /// Execute extension command
+    Exec {
+        /// Command ID
+        command: String,
+
+        /// Arguments (JSON)
+        #[arg(short, long)]
+        args: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -190,28 +275,28 @@ enum PackageCommands {
     Add {
         /// Package name
         package: String,
-        
+
         /// Package version
         #[arg(short, long)]
         version: Option<String>,
     },
-    
+
     /// Remove a dependency
     Remove {
         /// Package name
         package: String,
     },
-    
+
     /// Update dependencies
     Update {
         /// Update all dependencies
         #[arg(short, long)]
         all: bool,
     },
-    
+
     /// List dependencies
     List,
-    
+
     /// Publish package
     Publish {
         /// Skip verification
@@ -226,98 +311,98 @@ enum AiCommands {
     Assist {
         /// Initial prompt
         prompt: Option<String>,
-        
+
         /// Use offline/local models only
         #[arg(long)]
         ai_offline: bool,
     },
-    
+
     /// Generate code from description
     Generate {
         /// Description of code to generate
         description: String,
-        
+
         /// Target file or directory
         #[arg(short, long)]
         target: Option<String>,
-        
+
         /// Preview only (don't apply)
         #[arg(short, long)]
         preview_only: bool,
-        
+
         /// Offline mode
         #[arg(long)]
         ai_offline: bool,
-        
+
         /// Maximum tokens
         #[arg(long)]
         max_tokens: Option<usize>,
     },
-    
+
     /// Refactor existing code
     Refactor {
         /// Refactoring description
         description: String,
-        
+
         /// Target code selection
         #[arg(short, long)]
         target: String,
-        
+
         /// Preview only
         #[arg(short, long)]
         preview_only: bool,
     },
-    
+
     /// Explain code
     Explain {
         /// Code file or selection
         target: String,
-        
+
         /// Explanation depth (quick, detailed, comprehensive)
         #[arg(short, long, default_value = "detailed")]
         depth: String,
     },
-    
+
     /// Review code for issues
     Review {
         /// Target to review
         target: Option<String>,
-        
+
         /// Focus areas (security, performance, style, all)
         #[arg(short, long, default_value = "all")]
         focus: String,
     },
-    
+
     /// Generate tests
     Tests {
         /// Target code to test
         target: String,
-        
+
         /// Test type (unit, integration, e2e)
         #[arg(short = 't', long, default_value = "unit")]
         test_type: String,
     },
-    
+
     /// Generate documentation
     Doc {
         /// Target to document
         target: String,
-        
+
         /// Include examples
         #[arg(short, long)]
         examples: bool,
     },
-    
+
     /// Configure AI settings
     Config {
         /// Show current configuration
         #[arg(short, long)]
         show: bool,
-        
+
         /// Set default model
         #[arg(long)]
         model: Option<String>,
-        
+
         /// Set API key
         #[arg(long)]
         api_key: Option<String>,
@@ -350,47 +435,37 @@ fn main() -> Result<()> {
 
     // Dispatch commands
     match cli.command {
-        Commands::New { name, template, path } => {
-            commands::new_project(&name, &template, path.as_deref())
-        }
-        Commands::Build { release, target, verbose } => {
-            commands::build(release, target.as_deref(), verbose)
-        }
-        Commands::Run { release, args } => {
-            commands::run(release, &args)
-        }
-        Commands::Test { filter, release, bench } => {
-            commands::test(filter.as_deref(), release, bench)
-        }
-        Commands::Fmt { check, all } => {
-            commands::fmt(check, all)
-        }
-        Commands::Check { all } => {
-            commands::check(all)
-        }
-        Commands::Lint { fix, security } => {
-            commands::lint(fix, security)
-        }
-        Commands::Doc { open, private } => {
-            commands::doc(open, private)
-        }
-        Commands::Package { cmd } => {
-            commands::package(cmd)
-        }
-        Commands::Debug { target } => {
-            commands::debug(target.as_deref())
-        }
-        Commands::Profile { mode, output } => {
-            commands::profile(&mode, &output)
-        }
-        Commands::Audit { report, deny } => {
-            commands::audit(report, deny)
-        }
-        Commands::Deploy { platform, env, config } => {
-            commands::deploy(&platform, &env, config.as_deref())
-        }
-        Commands::Ai { cmd } => {
-            commands::ai(cmd)
-        }
+        Commands::New {
+            name,
+            template,
+            path,
+        } => commands::new_project(&name, &template, path.as_deref()),
+        Commands::Build {
+            release,
+            target,
+            verbose,
+        } => commands::build(release, target.as_deref(), verbose),
+        Commands::Run { release, args } => commands::run(release, &args),
+        Commands::Test {
+            filter,
+            release,
+            bench,
+        } => commands::test(filter.as_deref(), release, bench),
+        Commands::Fmt { check, all } => commands::fmt(check, all),
+        Commands::Check { all } => commands::check(all),
+        Commands::Lint { fix, security } => commands::lint(fix, security),
+        Commands::Doc { open, private } => commands::doc(open, private),
+        Commands::Package { cmd } => commands::package(cmd),
+        Commands::Debug { target } => commands::debug(target.as_deref()),
+        Commands::Profile { mode, output } => commands::profile(&mode, &output),
+        Commands::Audit { report, deny } => commands::audit(report, deny),
+        Commands::Deploy {
+            platform,
+            env,
+            config,
+        } => commands::deploy(&platform, &env, config.as_deref()),
+        Commands::Ai { cmd } => commands::ai(cmd),
+        Commands::Mcp { cmd } => commands::mcp(cmd),
+        Commands::Extensions { cmd } => commands::extensions(cmd),
     }
 }

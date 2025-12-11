@@ -1,0 +1,76 @@
+// src/main.rs
+use futures::StreamExt;
+use kube::runtime::controller::{Action, Controller};
+use kube::{Api, Client, ResourceExt};
+use std::sync::Arc;
+use tracing_subscriber::{fmt, EnvFilter};
+
+mod crd;
+use crd::{FusionApp, FusionAppSpec, FusionAppStatus};
+
+#[derive(Clone)]
+struct OperatorContext {
+    client: Client,
+}
+
+// Custom error type that implements std::error::Error
+#[derive(Debug, thiserror::Error)]
+enum ReconcileError {
+    #[error("Kubernetes error: {0}")]
+    KubeError(#[from] kube::Error),
+    #[error("Serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
+}
+
+async fn reconcile(fusion_app: Arc<FusionApp>, ctx: Arc<OperatorContext>) -> Result<Action, ReconcileError> {
+    let name = fusion_app.name_any();
+    tracing::info!("Reconciling FusionApp {}", name);
+    // Placeholder logic: just set status to Ready
+    let api: Api<FusionApp> = Api::namespaced(ctx.client.clone(), "default");
+    let mut status = FusionAppStatus {
+        available_replicas: 0,
+        quantum_job_id: None,
+        phase: "Ready".into(),
+    };
+    // Simulate setting available replicas
+    status.available_replicas = fusion_app.spec.replicas;
+    let pp = kube::api::PatchParams::apply("fusion-operator");
+    let patch = kube::api::Patch::Apply(&serde_json::json!({"status": status}));
+    api.patch_status(&name, &pp, &patch).await?;
+    Ok(Action::await_change())
+}
+
+fn error_policy(
+    _object: Arc<FusionApp>,
+    _error: &ReconcileError,
+    _ctx: Arc<OperatorContext>,
+) -> Action {
+    // Requeue after 5 seconds on error
+    Action::requeue(std::time::Duration::from_secs(5))
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Initialise logger
+    fmt::Subscriber::builder()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
+    let client = Client::try_default().await?;
+    let ctx = Arc::new(OperatorContext {
+        client: client.clone(),
+    });
+
+    let crds = Api::<FusionApp>::all(client.clone());
+
+    Controller::new(crds, Default::default())
+        .run(reconcile, error_policy, ctx)
+        .for_each(|res| async move {
+            match res {
+                Ok((obj_ref, _action)) => tracing::info!("Reconciled: {}", obj_ref.name.unwrap_or_default()),
+                Err(e) => tracing::error!("Reconcile error: {}", e),
+            }
+        })
+        .await;
+    Ok(())
+}

@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Result};
 use petgraph::algo::toposort;
 use petgraph::graphmap::DiGraphMap;
-use std::collections::HashMap;
 
 /// Resolve dependencies from a TOML manifest.
 ///
@@ -32,7 +31,8 @@ pub fn resolve(manifest: &str) -> Result<Vec<String>> {
         let deps = data
             .get("deps")
             .and_then(|v| v.as_array())
-            .unwrap_or(&vec![]);
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
         for dep in deps {
             let dep_str = dep
                 .as_str()

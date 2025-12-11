@@ -14,7 +14,9 @@ use fusion_lang::network::FusionNetwork;
 use std::thread;
 use std::time::Duration;
 
-fn main() -> std::io::Result<()> {
+use anyhow::Result;
+
+fn main() -> Result<()> {
     // ------------------------------------------------------------
     // 1️⃣  Initialise a simple single‑threaded executor.
     // ------------------------------------------------------------
@@ -26,7 +28,7 @@ fn main() -> std::io::Result<()> {
     // ------------------------------------------------------------
     thread::spawn(move || {
         // Server handler – echo back a static reply.
-        let handler = |mut chan: fusion_lang::network::SecureChannel| -> std::io::Result<()> {
+        let handler = |mut chan: fusion_lang::network::SecureChannel| -> Result<()> {
             let msg = chan.recv()?;
             println!("Server received: {}", String::from_utf8_lossy(&msg));
             chan.send(b"hello from server")?;

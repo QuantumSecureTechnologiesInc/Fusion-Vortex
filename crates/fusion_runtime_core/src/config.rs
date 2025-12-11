@@ -46,3 +46,32 @@ impl Default for QoSMode {
         QoSMode::Balanced
     }
 }
+
+// Conversions to sub-component configs
+
+impl From<&RuntimeConfig> for fusion_runtime_scheduler::RuntimeConfig {
+    fn from(c: &RuntimeConfig) -> Self {
+        fusion_runtime_scheduler::RuntimeConfig {
+            worker_threads: c.worker_threads,
+            stack_size: 2 * 1024 * 1024, // Default 2MB stack
+        }
+    }
+}
+
+impl From<&RuntimeConfig> for fusion_runtime_mem_mgr::RuntimeConfig {
+    fn from(c: &RuntimeConfig) -> Self {
+        fusion_runtime_mem_mgr::RuntimeConfig {
+            memory_pool_size: c.memory_pool_size,
+        }
+    }
+}
+
+impl From<&RuntimeConfig> for fusion_runtime_hal::RuntimeConfig {
+    fn from(c: &RuntimeConfig) -> Self {
+        fusion_runtime_hal::RuntimeConfig {
+            enable_gpu: c.enable_gpu,
+            enable_qpu: c.enable_qpu,
+            gpu_backend: c.gpu_backend,
+        }
+    }
+}

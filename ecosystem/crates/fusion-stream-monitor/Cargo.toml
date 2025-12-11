@@ -1,0 +1,9 @@
+[package]
+name = "fusion-stream-monitor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: fusion-stream-monitor"
+license = "MIT"
+
+[dependencies]

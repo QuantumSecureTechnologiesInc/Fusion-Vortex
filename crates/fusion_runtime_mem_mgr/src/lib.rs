@@ -66,7 +66,7 @@ pub struct MemoryConfig {
     pub qubit_pool_size: usize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct MemoryStats {
     pub total_allocated: usize,
     pub total_freed: usize,

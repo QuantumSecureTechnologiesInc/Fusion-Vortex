@@ -18,5 +18,6 @@ diff = { workspace = true }
 git2 = { workspace = true }
 fusion-core = { path = "../core" }
 fusion-ai-core = { path = "../ai-core" }
+fusion-ai-enhanced = { path = "../ai-enhanced" }
 blake3 = { workspace = true }
 chrono = "0.4"

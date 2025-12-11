@@ -1,0 +1,9 @@
+[package]
+name = "fusion-mail"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: fusion-mail"
+license = "MIT"
+
+[dependencies]

@@ -1,4 +1,6 @@
-use fusion_core::{compiler::Compiler, lexer::Lexer, parser::Parser, value::Value, vm::VM};
+use fusion_core_compiler::{
+    compiler::Compiler, lexer::Lexer, parser::Parser, value::Value, vm::VM,
+};
 
 #[test]
 fn test_function_definition_and_call() {
@@ -27,7 +29,10 @@ fn test_function_definition_and_call() {
     // Using `add` result in `print` ensures logic flow correct.
     let result = vm.interpret(function);
 
-    assert!(matches!(result, fusion_core::vm::InterpretResult::Ok));
+    assert!(matches!(
+        result,
+        fusion_core_compiler::vm::InterpretResult::Ok
+    ));
 }
 
 #[test]
@@ -57,5 +62,8 @@ fn test_recursive_function() {
     let mut vm = VM::new();
     let result = vm.interpret(function);
 
-    assert!(matches!(result, fusion_core::vm::InterpretResult::Ok));
+    assert!(matches!(
+        result,
+        fusion_core_compiler::vm::InterpretResult::Ok
+    ));
 }

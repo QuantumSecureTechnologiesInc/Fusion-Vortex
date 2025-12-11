@@ -1,5 +1,6 @@
 use anyhow::Result;
 use fusion_projects::ProjectWorkspace;
+use fusion_toolchain;
 use std::path::Path;
 
 pub fn list_projects() -> Result<()> {
@@ -27,6 +28,26 @@ pub fn list_projects() -> Result<()> {
         );
         println!();
     }
+
+    Ok(())
+}
+
+pub fn new_project(name: &str, template: &str, path: Option<&str>) -> Result<()> {
+    // Resolve path for toolchain
+    let project_path = if let Some(p) = path {
+        Path::new(p).to_path_buf()
+    } else {
+        std::env::current_dir()?.join(name)
+    };
+
+    // 1. Scaffold project structure
+    fusion_toolchain::new_project(name, template, &project_path)?;
+
+    // 2. Register in project database
+    // We reuse create_project which handles registration and ensure directory exists
+    // (though toolchain likely created it)
+    println!("✓ Scaffolded project using template '{}'", template);
+    create_project(name, path)?;
 
     Ok(())
 }

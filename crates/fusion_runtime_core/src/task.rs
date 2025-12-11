@@ -12,35 +12,8 @@ pub struct Task {
     future: Pin<Box<dyn Future<Output = ()> + Send>>,
 }
 
-/// Handle to a spawned task
-pub struct TaskHandle<T> {
-    id: u64,
-    result: Arc<Mutex<Option<Result<T, JoinError>>>>,
-}
-
-impl<T> TaskHandle<T> {
-    pub(crate) fn new(id: u64) -> Self {
-        Self {
-            id,
-            result: Arc::new(Mutex::new(None)),
-        }
-    }
-}
-
-impl<T> Future for TaskHandle<T>
-where
-    T: Clone,
-{
-    type Output = Result<T, JoinError>;
-
-    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if let Some(result) = self.result.lock().as_ref() {
-            Poll::Ready(result.clone())
-        } else {
-            Poll::Pending
-        }
-    }
-}
+/// Re-export TaskHandle from scheduler to ensure compatibility
+pub use fusion_runtime_scheduler::TaskHandle;
 
 /// Error from joining a task
 #[derive(Debug, Clone)]

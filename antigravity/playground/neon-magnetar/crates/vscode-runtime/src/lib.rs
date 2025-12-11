@@ -24,86 +24,120 @@ pub struct Extension {
 }
 
 /// Extension capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ExtensionCapability {
-    LanguageServer,
-    Formatter,
-    Linter,
-    Debugger,
-    CodeAction,
-    Completion,
-    Hover,
-    Definition,
-    References,
+pub use extension_host::ExtensionHost;
+pub use extension_loader::{ExtensionInfo, ExtensionLoader};
+pub use lsp_client::LspClient;
+pub use marketplace::{ExtensionSummary, MarketplaceClient};
+pub use node_bridge::NodeRuntime;
+pub use vscode_api::VsCodeApi;
+pub use wasm_runtime::{WasmExtensionMeta, WasmRuntime};
+
+/// Complete VS Code extension runtime
+pub struct VsCodeRuntime {
+    extension_host: ExtensionHost,
+    extension_loader: ExtensionLoader,
+    wasm_runtime: WasmRuntime,
+    marketplace: MarketplaceClient,
 }
 
-/// Extension activation context
-#[derive(Debug, Clone)]
-pub struct ActivationContext {
-    pub workspace_root: PathBuf,
-    pub extension_path: PathBuf,
-    pub storage_path: PathBuf,
-}
-
-/// Main extension host that manages all loaded extensions
-pub struct ExtensionHost {
-    extensions: Vec<Extension>,
-    context: ActivationContext,
-}
-
-impl ExtensionHost {
-    pub fn new(context: ActivationContext) -> Self {
-        Self {
-            extensions: Vec::new(),
-            context,
-        }
+impl VsCodeRuntime {
+    /// Create a new VS Code runtime
+    pub fn new(extensions_dir: std::path::PathBuf) -> Result<Self> {
+        Ok(Self {
+            extension_host: ExtensionHost::new(),
+            extension_loader: ExtensionLoader::new(extensions_dir.clone()),
+            wasm_runtime: WasmRuntime::new()?,
+            marketplace: MarketplaceClient::new(extensions_dir)?,
+        })
     }
 
-    /// Load an extension from a directory
-    pub async fn load_extension(&mut self, path: PathBuf) -> Result<()> {
-        let extension = extension_loader::load_extension(&path).await?;
-        self.extensions.push(extension);
-        Ok(())
+    /// Load all extensions from directory
+    pub async fn load_all_extensions(&mut self) -> Result<Vec<ExtensionInfo>> {
+        self.extension_loader.discover_extensions().await
     }
 
-    /// Activate all loaded extensions
-    pub async fn activate_all(&mut self) -> Result<()> {
-        for extension in &self.extensions {
-            tracing::info!("Activating extension: {}", extension.name);
-            self.activate_extension(&extension.id).await?;
-        }
-        Ok(())
+    /// Install extension from marketplace
+    pub async fn install_extension(&self, extension_id: &str) -> Result<std::path::PathBuf> {
+        self.marketplace.install(extension_id).await
     }
 
-    /// Activate a specific extension by ID
-    pub async fn activate_extension(&self, id: &str) -> Result<()> {
-        let extension = self
-            .extensions
-            .iter()
-            .find(|e| e.id == id)
-            .ok_or_else(|| anyhow::anyhow!("Extension not found: {}", id))?;
-
-        extension_host::activate(extension, &self.context).await
+    /// Uninstall extension
+    pub async fn uninstall_extension(&self, extension_id: &str) -> Result<()> {
+        self.marketplace.uninstall(extension_id).await
     }
 
-    /// Get all active extensions
-    pub fn get_extensions(&self) -> &[Extension] {
-        &self.extensions
+    /// List installed extensions
+    pub async fn list_installed(&self) -> Result<Vec<marketplace::ExtensionManifest>> {
+        self.marketplace.list_installed().await
+    }
+
+    /// Search marketplace
+    pub async fn search_extensions(&self, query: &str) -> Result<Vec<ExtensionSummary>> {
+        self.marketplace.search(query).await
+    }
+
+    /// Activate a JavaScript extension
+    pub async fn activate_js_extension(&mut self, extension_id: &str) -> Result<()> {
+        self.extension_host.activate_extension(extension_id).await
+    }
+
+    /// Activate a WASM extension
+    pub async fn activate_wasm_extension(
+        &mut self,
+        extension_id: &str,
+        wasm_path: &std::path::Path,
+    ) -> Result<()> {
+        self.wasm_runtime
+            .load_module(wasm_path, extension_id.to_string())
+            .await?;
+        self.wasm_runtime.activate(extension_id)
+    }
+
+    /// Start an LSP server for an extension
+    pub async fn start_lsp_server(
+        &self,
+        command: &str,
+        args: &[&str],
+        root_uri: &str,
+    ) -> Result<LspClient> {
+        LspClient::start(command, args, root_uri).await
+    }
+
+    /// Get extension host
+    pub fn extension_host(&self) -> &ExtensionHost {
+        &self.extension_host
+    }
+
+    /// Get extension host (mutable)
+    pub fn extension_host_mut(&mut self) -> &mut ExtensionHost {
+        &mut self.extension_host
+    }
+
+    /// Get WASM runtime
+    pub fn wasm_runtime(&self) -> &WasmRuntime {
+        &self.wasm_runtime
+    }
+
+    /// Get WASM runtime (mutable)
+    pub fn wasm_runtime_mut(&mut self) -> &mut WasmRuntime {
+        &mut self.wasm_runtime
+    }
+
+    /// Get marketplace client
+    pub fn marketplace(&self) -> &MarketplaceClient {
+        &self.marketplace
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
-    fn test_extension_host_creation() {
-        let context = ActivationContext {
-            workspace_root: PathBuf::from("/workspace"),
-            extension_path: PathBuf::from("/extensions"),
-            storage_path: PathBuf::from("/storage"),
-        };
-        let host = ExtensionHost::new(context);
-        assert_eq!(host.extensions.len(), 0);
+    fn test_runtime_creation() {
+        let temp_dir = tempdir().unwrap();
+        let runtime = VsCodeRuntime::new(temp_dir.path().to_path_buf());
+        assert!(runtime.is_ok());
     }
 }

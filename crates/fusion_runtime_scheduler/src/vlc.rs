@@ -249,7 +249,7 @@ impl VariationalLoopController {
             }
 
             // Calculate gradients (parameter shift rule - simplified)
-            let grads = self.calculate_gradients(&params, &circuit_fn);
+            let grads = self.calculate_gradients(&params, &mut circuit_fn);
 
             // Update parameters (gradient descent)
             for (p, g) in params.iter_mut().zip(grads.iter()) {
@@ -268,9 +268,9 @@ impl VariationalLoopController {
     }
 
     /// Calculate gradients using parameter shift rule
-    fn calculate_gradients<F>(&self, params: &[f64], circuit_fn: &F) -> Vec<f64>
+    fn calculate_gradients<F>(&self, params: &[f64], circuit_fn: &mut F) -> Vec<f64>
     where
-        F: Fn(&[f64]) -> f64, // Changed from FnMut to Fn
+        F: FnMut(&[f64]) -> f64,
     {
         const SHIFT: f64 = std::f64::consts::FRAC_PI_2; // π/2
 

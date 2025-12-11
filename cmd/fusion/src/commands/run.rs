@@ -1,8 +1,8 @@
 use anyhow::Result;
-use fusion_core::compiler::Compiler;
-use fusion_core::lexer::Lexer;
-use fusion_core::parser::Parser;
-use fusion_core::vm::VM;
+use fusion_core_compiler::compiler::Compiler;
+use fusion_core_compiler::lexer::Lexer;
+use fusion_core_compiler::parser::Parser;
+use fusion_core_compiler::vm::VM;
 use std::fs;
 use tracing::info;
 
@@ -59,10 +59,12 @@ pub fn run(release: bool, args: &[String]) -> Result<()> {
 fn run_source(source: &str) -> Result<()> {
     let lexer = Lexer::new(source);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program().map_err(|e| anyhow::anyhow!(e))?;
+    let program = parser
+        .parse_program()
+        .map_err(|e: String| anyhow::anyhow!(e))?;
 
     // Type Check
-    let mut checker = fusion_core::type_checker::TypeChecker::new();
+    let mut checker = fusion_core_compiler::type_checker::TypeChecker::new();
     checker.init_stdlib();
     checker
         .check_program(&program)

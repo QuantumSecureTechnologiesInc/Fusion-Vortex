@@ -1,35 +1,68 @@
 use anyhow::Result;
+use fusion_ai_enhanced::{
+    providers::{LocalProvider, OpenAIProvider},
+    AIProvider, EnhancedAIEngine,
+};
 use std::io::{self, Write};
+use std::sync::Arc;
 
-pub fn start_session(_offline: bool) -> Result<()> {
+pub fn start_session(offline: bool) -> Result<()> {
     println!("Starting interactive session...");
     println!("Type 'exit' to quit, 'help' for commands\n");
 
-    loop {
-        print!("fusion-ai> ");
-        io::stdout().flush()?;
+    let rt = tokio::runtime::Runtime::new()?;
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-
-        let input = input.trim();
-
-        match input {
-            "exit" | "quit" => {
-                println!("Goodbye!");
-                break;
+    rt.block_on(async {
+        // Initialize provider based on config/env
+        let provider: Arc<dyn AIProvider + Send + Sync> = if offline {
+            Arc::new(LocalProvider::new("local-model".to_string()))
+        } else {
+            // Try getting OpenAI key
+            if let Ok(key) = std::env::var("OPENAI_API_KEY") {
+                Arc::new(OpenAIProvider::new(key))
+            } else {
+                println!("No API key found, falling back to local provider");
+                Arc::new(LocalProvider::new("local-model".to_string()))
             }
-            "help" => {
-                print_help();
-            }
-            "" => continue,
-            _ => {
-                println!("Response: Mock response to '{}'", input);
+        };
+
+        let engine = EnhancedAIEngine::new(provider);
+        let mut agent = engine.create_interactive_agent();
+
+        loop {
+            print!("fusion-ai> ");
+            io::stdout().flush()?;
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
+            let input = input.trim();
+
+            match input {
+                "exit" | "quit" => {
+                    println!("Goodbye!");
+                    break;
+                }
+                "help" => {
+                    print_help();
+                }
+                "" => continue,
+                _ => match agent.chat(input).await {
+                    Ok(response) => {
+                        println!("\nAI: {}\n", response.message);
+                        if !response.tool_calls.is_empty() {
+                            println!("Tools used:");
+                            for call in response.tool_calls {
+                                println!("- {}", call.name);
+                            }
+                        }
+                    }
+                    Err(e) => println!("Error: {}", e),
+                },
             }
         }
-    }
 
-    Ok(())
+        Ok(())
+    })
 }
 
 fn print_help() {

@@ -27,7 +27,7 @@ mod qpu;
 
 pub use gpu::{GpuBackend, GpuKernelExecutor};
 pub use network::NetworkInterface;
-pub use qpu::{QpuInterface, QpuProvider};
+pub use qpu::{QpuInterface, QpuProvider, QuantumCircuit, QuantumGate};
 
 /// Hardware abstraction layer coordinating all devices
 pub struct HardwareLayer {

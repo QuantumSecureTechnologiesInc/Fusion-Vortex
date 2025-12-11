@@ -224,9 +224,48 @@ impl RuntimeBuilder {
         let qpu_sequencer = Arc::new(QpuJobSequencer::default());
 
         // Core components
-        let scheduler = Arc::new(Scheduler::new(&config));
-        let memory_manager = Arc::new(MemoryManager::new(&config));
-        let hal = Arc::new(HardwareLayer::new(&config));
+        // Core components
+        let scheduler_config: fusion_runtime_scheduler::RuntimeConfig = (&config).into();
+        let scheduler = Arc::new(Scheduler::new(&scheduler_config));
+
+        let mem_config: fusion_runtime_mem_mgr::RuntimeConfig = (&config).into();
+        let memory_manager = Arc::new(MemoryManager::new(&mem_config));
+
+        let hal_config: fusion_runtime_hal::RuntimeConfig = (&config).into();
+        let hal = Arc::new(HardwareLayer::new(&hal_config));
+
+        // Executor doesn't take config in constructor, fixed to match signature
+        // Assuming Executor::new(scheduler, &config) was intentional but if specific signature changed:
+        // Checking executor::new signature: new(id: usize, scheduler: Arc<Scheduler>, shutdown: Arc<Mutex<bool>>) -> Self
+        // It seems the Executor instantiation line was incorrect based on recent edits if Executor::new has changed.
+        // Let's assume Executor::new takes (scheduler, &config) based on the code I read in lib.rs:230.
+        // Wait, I saw "executor.rs:66:23 fn new(id: usize, scheduler: Arc<Scheduler>, shutdown: Arc<Mutex<bool>>) -> Self" in previous warning.
+        // This implies Executor definition might not match usage!
+        // But let's fix the config type references first which are definitely wrong.
+        // And I'll fix Executor usage to... wait, if Executor::new is id, scheduler, shutdown, I need to provide those.
+        // But maybe there is a pub fn new wrapper?
+        // Let's stick to fixing the config references using into() as I implemented the From traits.
+        // For Executor, I will assume signature in lib.rs 230 was intended for a different Executor or wrapper.
+        // Given I cannot see executor.rs fully, I should look at "crates/fusion_runtime_core/src/executor.rs".
+        // Use default Executor construction for now if possible or adapt.
+        // Actually, let's look at the Executor type.
+
+        let executor_config: fusion_runtime_scheduler::RuntimeConfig = (&config).into();
+        // Assuming Executor needs scheduler and maybe config?
+        // Line 230: let executor = Arc::new(Executor::new(scheduler.clone(), &config));
+        // If Executor::new signature is different, this line is wrong.
+        // I will trust the user intended signature and just fix the config type passed to it if it expects a specific config.
+        // But wait, Executor is in the CURRENT crate. So &config (RuntimeConfig) IS the correct type for Executor::new if it takes &RuntimeConfig.
+        // The error log didn't complain about Executor::new config type, only Scheduler, MemoryManager, Hal.
+        let executor = Arc::new(Executor::new(scheduler.clone(), &config));
+        // Ah, if I change 227-229, I should leave 230 alone if it wasn't erroring.
+
+        // Re-reading error log carefully:
+        // error[E0308]: mismatched types --> crates\fusion_runtime_core\src\lib.rs:227:49
+        // error[E0308]: mismatched types --> crates\fusion_runtime_core\src\lib.rs:228:58
+        // error[E0308]: mismatched types --> crates\fusion_runtime_core\src\lib.rs:229:47
+        // That's it for lib.rs errors.
+
         let executor = Arc::new(Executor::new(scheduler.clone(), &config));
         let vlc = Arc::new(VariationalLoopController::new());
         let metrics = Arc::new(RwLock::new(RuntimeMetrics::default()));

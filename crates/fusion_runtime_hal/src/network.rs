@@ -60,7 +60,6 @@ impl NetworkInterface {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::{Ipv4Addr, SocketAddrV4};
 
     #[test]
     fn test_network_creation() {

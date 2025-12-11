@@ -22,21 +22,24 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+toml = { workspace = true }
+git2 = { workspace = true }
 
 # Internal crates
 fusion-core = { path = "../../crates/core" }
 fusion-toolchain = { path = "../../crates/toolchain" }
-fusion-tester = { path = "../../crates/tester" }
-fusion-formatter = { path = "../../crates/formatter" }
-fusion-docgen = { path = "../../crates/docgen" }
+fusion-tester = { path = "../../ecosystem/crates/tester" }
+fusion-formatter = { path = "../../ecosystem/crates/formatter" }
+fusion-docgen = { path = "../../ecosystem/crates/docgen" }
 fusion-pkgmgr = { path = "../../crates/pkgmgr" }
-fusion-debugger = { path = "../../crates/debugger" }
+fusion-debugger = { path = "../../ecosystem/crates/debugger" }
 fusion-analyzer = { path = "../../crates/analyzer" }
-fusion-profiler = { path = "../../crates/profiler" }
-fusion-audit = { path = "../../crates/audit" }
-fusion-deploy = { path = "../../crates/deploy" }
+fusion-profiler = { path = "../../ecosystem/crates/profiler" }
+fusion-audit = { path = "../../ecosystem/crates/audit" }
+fusion-deploy = { path = "../../ecosystem/crates/deploy" }
 fusion-settings = { path = "../../crates/settings" }
 fusion-projects = { path = "../../crates/projects" }
-fusion-github = { path = "../../crates/github" }
+fusion-github = { path = "../../ecosystem/crates/github" }
+fusion-ai-cli = { path = "../../ecosystem/crates/ai-cli" }
 lazy_static = "1.4"
 

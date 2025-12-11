@@ -1,0 +1,10 @@
+[package]
+name = "fusion_llm_rag"
+version = "0.1.0"
+edition = "2021"
+description = "RAG vector store with thread-safe operations"
+license = "MIT"
+
+[dependencies]
+fusion_core = { path = "../../../crates/core", version = "0.1.0" }
+thiserror = { workspace = true }

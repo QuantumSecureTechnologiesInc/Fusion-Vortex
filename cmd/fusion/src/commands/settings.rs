@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use fusion_settings::FusionSettings;
 use std::process::Command;
 
