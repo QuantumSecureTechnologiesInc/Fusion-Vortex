@@ -1,0 +1,11 @@
+[package]
+name = "fusion_llm_tensor_parallel"
+version = "0.2.0"
+edition = "2021"
+description = "Splits model weights across GPUs for multi-device inference/training"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_net = { path = "../fusion_net/", version = "0.2.0" } # Inter-GPU communication
+

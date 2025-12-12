@@ -1,0 +1,14 @@
+[package]
+name = "fusion_llm_model_server"
+version = "0.2.0"
+edition = "2021"
+description = "High-performance inference server optimized for custom Fusion LLMs"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_http = { path = "../http/", version = "0.2.0" }
+# fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
+# fusion_llm_lora_manager = { path = "../llm-lora-manager/", version = "0.2.0" }
+tokio = { workspace = true }
+

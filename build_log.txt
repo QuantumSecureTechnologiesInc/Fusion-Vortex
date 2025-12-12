@@ -1,0 +1,5 @@
+error: no matching package found
+searched package name: `fusion_core`
+perhaps you meant:      fusion-core
+location searched: C:\Projects\Fusion - Programming Language\crates\core
+required by package `fusion_llm_attention_mask v0.1.0 (C:\Projects\Fusion - Programming Language\ecosystem\crates\llm-attention-mask)`

@@ -1,0 +1,14 @@
+[package]
+name = "fusion_interop_cargo_converter"
+version = "0.2.0"
+edition = "2021"
+description = "Translates Rust Cargo metadata and types to Fusion FFI definitions"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+# fusion_std = { path = "../../std", version = "0.2.0" }
+# fusion_bridge_c = { path = "../../bridge_c", version = "0.2.0" }
+toml = "0.8"
+thiserror = { workspace = true }
+

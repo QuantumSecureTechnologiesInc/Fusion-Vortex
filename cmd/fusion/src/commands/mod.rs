@@ -1,3 +1,4 @@
+pub mod agent;
 pub mod ai;
 pub mod audit;
 pub mod build;
@@ -5,10 +6,11 @@ pub mod check;
 pub mod debug;
 pub mod deploy;
 pub mod doc;
+pub mod extensions;
 pub mod fmt;
 pub mod github;
 pub mod lint;
-
+pub mod mcp;
 pub mod package;
 pub mod profile;
 pub mod project;

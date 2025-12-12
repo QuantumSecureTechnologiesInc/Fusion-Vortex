@@ -21,10 +21,11 @@ reqwest = { workspace = true }
 tracing = { workspace = true }
 pqcrypto-dilithium = { workspace = true }
 blake3 = { workspace = true }
-fusion-core = { path = "../../../crates/core" }
+fusion-core = { workspace = true }
 futures = "0.3"
 walkdir = "2.4"
 bytes = "1.5"
 
 [dev-dependencies]
 tempfile = "3.8"
+

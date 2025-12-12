@@ -7,14 +7,14 @@ mod commands;
 
 /// Fusion Programming Language CLI
 ///
-/// A next-generation programming language with post-quantum cryptography, and enterprise-grade tooling.
-#[derive(Parser, Debug)]
+/// A next-generation programming language with built-in AI assistance,
+/// post-quantum cryptography, and enterprise-grade tooling.
+#[derive(Parser)]
 #[command(
-    name = "fusion",
+    name = "fusion-vsc",
     version,
-    about = "Fusion Programming Language CLI",
-    long_about = "Fusion is a next-generation programming language with quantum-resistant cryptography, \
-                  and production-ready tooling.",
+    about = "Fusion VSC CLI",
+    long_about = "Fusion VSC CLI - The bridges between Fusion, VS Code, and MCP.",
     author,
     propagate_version = true
 )]
@@ -38,33 +38,33 @@ enum Commands {
         /// Project name
         name: String,
 
-        /// Project template (binary, library, quantum, ai-app)
-        #[arg(short, long, default_value = "binary")]
+        /// Template to use
+        #[arg(short, long, default_value = "default")]
         template: String,
 
-        /// Target directory
-        #[arg(short = 'p', long)]
+        /// Custom project path
+        #[arg(short, long)]
         path: Option<String>,
     },
 
-    /// Build the current project
+    /// Build the project
     Build {
         /// Build in release mode
         #[arg(short, long)]
         release: bool,
 
-        /// Target architecture
+        /// Build for target
         #[arg(short, long)]
         target: Option<String>,
 
-        /// Enable verbose output
+        /// Verbose output
         #[arg(short, long)]
         verbose: bool,
     },
 
-    /// Run the current project
+    /// Run the project
     Run {
-        /// Build in release mode
+        /// Run in release mode
         #[arg(short, long)]
         release: bool,
 
@@ -75,14 +75,15 @@ enum Commands {
 
     /// Run tests
     Test {
-        /// Test filter pattern
+        /// Test name filter
+        #[arg(short, long)]
         filter: Option<String>,
 
-        /// Run tests in release mode
+        /// Run in release mode
         #[arg(short, long)]
         release: bool,
 
-        /// Enable benchmarking
+        /// Run benchmarks
         #[arg(short, long)]
         bench: bool,
     },
@@ -93,32 +94,32 @@ enum Commands {
         #[arg(short, long)]
         check: bool,
 
-        /// Format all files in workspace
+        /// Format all files
         #[arg(short, long)]
         all: bool,
     },
 
-    /// Check code without building
+    /// Check source code
     Check {
-        /// Check all targets
+        /// Check all packages
         #[arg(short, long)]
         all: bool,
     },
 
-    /// Lint and analyze code
+    /// Lint source code
     Lint {
-        /// Fix automatically fixable issues
+        /// Auto-fix issues
         #[arg(short, long)]
         fix: bool,
 
-        /// Enable security-focused lints
+        /// Security-focused linting
         #[arg(short, long)]
         security: bool,
     },
 
     /// Generate documentation
     Doc {
-        /// Open documentation in browser
+        /// Open docs in browser
         #[arg(short, long)]
         open: bool,
 
@@ -127,182 +128,172 @@ enum Commands {
         private: bool,
     },
 
-    /// Manage dependencies
+    /// Package management
     Package {
         #[command(subcommand)]
         cmd: PackageCommands,
     },
 
-    /// Debug the current project
+    /// Debug the project
     Debug {
-        /// Entry point to debug
+        /// Debug target
         target: Option<String>,
     },
 
-    /// Profile runtime performance
+    /// Profile the project
     Profile {
-        /// Profiling mode (cpu, memory, gpu)
+        /// Profiling mode (cpu, memory, time)
         #[arg(short, long, default_value = "cpu")]
         mode: String,
 
-        /// Output format (json, flamegraph, trace)
-        #[arg(short, long, default_value = "flamegraph")]
+        /// Output file
+        #[arg(short, long)]
         output: String,
     },
 
-    /// Audit dependencies for vulnerabilities
+    /// Security audit
     Audit {
-        /// Generate detailed report
+        /// Generate audit report
         #[arg(short, long)]
         report: bool,
 
-        /// Fail on vulnerabilities
+        /// Deny warnings
         #[arg(short, long)]
         deny: bool,
     },
 
-    /// Deploy to cloud platforms
+    /// Deploy the project
     Deploy {
-        /// Target platform (aws, azure, gcp, local)
+        /// Target platform
         #[arg(short, long)]
         platform: String,
 
-        /// Deployment environment (dev, staging, production)
-        #[arg(short, long, default_value = "dev")]
+        /// Deployment environment
+        #[arg(short, long, default_value = "production")]
         env: String,
 
-        /// Configuration file
+        /// Config file
         #[arg(short, long)]
         config: Option<String>,
     },
 
-    /// AI Assistant commands
+    /// AI-powered development tools
     Ai {
         #[command(subcommand)]
         cmd: AiCommands,
     },
+
+    /// Model Context Protocol commands
+    Mcp {
+        #[command(subcommand)]
+        cmd: McpCommands,
+    },
+
+    /// VS Code extension management
+    Extensions {
+        #[command(subcommand)]
+        cmd: ExtensionCommands,
+    },
 }
 
 #[derive(Subcommand, Debug)]
-pub enum AiCommands {
-    /// Assist with coding tasks
-    Assist {
-        /// Prompt for the assistant
-        prompt: Option<String>,
-
-        /// Run in offline mode using local models
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
-    },
-
-    /// Generate code from description
-    Generate {
-        /// Description of code to generate
-        description: String,
-
-        /// Target file path
+enum FusionCommands {
+    /// Execute the Flux‑Resolve Engine – a GPU‑accelerated dependency resolver.
+    #[command(name = "flux-resolve")]
+    FluxResolve {
+        /// Path to the project manifest (e.g. `fusion.toml`).
         #[arg(short, long)]
-        target: Option<String>,
+        manifest: Option<String>,
+    },
+    /// Upgrade the Fusion Runtime Core to the latest version.
+    #[command(name = "runtime-upgrade")]
+    RuntimeUpgrade {
+        /// Target version (defaults to the latest stable release).
+        #[arg(short, long)]
+        version: Option<String>,
+    },
+    /// Placeholder for legacy commands – retained for backward compatibility.
+    #[command(name = "legacy")]
+    Legacy {
+        /// The original command name to invoke.
+        #[arg()]
+        cmd: String,
+        /// Additional arguments passed through.
+        #[arg(last = true)]
+        args: Vec<String>,
+    },
+}
 
-        /// Preview changes without applying
-        #[arg(long)]
-        preview_only: bool,
+#[derive(Subcommand, Debug)]
+enum McpCommands {
+    /// Start MCP server
+    Serve {
+        /// Port to listen on
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
 
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
-
-        /// Maximum tokens to generate
-        #[arg(long)]
-        max_tokens: Option<usize>,
+        /// Enable extension support
+        #[arg(short, long)]
+        extensions: bool,
     },
 
-    /// Refactor existing code
-    Refactor {
-        /// Description of refactoring
-        description: String,
-
-        /// Target file to refactor
-        target: String,
-
-        /// Preview changes without applying
-        #[arg(long)]
-        preview_only: bool,
-
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
+    /// Manage context
+    Context {
+        #[command(subcommand)]
+        cmd: ContextCommands,
     },
 
-    /// Explain code logic
-    Explain {
-        /// Target file or code snippet
-        target: String,
+    /// Manage tools
+    Tools {
+        #[command(subcommand)]
+        cmd: ToolCommands,
+    },
+}
 
-        /// Detail depth (brief, standard, detailed)
-        #[arg(short, long, default_value = "standard")]
-        depth: String,
+#[derive(Subcommand, Debug)]
+enum ContextCommands {
+    /// Add context
+    Add {
+        /// Path to file or directory
+        path: String,
 
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
+        /// Recursive for directories
+        #[arg(short, long)]
+        recursive: bool,
     },
 
-    /// Review code for quality and security
-    Review {
-        /// Target file or directory
-        target: Option<String>,
+    /// List context
+    List,
 
-        /// Focus area (security, style, performance)
-        #[arg(short, long, default_value = "general")]
-        focus: String,
+    /// Clear context
+    Clear,
+}
 
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
+#[derive(Subcommand, Debug)]
+enum ToolCommands {
+    /// List available tools
+    List,
+}
+
+#[derive(Subcommand, Debug)]
+enum ExtensionCommands {
+    /// List installed extensions
+    List,
+
+    /// Install an extension
+    Install {
+        /// Extension ID (publisher.name)
+        id: String,
     },
 
-    /// Generate tests
-    Tests {
-        /// Target file to test
-        target: String,
+    /// Execute extension command
+    Exec {
+        /// Command ID
+        command: String,
 
-        /// Test type (unit, integration)
-        #[arg(long, default_value = "unit")]
-        test_type: String,
-
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
-    },
-
-    /// Generate documentation
-    Doc {
-        /// Target file to document
-        target: String,
-
-        /// Include examples
-        #[arg(long)]
-        examples: bool,
-
-        /// Run in offline mode
-        #[arg(long, alias = "offline")]
-        ai_offline: bool,
-    },
-
-    /// Configure AI settings
-    Config {
-        /// Show current configuration
-        #[arg(long)]
-        show: bool,
-
-        /// Set default model
-        #[arg(long)]
-        model: Option<String>,
-
-        /// Set API key
-        #[arg(long)]
-        api_key: Option<String>,
+        /// Arguments (JSON)
+        #[arg(short, long)]
+        args: Option<String>,
     },
 }
 
@@ -339,6 +330,130 @@ enum PackageCommands {
         /// Skip verification
         #[arg(long)]
         no_verify: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AiCommands {
+    /// Interactive AI assistant
+    Assist {
+        /// Initial prompt
+        prompt: Option<String>,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Generate code from description
+    Generate {
+        /// Description of code to generate
+        description: String,
+
+        /// Target file or directory
+        #[arg(short, long)]
+        target: Option<String>,
+
+        /// Preview only (don't apply)
+        #[arg(short, long)]
+        preview_only: bool,
+
+        /// Offline mode
+        #[arg(long)]
+        ai_offline: bool,
+
+        /// Maximum tokens
+        #[arg(long)]
+        max_tokens: Option<usize>,
+    },
+
+    /// Refactor existing code
+    Refactor {
+        /// Refactoring description
+        description: String,
+
+        /// Target code selection
+        #[arg(short, long)]
+        target: String,
+
+        /// Preview only
+        #[arg(short, long)]
+        preview_only: bool,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Explain code
+    Explain {
+        /// Code file or selection
+        target: String,
+
+        /// Explanation depth (quick, detailed, comprehensive)
+        #[arg(short, long, default_value = "detailed")]
+        depth: String,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Review code for issues
+    Review {
+        /// Target to review
+        target: Option<String>,
+
+        /// Focus areas (security, performance, style, all)
+        #[arg(short, long, default_value = "all")]
+        focus: String,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Generate tests
+    Tests {
+        /// Target code to test
+        target: String,
+
+        /// Test type (unit, integration, e2e)
+        #[arg(short = 't', long, default_value = "unit")]
+        test_type: String,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Generate documentation
+    Doc {
+        /// Target to document
+        target: String,
+
+        /// Include examples
+        #[arg(short, long)]
+        examples: bool,
+
+        /// Use offline/local models only
+        #[arg(long)]
+        ai_offline: bool,
+    },
+
+    /// Configure AI settings
+    Config {
+        /// Show current configuration
+        #[arg(short, long)]
+        show: bool,
+
+        /// Set default model
+        #[arg(long)]
+        model: Option<String>,
+
+        /// Set API key
+        #[arg(long)]
+        api_key: Option<String>,
     },
 }
 
@@ -398,5 +513,7 @@ fn main() -> Result<()> {
             config,
         } => commands::deploy::deploy(&platform, &env, config.as_deref()),
         Commands::Ai { cmd } => commands::ai::ai(cmd),
+        Commands::Mcp { cmd } => commands::mcp::mcp(cmd),
+        Commands::Extensions { cmd } => commands::extensions::extensions(cmd),
     }
 }

@@ -1,0 +1,11 @@
+[package]
+name = "fusion_llm_distill"
+version = "0.2.0"
+edition = "2021"
+description = "Knowledge Distillation framework for compressing LLMs"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true }
+

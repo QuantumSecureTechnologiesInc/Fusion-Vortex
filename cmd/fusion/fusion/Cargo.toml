@@ -24,19 +24,19 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # Internal crates
-fusion-core = { path = "../../crates/core" }
+fusion-core = { path = "../../../registry/crates/core/" }
 fusion-toolchain = { path = "../../crates/toolchain" }
-fusion-tester = { path = "../../crates/tester" }
-fusion-formatter = { path = "../../crates/formatter" }
-fusion-docgen = { path = "../../crates/docgen" }
+fusion-tester = { path = "../../../registry/crates/tester/" }
+fusion-formatter = { path = "../../../registry/crates/formatter/" }
+fusion-docgen = { path = "../../../registry/crates/docgen/" }
 fusion-pkgmgr = { path = "../../crates/pkgmgr" }
-fusion-debugger = { path = "../../crates/debugger" }
+fusion-debugger = { path = "../../../registry/crates/debugger/" }
 fusion-analyzer = { path = "../../crates/analyzer" }
-fusion-profiler = { path = "../../crates/profiler" }
-fusion-audit = { path = "../../crates/audit" }
-fusion-deploy = { path = "../../crates/deploy" }
+fusion-profiler = { path = "../../../registry/crates/profiler/" }
+fusion-audit = { path = "../../../registry/crates/audit/" }
+fusion-deploy = { path = "../../../registry/crates/deploy/" }
 fusion-settings = { path = "../../crates/settings" }
 fusion-projects = { path = "../../crates/projects" }
-fusion-github = { path = "../../crates/github" }
+fusion-github = { path = "../../../registry/crates/github/" }
 lazy_static = "1.4"
 

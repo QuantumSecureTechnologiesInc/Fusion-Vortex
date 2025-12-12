@@ -1,0 +1,10 @@
+[package]
+name = "fusion_nn_metrics"
+version = "0.2.0"
+edition = "2021"
+description = "Training metrics calculation (Accuracy, F1, AUC, etc.)"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+

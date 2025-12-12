@@ -1,0 +1,10 @@
+[package]
+name = "fusion_tensor_sparse"
+version = "0.2.0"
+edition = "2021"
+description = "Sparse-Dense and Sparse-Sparse Tensor operations"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+

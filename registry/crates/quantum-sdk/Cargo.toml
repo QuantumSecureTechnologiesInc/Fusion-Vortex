@@ -1,0 +1,9 @@
+[package]
+name = "fusion_quantum_sdk"
+version = "0.1.0"
+edition = "2021"
+description = "Fusion Quantum SDK for interacting with QPUs"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }

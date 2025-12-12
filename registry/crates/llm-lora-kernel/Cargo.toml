@@ -1,0 +1,11 @@
+[package]
+name = "fusion_llm_lora_kernel"
+version = "0.2.0"
+edition = "2021"
+description = "Fused kernel for base weight + LORA adapter multiplication (W + AB)"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true }
+

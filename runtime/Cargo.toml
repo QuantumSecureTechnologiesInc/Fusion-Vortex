@@ -10,13 +10,16 @@ members = [
     "crates/fusion_finance",
     "crates/fusion_net",
     "crates/fusion_quantum",
-    "crates/fusion_traits",           # ⭐ NEW: Phase 2
-    "crates/fusion_tensor_core",      # ⭐ NEW: Phase 2
-    "crates/fusion_quantum_core",     # ⭐ NEW: Phase 2
+    "crates/fusion_traits",           # ⭐ Phase 2: Core traits
+    "crates/fusion_tensor_core",      # ⭐ Phase 2: Tensor operations
+    "crates/fusion_quantum_core",     # ⭐ Phase 2: Quantum primitives
+    "crates/fusion_cortex",           # ⭐ v0.3.0: AI Scheduler
+    "crates/fusion_hal",              # ⭐ v0.3.0: Hardware Abstraction Layer
+    "crates/fusion_flux_resolve",     # ⭐ Flux-Resolve Engine
 ]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
@@ -27,7 +30,8 @@ authors = ["Quantum Secure Technologies Inc."]
 # Core async runtime primitives
 parking_lot = "0.12"
 crossbeam = "0.8"
-dashmap = "5.5"
+crossbeam-deque = "0.8"
+dashmap = "6.1"
 
 # Low-level memory management
 libc = "0.2"
@@ -37,6 +41,10 @@ memmap2 = "0.9"
 ash = "0.38"  # Vulkan bindings
 metal = "0.28"  # Metal for macOS/iOS
 cuda-sys = "0.3"  # CUDA FFI
+
+# Thread pool and core affinity
+core_affinity = "0.8"
+num_cpus = "1.16"
 
 # Network performance
 socket2 = "0.5"
@@ -58,8 +66,13 @@ proptest = "1.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Numeric types (for tensor/quantum)
+# Numeric types (for tensor/quantum/AI)
 num-complex = "0.4"
+ndarray = "0.15"
+uuid = { version = "1.4", features = ["v4"] }
+
+# Error handling
+thiserror = "1.0"
 
 [profile.release]
 opt-level = 3

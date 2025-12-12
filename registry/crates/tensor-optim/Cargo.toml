@@ -1,0 +1,11 @@
+[package]
+name = "fusion_tensor_optim"
+version = "0.2.0"
+edition = "2021"
+description = "Gradient accumulation, clipping, and training utilities"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true } # For Variable/Grads
+

@@ -6,5 +6,6 @@ description = "RAG vector store with thread-safe operations"
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { workspace = true }
 thiserror = { workspace = true }
+

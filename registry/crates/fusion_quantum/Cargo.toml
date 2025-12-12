@@ -1,0 +1,18 @@
+[package]
+name = "fusion_quantum"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Quantum computing primitives with QPU integration"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_runtime_core = { path = "../fusion_runtime_core/" }
+fusion_runtime_hal = { path = "../fusion_runtime_hal/" }
+serde = { workspace = true }
+tracing = { workspace = true }
+[dev-dependencies]
+criterion = { workspace = true }
+

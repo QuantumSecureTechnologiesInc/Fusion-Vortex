@@ -6,4 +6,5 @@ description = "Utilities for generating attention masks (Sliding Window, Causal,
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { workspace = true }
+

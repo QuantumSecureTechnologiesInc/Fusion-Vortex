@@ -6,4 +6,5 @@ description = "Tokenizers for LLM models (BPE, WordPiece, etc.)"
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { workspace = true }
+

@@ -1,0 +1,11 @@
+[package]
+name = "portfolio_optimizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fusion_ai_core = { path = "../../registry/crates/fusion_ai_core" }
+fusion_quantum = { path = "../../registry/crates/fusion_quantum" }
+fusion_web = { path = "../../registry/crates/fusion-web-server", package = "fusion-web-server" }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }

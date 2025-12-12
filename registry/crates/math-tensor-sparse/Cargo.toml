@@ -1,0 +1,9 @@
+[package]
+name = "math-tensor-sparse"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: math-tensor-sparse"
+license = "MIT"
+
+[dependencies]

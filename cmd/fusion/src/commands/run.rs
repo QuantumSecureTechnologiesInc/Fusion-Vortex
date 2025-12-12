@@ -1,79 +1,50 @@
-use anyhow::Result;
-use fusion_core_compiler::compiler::Compiler;
-use fusion_core_compiler::lexer::Lexer;
-use fusion_core_compiler::parser::Parser;
-use fusion_core_compiler::vm::VM;
-use std::fs;
+use anyhow::{Context, Result};
+use std::process::Command;
 use tracing::info;
 
+/// Run the project using Fusion Flux Engine
 pub fn run(release: bool, args: &[String]) -> Result<()> {
-    if args.is_empty() {
-        // Run internal test if no file provided (preserving the behavior from neon-magnetar main.rs)
-        // Or strictly require file? The CLI help says [ARGS]...
-        // Let's stick to reading a file if provided, else error for now as it is a CLI tool.
-        // But wait, the user's test flow used no args to run internal test.
-        // Let's support an internal test if "test" is passed as arg? Or just fail.
-        // Replicating the logic from previous main.rs:
+    info!("Running project with Fusion Flux Engine");
 
-        // Actually, the previous main.rs had a hardcoded test case if no args.
-        // Let's restore that for demonstration if the user runs `fusion run` without args
-        println!("No input file provided. Running internal test case...");
-        let source = r#"
-        struct Point {
-            x: Int,
-            y: Int,
-        }
+    println!("╔════════════════════════════════════════════╗");
+    println!("║   FUSION FLUX ENGINE - BUILD & RUN        ║");
+    println!("╚════════════════════════════════════════════╝");
+    println!();
 
-        fn main() : Int {
-            let p: Point = Point { x: 10, y: 20 };
-            print("Initial x:");
-            print(p.x);
-            
-            p.x = 30;
-            print("New x:");
-            print(p.x);
-            
-            let sum: Int = 0;
-            for (let j: Int = 0; j < 3; j = j + 1) {
-                sum = sum + p.y;
-            }
-            print("Sum loops:");
-            print(sum);
+    let flux_enabled =
+        std::env::var("FUSION_FLUX_ENABLED").unwrap_or_else(|_| "true".to_string()) == "true";
 
-            return sum;
-        }
-        "#;
-        run_source(source)?;
-        return Ok(());
+    // First build with Flux
+    if flux_enabled {
+        println!("🔨 Building with Fusion Flux Engine...");
+        crate::commands::build::build(release, None, false)?;
+        println!();
     }
 
-    let filename = &args[0];
-    info!("Running {} (release: {})", filename, release);
+    println!("🚀 Executing program...");
+    println!();
 
-    let source = fs::read_to_string(filename)?;
-    run_source(&source)?;
+    let mut cmd = Command::new("cargo");
+    cmd.arg("run");
 
-    Ok(())
-}
+    if release {
+        cmd.arg("--release");
+    }
 
-fn run_source(source: &str) -> Result<()> {
-    let lexer = Lexer::new(source);
-    let mut parser = Parser::new(lexer);
-    let program = parser
-        .parse_program()
-        .map_err(|e: String| anyhow::anyhow!(e))?;
+    if !args.is_empty() {
+        cmd.arg("--");
+        cmd.args(args);
+    }
 
-    // Type Check
-    let mut checker = fusion_core_compiler::type_checker::TypeChecker::new();
-    checker.init_stdlib();
-    checker
-        .check_program(&program)
-        .map_err(|e| anyhow::anyhow!("Type Error: {}", e))?;
+    if flux_enabled {
+        cmd.env("FUSION_FLUX_MODE", "active");
+    }
 
-    let compiler = Compiler::new();
-    let function = compiler.compile(program);
+    let status = cmd.status().context("Failed to execute run")?;
 
-    let mut vm = VM::new();
-    vm.interpret(function);
-    Ok(())
+    if status.success() {
+        Ok(())
+    } else {
+        anyhow::bail!("Run failed");
+    }
 }

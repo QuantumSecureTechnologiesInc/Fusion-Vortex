@@ -1,0 +1,12 @@
+[package]
+name = "fusion-core"
+version = "0.2.0"
+edition = "2021"
+description = "Fusion language core - Type system, IR, and compiler primitives"
+
+[lib]
+name = "fusion_core_compiler"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror = { workspace = true }

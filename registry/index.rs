@@ -1,0 +1,182 @@
+/// Production Package Index.
+///
+/// Manages crate metadata, versions, and dependencies.
+/// Uses filesystem persistence for simplicity/portability in this implementation.
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
+use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
+
+#[derive(Debug)]
+pub enum RegistryError {
+    IoError(std::io::Error),
+    SerializationError(String),
+    InvalidName(String),
+    LockError,
+    VersionExists(String),
+}
+
+pub type RegistryResult<T> = Result<T, RegistryError>;
+
+impl From<std::io::Error> for RegistryError {
+    fn from(err: std::io::Error) -> Self {
+        RegistryError::IoError(err)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CrateMetadata {
+    pub name: String,
+    pub vers: String,
+    pub deps: Vec<CrateDependency>,
+    pub cksum: String,
+    pub yanked: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CrateDependency {
+    pub name: String,
+    pub req: String,
+    pub optional: bool,
+}
+
+pub struct RegistryIndex {
+    root_path: PathBuf,
+    cache: Arc<RwLock<HashMap<String, Vec<CrateMetadata>>>>,
+}
+
+impl RegistryIndex {
+    pub fn new(path: &str) -> RegistryResult<Self> {
+        let root = PathBuf::from(path);
+        fs::create_dir_all(&root)?;
+
+        Ok(Self {
+            root_path: root,
+            cache: Arc::new(RwLock::new(HashMap::new())),
+        })
+    }
+
+    /// Publish a new version of a crate.
+    pub fn publish(&self, meta: CrateMetadata) -> RegistryResult<()> {
+        if meta.name.is_empty() {
+            return Err(RegistryError::InvalidName("Empty crate name".into()));
+        }
+
+        let mut cache = self.cache.write().map_err(|_| RegistryError::LockError)?;
+
+        let versions = cache.entry(meta.name.clone()).or_insert_with(Vec::new);
+
+        if versions.iter().any(|v| v.vers == meta.vers) {
+            return Err(RegistryError::VersionExists(format!(
+                "Version {} already exists",
+                meta.vers
+            )));
+        }
+
+        let crate_path = self.get_index_path(&meta.name);
+        if let Some(parent) = crate_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let line = serde_json::to_string(&meta)
+            .map_err(|e| RegistryError::SerializationError(e.to_string()))?;
+
+        use std::io::Write;
+        let mut file = fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&crate_path)?;
+
+        writeln!(file, "{}", line)?;
+
+        versions.push(meta.clone());
+
+        println!("[Registry] Published {} v{}", meta.name, meta.vers);
+        Ok(())
+    }
+
+    /// Load all versions of a crate from the index.
+    pub fn load_crate(&self, name: &str) -> RegistryResult<Vec<CrateMetadata>> {
+        let path = self.get_index_path(name);
+
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+
+        let content = fs::read_to_string(&path)?;
+        let mut versions = Vec::new();
+
+        for line in content.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let meta: CrateMetadata = serde_json::from_str(line)
+                .map_err(|e| RegistryError::SerializationError(e.to_string()))?;
+            versions.push(meta);
+        }
+
+        Ok(versions)
+    }
+
+    /// Sharding strategy: 1/2/3 chars or ab/cd/abcd
+    fn get_index_path(&self, name: &str) -> PathBuf {
+        let name_lower = name.to_lowercase();
+        let sub = match name_lower.len() {
+            1 => "1".to_string(),
+            2 => "2".to_string(),
+            3 => "3".to_string(),
+            _ => format!("{}/{}", &name_lower[0..2], &name_lower[2..4]),
+        };
+        self.root_path.join(sub).join(name_lower)
+    }
+
+    /// List all crates in the registry.
+    pub fn list_all(&self) -> RegistryResult<Vec<String>> {
+        let mut crates = Vec::new();
+        self.visit_directory(&self.root_path, &mut crates)?;
+        Ok(crates)
+    }
+
+    fn visit_directory(&self, path: &PathBuf, crates: &mut Vec<String>) -> RegistryResult<()> {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(name) = path.file_name() {
+                    if let Some(name_str) = name.to_str() {
+                        crates.push(name_str.to_string());
+                    }
+                }
+            } else if path.is_dir() {
+                self.visit_directory(&path, crates)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_index_creation() {
+        let temp_dir = std::env::temp_dir().join("fusion-registry-test");
+        let index = RegistryIndex::new(temp_dir.to_str().unwrap()).unwrap();
+
+        let meta = CrateMetadata {
+            name: "test-crate".into(),
+            vers: "1.0.0".into(),
+            deps: vec![],
+            cksum: "abc123".into(),
+            yanked: false,
+        };
+
+        index.publish(meta).unwrap();
+        let loaded = index.load_crate("test-crate").unwrap();
+        assert_eq!(loaded.len(), 1);
+        assert_eq!(loaded[0].vers, "1.0.0");
+    }
+}

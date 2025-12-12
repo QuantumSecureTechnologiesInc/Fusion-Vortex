@@ -1,0 +1,10 @@
+[package]
+name = "fusion_llm_vision_adapter"
+version = "0.2.0"
+edition = "2021"
+description = "Multimodal vision adapter for LLMs (image encoding and alignment)"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+

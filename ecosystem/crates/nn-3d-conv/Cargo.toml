@@ -6,5 +6,6 @@ description = "3D Convolutional Layers for video and volumetric data (C * D * H 
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
-fusion-ai-core = { path = "../ai-core", version = "0.1.0" }
+fusion-core = { workspace = true }
+fusion-ai-core = { workspace = true }
+

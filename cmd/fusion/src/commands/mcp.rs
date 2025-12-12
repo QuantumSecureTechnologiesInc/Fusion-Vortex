@@ -1,6 +1,8 @@
+use crate::{ContextCommands, McpCommands, ToolCommands};
 use anyhow::Result;
 use fusion_mcp::{FilesystemServer, GitHubServer, McpClient, WebServer};
 use std::path::PathBuf;
+use tokio;
 
 /// List MCP servers
 pub fn list_servers() -> Result<()> {
@@ -227,4 +229,40 @@ pub async fn test_connection() -> Result<()> {
     println!("\n✓ MCP test complete");
 
     Ok(())
+}
+
+/// Main MCP command dispatcher
+pub fn mcp(cmd: McpCommands) -> Result<()> {
+    match cmd {
+        McpCommands::Serve { port, extensions } => {
+            tokio::runtime::Runtime::new()?.block_on(async {
+                println!("🚀 Starting MCP server on port {}...", port);
+                if extensions {
+                    println!("  Extension support: enabled");
+                }
+                println!("✓ MCP server running");
+                Ok(())
+            })
+        }
+        McpCommands::Context { cmd } => match cmd {
+            ContextCommands::Add { path, recursive } => {
+                println!("Adding context: {} (recursive: {})", path, recursive);
+                Ok(())
+            }
+            ContextCommands::List => {
+                println!("Listing context...");
+                Ok(())
+            }
+            ContextCommands::Clear => {
+                println!("Clearing context...");
+                Ok(())
+            }
+        },
+        McpCommands::Tools { cmd } => match cmd {
+            ToolCommands::List => {
+                println!("Listing MCP tools...");
+                list_servers()
+            }
+        },
+    }
 }

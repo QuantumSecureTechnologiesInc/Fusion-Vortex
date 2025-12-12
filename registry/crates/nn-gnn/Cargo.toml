@@ -1,0 +1,9 @@
+[package]
+name = "nn-gnn"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: nn-gnn"
+license = "MIT"
+
+[dependencies]

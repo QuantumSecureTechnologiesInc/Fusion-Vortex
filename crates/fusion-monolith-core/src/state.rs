@@ -1,0 +1,360 @@
+//! Shared state types for the Fusion Monolith
+//!
+//! This module defines the central `FusionState` that all components share
+//! via `Arc<RwLock<FusionState>>`.
+
+use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+/// Unique identifier for a package
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct PackageId {
+    /// Package name
+    pub name: String,
+    /// Package version
+    pub version: String,
+}
+
+impl PackageId {
+    /// Creates a new PackageId
+    pub fn new(name: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            version: version.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for PackageId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} v{}", self.name, self.version)
+    }
+}
+
+/// Current status of the build pipeline
+#[derive(Debug, Clone, PartialEq)]
+pub enum BuildStatus {
+    /// No operation in progress
+    Idle,
+    /// Resolving dependencies
+    Resolving,
+    /// Running security audit
+    Auditing {
+        /// Number of packages checked
+        checked: usize,
+        /// Total packages to check
+        total: usize,
+    },
+    /// Fast semantic analysis (no codegen)
+    Checking {
+        /// Current crate being checked
+        current_crate: String,
+        /// Progress (0.0 to 1.0)
+        progress: f32,
+    },
+    /// Full compilation with codegen
+    Compiling {
+        /// Current crate being compiled
+        current_crate: String,
+        /// Progress (0.0 to 1.0)
+        progress: f32,
+    },
+    /// Running tests
+    Testing {
+        /// Number of tests passed
+        passed: usize,
+        /// Number of tests failed
+        failed: usize,
+    },
+    /// Executing the target binary
+    Running {
+        /// Process ID of the running target
+        pid: u32,
+    },
+    /// Build failed
+    Failed(String),
+    /// Build completed successfully
+    Success,
+}
+
+impl Default for BuildStatus {
+    fn default() -> Self {
+        Self::Idle
+    }
+}
+
+impl std::fmt::Display for BuildStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Idle => write!(f, "Idle"),
+            Self::Resolving => write!(f, "Resolving Dependencies..."),
+            Self::Auditing { checked, total } => {
+                write!(f, "Auditing Security [{}/{}]", checked, total)
+            }
+            Self::Checking {
+                current_crate,
+                progress,
+            } => {
+                let bar = Self::progress_bar(*progress);
+                write!(f, "Checking (Analysis) [{}] {}", bar, current_crate)
+            }
+            Self::Compiling {
+                current_crate,
+                progress,
+            } => {
+                let bar = Self::progress_bar(*progress);
+                write!(f, "Compiling (Codegen) [{}] {}", bar, current_crate)
+            }
+            Self::Testing { passed, failed } => {
+                write!(f, "Running Tests (Passed: {}, Failed: {})", passed, failed)
+            }
+            Self::Running { pid } => write!(f, "Running Target (PID: {})...", pid),
+            Self::Failed(e) => write!(f, "FAILED: {}", e),
+            Self::Success => write!(f, "Success"),
+        }
+    }
+}
+
+impl BuildStatus {
+    /// Creates a progress bar string
+    fn progress_bar(progress: f32) -> String {
+        let bar_len = 20;
+        let filled = (progress * bar_len as f32) as usize;
+        let empty = bar_len.saturating_sub(filled);
+        format!("{}{}", "=".repeat(filled), "-".repeat(empty))
+    }
+
+    /// Returns true if the status represents an active operation
+    pub fn is_active(&self) -> bool {
+        !matches!(self, Self::Idle | Self::Success | Self::Failed(_))
+    }
+
+    /// Returns true if the status represents a completed operation
+    pub fn is_complete(&self) -> bool {
+        matches!(self, Self::Success | Self::Failed(_))
+    }
+
+    /// Returns true if the status represents a failure
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+/// A built artifact
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Artifact {
+    /// Package that produced this artifact
+    pub package: PackageId,
+    /// Path to the binary (if applicable)
+    pub binary_path: Option<String>,
+    /// List of vulnerabilities found
+    pub vulnerability_report: Vec<String>,
+    /// Build timestamp
+    pub build_timestamp: Option<chrono::DateTime<chrono::Utc>>,
+    /// Build duration in milliseconds
+    pub build_duration_ms: Option<u64>,
+}
+
+impl Artifact {
+    /// Creates a new artifact
+    pub fn new(package: PackageId) -> Self {
+        Self {
+            package,
+            binary_path: None,
+            vulnerability_report: Vec::new(),
+            build_timestamp: None,
+            build_duration_ms: None,
+        }
+    }
+
+    /// Checks if the artifact has any vulnerabilities
+    pub fn has_vulnerabilities(&self) -> bool {
+        !self.vulnerability_report.is_empty()
+    }
+}
+
+/// LSP diagnostic message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LspDiagnostic {
+    /// File path
+    pub file: String,
+    /// Line number (1-indexed)
+    pub line: u32,
+    /// Column number (1-indexed)
+    pub column: Option<u32>,
+    /// Diagnostic message
+    pub message: String,
+    /// Severity level
+    pub severity: String,
+    /// Diagnostic code (e.g., E0001)
+    pub code: Option<String>,
+}
+
+impl LspDiagnostic {
+    /// Creates a new diagnostic
+    pub fn new(
+        file: impl Into<String>,
+        line: u32,
+        message: impl Into<String>,
+        severity: impl Into<String>,
+    ) -> Self {
+        Self {
+            file: file.into(),
+            line,
+            column: None,
+            message: message.into(),
+            severity: severity.into(),
+            code: None,
+        }
+    }
+
+    /// Sets the column
+    pub fn with_column(mut self, column: u32) -> Self {
+        self.column = Some(column);
+        self
+    }
+
+    /// Sets the diagnostic code
+    pub fn with_code(mut self, code: impl Into<String>) -> Self {
+        self.code = Some(code.into());
+        self
+    }
+}
+
+/// The central shared state for all Fusion Monolith components
+#[derive(Debug)]
+pub struct FusionState {
+    /// Current build status
+    pub status: BuildStatus,
+    /// Dependency graph (package -> dependencies)
+    pub dependency_graph: HashMap<PackageId, Vec<PackageId>>,
+    /// Built artifacts
+    pub artifacts: HashMap<PackageId, Artifact>,
+    /// LSP diagnostics
+    pub diagnostics: Vec<LspDiagnostic>,
+    /// Application stdout buffer
+    pub stdout_buffer: Vec<String>,
+    /// State revision number (for cache invalidation)
+    pub revision: u64,
+    /// Last status change timestamp
+    pub last_update: std::time::Instant,
+}
+
+impl FusionState {
+    /// Creates a new FusionState
+    pub fn new() -> Self {
+        Self {
+            status: BuildStatus::Idle,
+            dependency_graph: HashMap::new(),
+            artifacts: HashMap::new(),
+            diagnostics: Vec::new(),
+            stdout_buffer: Vec::new(),
+            revision: 0,
+            last_update: std::time::Instant::now(),
+        }
+    }
+
+    /// Updates the status and increments the revision
+    pub fn set_status(&mut self, status: BuildStatus) {
+        self.status = status;
+        self.revision += 1;
+        self.last_update = std::time::Instant::now();
+    }
+
+    /// Adds a diagnostic
+    pub fn add_diagnostic(&mut self, diagnostic: LspDiagnostic) {
+        self.diagnostics.push(diagnostic);
+        self.revision += 1;
+    }
+
+    /// Clears all diagnostics
+    pub fn clear_diagnostics(&mut self) {
+        self.diagnostics.clear();
+        self.revision += 1;
+    }
+
+    /// Adds a log line to the stdout buffer
+    pub fn log(&mut self, message: impl Into<String>) {
+        self.stdout_buffer.push(message.into());
+    }
+
+    /// Takes and clears the stdout buffer
+    pub fn take_logs(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.stdout_buffer)
+    }
+
+    /// Adds an artifact
+    pub fn add_artifact(&mut self, artifact: Artifact) {
+        self.artifacts.insert(artifact.package.clone(), artifact);
+        self.revision += 1;
+    }
+
+    /// Gets an artifact by package ID
+    pub fn get_artifact(&self, package: &PackageId) -> Option<&Artifact> {
+        self.artifacts.get(package)
+    }
+
+    /// Resets the state for a new build
+    pub fn reset(&mut self) {
+        self.status = BuildStatus::Idle;
+        self.diagnostics.clear();
+        self.stdout_buffer.clear();
+        self.revision += 1;
+        self.last_update = std::time::Instant::now();
+    }
+}
+
+impl Default for FusionState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Type alias for the shared state
+pub type SharedState = Arc<RwLock<FusionState>>;
+
+/// Creates a new shared state
+pub fn create_shared_state() -> SharedState {
+    Arc::new(RwLock::new(FusionState::new()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_package_id() {
+        let id = PackageId::new("serde", "1.0.0");
+        assert_eq!(id.to_string(), "serde v1.0.0");
+    }
+
+    #[test]
+    fn test_build_status_display() {
+        let status = BuildStatus::Compiling {
+            current_crate: "myapp".to_string(),
+            progress: 0.5,
+        };
+        assert!(status.to_string().contains("Compiling"));
+        assert!(status.to_string().contains("myapp"));
+    }
+
+    #[test]
+    fn test_state_revision() {
+        let mut state = FusionState::new();
+        let initial_rev = state.revision;
+        state.set_status(BuildStatus::Resolving);
+        assert!(state.revision > initial_rev);
+    }
+
+    #[test]
+    fn test_diagnostic() {
+        let diag = LspDiagnostic::new("main.rs", 10, "unused variable", "warning")
+            .with_column(5)
+            .with_code("W0001");
+        assert_eq!(diag.file, "main.rs");
+        assert_eq!(diag.column, Some(5));
+        assert_eq!(diag.code, Some("W0001".to_string()));
+    }
+}

@@ -2,14 +2,42 @@
 #![allow(dead_code)]
 // REST API server, database integration, and package management
 
+//! # Global Package Manager Registry (GPMR)
+//!
+//! This module implements the Global Package Manager Registry for the Fusion ecosystem.
+//! It serves as the central authority for:
+//! - Package storage and retrieval.
+//! - Version management.
+//! - Dependency resolution sources.
+//! - Authentication and publishing of new crates.
+//!
+//! The GPMR is the defined location where all packages are stored and pulled from.
+
 pub mod api;
 pub mod auth;
 pub mod database;
 pub mod packages;
 pub mod storage;
 
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
+
+/// The Global Package Manager Registry (GPMR) Interface
+pub struct GlobalRegistry {
+    name: String,
+    url: String,
+}
+
+impl GlobalRegistry {
+    pub fn new() -> Self {
+        Self {
+            name: "Fusion Global Registry".to_string(),
+            url: "https://registry.fusion-lang.org".to_string(),
+        }
+    }
+}
 
 /// Registry error types
 #[derive(Debug, Clone)]

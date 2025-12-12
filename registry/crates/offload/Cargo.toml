@@ -1,0 +1,12 @@
+[package]
+name = "fusion_llm_offload"
+version = "0.2.0"
+edition = "2021"
+description = "CPU/Disk offloading manager for large models exceeding VRAM capacity"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { path = "../std", version = "0.2.0" }
+tokio = { workspace = true }
+

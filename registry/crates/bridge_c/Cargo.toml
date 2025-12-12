@@ -1,0 +1,9 @@
+[package]
+name = "fusion_bridge_c"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "C FFI bridge utilities for Fusion interop"
+
+[dependencies]
+libc = { workspace = true }

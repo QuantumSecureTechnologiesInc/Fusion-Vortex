@@ -1,0 +1,9 @@
+[package]
+name = "fusion-vram-scheduler"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: fusion-vram-scheduler"
+license = "MIT"
+
+[dependencies]

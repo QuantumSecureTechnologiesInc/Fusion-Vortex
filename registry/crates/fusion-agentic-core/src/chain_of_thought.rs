@@ -1,0 +1,299 @@
+//! Chain of thought processing for iterative problem-solving
+
+use crate::{AgenticError, Result};
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+
+/// A node in the chain of thought
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThoughtNode {
+    /// The thought content
+    pub content: String,
+
+    /// Parent thought (if any)
+    pub parent: Option<Box<ThoughtNode>>,
+
+    /// Children thoughts
+    pub children: Vec<ThoughtNode>,
+
+    /// Depth in the reasoning tree
+    pub depth: usize,
+
+    /// Confidence score (0.0 - 1.0)
+    pub confidence: f64,
+
+    /// Tags for categorization
+    pub tags: Vec<String>,
+}
+
+impl ThoughtNode {
+    pub fn new(content: String) -> Self {
+        Self {
+            content,
+            parent: None,
+            children: Vec::new(),
+            depth: 0,
+            confidence: 0.5,
+            tags: Vec::new(),
+        }
+    }
+
+    pub fn add_child(&mut self, child: ThoughtNode) {
+        self.children.push(child);
+    }
+
+    pub fn with_confidence(mut self, confidence: f64) -> Self {
+        self.confidence = confidence;
+        self
+    }
+
+    pub fn with_tags(mut self, tags: Vec<String>) -> Self {
+        self.tags = tags;
+        self
+    }
+}
+
+/// A complete reasoning chain
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReasoningChain {
+    /// Root thought
+    pub root: ThoughtNode,
+
+    /// Current focus node
+    pub current: usize,
+
+    /// All nodes in the chain
+    pub nodes: Vec<ThoughtNode>,
+
+    /// Chain metadata
+    pub metadata: ChainMetadata,
+}
+
+impl ReasoningChain {
+    pub fn new(root: ThoughtNode) -> Self {
+        Self {
+            root: root.clone(),
+            current: 0,
+            nodes: vec![root],
+            metadata: ChainMetadata::default(),
+        }
+    }
+
+    pub fn add_thought(&mut self, thought: ThoughtNode) {
+        self.nodes.push(thought);
+        self.metadata.total_thoughts += 1;
+    }
+
+    pub fn get_current(&self) -> Option<&ThoughtNode> {
+        self.nodes.get(self.current)
+    }
+
+    pub fn advance(&mut self) -> bool {
+        if self.current < self.nodes.len() - 1 {
+            self.current += 1;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChainMetadata {
+    pub total_thoughts: usize,
+    pub average_confidence: f64,
+    pub max_depth: usize,
+}
+
+impl Default for ChainMetadata {
+    fn default() -> Self {
+        Self {
+            total_thoughts: 0,
+            average_confidence: 0.0,
+            max_depth: 0,
+        }
+    }
+}
+
+/// Chain of thought processor
+pub struct ChainOfThought {
+    /// Maximum chain depth
+    max_depth: usize,
+
+    /// Minimum confidence threshold
+    confidence_threshold: f64,
+}
+
+impl ChainOfThought {
+    pub fn new() -> Self {
+        Self {
+            max_depth: 20,
+            confidence_threshold: 0.7,
+        }
+    }
+
+    /// Decompose a problem into a chain of thoughts
+    pub fn decompose(&self, problem: &str) -> Result<ReasoningChain> {
+        // Create root thought
+        let root = ThoughtNode::new(format!("Problem: {}", problem))
+            .with_confidence(1.0)
+            .with_tags(vec!["root".to_string(), "problem".to_string()]);
+
+        let mut chain = ReasoningChain::new(root);
+
+        // Generate reasoning chain
+        self.generate_chain(&mut chain, problem)?;
+
+        Ok(chain)
+    }
+
+    fn generate_chain(&self, chain: &mut ReasoningChain, problem: &str) -> Result<()> {
+        // Step 1: Understand the problem
+        chain.add_thought(
+            ThoughtNode::new(format!("Understanding: {}", problem))
+                .with_confidence(0.9)
+                .with_tags(vec!["understanding".to_string()]),
+        );
+
+        // Step 2: Identify key components
+        chain.add_thought(
+            ThoughtNode::new("Identifying key components and requirements".to_string())
+                .with_confidence(0.85)
+                .with_tags(vec!["analysis".to_string()]),
+        );
+
+        // Step 3: Explore approaches
+        chain.add_thought(
+            ThoughtNode::new("Exploring potential approaches and solutions".to_string())
+                .with_confidence(0.8)
+                .with_tags(vec!["exploration".to_string()]),
+        );
+
+        // Step 4: Design solution
+        chain.add_thought(
+            ThoughtNode::new("Designing optimal solution architecture".to_string())
+                .with_confidence(0.85)
+                .with_tags(vec!["design".to_string()]),
+        );
+
+        // Step 5: Plan implementation
+        chain.add_thought(
+            ThoughtNode::new("Planning implementation steps".to_string())
+                .with_confidence(0.8)
+                .with_tags(vec!["planning".to_string()]),
+        );
+
+        // Step 6: Consider edge cases
+        chain.add_thought(
+            ThoughtNode::new("Considering edge cases and error handling".to_string())
+                .with_confidence(0.75)
+                .with_tags(vec!["validation".to_string()]),
+        );
+
+        // Step 7: Validate solution
+        chain.add_thought(
+            ThoughtNode::new("Validating solution against requirements".to_string())
+                .with_confidence(0.9)
+                .with_tags(vec!["validation".to_string()]),
+        );
+
+        Ok(())
+    }
+
+    /// Create a new thought node
+    pub fn create_thought(&self, content: &str, context: &str) -> Result<ThoughtNode> {
+        Ok(ThoughtNode::new(format!("{} (Context: {})", content, context)).with_confidence(0.8))
+    }
+
+    /// Iterate on a thought node
+    pub fn iterate(&self, node: &ThoughtNode) -> Result<String> {
+        // Create improved version based on the node
+        let iteration = format!(
+            "Iteration on: {} -> Improved version with enhanced clarity and precision",
+            node.content
+        );
+
+        Ok(iteration)
+    }
+
+    /// Merge multiple reasoning chains
+    pub fn merge_chains(&self, chains: Vec<ReasoningChain>) -> Result<ReasoningChain> {
+        if chains.is_empty() {
+            return Err(AgenticError::InvalidContext(
+                "No chains to merge".to_string(),
+            ));
+        }
+
+        let mut merged = chains[0].clone();
+
+        for chain in chains.iter().skip(1) {
+            for node in &chain.nodes {
+                merged.add_thought(node.clone());
+            }
+        }
+
+        Ok(merged)
+    }
+
+    /// Extract insights from a reasoning chain
+    pub fn extract_insights(&self, chain: &ReasoningChain) -> Vec<String> {
+        chain
+            .nodes
+            .iter()
+            .filter(|node| node.confidence >= self.confidence_threshold)
+            .map(|node| node.content.clone())
+            .collect()
+    }
+
+    /// Visualise the chain as a tree structure
+    pub fn visualise(&self, chain: &ReasoningChain) -> String {
+        let mut output = String::new();
+
+        for (i, node) in chain.nodes.iter().enumerate() {
+            let indent = "  ".repeat(node.depth);
+            output.push_str(&format!(
+                "{}{}. {} (confidence: {:.2})\n",
+                indent,
+                i + 1,
+                node.content,
+                node.confidence
+            ));
+        }
+
+        output
+    }
+}
+
+impl Default for ChainOfThought {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_thought_node() {
+        let node = ThoughtNode::new("Test thought".to_string()).with_confidence(0.9);
+        assert_eq!(node.content, "Test thought");
+        assert_eq!(node.confidence, 0.9);
+    }
+
+    #[test]
+    fn test_chain_creation() {
+        let root = ThoughtNode::new("Root".to_string());
+        let chain = ReasoningChain::new(root);
+        assert_eq!(chain.nodes.len(), 1);
+    }
+
+    #[test]
+    fn test_decompose() {
+        let cot = ChainOfThought::new();
+        let result = cot.decompose("Solve complex problem");
+        assert!(result.is_ok());
+        let chain = result.unwrap();
+        assert!(chain.nodes.len() > 1);
+    }
+}

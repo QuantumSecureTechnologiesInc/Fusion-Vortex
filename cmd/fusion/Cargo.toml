@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "Fusion Programming Language CLI - Main entry point"
+description = "Fusion VSC CLI - The bridges between Fusion, VS Code, and MCP."
 
 [[bin]]
 name = "fusion"
@@ -22,24 +22,32 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tokio = { workspace = true }
 toml = { workspace = true }
+uuid = { workspace = true }
 git2 = { workspace = true }
+dirs = { workspace = true }
 
 # Internal crates
-fusion-core = { path = "../../crates/core" }
+fusion-core = { path = "../../registry/crates/core" }
 fusion-toolchain = { path = "../../crates/toolchain" }
-fusion-tester = { path = "../../ecosystem/crates/tester" }
-fusion-formatter = { path = "../../ecosystem/crates/formatter" }
-fusion-docgen = { path = "../../ecosystem/crates/docgen" }
+fusion-tester = { path = "../../registry/crates/tester" }
+fusion-formatter = { path = "../../registry/crates/formatter" }
+fusion-docgen = { path = "../../registry/crates/docgen" }
 fusion-pkgmgr = { path = "../../crates/pkgmgr" }
-fusion-debugger = { path = "../../ecosystem/crates/debugger" }
+fusion-debugger = { path = "../../registry/crates/debugger" }
 fusion-analyzer = { path = "../../crates/analyzer" }
-fusion-profiler = { path = "../../ecosystem/crates/profiler" }
-fusion-audit = { path = "../../ecosystem/crates/audit" }
-fusion-deploy = { path = "../../ecosystem/crates/deploy" }
+fusion-profiler = { path = "../../registry/crates/profiler" }
+fusion-audit = { path = "../../registry/crates/audit" }
+fusion-deploy = { path = "../../registry/crates/deploy" }
+fusion-ai-cli = { path = "../../registry/crates/ai-cli" }
 fusion-settings = { path = "../../crates/settings" }
 fusion-projects = { path = "../../crates/projects" }
-fusion-github = { path = "../../ecosystem/crates/github" }
-fusion-ai-cli = { path = "../../ecosystem/crates/ai-cli" }
+fusion-github = { path = "../../registry/crates/github" }
+fusion-agents = { path = "../../registry/crates/agents" }
+fusion-mcp = { path = "../../registry/crates/mcp" }
+fusion-ai-enhanced = { path = "../../crates/ai-enhanced" }
+fusion-agentic-core = { path = "../../registry/crates/fusion-agentic-core" }
+fusion-vscode-runtime = { path = "../../crates/vscode-runtime" }
 lazy_static = "1.4"
 

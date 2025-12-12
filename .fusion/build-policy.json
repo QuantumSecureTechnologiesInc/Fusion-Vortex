@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "policies": {
+    "build_system": {
+      "required_engine": "fusion_flux_resolve",
+      "strict_mode": true,
+      "allow_cargo_fallback": false,
+      "enforcement_level": "strict"
+    },
+    "environment": {
+      "FUSION_FLUX_ENABLED": "true",
+      "FUSION_STRICT_MODE": "true",
+      "ALLOW_CARGO_FALLBACK": "false",
+      "FUSION_CUDA_ENABLE": "true"
+    },
+    "prohibited_commands": [
+      "cargo build",
+      "cargo test",
+      "cargo run",
+      "cargo check",
+      "cargo-build",
+      "cargo-test"
+    ],
+    "required_commands": [
+      "fusion build",
+      "fusion test",
+      "fusion run",
+      "fusion check"
+    ],
+    "exemptions": [
+      {
+        "path": "runtime/crates/fusion_flux_resolve",
+        "reason": "Building the Flux engine itself",
+        "allow_cargo": true
+      },
+      {
+        "path": "runtime/*",
+        "reason": "Fusion runtime components",
+        "allow_cargo": true,
+        "condition": "only_for_bootstrapping"
+      }
+    ]
+  },
+  "enforcement": {
+    "pre_commit_hook": true,
+    "ci_cd_check": true,
+    "local_development": true,
+    "build_audit": true
+  },
+  "telemetry": {
+    "track_builds": true,
+    "track_cache_hits": true,
+    "track_policy_violations": true,
+    "report_interval": "daily"
+  },
+  "rollout": {
+    "phase": "2",
+    "phase_1": {
+      "name": "Warning Mode",
+      "strict_mode": false,
+      "status": "completed"
+    },
+    "phase_2": {
+      "name": "Strict Mode",
+      "strict_mode": true,
+      "status": "active",
+      "start_date": "2025-12-12"
+    },
+    "phase_3": {
+      "name": "Full Enforcement",
+      "strict_mode": true,
+      "allow_fallback": false,
+      "status": "planned",
+      "target_date": "2026-01-01"
+    }
+  },
+  "compliance": {
+    "check_interval": "per_build",
+    "audit_log_path": ".fusion/build-audit.log",
+    "violation_action": "block",
+    "notification": {
+      "slack_webhook": null,
+      "email": null,
+      "log_only": true
+    }
+  }
+}

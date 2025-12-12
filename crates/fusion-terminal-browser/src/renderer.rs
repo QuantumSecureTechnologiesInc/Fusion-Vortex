@@ -1,0 +1,291 @@
+//! Terminal rendering and output management
+
+use crate::config::{ColorDepth, RenderMode};
+use crate::{BrowserConfig, BrowserError, Result};
+use crossterm::{
+    cursor,
+    event::{self, Event},
+    execute, queue,
+    style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
+    terminal::{self, ClearType},
+};
+use image::{DynamicImage, GenericImageView, Rgba};
+use std::io::{self, Write};
+use tracing::debug;
+
+/// Terminal renderer for converting images to terminal output
+pub struct TerminalRenderer {
+    config: BrowserConfig,
+    buffer: Vec<Vec<TerminalCell>>,
+}
+
+/// A single terminal cell with color information
+#[derive(Debug, Clone, PartialEq)]
+pub struct TerminalCell {
+    pub character: char,
+    pub fg_color: Color,
+    pub bg_color: Color,
+}
+
+impl TerminalCell {
+    fn new(character: char, fg_color: Color, bg_color: Color) -> Self {
+        Self {
+            character,
+            fg_color,
+            bg_color,
+        }
+    }
+}
+
+/// Block characters for Unicode rendering
+const BLOCK_CHARS: [char; 10] = [' ', '░', '▒', '▓', '█', '▀', '▄', '▌', '▐', '■'];
+
+/// ASCII characters for ASCII-only rendering
+const ASCII_CHARS: [char; 10] = [' ', '.', ':', '-', '=', '+', '*', '#', '%', '@'];
+
+impl TerminalRenderer {
+    /// Create a new terminal renderer
+    pub fn new(config: BrowserConfig) -> Self {
+        let buffer = vec![
+            vec![
+                TerminalCell::new(' ', Color::White, Color::Black);
+                config.terminal_width as usize
+            ];
+            config.terminal_height as usize
+        ];
+
+        Self { config, buffer }
+    }
+
+    /// Initialize terminal (enable raw mode, alternative screen, etc.)
+    pub fn init_terminal() -> Result<()> {
+        terminal::enable_raw_mode()?;
+        execute!(
+            io::stdout(),
+            terminal::EnterAlternateScreen,
+            cursor::Hide,
+            event::EnableMouseCapture
+        )?;
+        Ok(())
+    }
+
+    /// Restore terminal to normal state
+    pub fn restore_terminal() -> Result<()> {
+        execute!(
+            io::stdout(),
+            event::DisableMouseCapture,
+            cursor::Show,
+            terminal::LeaveAlternateScreen
+        )?;
+        terminal::disable_raw_mode()?;
+        Ok(())
+    }
+
+    /// Convert screenshot to terminal cells
+    pub fn screenshot_to_cells(&mut self, image_data: &[u8]) -> Result<()> {
+        debug!("Converting screenshot to terminal cells");
+
+        // Decode image
+        let img = image::load_from_memory(image_data)
+            .map_err(|e| BrowserError::ImageProcessing(e.to_string()))?;
+
+        // TermBlink-style rendering: resize for half-blocks (2x vertical resolution)
+        let term_height_doubled = (self.config.terminal_height as u32) * 2;
+
+        let resized = img.resize_exact(
+            self.config.terminal_width as u32,
+            term_height_doubled,
+            image::imageops::FilterType::Nearest,
+        );
+
+        // Convert to terminal cells based on render mode
+        match self.config.render_mode {
+            RenderMode::Ascii => self.image_to_ascii(&resized),
+            RenderMode::UnicodeBlock | RenderMode::UnicodeFull => self.image_to_unicode(&resized),
+            RenderMode::TrueColor => self.image_to_truecolor_halfblocks(&resized),
+            _ => {
+                // Fallback to TrueColor for unsupported modes
+                self.image_to_truecolor_halfblocks(&resized)
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Convert image to ASCII representation
+    fn image_to_ascii(&mut self, img: &DynamicImage) {
+        let (width, height_doubled) = img.dimensions();
+        let height = height_doubled / 2;
+
+        for y in 0..height.min(self.config.terminal_height as u32) {
+            for x in 0..width.min(self.config.terminal_width as u32) {
+                let pixel = img.get_pixel(x, y * 2);
+                let luminance = Self::pixel_luminance(&pixel);
+
+                let char_index =
+                    (luminance as f32 / 255.0 * (ASCII_CHARS.len() - 1) as f32) as usize;
+                let character = ASCII_CHARS[char_index];
+
+                let color = match self.config.color_depth {
+                    ColorDepth::Monochrome => Color::White,
+                    _ => Self::rgba_to_color(&pixel, &self.config.color_depth),
+                };
+
+                self.buffer[y as usize][x as usize] =
+                    TerminalCell::new(character, color, Color::Black);
+            }
+        }
+    }
+
+    /// Convert image to Unicode block representation
+    fn image_to_unicode(&mut self, img: &DynamicImage) {
+        let (width, height_doubled) = img.dimensions();
+        let height = height_doubled / 2;
+
+        for y in 0..height.min(self.config.terminal_height as u32) {
+            for x in 0..width.min(self.config.terminal_width as u32) {
+                let pixel = img.get_pixel(x, y * 2);
+                let luminance = Self::pixel_luminance(&pixel);
+
+                let char_index =
+                    (luminance as f32 / 255.0 * (BLOCK_CHARS.len() - 1) as f32) as usize;
+                let character = BLOCK_CHARS[char_index];
+
+                let fg_color = Self::rgba_to_color(&pixel, &self.config.color_depth);
+
+                self.buffer[y as usize][x as usize] =
+                    TerminalCell::new(character, fg_color, Color::Black);
+            }
+        }
+    }
+
+    /// Convert image to true color representation using half-blocks (TermBlink approach)
+    /// This gives 2x vertical resolution by using upper/lower half blocks
+    fn image_to_truecolor_halfblocks(&mut self, img: &DynamicImage) {
+        let (width, height_doubled) = img.dimensions();
+        let height = height_doubled / 2;
+
+        for y in 0..height.min(self.config.terminal_height as u32) {
+            for x in 0..width.min(self.config.terminal_width as u32) {
+                // Get top and bottom pixels for this cell
+                let top_pixel = img.get_pixel(x, y * 2);
+                let bottom_pixel = img.get_pixel(x, y * 2 + 1);
+
+                let top_color = Self::rgba_to_color(&top_pixel, &ColorDepth::TrueColor);
+                let bottom_color = Self::rgba_to_color(&bottom_pixel, &ColorDepth::TrueColor);
+
+                // Use upper half block with top color as foreground, bottom as background
+                // This gives us 2 pixels per terminal cell
+                self.buffer[y as usize][x as usize] = TerminalCell::new(
+                    '▀', // Upper half block
+                    top_color,
+                    bottom_color,
+                );
+            }
+        }
+    }
+
+    /// Calculate pixel luminance
+    fn pixel_luminance(pixel: &Rgba<u8>) -> u8 {
+        let r = pixel[0] as f32;
+        let g = pixel[1] as f32;
+        let b = pixel[2] as f32;
+
+        // ITU-R BT.709 luminance formula
+        (0.2126 * r + 0.7152 * g + 0.0722 * b) as u8
+    }
+
+    /// Convert RGBA pixel to terminal color
+    fn rgba_to_color(pixel: &Rgba<u8>, color_depth: &ColorDepth) -> Color {
+        match color_depth {
+            ColorDepth::Monochrome => Color::White,
+            ColorDepth::Ansi16 => Self::rgb_to_ansi16(pixel[0], pixel[1], pixel[2]),
+            ColorDepth::Ansi256 => Self::rgb_to_ansi256(pixel[0], pixel[1], pixel[2]),
+            ColorDepth::TrueColor => Color::Rgb {
+                r: pixel[0],
+                g: pixel[1],
+                b: pixel[2],
+            },
+        }
+    }
+
+    /// Convert RGB to ANSI 16-color
+    fn rgb_to_ansi16(r: u8, g: u8, b: u8) -> Color {
+        // Simple thresholding
+        let threshold = 128;
+        match (r > threshold, g > threshold, b > threshold) {
+            (false, false, false) => Color::Black,
+            (true, false, false) => Color::Red,
+            (false, true, false) => Color::Green,
+            (true, true, false) => Color::Yellow,
+            (false, false, true) => Color::Blue,
+            (true, false, true) => Color::Magenta,
+            (false, true, true) => Color::Cyan,
+            (true, true, true) => Color::White,
+        }
+    }
+
+    /// Convert RGB to ANSI 256-color
+    fn rgb_to_ansi256(r: u8, g: u8, b: u8) -> Color {
+        // Use 6x6x6 RGB cube (colors 16-231)
+        let r_index = (r as f32 / 255.0 * 5.0) as u8;
+        let g_index = (g as f32 / 255.0 * 5.0) as u8;
+        let b_index = (b as f32 / 255.0 * 5.0) as u8;
+
+        let color_index = 16 + 36 * r_index + 6 * g_index + b_index;
+        Color::AnsiValue(color_index)
+    }
+
+    /// Render the buffer to the terminal (TermBlink-style fast rendering)
+    pub fn render(&self) -> Result<()> {
+        let mut stdout = io::stdout();
+
+        queue!(stdout, cursor::MoveTo(0, 0))?;
+
+        for (y, row) in self.buffer.iter().enumerate() {
+            for cell in row {
+                queue!(
+                    stdout,
+                    SetForegroundColor(cell.fg_color),
+                    SetBackgroundColor(cell.bg_color),
+                    Print(cell.character)
+                )?;
+            }
+            queue!(stdout, ResetColor)?;
+            if y < self.buffer.len() - 1 {
+                queue!(stdout, Print("\r\n"))?;
+            }
+        }
+
+        stdout.flush()?;
+
+        Ok(())
+    }
+
+    /// Clear the terminal
+    pub fn clear() -> Result<()> {
+        execute!(io::stdout(), terminal::Clear(ClearType::All))?;
+        Ok(())
+    }
+
+    /// Get terminal size
+    pub fn terminal_size() -> Result<(u16, u16)> {
+        terminal::size().map_err(|e| BrowserError::Terminal(e))
+    }
+}
+
+/// Terminal event handler
+pub struct EventHandler;
+
+impl EventHandler {
+    /// Read terminal event (blocking)
+    pub fn read_event() -> Result<Event> {
+        event::read().map_err(|e| BrowserError::Terminal(e))
+    }
+
+    /// Check if event is available (non-blocking)
+    pub fn poll_event(timeout_ms: u64) -> Result<bool> {
+        event::poll(std::time::Duration::from_millis(timeout_ms))
+            .map_err(|e| BrowserError::Terminal(e))
+    }
+}

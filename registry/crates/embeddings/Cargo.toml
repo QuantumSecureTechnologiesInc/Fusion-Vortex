@@ -1,0 +1,11 @@
+[package]
+name = "fusion_embeddings"
+version = "0.2.0"
+edition = "2021"
+description = "Token and Positional Embeddings for sequence models"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true }
+

@@ -1,0 +1,38 @@
+//! # Fusion Hardware Abstraction Layer (HAL)
+//!
+//! Low-level hardware interfaces for the Fusion Runtime, including:
+//!
+//! - **CUDA Backend**: GPU kernel execution via FFI
+//! - **Pinned Thread Pool**: Work-stealing thread pool with core affinity for HFT
+//! - **Unified Allocator**: CUDA-aware global allocator
+//!
+//! ## Architecture
+//!
+//! The HAL operates in the "Accelerator Plane" of the runtime, managing
+//! GPU and TPU tensor operations. It uses the Cortex Engine to predict
+//! kernel costs and pushes long-running operations to dedicated async
+//! streams to prevent blocking the Classical Plane.
+
+mod cuda_backend;
+mod pinned_pool;
+mod unified_allocator;
+
+pub use cuda_backend::{CudaBackend, CudaStream, GpuError};
+pub use pinned_pool::PinnedThreadPool;
+pub use unified_allocator::UnifiedAllocator;
+
+/// Re-export common types
+pub mod prelude {
+    pub use super::{CudaBackend, CudaStream, GpuError, PinnedThreadPool, UnifiedAllocator};
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pinned_pool_creation() {
+        let pool = PinnedThreadPool::new(2);
+        assert!(pool.is_active());
+    }
+}

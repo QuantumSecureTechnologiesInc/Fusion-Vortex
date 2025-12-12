@@ -1,0 +1,71 @@
+use crate::core::TensorData;
+use crate::flow::FlowProcessor;
+use anyhow::Result;
+use tracing::info;
+
+/// Simulates a training step by applying a gradient update.
+/// In a real system, gradients would come from a backprop pass.
+/// Here, we simulate a "weight decay" or simple direction shift.
+pub struct SgdLearnProcessor {
+    pub learning_rate: f64,
+    pub momentum: f64,
+}
+
+impl FlowProcessor for SgdLearnProcessor {
+    fn name(&self) -> &str {
+        "LEARN (SGD Optimizer)"
+    }
+
+    fn process_sync(&self, mut tensor: TensorData) -> Result<TensorData> {
+        let lr = self.learning_rate;
+
+        // Convert to ndarray for easy element-wise math
+        let mut array = tensor.to_ndarray()?;
+
+        // Mock Gradient: Let's assume the gradient pushes values towards 0 (L2 Regularization effect)
+        // Gradient = val * 0.1
+        // New_Val = Old_Val - (lr * Gradient)
+
+        info!("Applying SGD step to tensor {} (LR: {})", tensor.id, lr);
+
+        // Apply update in place
+        array.mapv_inplace(|val| {
+            let gradient = val * 0.1; // Simulated gradient
+            val - (lr * gradient)
+        });
+
+        tensor.update_from_ndarray(array);
+        tensor
+            .metadata
+            .insert("last_optimizer_step".to_string(), "SGD".to_string());
+
+        Ok(tensor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sgd_processor() {
+        let tensor = TensorData::new("test", vec![3], vec![10.0, 20.0, 30.0]);
+        let processor = SgdLearnProcessor {
+            learning_rate: 0.1,
+            momentum: 0.9,
+        };
+        let result = processor.process_sync(tensor);
+        assert!(result.is_ok());
+        let updated = result.unwrap();
+
+        // Values should be smaller (moved toward zero)
+        assert!(updated.data[0] < 10.0);
+        assert!(updated.data[1] < 20.0);
+        assert!(updated.data[2] < 30.0);
+
+        assert_eq!(
+            updated.metadata.get("last_optimizer_step"),
+            Some(&"SGD".to_string())
+        );
+    }
+}

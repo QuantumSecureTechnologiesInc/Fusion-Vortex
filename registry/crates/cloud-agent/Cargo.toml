@@ -1,0 +1,15 @@
+[package]
+name = "fusion_q_cloud_agent"
+version = "0.2.0"
+edition = "2021"
+description = "Manages and monitors asynchronous QPU jobs across cloud backends"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+# fusion_std = { workspace = true }  # Not yet implemented
+fusion_net = { path = "../fusion_net" }
+fusion_http = { path = "../http" }
+# fusion_k8s_operator = { workspace = true }  # Check if exists
+tokio = { workspace = true }
+thiserror = { workspace = true }

@@ -6,5 +6,6 @@ description = "General Attention mechanisms (Perceiver, Linformer) "
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
-fusion-ai-core = { path = "../ai-core", version = "0.1.0" }
+fusion-core = { workspace = true }
+fusion-ai-core = { workspace = true }
+

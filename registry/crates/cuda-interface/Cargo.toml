@@ -1,0 +1,9 @@
+[package]
+name = "fusion_cuda_interface"
+version = "0.2.0"
+edition = "2021"
+description = "CUDA kernel interface for high-speed GPU operations"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }

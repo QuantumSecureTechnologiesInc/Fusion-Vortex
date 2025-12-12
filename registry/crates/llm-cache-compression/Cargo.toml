@@ -1,0 +1,11 @@
+[package]
+name = "fusion_llm_cache_compression"
+version = "0.2.0"
+edition = "2021"
+description = "Algorithms for quantizing the Key-Value (KV) cache to save VRAM"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_llm_quantization = { path = "../llm-quantization/", version = "0.2.0" }
+

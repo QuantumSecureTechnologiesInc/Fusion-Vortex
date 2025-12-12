@@ -8,7 +8,7 @@ authors.workspace = true
 description = "Heterogeneous QoS-aware scheduler for Quantum/AI/Classical tasks"
 
 [dependencies]
-fusion_core = { path = "../fusion_core" }
+fusion_core = { path = "../../../registry/crates/fusion_core/" }
 parking_lot = { workspace = true }
 crossbeam = { workspace = true }
 dashmap = { workspace = true }

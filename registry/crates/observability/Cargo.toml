@@ -1,0 +1,13 @@
+[package]
+name = "fusion_server_observability"
+version = "0.2.0"
+edition = "2021"
+description = "Metrics and Distributed Tracing Ingestor (Prometheus/OpenTelemetry)"
+license = "MIT"
+
+[dependencies]
+fusion_std = { path = "../std" }
+fusion_net = { path = "../fusion_net/", version = "0.2.0" }
+tokio = { workspace = true }
+prometheus = "0.13" # Standard metrics library
+opentelemetry = "0.20" # Tracing interface

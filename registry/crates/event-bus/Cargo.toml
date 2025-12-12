@@ -1,0 +1,13 @@
+[package]
+name = "fusion_server_event_bus"
+version = "0.2.0"
+edition = "2021"
+description = "Asynchronous message queue and event bus implementation"
+license = "MIT"
+
+[dependencies]
+fusion_std = { path = "../std" }
+fusion_net = { path = "../fusion_net/", version = "0.2.0" } # For transport
+tokio = { workspace = true, features = ["sync"] }
+thiserror = { workspace = true }
+serde = { workspace = true }

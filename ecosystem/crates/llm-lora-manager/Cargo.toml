@@ -6,4 +6,5 @@ description = "LoRA adapter manager for LLM models"
 license = "MIT"
 
 [dependencies]
-fusion-core = { path = "../../../crates/core", version = "0.1.0" }
+fusion-core = { workspace = true }
+

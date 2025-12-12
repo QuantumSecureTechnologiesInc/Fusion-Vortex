@@ -1,0 +1,80 @@
+[package]
+name = "fusion-terminal-browser"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Terminal-based browser with Blink engine and WebGPU support for Fusion CLI (Chromiumoxide-powered)"
+license = "MIT"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+
+[dependencies]
+# Fusion Runtime Core (replaces tokio)
+fusion_runtime_core = { path = "../../registry/crates/fusion_runtime_core" }
+
+# Terminal rendering
+crossterm = "0.28"
+ratatui = "0.29"
+
+# WebGPU support
+wgpu = "23.0"
+pollster = "0.4"
+
+# Image processing for terminal output
+image = "0.25"
+fast_image_resize = "5.4"
+
+# Browser engine (chromiumoxide with CDP - superior to headless_chrome)
+chromiumoxide = "0.6"
+
+# Async utilities
+futures = "0.3"
+async-stream = "0.3"
+
+# Logging and error handling
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Command parsing
+clap = { version = "4.5", features = ["derive"] }
+
+# URL handling
+url = "2.5"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Configuration
+toml = "0.8"
+dirs = "5.0"
+directories = "5.0"
+
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Terminal colors
+owo-colors = "4.1"
+
+# Unicode width calculation
+unicode-width = "0.2"
+
+# Concurrency
+parking_lot = "0.12"
+crossbeam = "0.8"
+
+[features]
+default = ["webgpu"]
+webgpu = []
+websocket = []
+javascript = []
+
+[lib]
+name = "fusion_terminal_browser"
+path = "src/lib.rs"
+
+[[bin]]
+name = "fusion-browser"
+path = "src/bin/main.rs"

@@ -8,8 +8,8 @@ authors.workspace = true
 description = "AI/ML core with autodiff and zero-copy tensor operations"
 
 [dependencies]
-fusion_core = { path = "../fusion_core" }
-fusion_runtime_core = { path = "../fusion_runtime_core" }
+fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_runtime_core = { path = "../../../registry/crates/fusion_runtime_core/" }
 serde = { workspace = true }
 tracing = { workspace = true }
 

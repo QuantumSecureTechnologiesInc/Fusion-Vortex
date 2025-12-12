@@ -1,0 +1,13 @@
+[package]
+name = "fusion_interop_python_pkg"
+version = "0.2.0"
+edition = "2021"
+description = "Analyzes Python packages and manages isolated environments for FFI"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { path = "../std" }
+tokio = { workspace = true }
+anyhow = { workspace = true } # For external command execution errors
+

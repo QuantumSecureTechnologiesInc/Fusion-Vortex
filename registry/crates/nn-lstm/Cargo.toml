@@ -1,0 +1,9 @@
+[package]
+name = "nn-lstm"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Fusion ecosystem crate: nn-lstm"
+license = "MIT"
+
+[dependencies]

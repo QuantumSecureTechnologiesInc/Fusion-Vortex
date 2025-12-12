@@ -8,9 +8,10 @@ authors.workspace = true
 description = "AI/ML core with autodiff and zero-copy tensor operations"
 
 [dependencies]
-fusion-core = { path = "../../../crates/fusion_core" }
+fusion-core = { workspace = true }
 fusion_runtime_core = { path = "../../../crates/fusion_runtime_core" }
 serde = { workspace = true }
 tracing = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true }
+

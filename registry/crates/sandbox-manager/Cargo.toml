@@ -1,0 +1,12 @@
+[package]
+name = "fusion_sec_sandbox"
+version = "0.2.0"
+edition = "2021"
+description = "OS-level sandboxing (Seccomp/AppArmor) and capability management"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+thiserror = { workspace = true }
+# In prod: syscalls/seccomp bindings
+

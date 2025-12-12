@@ -1,0 +1,282 @@
+//! Main browser interface
+
+use crate::{
+    engine::Engine,
+    renderer::TerminalRenderer,
+    session::SessionManager,
+    terminal::{TerminalUI, UIEvent, UIState},
+    webgpu, BrowserConfig, Result,
+};
+use fusion_runtime_core::Runtime;
+use ratatui::text::Line;
+use std::sync::Arc;
+use tracing::{debug, info};
+
+/// Main terminal browser
+pub struct Browser {
+    config: BrowserConfig,
+    engine: Engine,
+    renderer: TerminalRenderer,
+    session_manager: SessionManager,
+    webgpu_renderer: Option<webgpu::WebGpuRenderer>,
+    runtime: Arc<Runtime>,
+    running: bool,
+}
+
+impl Browser {
+    /// Create a new browser instance
+    pub fn new(config: BrowserConfig) -> Result<Self> {
+        info!("Initialising Fusion Terminal Browser");
+
+        // Create Fusion runtime
+        let runtime = Arc::new(Runtime::builder().enable_gpu().worker_threads(4).build());
+
+        // Initialize WebGPU if enabled
+        let webgpu_renderer = if config.enable_webgpu {
+            Some(webgpu::init_webgpu(true)?)
+        } else {
+            None
+        };
+
+        let engine = Engine::new(config.clone(), runtime.clone())?;
+        let renderer = TerminalRenderer::new(config.clone());
+        let session_manager = SessionManager::new(&config)?;
+
+        Ok(Self {
+            config,
+            engine,
+            renderer,
+            session_manager,
+            webgpu_renderer,
+            runtime,
+            running: false,
+        })
+    }
+
+    /// Navigate to a URL
+    pub fn navigate(&mut self, url: &str) -> Result<()> {
+        info!("Navigating to: {}", url);
+
+        // Navigate with engine
+        self.engine.navigate(url)?;
+
+        // Add to session history
+        self.session_manager
+            .session_mut()
+            .add_to_history(url.to_string());
+        self.session_manager.auto_save()?;
+
+        Ok(())
+    }
+
+    /// Render current page to terminal
+    pub fn render(&mut self) -> Result<()> {
+        debug!("Rendering page to terminal");
+
+        // Capture screenshot
+        let screenshot = self.engine.capture_screenshot()?;
+
+        // Process with WebGPU if available
+        let processed = if let Some(ref webgpu) = self.webgpu_renderer {
+            if webgpu.is_available() {
+                webgpu.process_image(
+                    &screenshot,
+                    self.config.window_width,
+                    self.config.window_height,
+                )?
+            } else {
+                screenshot
+            }
+        } else {
+            screenshot
+        };
+
+        // Convert to terminal cells
+        self.renderer.screenshot_to_cells(&processed)?;
+
+        // Render to terminal
+        self.renderer.render()?;
+
+        Ok(())
+    }
+
+    /// Start interactive browser session
+    pub fn run(&mut self) -> Result<()> {
+        info!("Starting interactive browser session");
+
+        self.running = true;
+
+        // Initialize terminal UI
+        let mut ui = TerminalUI::new()?;
+        let mut ui_state = UIState::default();
+
+        // Load last URL from session if available
+        if let Some(ref url) = self.session_manager.session().current_url {
+            ui_state.url = url.clone();
+            self.navigate(url)?;
+        }
+
+        while self.running {
+            // Update UI state
+            if let Ok(title) = self.engine.get_title() {
+                ui_state.title = title;
+            }
+
+            if let Ok(url) = self.engine.get_url() {
+                ui_state.url = url;
+            }
+
+            // Render page to terminal
+            if let Err(e) = self.render() {
+                ui_state.status = format!("Render error: {}", e);
+            }
+
+            // Draw UI (this will overlay on top of rendered page)
+            let content = vec![Line::from("Page content displayed in terminal")];
+            ui.draw(&ui_state, &content)?;
+
+            // Handle events
+            if let Some(event) = TerminalUI::handle_events()? {
+                match event {
+                    UIEvent::Quit => {
+                        self.running = false;
+                    }
+                    UIEvent::Navigate => {
+                        // In a full implementation, this would open an input dialog
+                        ui_state.status =
+                            "Navigate: Enter URL (not implemented in basic version)".to_string();
+                    }
+                    UIEvent::Reload => {
+                        ui_state.loading = true;
+                        if let Err(e) = self.engine.reload() {
+                            ui_state.status = format!("Reload error: {}", e);
+                        }
+                        ui_state.loading = false;
+                    }
+                    UIEvent::Back => {
+                        if let Some(url) = self.session_manager.session_mut().go_back() {
+                            self.navigate(&url)?;
+                        }
+                    }
+                    UIEvent::Forward => {
+                        if let Some(url) = self.session_manager.session_mut().go_forward() {
+                            self.navigate(&url)?;
+                        }
+                    }
+                    UIEvent::Resize(width, height) => {
+                        self.config.update_terminal_size(width, height);
+                        self.renderer = TerminalRenderer::new(self.config.clone());
+                    }
+                    UIEvent::Escape => {
+                        ui_state.status = "Ready".to_string();
+                    }
+                }
+            }
+        }
+
+        info!("Browser session ended");
+        Ok(())
+    }
+
+    /// Stop the browser
+    pub fn stop(&mut self) {
+        self.running = false;
+    }
+
+    /// Get current URL
+    pub fn current_url(&self) -> Result<String> {
+        self.engine.get_url()
+    }
+
+    /// Get page title
+    pub fn title(&self) -> Result<String> {
+        self.engine.get_title()
+    }
+
+    /// Execute JavaScript
+    pub fn execute_script(&self, script: &str) -> Result<serde_json::Value> {
+        self.engine.execute_script(script)
+    }
+
+    /// Get session reference
+    pub fn session(&self) -> &crate::session::Session {
+        self.session_manager.session()
+    }
+
+    /// Get mutable session reference
+    pub fn session_mut(&mut self) -> &mut crate::session::Session {
+        self.session_manager.session_mut()
+    }
+
+    /// Take a screenshot and save to file
+    pub fn screenshot_to_file(&self, path: &std::path::Path) -> Result<()> {
+        let screenshot = self.engine.capture_screenshot()?;
+        std::fs::write(path, screenshot)?;
+        Ok(())
+    }
+
+    /// Get HTML content of current page
+    pub fn get_html(&self) -> Result<String> {
+        self.engine.get_content()
+    }
+
+    /// Click an element by CSS selector
+    pub fn click(&self, selector: &str) -> Result<()> {
+        self.engine.click(selector)
+    }
+
+    /// Type text into an element
+    pub fn type_text(&self, selector: &str, text: &str) -> Result<()> {
+        self.engine.type_text(selector, text)
+    }
+
+    /// Go back in history
+    pub fn go_back(&mut self) -> Result<()> {
+        if let Some(url) = self.session_manager.session_mut().go_back() {
+            self.navigate(&url)?;
+        }
+        Ok(())
+    }
+
+    /// Go forward in history
+    pub fn go_forward(&mut self) -> Result<()> {
+        if let Some(url) = self.session_manager.session_mut().go_forward() {
+            self.navigate(&url)?;
+        }
+        Ok(())
+    }
+
+    /// Reload current page
+    pub fn reload(&self) -> Result<()> {
+        self.engine.reload()
+    }
+
+    /// Scroll the page
+    pub fn scroll(&self, delta_y: i32) -> Result<()> {
+        self.engine.scroll(delta_y)
+    }
+}
+
+impl Drop for Browser {
+    fn drop(&mut self) {
+        debug!("Shutting down browser");
+        let _ = self.session_manager.auto_save();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_browser_creation() {
+        let config = BrowserConfig {
+            enable_webgpu: false,
+            ..Default::default()
+        };
+
+        // This test might fail in CI without Chrome installed
+        // let browser = Browser::new(config);
+        // assert!(browser.is_ok());
+    }
+}

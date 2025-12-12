@@ -1,0 +1,120 @@
+//! Zero-Copy Language Server with Self-Optimizing Cache
+
+use crate::config::LspConfig;
+use crate::state::{FusionState, SharedState};
+use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::time::Instant;
+
+/// Tracks usage statistics for optimization
+struct LspOptimizer {
+    query_frequency: HashMap<String, u64>,
+    total_queries: u64,
+}
+
+impl LspOptimizer {
+    fn new() -> Self {
+        Self {
+            query_frequency: HashMap::new(),
+            total_queries: 0,
+        }
+    }
+
+    fn record_access(&mut self, key: &str) {
+        self.total_queries += 1;
+        *self.query_frequency.entry(key.to_string()).or_insert(0) += 1;
+    }
+
+    fn should_cache(&self, key: &str, threshold: u64) -> bool {
+        self.query_frequency
+            .get(key)
+            .map(|c| *c >= threshold)
+            .unwrap_or(false)
+    }
+}
+
+/// The LSP Server with adaptive caching
+pub struct LspServer {
+    state: SharedState,
+    config: LspConfig,
+    optimizer: RwLock<LspOptimizer>,
+    l1_cache: RwLock<HashMap<String, String>>,
+    last_revision: RwLock<u64>,
+}
+
+impl LspServer {
+    pub fn new(state: SharedState, config: LspConfig) -> Self {
+        Self {
+            state,
+            config,
+            optimizer: RwLock::new(LspOptimizer::new()),
+            l1_cache: RwLock::new(HashMap::new()),
+            last_revision: RwLock::new(0),
+        }
+    }
+
+    /// Handles a request with adaptive caching
+    pub fn handle_request(&self, action: &str, target: &str) -> String {
+        let start = Instant::now();
+
+        // Record telemetry
+        {
+            self.optimizer.write().record_access(target);
+        }
+
+        // Check cache invalidation
+        self.check_invalidation();
+
+        // Check L1 cache first
+        if let Some(cached) = self.l1_cache.read().get(target) {
+            tracing::debug!(
+                "[LSP] Cache hit for {} ({}us)",
+                target,
+                start.elapsed().as_micros()
+            );
+            return cached.clone();
+        }
+
+        // Cache miss - read from shared state
+        let response = {
+            let state = self.state.read();
+            let found = state.artifacts.iter().find(|(k, _)| k.name == target);
+            match found {
+                Some((_, artifact)) => format!(
+                    "Package: {}\nBinary: {:?}",
+                    artifact.package.name, artifact.binary_path
+                ),
+                None => "Resolving...".to_string(),
+            }
+        };
+
+        // Promote to cache if hot
+        let should_cache = self
+            .optimizer
+            .read()
+            .should_cache(target, self.config.cache_threshold);
+        if should_cache && self.config.adaptive_caching {
+            self.l1_cache
+                .write()
+                .insert(target.to_string(), response.clone());
+            tracing::debug!("[LSP] Promoted '{}' to L1 cache", target);
+        }
+
+        tracing::debug!(
+            "[LSP] {} {} ({}us)",
+            action,
+            target,
+            start.elapsed().as_micros()
+        );
+        response
+    }
+
+    fn check_invalidation(&self) {
+        let current_rev = self.state.read().revision;
+        let mut last = self.last_revision.write();
+        if *last != current_rev {
+            self.l1_cache.write().clear();
+            *last = current_rev;
+        }
+    }
+}

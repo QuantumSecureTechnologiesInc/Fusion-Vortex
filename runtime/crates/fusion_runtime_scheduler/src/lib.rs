@@ -109,7 +109,7 @@ pub struct Scheduler {
     next_task_id: AtomicU64,
 }
 
-use crate::RuntimeConfig;
+use fusion_runtime_core::{GpuBackend, QoSMode, RuntimeConfig};
 
 impl Scheduler {
     pub fn new(_config: &RuntimeConfig) -> Self {
@@ -186,27 +186,65 @@ pub struct SchedulerStats {
     pub high_priority_len: usize,
     pub normal_priority_len: usize,
     pub low_priority_len: usize,
+    pub external_device_len: usize,
+}
+
+// Simple handle for spawned tasks
+pub struct TaskHandle<T> {
+    id: u64,
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T> TaskHandle<T> {
+    fn new(id: u64) -> Self {
+        Self {
+            id,
+            _marker: std::marker::PhantomData,
+        }
+    }
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fusion_runtime_core::{GpuBackend, QoSMode, RuntimeConfig};
+
+    #[test]
     fn test_scheduler_creation() {
-        let config = RuntimeConfig;
+        let config = RuntimeConfig {
+            enable_gpu: false,
+            enable_qpu: false,
+            qos_mode: QoSMode::Balanced,
+            gpu_backend: GpuBackend::Auto,
+            worker_threads: 4,
+            memory_pool_size: 1024 * 1024 * 1024,
+        };
         let scheduler = Scheduler::new(&config);
         let stats = scheduler.stats();
-
         assert_eq!(stats.high_priority_len, 0);
         assert_eq!(stats.normal_priority_len, 0);
     }
 
     #[test]
     fn test_task_enqueueing() {
-        let config = RuntimeConfig;
+        let config = RuntimeConfig {
+            enable_gpu: false,
+            enable_qpu: false,
+            qos_mode: QoSMode::Balanced,
+            gpu_backend: GpuBackend::Auto,
+            worker_threads: 4,
+            memory_pool_size: 1024 * 1024 * 1024,
+        };
         let scheduler = Scheduler::new(&config);
-
         let _ = scheduler.spawn_task(
             async {
                 println!("Test task");
             },
             TaskPriority::High,
         );
-
         let stats = scheduler.stats();
         assert_eq!(stats.high_priority_len, 1);
     }

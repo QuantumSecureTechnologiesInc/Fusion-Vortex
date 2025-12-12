@@ -61,7 +61,7 @@ This changes v0.2.0 from a "performance upgrade" to a **"Foundation + Core Ecosy
 ✅ **Live package registry** with 100+ published packages  
 ✅ **Full interop** (Python, JS, Java)  
 ✅ **Enterprise deployment** (K8s operator working)  
-✅ **Security certified** (FIPS 140-3 crypto)
+✅ **Security compliant** (Meets NIST FIPS 140-3 requirements)
 
 ---
 

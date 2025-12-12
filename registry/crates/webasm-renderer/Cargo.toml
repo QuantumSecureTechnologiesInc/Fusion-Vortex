@@ -1,0 +1,12 @@
+[package]
+name = "fusion_ui_webasm_renderer"
+version = "0.2.0"
+edition = "2021"
+description = "High-performance WebAssembly renderer for canvas/WebGL graphics and component binding"
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { path = "../std", version = "0.2.0" }
+# In prod: web-sys, js-sys (Rust FFI to browser APIs)
+

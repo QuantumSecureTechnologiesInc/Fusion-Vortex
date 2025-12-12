@@ -1,0 +1,14 @@
+[package]
+name = "fusion_http"
+version = "0.2.0"
+edition = "2021"
+description = "HTTP server and client library for Fusion"
+license = "MIT"
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
+hyper = { workspace = true }
+tower = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

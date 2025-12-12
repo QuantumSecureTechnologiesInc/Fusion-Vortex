@@ -1,0 +1,347 @@
+//! Flux-Resolve Engine - Rust Bridge Layer
+//!
+//! This module provides the Rust FFI bridge between the Fusion-native
+//! flux_resolve.fu module and system-level operations that require
+//! direct OS/hardware access.
+//!
+//! The core resolution logic lives in stdlib/flux_resolve.fu (Fusion code).
+//! This bridge only handles:
+//! - File I/O for cache persistence
+//! - Network requests to package registries
+//! - GPU/CUDA kernel loading and execution
+//! - System metrics and telemetry collection
+
+use dashmap::DashMap;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use std::sync::Arc;
+
+/// Configuration for the Flux-Resolve bridge
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FluxResolveConfig {
+    pub cache_path: PathBuf,
+    pub gpu_enabled: bool,
+    pub gpu_threshold: usize,
+    pub vsids_decay: f64,
+}
+
+impl Default for FluxResolveConfig {
+    fn default() -> Self {
+        Self {
+            cache_path: PathBuf::from("./.fusion/cache_db"),
+            gpu_enabled: std::env::var("FUSION_CUDA_ENABLE").unwrap_or_else(|_| "true".to_string())
+                == "true",
+            gpu_threshold: 10_000,
+            vsids_decay: 0.95,
+        }
+    }
+}
+
+/// Cache storage bridge for Fusion module
+pub struct CacheBridge {
+    /// L1 in-memory cache
+    hot_cache: Arc<DashMap<String, Vec<u8>>>,
+    /// L2 disk cache path
+    disk_path: PathBuf,
+}
+
+impl CacheBridge {
+    pub fn new(config: &FluxResolveConfig) -> Self {
+        Self {
+            hot_cache: Arc::new(DashMap::new()),
+            disk_path: config.cache_path.clone(),
+        }
+    }
+
+    /// Get cached resolution by hash
+    pub fn get(&self, hash: &str) -> Option<Vec<u8>> {
+        // Check L1 cache
+        if let Some(data) = self.hot_cache.get(hash) {
+            return Some(data.clone());
+        }
+
+        // Check L2 disk cache
+        let file_path = self.disk_path.join(format!("{}.lock", hash));
+        if let Ok(data) = std::fs::read(&file_path) {
+            // Populate L1
+            self.hot_cache.insert(hash.to_string(), data.clone());
+            return Some(data);
+        }
+
+        None
+    }
+
+    /// Store resolution in cache
+    pub fn put(&self, hash: &str, data: Vec<u8>) {
+        // Store in L1
+        self.hot_cache.insert(hash.to_string(), data.clone());
+
+        // Store in L2 (fire-and-forget)
+        let file_path = self.disk_path.join(format!("{}.lock", hash));
+        if let Some(parent) = file_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = std::fs::write(&file_path, data);
+    }
+
+    /// Clear all caches
+    pub fn clear(&self) {
+        self.hot_cache.clear();
+        if self.disk_path.exists() {
+            let _ = std::fs::remove_dir_all(&self.disk_path);
+        }
+    }
+
+    /// Get cache statistics
+    pub fn stats(&self) -> CacheStats {
+        CacheStats {
+            l1_entries: self.hot_cache.len(),
+            l2_size_bytes: self.disk_size(),
+        }
+    }
+
+    fn disk_size(&self) -> u64 {
+        if !self.disk_path.exists() {
+            return 0;
+        }
+
+        let mut total = 0u64;
+        if let Ok(entries) = std::fs::read_dir(&self.disk_path) {
+            for entry in entries.flatten() {
+                if let Ok(metadata) = entry.metadata() {
+                    total += metadata.len();
+                }
+            }
+        }
+        total
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheStats {
+    pub l1_entries: usize,
+    pub l2_size_bytes: u64,
+}
+
+/// GPU compute bridge for SAT solving
+pub struct GpuBridge {
+    enabled: bool,
+    threshold: usize,
+}
+
+impl GpuBridge {
+    pub fn new(config: &FluxResolveConfig) -> Self {
+        Self {
+            enabled: config.gpu_enabled,
+            threshold: config.gpu_threshold,
+        }
+    }
+
+    /// Check if GPU should be used for given complexity
+    pub fn should_offload(&self, complexity: usize) -> bool {
+        self.enabled && complexity >= self.threshold
+    }
+
+    /// Solve SAT problem on GPU (stub - would load CUDA kernel)
+    pub fn solve_sat(&self, _clauses: Vec<Vec<i32>>) -> Result<Vec<i32>, String> {
+        if !self.enabled {
+            return Err("GPU disabled".to_string());
+        }
+
+        // Stub: In production, this would:
+        // 1. Load CUDA kernel from PTX file
+        // 2. Transfer clauses to GPU memory
+        // 3. Execute kernel
+        // 4. Retrieve solution
+        // 5. Return SAT assignment
+
+        // Mock solution for now
+        Ok(vec![1, -2, 3])
+    }
+}
+
+/// Registry bridge for fetching package metadata
+pub struct RegistryBridge {
+    #[allow(dead_code)]
+    registry_url: String,
+}
+
+impl RegistryBridge {
+    pub fn new() -> Self {
+        Self {
+            registry_url: std::env::var("FUSION_REGISTRY_URL")
+                .unwrap_or_else(|_| "https://registry.fusionlang.dev".to_string()),
+        }
+    }
+
+    /// Fetch available versions for a package
+    pub async fn fetch_versions(&self, _package_name: &str) -> Result<Vec<String>, String> {
+        // Stub: In production, make HTTP request to registry
+        // For now, return mock data
+        Ok(vec![
+            "0.1.0".to_string(),
+            "0.1.1".to_string(),
+            "0.2.0".to_string(),
+        ])
+    }
+
+    /// Fetch package metadata
+    pub async fn fetch_metadata(
+        &self,
+        _package_name: &str,
+        _version: &str,
+    ) -> Result<Vec<u8>, String> {
+        // Stub: In production, fetch from registry
+        Ok(Vec::new())
+    }
+}
+
+impl Default for RegistryBridge {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Main bridge orchestrator
+pub struct FluxResolveBridge {
+    config: FluxResolveConfig,
+    cache: CacheBridge,
+    gpu: GpuBridge,
+    registry: RegistryBridge,
+}
+
+impl FluxResolveBridge {
+    pub fn new(config: FluxResolveConfig) -> Self {
+        Self {
+            cache: CacheBridge::new(&config),
+            gpu: GpuBridge::new(&config),
+            registry: RegistryBridge::new(),
+            config,
+        }
+    }
+
+    pub fn cache(&self) -> &CacheBridge {
+        &self.cache
+    }
+
+    pub fn gpu(&self) -> &GpuBridge {
+        &self.gpu
+    }
+
+    pub fn registry(&self) -> &RegistryBridge {
+        &self.registry
+    }
+
+    pub fn config(&self) -> &FluxResolveConfig {
+        &self.config
+    }
+}
+
+impl Default for FluxResolveBridge {
+    fn default() -> Self {
+        Self::new(FluxResolveConfig::default())
+    }
+}
+
+/// FFI exports for Fusion runtime
+#[no_mangle]
+pub extern "C" fn flux_resolve_bridge_create() -> *mut FluxResolveBridge {
+    Box::into_raw(Box::new(FluxResolveBridge::default()))
+}
+
+#[no_mangle]
+pub extern "C" fn flux_resolve_bridge_destroy(bridge: *mut FluxResolveBridge) {
+    if !bridge.is_null() {
+        unsafe {
+            let _ = Box::from_raw(bridge);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn flux_resolve_cache_get(
+    bridge: *const FluxResolveBridge,
+    hash: *const i8,
+    out_len: *mut usize,
+) -> *mut u8 {
+    if bridge.is_null() || hash.is_null() || out_len.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    unsafe {
+        let bridge = &*bridge;
+        let hash_str = std::ffi::CStr::from_ptr(hash).to_string_lossy();
+
+        if let Some(data) = bridge.cache.get(&hash_str) {
+            *out_len = data.len();
+            let boxed = data.into_boxed_slice();
+            Box::into_raw(boxed) as *mut u8
+        } else {
+            std::ptr::null_mut()
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn flux_resolve_cache_put(
+    bridge: *const FluxResolveBridge,
+    hash: *const i8,
+    data: *const u8,
+    len: usize,
+) {
+    if bridge.is_null() || hash.is_null() || data.is_null() {
+        return;
+    }
+
+    unsafe {
+        let bridge = &*bridge;
+        let hash_str = std::ffi::CStr::from_ptr(hash).to_string_lossy();
+        let data_slice = std::slice::from_raw_parts(data, len);
+
+        bridge.cache.put(&hash_str, data_slice.to_vec());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cache_bridge() {
+        let config = FluxResolveConfig::default();
+        let cache = CacheBridge::new(&config);
+
+        let hash = "test_hash_123";
+        let data = b"test data".to_vec();
+
+        // Put and get
+        cache.put(hash, data.clone());
+        let retrieved = cache.get(hash);
+
+        assert!(retrieved.is_some());
+        assert_eq!(retrieved.unwrap(), data);
+
+        // Stats
+        let stats = cache.stats();
+        assert_eq!(stats.l1_entries, 1);
+    }
+
+    #[test]
+    fn test_gpu_bridge() {
+        let config = FluxResolveConfig::default();
+        let gpu = GpuBridge::new(&config);
+
+        // Below threshold
+        assert!(!gpu.should_offload(5000));
+
+        // Above threshold
+        assert!(gpu.should_offload(15000));
+    }
+
+    #[test]
+    fn test_bridge_creation() {
+        let bridge = FluxResolveBridge::default();
+        assert_eq!(bridge.config().gpu_threshold, 10_000);
+        assert_eq!(bridge.config().vsids_decay, 0.95);
+    }
+}
