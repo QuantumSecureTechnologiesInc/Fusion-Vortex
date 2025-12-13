@@ -64,6 +64,7 @@ pub struct EventPoller {
     kqueue_fd: i32,
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     iocp_handle: usize,
 }
 
@@ -132,12 +133,25 @@ impl EventPoller {
     ///
     /// Vec of ready events
     pub fn poll_timeout(&self, timeout: std::time::Duration) -> Vec<IoEvent> {
-        // In real implementation, would call epoll_wait/kevent/GetQueuedCompletionStatus
+        let start = std::time::Instant::now();
 
-        // For now, just return pending events
-        let mut pending = self.pending.lock();
-        let events = pending.drain(..).collect();
-        events
+        loop {
+            // Check for pending events
+            {
+                let mut pending = self.pending.lock();
+                if !pending.is_empty() {
+                    return pending.drain(..).collect();
+                }
+            }
+
+            // Check timeout
+            if start.elapsed() >= timeout {
+                return Vec::new();
+            }
+
+            // Short sleep to avoid busy waiting
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
     }
 
     /// Simulate event (for testing)
@@ -180,21 +194,22 @@ impl FusedIoReactor {
     }
 
     /// Register network socket
-    pub fn register_socket(&self, fd: i32, read: bool, write: bool) -> EventId {
+    pub fn register_socket(&self, _fd: i32, read: bool, _write: bool) -> EventId {
         if read {
             self.poller.register(EventType::SocketRead)
         } else {
+            // Mapping write to write event
             self.poller.register(EventType::SocketWrite)
         }
     }
 
     /// Register GPU event
-    pub fn register_gpu_event(&self, stream_id: u64) -> EventId {
+    pub fn register_gpu_event(&self, _stream_id: u64) -> EventId {
         self.poller.register(EventType::GpuComplete)
     }
 
     /// Register QPU job
-    pub fn register_qpu_job(&self, job_id: u64) -> EventId {
+    pub fn register_qpu_job(&self, _job_id: u64) -> EventId {
         self.poller.register(EventType::QpuComplete)
     }
 
@@ -235,7 +250,7 @@ mod tests {
         let poller = EventPoller::new();
 
         let id1 = poller.register(EventType::SocketRead);
-        let id2 = poller.register(EventType::GpuComplete);
+        let _id2 = poller.register(EventType::GpuComplete);
 
         assert_eq!(poller.event_count(), 2);
 

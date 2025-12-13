@@ -71,6 +71,7 @@ pub struct QpuJobSequencer {
 
     /// Batching configuration
     max_batch_size: usize,
+    #[allow(dead_code)]
     max_wait_ms: u64,
 }
 

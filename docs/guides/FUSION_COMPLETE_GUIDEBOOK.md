@@ -1,520 +1,324 @@
-# Fusion Programming Language – Comprehensive Guidebook
+# Fusion Programming Language – The Comprehensive Guidebook
+
+**Version**: 3.4 (Monolith Era)  
+**Author**: Fusion Core Team
 
 ---
 
-## Table of Contents
+## 📖 Table of Contents
 
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
 3. [Language Fundamentals](#language-fundamentals)
-4. [Advanced Language Features](#advanced-language-features)
-5. [Memory Management & Borrow Checker](#memory-management--borrow-checker)
-6. [Standard Library – Collections](#standard-library--collections)
-7. [Core Type System](#core-type-system)
-8. [Security & Cryptography](#security--cryptography)
-9. [AI / Machine Learning Support](#ai--machine-learning-support)
-10. [Quantum Computing Integration](#quantum-computing-integration)
-11. [Tooling & Development Workflow](#tooling--development-workflow)
-12. [Package Manager](#package-manager)
-13. [Testing, CI/CD & Quality Assurance](#testing-ci-cd--quality-assurance)
-14. [Deployment Strategies](#deployment-strategies)
-15. [Best Practices & Performance Optimisation](#best-practices--performance-optimisation)
-16. [Appendices](#appendices)
+4. [Memory Management & The Effect System](#memory-management--the-effect-system)
+5. [The Fusion Unified Toolchain](#the-fusion-unified-toolchain)
+6. [HAFT: Intelligent AI & Tensors](#haft-intelligent-ai--tensors)
+7. [Quantum Computing & Security](#quantum-computing--security)
+8. [Flux-Resolve & Package Management](#flux-resolve--package-management)
+9. [Fusion Terminal Browser](#fusion-terminal-browser)
+10. [Real-World Use Cases](#real-world-use-cases)
+11. [Best Practices Guide](#best-practices-guide)
+12. [Appendices](#appendices)
 
 ---
 
-## Introduction {#introduction}
+## 1. Introduction {#introduction}
 
-Fusion is a modern, multi‑paradigm programming language that blends the ergonomics of Python with the performance and safety of Rust. It targets a wide range of domains – from systems programming and high‑performance services to AI/ML workloads and quantum‑ready applications. The language is built on LLVM 16+, enabling aggressive optimisation, native WebAssembly compilation, and seamless integration with existing C/C++ ecosystems.
+Welcome to **Fusion**, a modern, multi-paradigm programming language designed to bridge the gap between high-level ergonomics and bare-metal performance. Fusion was born from a simple observation: modern development often requires stitching together Python for AI, Rust for performance, and C++ for legacy systems. Fusion aims to be the single language that spans these domains seamlessly.
 
-Key design goals:
+At its core, Fusion is built on a **unified, shared-memory toolchain** known as the Monolith. Unlike traditional compilers that treat building, testing, and linting as separate steps, Fusion integrates them into a continuous intelligence loop. This architecture allows the language to "understand" your code in real-time, offering capabilities like zero-copy IDE feedback and autonomous memory optimization via **HAFT** (Hyper-Adaptive Flux Tensors).
 
-- **Security by design** – hybrid classical/post‑quantum cryptography, mandatory static analysis, and an optional borrow‑checker.
-- **Performance** – LLVM‑backed optimisation, zero‑cost abstractions, and GPU/AI acceleration.
-- **Productivity** – Python‑like syntax, powerful standard library, and first‑class tooling.
-
-![Compiler Architecture](C:/Users/Matth/.gemini/antigravity/brain/26c6eed1-56bf-4c97-9bc1-14e37988f4b2/uploaded_image_0_1765158009179.png)
-
-*Figure 1 – Fusion compilation pipeline from source to native binary or WebAssembly.*
+Whether you are building a high-frequency trading engine, a quantum simulation, or a distributed AI model, Fusion provides the safety guarantees of a borrow checker with the ease of use of a dynamic language.
 
 ---
 
-## Getting Started {#getting-started}
+## 2. Getting Started {#getting-started}
 
 ### Installation
 
-Fusion provides pre‑built binaries for Windows, macOS and Linux. On Windows, download the installer from the official site and run it. On Unix‑like systems you can use the script below:
+Fusion provides a unified installer that sets up the compiler, the Monolith toolchain, and the standard library.
 
+**For Unix-like Systems (Linux/macOS):**
 ```bash
 curl -fsSL https://sh.fusion-lang.org | sh
 ```
 
-The installer adds the `fusion` and `fusionc` commands to your `PATH`.
-
-### First Program
-
-Create a new project and write a simple "Hello, World!" program:
-
-```bash
-fusion new hello-world
-cd hello-world
+**For Windows (PowerShell):**
+```powershell
+iwr https://win.fusion-lang.org -useb | iex
 ```
 
-Edit `src/main.fu`:
+### Your First Application
+
+Let's create a simple project to verify the installation. Fusion's CLI handles project generation, ensuring a standard directory structure from day one.
+
+```bash
+fusion new hello-fusion
+cd hello-fusion
+```
+
+Open `src/main.fu` and you'll see the entry point. Here is a slightly more advanced "Hello World" that demonstrates string interpolation and basic input:
 
 ```fusion
+// src/main.fu
 fn main() -> int {
-    println("Hello, World!")
+    let name = "Developer"
+    println("Hello, {}! Welcome to Fusion.", name)
+    
+    // Return explicit exit code (0 = success)
     return 0
 }
 ```
 
-Build and run:
-
+To run this, simply execute:
 ```bash
-fusion build --release
-./target/release/hello-world
-```
-
-### REPL
-
-Fusion ships with an interactive REPL useful for rapid experimentation:
-
-```bash
-fusion repl
->>> let x = 42
->>> println(x)
-42
+fusion run
 ```
 
 ---
 
-## Language Fundamentals {#language-fundamentals}
+## 3. Language Fundamentals {#language-fundamentals}
 
-### Syntax Overview
+Fusion syntax is designed to be familiar to users of C-family languages but stripped of unnecessary boilerplate. It uses indentation-free block delimiters (`{}`) but enforces consistent formatting via the built-in formatter.
 
-Fusion uses indentation‑free block delimiters (`{}`) similar to C‑style languages. Statements end with a newline; semicolons are optional.
+### Variables and Mutability
 
-| Construct            | Example                                                             |
-| -------------------- | ------------------------------------------------------------------- |
-| Variable (immutable) | `let pi: float = 3.14159;`                                          |
-| Variable (mutable)   | `let mut counter = 0;`                                              |
-| Function             | `fn add(a: int, b: int) -> int { a + b }`                           |
-| Conditional          | `if x > 0 { println("positive") } else { println("non‑positive") }` |
-| Loop                 | `while i < 10 { i += 1 }`                                           |
-
-### Types
-
-Fusion supports **strong static typing** with optional type inference. Primitive types include `int`, `float`, `bool`, `string`, and `bytes`. Composite types include `list<T>`, `map<K, V>`, `tuple<T1, T2, …>`, and **tensor** types for multi‑dimensional data.
-
-### Modules & Packages
-
-Modules are defined by directory structure. A file `src/utils.fu` creates a module `utils` that can be imported with:
+By default, variables in Fusion are **immutable**. This is a deliberate design choice to prevent accidental state mutation, which is a common source of bugs in concurrent systems.
 
 ```fusion
-import utils
-utils.helper()
+// Immutable by default
+let pi = 3.14159
+// pi = 3.14  // Compiler Error!
+
+// Explicit mutability
+let mut counter = 0
+counter += 1
 ```
 
----
+### Functions and Control Flow
 
-## Advanced Language Features {#advanced-language-features}
-
-### Generics & Traits
-
-Fusion’s generic system is powered by **traits**, similar to Rust. Example of a generic `max` function constrained by the `Comparable` trait:
+Functions explicitly declare return types, ensuring clarity at API boundaries. The `match` statement provides powerful pattern matching capabilities, far exceeding traditional switch statements.
 
 ```fusion
-trait Comparable {
-    fn cmp(&self, other: &Self) -> int;
-}
-
-fn max<T: Comparable>(a: T, b: T) -> T {
-    if a.cmp(&b) > 0 { a } else { b }
+fn analyze_value(x: int) -> string {
+    match x {
+        0 => "Zero",
+        1..=10 => "Small number",
+        _ => "Large number"
+    }
 }
 ```
 
-### Pattern Matching
+### Async/Await
 
-Pattern matching provides exhaustive case analysis:
-
-```fusion
-match value {
-    0 => println("zero"),
-    1..=10 => println("small number"),
-    _ => println("other")
-}
-```
-
-### Asynchronous Functions
-
-Fusion supports `async`/`await` syntax for non‑blocking I/O:
+Fusion treats asynchronous programming as a first-class citizen. Unlike some languages where async splits the ecosystem, Fusion's standard library is fully async-aware.
 
 ```fusion
-async fn fetch(url: string) -> Result<string> {
-    let resp = await http.get(url);
-    resp.body()
+async fn fetch_user_data(id: int) -> Result<User> {
+    let url = fmt("https://api.example.com/users/{}", id)
+    let response = await http.get(url)
+    return response.json()
 }
 ```
 
 ---
 
-## Memory Management & Borrow Checker {#memory-management--borrow-checker}
+## 4. Memory Management & The Effect System {#memory-management--the-effect-system}
 
-Fusion offers two complementary memory models:
+One of Fusion's most powerful features is its dual-mode memory management, controlled by the **Effect System**. This allows you to choose the right tool for the job within the same codebase.
 
-1. **Garbage‑Collected (GC) mode** – the default for high‑level code.
-2. **Borrow‑Checker mode** – optional static ownership model for performance‑critical sections.
+### The Two Modes
 
-Enable borrow‑checking on a function with the `@borrowed` attribute:
+1.  **Garbage Collector (Default)**: For 90% of application logic, UI code, and scripting, you want ease of use. Fusion's generational GC handles memory automatically, preventing leaks without manual intervention.
+2.  **Borrow Checker (`@borrowed`)**: For performance-critical paths (e.g., inner loops, audio processing, network drivers), you can opt-in to Rust-style ownership/borrowing semantics.
+
+### Using `@borrowed`
+
+Applying the `@borrowed` attribute switches the compiler mode for that scope. It enforces zero-allocation policies and strict ownership rules.
 
 ```fusion
+// This function runs without GC pauses
 @borrowed
-fn process(data: &mut List<int>) {
-    data.push(42);
+fn process_audio_buffer(buffer: &mut [f32]) {
+    for sample in buffer {
+        *sample *= 0.5  // In-place volume reduction
+    }
 }
 ```
 
-The compiler enforces the classic single‑owner rule, preventing data races and use‑after‑free bugs.
+### Other Effects
 
-![Borrow Checker Diagram](C:/Users/Matth/.gemini/antigravity/brain/26c6eed1-56bf-4c97-9bc1-14e37988f4b2/uploaded_image_1_1765158009179.png)
-
-*Figure 2 – Borrow‑checker flow.*
-
----
-
-## Standard Library – Collections {#standard-library--collections}
-
-Fusion ships with high‑performance collections implemented on top of the borrow‑checker and GC.
-
-### HashMap
-
-```fusion
-let mut map: HashMap<string, int> = HashMap::new();
-map.insert("apples", 3);
-map.insert("oranges", 5);
-println(map["apples"]);
-```
-
-### HashSet
-
-```fusion
-let mut set: HashSet<int> = HashSet::new();
-set.insert(10);
-set.insert(20);
-assert!(set.contains(10));
-```
-
-Both collections provide iterator adapters, lazy evaluation, and are fully thread‑safe when used with the `@sync` attribute.
+The effect system extends beyond memory:
+-   `@gpu_accelerated`: Automatically compiles the function to a CUDA or OpenCL kernel for execution on the GPU.
+-   `@constant_time`: Critical for cryptography; prevents compiler optimizations that could introduce timing side-channels.
+-   `@atomic`: Enforces atomic memory access guarantees for lock-free data structures.
 
 ---
 
-## Core Type System {#core-type-system}
+## 5. The Fusion Unified Toolchain {#the-fusion-unified-toolchain}
 
-Fusion distinguishes three orthogonal type families:
+### The Monolith Architecture
 
-- **Classical** – standard scalar and aggregate types.
-- **Tensor** – multi‑dimensional arrays with compile‑time shape checking.
-- **Quantum** – qubit registers and circuit descriptions.
+In traditional workflows, you might run `cargo check`, then `cargo test`, then a linter, then a security output. Each of these tools starts from scratch, parsing your code and loading dependencies. This is inefficient.
 
-![Type System Diagram](C:/Users/Matth/.gemini/antigravity/brain/26c6eed1-56bf-4c97-9bc1-14e37988f4b2/uploaded_image_2_1765158009179.png)
+Fusion v3.4 introduced **Fusion Monolith Core**. It is a single, long-running process that holds your project's state in shared memory (`Arc<RwLock<FusionState>>`). When you save a file, the compiler updates the Abstract Syntax Tree (AST) in memory. The auditor checks dependencies on the fly, and the Language Server Protocol (LSP) reads the *exact same memory* to provide autocomplete.
 
-*Figure 3 – Fusion type hierarchy.*
+### CLI Commands
 
-### Tensor Example
+The `fusion` CLI is your gateway to the Monolith.
 
-```fusion
-let image: Tensor<u8, [3, 224, 224]> = Tensor::zeros();
-let normalized = image.map(|v| v as f32 / 255.0);
-```
-
-### Quantum Example
-
-```fusion
-let mut circuit = QuantumCircuit::new();
-circuit.h(0);
-circuit.cnot(0, 1);
-let result = circuit.run();
-println(result);
-```
+-   **`fusion check`**: Performs semantic analysis. Because it reuses the state from the Monolith, it is near-instantaneous.
+-   **`fusion build`**: Runs the full compilation pipeline.
+-   **`fusion audit`**: Scans your dependencies against the Fusion Security Database. Thanks to "Shift-Left" security, this happens *during* dependency resolution.
+-   **`fusion watch`**: Starts the Monolith in daemon mode, powering your IDE extensions.
 
 ---
 
-## Security & Cryptography {#security--cryptography}
+## 6. HAFT: Intelligent AI & Tensors {#haft-intelligent-ai--tensors}
 
-Fusion enforces **hybrid cryptography** by default. All cryptographic primitives are wrapped with the `@constant_time` attribute to mitigate side‑channel attacks.
+Fusion is designed for the AI era. Instead of relying on external libraries like NumPy or PyTorch for heavy lifting, Fusion includes **HAFT** (Hyper-Adaptive Flux Tensors) as a language primitive.
 
-### Hybrid Signature Example
+### Autonomous Memory optimization
+
+A standard array is dumb; it just sits in memory. A **FluxTensor** is intelligent. It is managed by three autonomous background agents:
+
+1.  **The Researcher**: Continually analyzes your code's access patterns. Is it reading sequentially? Randomly? Is the matrix sparse (mostly zeros)?
+2.  **The Builder**: Managing the "Hot" and "Cold" storage tiers. Based on the Researcher's findings, it moves rarely accessed data to compressed cold storage (RAM or NVMe), keeping only the active "hot" data in GPU memory or CPU cache.
+3.  **The Optimizer**: Tunes the data layout in real-time, effectively rewriting memory organization to match your usage patterns.
+
+### Example: AI Model Training
 
 ```fusion
-@constant_time
-fn sign(payload: List<u8>) -> HybridSignature {
-    let keys = HybridKeypair::load();
-    hybrid_sign(payload, &keys)
+import fusion.haft
+import fusion.nn
+
+fn train_model() {
+    // 100GB Tensor - exceeds GPU memory!
+    let data = FluxTensor::from_file("massive_dataset.csv")
+    
+    // HAFT agents activate automatically.
+    // They will keep only the current batch in GPU memory.
+    let model = nn::Transformer::new()
+    
+    // Training loop is syntax-native, no complex library calls
+    model.fit(data, epochs=10)
 }
 ```
 
-The implementation combines **CRYSTALS‑Dilithium** (post‑quantum) with **ECDSA** (classical) to provide forward‑secure signatures.
-
-![Hybrid Cryptography Diagram](C:/Users/Matth/.gemini/antigravity/brain/26c6eed1-56bf-4c97-9bc1-14e37988f4b2/uploaded_image_3_1765158009179.png)
-
-*Figure 4 – Hybrid cryptographic workflow.*
+This significantly lowers the barrier to entry for training large models on consumer hardware.
 
 ---
 
-## AI / Machine Learning Support {#ai--machine-learning-support}
+## 7. Quantum Computing & Security {#quantum-computing--security}
 
-Fusion includes a native `fusion::ml` module exposing tensor operations, automatic differentiation, and GPU off‑loading via the `@gpu_accelerated` attribute.
+Fusion adopts a "Quantum-Native" stance. We assume that powerful quantum computers will exist during the lifetime of the code you write today.
 
-### Simple Neural Network
+### Hybrid Cryptography
+
+By default, all cryptographic operations in the standard library use **Hybrid** algorithms. For example, a TLS handshake doesn't just use Elliptic Curve Diffie-Hellman (ECDH); it combines it with a Post-Quantum algorithm like Kyber-1024.
 
 ```fusion
-@gpu_accelerated
-fn train_mnist() -> Result<()> {
-    let data = ml::load_mnist();
-    let mut model = ml::Sequential::new()
-        .add(ml::Dense::new(784, 128).relu())
-        .add(ml::Dense::new(128, 10).softmax());
-    model.fit(&data.train, epochs = 5, batch_size = 64);
-    let acc = model.evaluate(&data.test);
-    println("Test accuracy: {}", acc);
-    Ok(())
+// This automatically uses Hybrid Crypto (X25519 + Kyber)
+let secure_socket = net::TcpStream::connect_secure("bank.com:443")
+```
+
+### Quantum Circuits
+
+You can write quantum algorithms directly in Fusion. The `fusion::quantum` module provides primitives for Qubits and Gates.
+
+```fusion
+fn entangle_pair() -> Result<Measurement> {
+    let q = QubitRegister::new(2)
+    
+    // Hadamard gate puts q[0] in superposition
+    q.h(0)
+    
+    // CNOT gate entangles q[0] and q[1]
+    q.cnot(control=0, target=1)
+    
+    // Collapse wave function
+    return q.measure()
 }
 ```
 
-The `@gpu_accelerated` attribute automatically compiles the relevant kernels to CUDA or OpenCL.
+These circuits can run on the built-in simulator or be dispatched to a cloud QPU (IBM Q, Rigetti) by changing a simple configuration flag.
 
 ---
 
-## Quantum Computing Integration {#quantum-computing-integration}
+## 8. Flux-Resolve & Package Management {#flux-resolve--package-management}
 
-Fusion’s `fusion::quantum` module provides a high‑level API for defining circuits, simulators, and cloud back‑ends (IBM Q, Azure Quantum).
+Dependency hell is a solved problem in Fusion thanks to **Flux-Resolve**. Standard resolvers use CPU-based SAT solvers which can be slow for large graphs. Flux-Resolve offloads this constraint satisfaction problem to the GPU specifically (or uses vectorized CPU instructions).
 
-### Quantum Circuit Example
+**Shift-Left Security** is integrated here. When you try to add a dependency:
+```bash
+fusion add "unsafe-lib"
+```
+Flux-Resolve checks the vulnerability database *before* even downloading the package metadata. If a known vulnerability exists, it blocks the resolution, preventing the bad code from ever touching your disk.
 
-```fusion
-fn bell_state() -> Result<QubitRegister> {
-    let mut circuit = QuantumCircuit::new();
-    circuit.h(0);
-    circuit.cnot(0, 1);
-    let result = circuit.run(backend = Backend::LocalSimulator);
-    Ok(result)
-}
+---
+
+## 9. Fusion Terminal Browser {#fusion-terminal-browser}
+
+Developers spend half their time reading documentation. Switching context to a web browser breaks flow. Fusion includes a built-in **Terminal Browser**—a text-based web renderer optimized for technical documentation.
+
+It renders Markdown, API references, and standard web pages directly in your terminal with full mouse support and strict Vim keybindings.
+
+**Usage:**
+```bash
+fusion tool browser https://docs.fusion-lang.org/std/collections
 ```
 
-The API abstracts away low‑level gate scheduling, allowing developers to focus on algorithmic design.
+You can even integrate it into your IDE setup to have documentation open in a side pane without the overhead of a Chrome instance.
 
 ---
 
-## Tooling & Development Workflow {#tooling--development-workflow}
+## 10. Real-World Use Cases {#real-world-use-cases}
 
-Fusion ships with a full suite of developer tools:
+### Case Study: High-Frequency Trading (HFT)
+**Challenge**: Process millions of market ticks per second with microsecond latency.
+**Fusion Solution**: 
+-   Use `@borrowed` for the order matching engine to eliminate GC pauses.
+-   Use `@gpu_accelerated` to run risk analysis models in parallel on the GPU.
+-   Result: A deterministic, ultra-low latency engine in a high-level language.
 
-- **Language Server (LSP)** – IDE integration for VS Code, IntelliJ, Vim.
-- **Static Analysis (`fusion security scan --sast`)** – detects XSS, SQLi, insecure crypto.
-- **Software Composition Analysis (`fusion security scan --sca`)** – checks dependencies against CVE databases.
-- **Fuzzing (`fusion fuzz --target-fn <fn>`)** – automated input generation.
-
-![Development Workflow Diagram](C:/Users/Matth/.gemini/antigravity/brain/26c6eed1-56bf-4c97-9bc1-14e37988f4b2/uploaded_image_4_1765158009179.png)
-
-*Figure 5 – Typical CI/CD pipeline for Fusion projects.*
-
----
-
-## Package Manager {#package-manager}
-
-The `fusion` CLI manages project dependencies, builds, and publishing. A typical `Fusion.toml` manifest:
-
-```toml
-[package]
-name = "my_app"
-version = "0.1.0"
-edition = "2025"
-
-[dependencies]
-fusion-ml = "^1.2"
-fusion-crypto = "^0.9"
-```
-
-Common commands:
-
-- `fusion new <name>` – scaffold a new project.
-- `fusion add <pkg>@<ver>` – add a dependency.
-- `fusion build --target wasm32-wasi` – compile to WebAssembly.
-- `fusion publish` – publish to the Fusion package registry.
+### Case Study: Secure Medical Records
+**Challenge**: Store patient data for 50 years, ensuring it remains secure against future quantum computers.
+**Fusion Solution**:
+-   Use the standard library's Hybrid Cryptography for all data at rest.
+-   Use `@constant_time` utilities for all custom parsing logic.
+-   Result: Future-proof data compliance out of the box.
 
 ---
 
-## Testing, CI/CD & Quality Assurance {#testing-ci-cd--quality-assurance}
+## 11. Best Practices Guide {#best-practices-guide}
 
-### Unit Tests
+### Do:
+-   **Prefer Immutability**: Use `let` instead of `let mut` whenever possible. It makes code easier to reason about.
+-   **Use GC by Default**: Don't reach for `@borrowed` optimization prematurely. The Fusion GC is highly tuned. Only optimize hot paths.
+-   **Trust the Monolith**: Keep `fusion watch` running. The shared state makes your tools smarter.
+-   **Annotate Asynchronously**: If a function does I/O, mark it `async`. Blocking the main thread is an anti-pattern.
 
-Fusion uses the built‑in `#[test]` attribute. Example:
-
-```fusion
-#[test]
-fn test_add() {
-    assert_eq!(add(2, 3), 5);
-}
-```
-
-Run tests with `fusion test`.
-
-### Benchmarking
-
-Benchmarks are declared with `#[bench]` and executed via `fusion bench`.
-
-### Continuous Integration
-
-A minimal GitHub Actions workflow (`.github/workflows/ci.yml`):
-
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Fusion
-        run: curl -fsSL https://sh.fusion-lang.org | sh
-      - name: Build
-        run: fusion build --release
-      - name: Test
-        run: fusion test
-      - name: Security Scan
-        run: fusion security scan --sast && fusion security scan --sca
-```
+### Don't:
+-   **Ignore Security Warnings**: If `fusion audit` flags a dependency, do not suppress it without a rigorous manual review.
+-   **Manually Manage Tensors**: Avoid writing manual loops for matrix math. Use HAFT operators (`tensor_a * tensor_b`) to let the autonomous agents optimize execution.
+-   **Mix Modes Carelessly**: Be careful when passing data between `@borrowed` code and GC code. The compiler handles it, but extensive copying can hurt performance.
 
 ---
 
-## Deployment Strategies {#deployment-strategies}
-
-Fusion binaries are statically linked by default, making them ideal for containerised deployment. Example Dockerfile for a web service:
-
-```dockerfile
-FROM alpine:3.18
-COPY target/release/my_service /usr/local/bin/my_service
-EXPOSE 8080
-CMD ["/usr/local/bin/my_service"]
-```
-
-For serverless platforms, compile to WebAssembly and deploy to Cloudflare Workers or AWS Lambda (via `wasmtime`).
-
----
-
-## Best Practices & Performance Optimisation {#best-practices--performance-optimisation}
-
-| Area            | Recommendation                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| **Security**    | Use `@constant_time` on all crypto primitives; enable `fusion security scan` in CI.             |
-| **Memory**      | Prefer borrow‑checked functions for hot paths; avoid unnecessary GC allocations.                |
-| **Concurrency** | Use `@sync` on data structures accessed from multiple threads; leverage `fusion async` for I/O. |
-| **GPU**         | Annotate compute‑heavy kernels with `@gpu_accelerated`; profile with `fusion profile`.          |
-| **Code Style**  | Follow the Fusion Style Guide – 2‑space indentation, snake_case for identifiers.                |
-
----
-
-## Appendices {#appendices}
+## 12. Appendices {#appendices}
 
 ### A. Glossary
+-   **HAFT**: Hyper-Adaptive Flux Tensor. The intelligent array primitive.
+-   **Monolith**: The unified compiler/toolchain process.
+-   **Flux-Resolve**: The GPU-accelerated dependency solver.
+-   **Agent**: An autonomous background thread optimizing runtime state.
 
-- **Hybrid Cryptography** – combination of classical and post‑quantum algorithms.
-- **Borrow Checker** – static analysis enforcing exclusive mutable access.
-- **Tensor** – multi‑dimensional array with compile‑time shape.
-- **Quantum Register** – collection of qubits representing quantum state.
-
-### B. Reference Commands
-
-```
-fusion new <name>
-fusion build --target <arch>
-fusion run
-fusion test
-fusion bench
-fusion security scan --sast
-fusion security scan --sca
-fusion fuzz --target-fn <fn>
-```
-
-### C. Further Reading
-
-- *LLVM Optimisation Guide* – <https://llvm.org/docs/Passes.html>
-- *Post‑Quantum Cryptography* – NIST PQC Standardisation Project
-- *WebAssembly System Interface (WASI)* – <https://github.com/WebAssembly/WASI>
+### B. Cheat Sheet
+-   `fusion new <name>` - Create project
+-   `fusion run` - Build and run
+-   `fusion audit` - Security Check
+-   `@borrowed` - Zero-copy mode
+-   `@gpu_accelerated` - CUDA/OpenCL target
 
 ---
-
-*Generated on 2025‑12‑08 by Antigravity – the advanced AI coding assistant.*
-
-## Case Studies & Real‑World Applications
-
-### 1. High‑Frequency Trading Platform
-
-A Fusion service handling millions of orders per second leverages the borrow‑checker for deterministic latency and the GPU‑accelerated ML module for predictive order‑book modelling.
-
-```fusion
-@borrowed
-fn process_order(order: &mut Order) {
-    // deterministic, zero‑GC path
-    order.validate();
-    order.execute();
-}
-```
-
-### 2. Secure Medical Data Pipeline
-
-Fusion’s hybrid cryptography ensures patient data remains confidential even against future quantum attacks.
-
-```fusion
-@constant_time
-fn encrypt_record(record: List<u8>) -> HybridCiphertext {
-    let keys = HybridKeypair::load();
-    hybrid_encrypt(record, &keys)
-}
-```
-
-### 3. Quantum‑Ready Simulation Service
-
-A cloud‑native Fusion microservice exposes a REST API that submits quantum circuits to IBM Quantum back‑ends.
-
-```fusion
-fn submit_circuit(circuit: QuantumCircuit) -> Result<JobId> {
-    let client = quantum::Client::new();
-    client.submit(circuit)
-}
-```
-
-## Performance Benchmarks
-
-| Benchmark             | Description                     | Fusion (ns)     | Rust (ns) | C++ (ns) |
-| --------------------- | ------------------------------- | --------------- | --------- | -------- |
-| Integer Add (10⁸ ops) | Simple arithmetic loop          | 120             | 115       | 110      |
-| Matrix Mul (512×512)  | GPU‑accelerated tensor multiply | 8 200           | 9 500     | 9 800    |
-| HashMap Insert (10⁶)  | GC‑mode vs Borrow‑Checker       | 45 000 / 28 000 | 30 000    | 27 000   |
-
-*All benchmarks run on an AMD 7950X with RTX 4090, LLVM 16, Fusion v0.2.0‑rc.*
-
-## Frequently Asked Questions (FAQ)
-
-**Q: When should I use the borrow‑checker vs GC?**
-A: Use the borrow‑checker for latency‑critical paths (e.g., networking, trading). Use GC for rapid prototyping or when deterministic memory management is not required.
-
-**Q: How do I enable post‑quantum mode?**
-A: Set the environment variable `FUSION_PQC_MODE=enabled` before building. The compiler will automatically link the hybrid crypto libraries.
-
-**Q: Can I compile Fusion to WebAssembly for the browser?**
-A: Yes. Run `fusion build --target wasm32-wasi`. The resulting `.wasm` can be loaded with `wasmtime` or any WASI‑compatible runtime.
-
-## Troubleshooting & Support
-
-| Symptom                                  | Likely Cause                    | Fix                                                           |
-| ---------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
-| “borrowed” error on mutable reference    | Missing `@borrowed` annotation  | Add `@borrowed` to the function signature                     |
-| Compilation fails on Windows             | LLVM not found                  | Install LLVM 16 via the official installer or set `LLVM_PATH` |
-| Runtime panic on cryptographic operation | Missing constant‑time attribute | Ensure `@constant_time` is applied to all crypto functions    |
-
-For further assistance, join the **Fusion Discord** or open an issue on the **GitHub repository**.
-
----
-*End of Guidebook*
+*Updated for Fusion v3.4 (Monolith Era)*

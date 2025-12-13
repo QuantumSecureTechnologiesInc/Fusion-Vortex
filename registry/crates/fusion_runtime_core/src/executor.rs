@@ -1,18 +1,19 @@
 //! Task executor implementation
 
 use crate::config::RuntimeConfig;
-use crate::task::{Task, TaskHandle};
-use crossbeam::channel;
+use crate::task::TaskHandle;
+// use crossbeam::channel; // Unused
 use fusion_runtime_scheduler::{Scheduler, TaskPriority};
 use parking_lot::Mutex;
 use std::future::Future;
-use std::pin::Pin;
+// use std::pin::Pin; // Unused
 use std::sync::Arc;
-use std::task::{Context, Poll};
+// use std::task::{Context, Poll}; // Unused
 
 /// Multi-threaded task executor
 pub struct Executor {
     scheduler: Arc<Scheduler>,
+    #[allow(dead_code)]
     workers: Vec<Worker>,
     shutdown: Arc<Mutex<bool>>,
 }
@@ -53,11 +54,13 @@ impl Executor {
 impl Drop for Executor {
     fn drop(&mut self) {
         *self.shutdown.lock() = true;
-        // Wait for workers to finish
+        // Wait for workers to finish - joined in Worker Drop if we kept handles,
+        // but here we just signal shutdown. Real impl might join.
     }
 }
 
 struct Worker {
+    #[allow(dead_code)]
     id: usize,
     _handle: std::thread::JoinHandle<()>,
 }
@@ -67,9 +70,19 @@ impl Worker {
         let handle = std::thread::Builder::new()
             .name(format!("fusion-worker-{}", id))
             .spawn(move || {
-                while !*shutdown.lock() {
-                    // Worker loop
-                    std::thread::sleep(std::time::Duration::from_millis(10));
+                loop {
+                    if *shutdown.lock() {
+                        break;
+                    }
+
+                    if let Some(task) = scheduler.next_task() {
+                        // Execute task synchronously on this thread
+                        futures::executor::block_on(task);
+                    } else {
+                        // Backoff to avoid busy loop
+                        // In a real implementation this would use a condition variable or channel
+                        std::thread::sleep(std::time::Duration::from_millis(1));
+                    }
                 }
             })
             .expect("Failed to spawn worker thread");

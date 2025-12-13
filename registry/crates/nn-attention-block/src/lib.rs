@@ -1,9 +1,9 @@
 /// Production General Attention Block.
 ///
 /// Provides general, non-Transformer attention mechanisms (e.g., bilinear attention).
-use fusion_ai_core_adapters::{Layer, Linear, Variable};
-use fusion_core_compiler::types::tensor::{Matrix, Tensor};
-use fusion_core_compiler::FusionResult;
+use fusion_ai_core::{Layer, Linear, Variable};
+use fusion_core::types::tensor::{Matrix, Tensor};
+use fusion_core::FusionResult;
 
 pub struct BilinearAttention {
     pub W: Variable, // [QueryDim, KeyDim]
@@ -26,7 +26,7 @@ impl Layer for BilinearAttention {
         let k = input_q; // Mock Key
 
         // 1. Q @ W
-        let q_w = fusion_ai_core_adapters::autodiff::MatMul::apply(q, self.W.clone());
+        let q_w = fusion_ai_core::autodiff::MatMul::apply(q, self.W.clone());
 
         // 2. (Q @ W) @ K^T
         // Transpose K (requires geometry crate)
@@ -39,4 +39,3 @@ impl Layer for BilinearAttention {
         vec![self.W.clone()]
     }
 }
-

@@ -1,8 +1,8 @@
 /// REROPE Implementation.
 ///
 /// Combines Absolute RoPE with a mechanism for relative positional bias (REROPE).
-use fusion_core_compiler::types::tensor::Matrix;
-use fusion_core_compiler::FusionResult;
+use fusion_core::types::tensor::Matrix;
+use fusion_core::FusionResult;
 
 pub struct ReropeTransformer;
 

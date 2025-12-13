@@ -15,6 +15,8 @@ pub mod error {
         Config(String),
         #[error("Runtime error: {0}")]
         Runtime(String),
+        #[error("Core error: {0}")]
+        Core(#[from] fusion_core::FusionError),
     }
 
     pub type StdResult<T> = Result<T, StdError>;

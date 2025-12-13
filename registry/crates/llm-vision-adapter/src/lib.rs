@@ -1,8 +1,8 @@
 /// Production Vision Adapter (Multimodal).
 ///
 /// Handles pre-processing, encoding, and alignment of image inputs for LLMs.
-use fusion_core_compiler::types::tensor::{Matrix, Tensor, Vector1D};
-use fusion_core_compiler::FusionResult;
+use fusion_core::types::tensor::{Matrix, Tensor, Vector1D};
+use fusion_core::FusionResult;
 
 pub struct VisionEncoder {
     // Reference to a Vision Transformer (ViT) or ResNet encoder
@@ -44,7 +44,7 @@ impl VisionEncoder {
         // This requires:
         // 1. Placeholder token ID generation
         // 2. Embedding lookup for vision tokens
-        // 3. Tensor concatenation (fusion_core_compiler::ops::concat)
+        // 3. Tensor concatenation (fusion_core::ops::concat)
 
         Ok(prompt_tokens.clone())
     }

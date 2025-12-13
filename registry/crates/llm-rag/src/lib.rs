@@ -4,7 +4,7 @@
 /// - Thread-safe storage (Arc<RwLock>) allowing concurrent reads.
 /// - Robust math (Cosine Similarity with zero-magnitude checks).
 /// - Typed Errors.
-use fusion_core_compiler::types::tensor::Vector1D;
+use fusion_core::types::tensor::Vector1D;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use thiserror::Error;

@@ -6,7 +6,7 @@
 //! enabling true zero-copy data flow between training and inference.
 
 use fusion_core::{FusionType, TensorDType, TensorType};
-
+use ndarray::{ArrayD, IxDyn};
 use tracing::{debug, trace};
 
 pub mod nn;
@@ -14,9 +14,9 @@ pub mod ops;
 pub mod optim;
 
 /// Tensor builder for AI/ML workloads
+#[derive(Debug, Clone)]
 pub struct Tensor {
-    shape: Vec<usize>,
-    dtype: TensorDType,
+    data: ArrayD<f32>, // Using f32 as default for ML
     device: String,
     requires_grad: bool,
 }
@@ -27,9 +27,10 @@ impl Tensor {
         let shape = shape.into();
         debug!("Creating zero tensor with shape {:?}", shape);
 
+        let data = ArrayD::zeros(IxDyn(&shape));
+
         Self {
-            shape,
-            dtype: TensorDType::F32,
+            data,
             device: "cpu".to_string(),
             requires_grad: false,
         }
@@ -40,9 +41,10 @@ impl Tensor {
         let shape = shape.into();
         debug!("Creating ones tensor with shape {:?}", shape);
 
+        let data = ArrayD::ones(IxDyn(&shape));
+
         Self {
-            shape,
-            dtype: TensorDType::F32,
+            data,
             device: "cpu".to_string(),
             requires_grad: false,
         }
@@ -64,22 +66,45 @@ impl Tensor {
     pub async fn matmul(&self, other: &Tensor) -> Tensor {
         trace!(
             "Matrix multiplication: {:?} @ {:?}",
-            self.shape,
-            other.shape
+            self.shape(),
+            other.shape()
         );
 
-        // In a real implementation, this would:
-        // 1. Check device compatibility
-        // 2. Schedule GPU kernel via fusion_runtime_core
-        // 3. Perform zero-copy operation if possible
-        // 4. Return new tensor referencing result
+        // Naive implementation for CPU (since we are boosting mocks to 'real' impls)
+        // Only supporting 2D for now for simplicity in this bridge step
 
-        let result_rows = self.shape[0];
-        let result_cols = other.shape[1];
+        let self_shape = self.shape();
+        let other_shape = other.shape();
+
+        if self_shape.len() != 2 || other_shape.len() != 2 {
+            panic!("Matmul currently only supports 2D tensors");
+        }
+
+        let rows = self_shape[0];
+        let cols = other_shape[1];
+        let common = self_shape[1];
+
+        if common != other_shape[0] {
+            panic!("Dimension mismatch: {:?} @ {:?}", self_shape, other_shape);
+        }
+
+        // Convert to 2D view for ndarray dot
+        // Note: In a real system we would use fusion_runtime_core dispatch
+        let a = self
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .unwrap();
+        let b = other
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .unwrap();
+
+        let result = a.dot(&b);
 
         Tensor {
-            shape: vec![result_rows, result_cols],
-            dtype: self.dtype,
+            data: result.into_dyn(),
             device: self.device.clone(),
             requires_grad: self.requires_grad || other.requires_grad,
         }
@@ -87,35 +112,56 @@ impl Tensor {
 
     /// Get tensor shape
     pub fn shape(&self) -> &[usize] {
-        &self.shape
+        self.data.shape()
     }
 
-    pub fn from_slice(_data: &[f64]) -> Self {
-        // Mock creation from slice, assuming 1D for now
-        Self::zeros(vec![_data.len()])
+    pub fn from_slice(data: &[f64]) -> Self {
+        let data_f32: Vec<f32> = data.iter().map(|&x| x as f32).collect();
+        let arr = ArrayD::from_shape_vec(IxDyn(&[data.len()]), data_f32).unwrap();
+
+        Self {
+            data: arr,
+            device: "cpu".to_string(),
+            requires_grad: false,
+        }
     }
 
     pub fn eye(n: usize) -> Self {
-        // Mock identity matrix
-        Self::ones(vec![n, n])
+        let arr = ArrayD::from_shape_fn(IxDyn(&[n, n]), |d| if d[0] == d[1] { 1.0 } else { 0.0 });
+
+        Self {
+            data: arr,
+            device: "cpu".to_string(),
+            requires_grad: false,
+        }
     }
 
     pub fn mean(&self) -> Self {
-        // Mock mean, returns scalar tensor
-        Self::ones(vec![1])
+        let mean_val = self.data.mean().unwrap_or(0.0);
+        let arr = ArrayD::from_elem(IxDyn(&[1]), mean_val);
+
+        Self {
+            data: arr,
+            device: self.device.clone(),
+            requires_grad: false,
+        }
     }
 
-    pub fn item<T: Default>(&self) -> T {
-        // Mock item retrieval
-        T::default()
+    pub fn item<T>(&self) -> T
+    where
+        T: From<f32>,
+    {
+        // Assuming single item tensor
+        let val = self.data.first().cloned().unwrap_or(0.0);
+        T::from(val)
     }
 }
 
 impl From<Tensor> for FusionType {
     fn from(tensor: Tensor) -> Self {
         FusionType::Tensor(TensorType {
-            shape: tensor.shape,
-            dtype: tensor.dtype,
+            shape: tensor.shape().to_vec(),
+            dtype: TensorDType::F32,
             device: tensor.device,
             data_ptr: 0, // Would be allocated by memory manager
         })
@@ -134,7 +180,7 @@ impl Autodiff {
     }
 
     /// Compute gradients via backpropagation
-    pub fn backward(&mut self, loss: &Tensor) {
+    pub fn backward(&mut self, _loss: &Tensor) {
         trace!("Computing gradients for loss tensor");
 
         // In a real implementation:
@@ -162,10 +208,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_matrix_multiplication() {
-        let a = Tensor::zeros(vec![2, 3]);
-        let b = Tensor::zeros(vec![3, 4]);
+        let a = Tensor::eye(2); // 2x2 identity
+        let b = Tensor::ones(vec![2, 2]); // 2x2 ones
         let c = a.matmul(&b).await;
 
-        assert_eq!(c.shape(), &[2, 4]);
+        assert_eq!(c.shape(), &[2, 2]);
+        // Result should be ones
+        assert_eq!(c.data.sum(), 4.0);
     }
 }

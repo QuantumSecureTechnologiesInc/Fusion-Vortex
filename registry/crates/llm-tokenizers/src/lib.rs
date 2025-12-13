@@ -1,5 +1,5 @@
 /// LLM Tokenizers - BPE, WordPiece, SentencePiece implementations
-use fusion_core_compiler::{FusionError, FusionResult};
+use fusion_core::{FusionError, FusionResult};
 use std::collections::{HashMap, HashSet};
 
 pub mod bpe {

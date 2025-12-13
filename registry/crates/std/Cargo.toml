@@ -8,3 +8,4 @@ description = "Fusion standard library extensions and error handling"
 [dependencies]
 thiserror = { workspace = true }
 serde = { workspace = true }
+fusion_core = { path = "../fusion_core" }

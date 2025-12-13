@@ -85,7 +85,7 @@ impl LowJitterTimer {
     }
 
     /// Create a deadline timer
-    pub fn deadline(&self, duration: Duration) -> Deadline {
+    pub fn deadline(&self, duration: Duration) -> Deadline<'_> {
         Deadline {
             target_ns: self.now_ns() + duration.as_nanos() as u64,
             timer: self,

@@ -1,11 +1,11 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::PathBuf;
 
 pub mod commands;
 pub mod interactive;
 
 use fusion_ai_core_adapters::{
-    AdapterConfig, AnthropicConfig, ApplyMode, GoogleConfig, LocalConfig, ModelSession,
+    AdapterConfig, AnthropicConfig, GoogleConfig, LocalConfig, ModelSession,
     OpenAIConfig, PatchMetadata, PreviewEngine, PromptManager, SafetyEngine, UnifiedAdapter,
     WorkspaceLoader,
 };

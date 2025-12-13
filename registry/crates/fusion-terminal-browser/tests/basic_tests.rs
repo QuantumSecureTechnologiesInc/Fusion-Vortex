@@ -1,0 +1,74 @@
+//! Basic functionality test for Fusion Terminal Browser
+
+use fusion_terminal_browser::{Browser, BrowserConfig};
+
+#[test]
+#[ignore] // Requires Chrome to be installed
+fn test_browser_creation() {
+    let config = BrowserConfig {
+        enable_webgpu: false,
+        window_width: 800,
+        window_height: 600,
+        terminal_width: 80,
+        terminal_height: 24,
+        ..Default::default()
+    };
+
+    let result = Browser::new(config);
+
+    // This test verifies the browser can be created
+    // It may fail if Chrome is not installed
+    if result.is_err() {
+        println!("Warning: Browser creation failed. Chrome may not be installed.");
+        println!("Run setup scripts: .\\setup-windows.ps1");
+    } else {
+        println!("✓ Browser created successfully!");
+    }
+}
+
+#[test]
+fn test_config_serialization() {
+    let config = BrowserConfig::default();
+
+    // Test TOML serialization
+    let toml_str = toml::to_string(&config).expect("Failed to serialize config");
+    assert!(!toml_str.is_empty());
+
+    // Test deserialization
+    let _deserialized: BrowserConfig =
+        toml::from_str(&toml_str).expect("Failed to deserialize config");
+
+    println!("✓ Config serialization works!");
+}
+
+#[test]
+fn test_render_mode_parsing() {
+    use fusion_terminal_browser::config::{ColorDepth, RenderMode};
+
+    // Test that default config has correct modes
+    let config = BrowserConfig::default();
+
+    match config.render_mode {
+        RenderMode::TrueColor => println!("✓ Default render mode is TrueColor"),
+        _ => panic!("Default render mode should be TrueColor"),
+    }
+
+    match config.color_depth {
+        ColorDepth::TrueColor => println!("✓ Default color depth is TrueColor"),
+        _ => panic!("Default color depth should be TrueColor"),
+    }
+}
+
+#[test]
+fn test_terminal_size_calculation() {
+    let config = BrowserConfig::from_terminal_size(120, 40);
+
+    assert_eq!(config.terminal_width, 120);
+    assert_eq!(config.terminal_height, 40);
+
+    // Window should be scaled appropriately
+    assert!(config.window_width > 0);
+    assert!(config.window_height > 0);
+
+    println!("✓ Terminal size calculation works!");
+}

@@ -82,7 +82,7 @@ impl NaturalLanguageProcessor {
         )))
     }
 
-    fn extract_target(&self, input: &str, action: &str) -> Option<String> {
+    fn extract_target(&self, input: &str, _action: &str) -> Option<String> {
         // Remove action word from start
         let mut remaining = input.to_string();
         for (pattern, _) in ACTION_PATTERNS.iter() {
@@ -133,7 +133,7 @@ impl NaturalLanguageProcessor {
     }
 
     fn calculate_confidence(&self, input: &str, action: &str) -> f64 {
-        let mut confidence = 0.5;
+        let mut confidence: f64 = 0.5;
 
         // Increase confidence for clear action words
         for (pattern, act) in ACTION_PATTERNS.iter() {
@@ -153,7 +153,7 @@ impl NaturalLanguageProcessor {
             confidence -= 0.2;
         }
 
-        confidence.clamp(0.0, 1.0)
+        confidence.clamp(0.0f64, 1.0f64)
     }
 }
 

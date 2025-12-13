@@ -1,9 +1,6 @@
 /// Production Trie Search.
-/// 
+///
 /// Used to constrain beam search or implement grammar-based decoding.
-
-use fusion_llm_inference_engine::Sampler;
-use fusion_core::{FusionResult, FusionError};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -13,7 +10,12 @@ pub struct TrieNode {
 }
 
 impl TrieNode {
-    pub fn new() -> Self { Self { children: HashMap::new(), is_terminal: false } }
+    pub fn new() -> Self {
+        Self {
+            children: HashMap::new(),
+            is_terminal: false,
+        }
+    }
 }
 
 pub struct DecodingTrie {
@@ -21,7 +23,11 @@ pub struct DecodingTrie {
 }
 
 impl DecodingTrie {
-    pub fn new() -> Self { Self { root: TrieNode::new() } }
+    pub fn new() -> Self {
+        Self {
+            root: TrieNode::new(),
+        }
+    }
 
     /// Adds a constraint sequence to the trie.
     pub fn insert_sequence(&mut self, sequence: &[u32]) {
@@ -35,7 +41,7 @@ impl DecodingTrie {
     /// Returns a mask (Vec<bool>) that filters logits to only valid next tokens.
     pub fn get_valid_tokens(&self, current_prefix: &[u32]) -> Vec<u32> {
         let mut node = &self.root;
-        
+
         // Traverse to the current prefix position
         for &token in current_prefix {
             if let Some(child) = node.children.get(&token) {

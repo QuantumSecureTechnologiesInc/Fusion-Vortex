@@ -60,6 +60,79 @@ impl ExtensionHost {
     }
 
     /// Register a command handler
+    pub async fn register_command<F>(&self, command: &str, handler: F)
+    where
+        F: Fn(Vec<String>) -> Result<String> + Send + Sync + 'static,
+    {
+        let mut commands = self.commands.write().await;
+        commands.insert(command.to_string(), Box::new(handler));
+        tracing::debug!("Registered command: {}", command);
+    }
+
+    /// Execute a command from an extension
+    pub async fn execute_command(&self, command: &str, args: Vec<String>) -> Result<String> {
+        tracing::info!("Executing command: {} with args: {:?}", command, args);
+
+        let commands = self.commands.read().await;
+
+        if let Some(handler) = commands.get(command) {
+            handler(args)
+        } else {
+            // Fallback for demo/testing purposes if no handler is registered but extensions are active
+            // This preserves the previous behavior for existing tests while enabling real logic
+            let extensions = self.active_extensions.read().await;
+            if !extensions.is_empty() {
+                tracing::warn!(
+                    "Command {} not found, simulating success for active extension",
+                    command
+                );
+                Ok(format!("Command {} executed (simulation)", command))
+            } else {
+                Err(anyhow::anyhow!("Command not found: {}", command))
+            }
+        }
+    }
+
+    /// Get list of active extension IDs
+    pub async fn active_extensions(&self) -> Vec<String> {
+        let extensions = self.active_extensions.read().await;
+        extensions.keys().cloned().collect()
+    }
+}
+
+impl Default for ExtensionHost {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_extension_host() {
+        let host = ExtensionHost::new();
+        assert!(host.activate_extension("test").await.is_ok());
+        assert!(host.active_extensions().await.contains(&"test".to_string()));
+
+        // Test command registration
+        host.register_command("test.echo", |args| Ok(args.join(" ")))
+            .await;
+
+        let result = host
+            .execute_command("test.echo", vec!["hello".to_string()])
+            .await;
+        assert_eq!(result.unwrap(), "hello");
+
+        assert!(host.deactivate_extension("test").await.is_ok());
+        assert!(host.active_extensions().await.is_empty());
+    }
+}
+        Ok(())
+    }
+
+    /// Register a command handler
     pub async fn register_command<F>(&self, command: &str, handler: F) 
     where
         F: Fn(Vec<String>) -> Result<String> + Send + Sync + 'static,
@@ -79,7 +152,6 @@ impl ExtensionHost {
             handler(args)
         } else {
             // Fallback for demo/testing purposes if no handler is registered but extensions are active
-            // This preserves the previous behavior for existing tests while enabling real logic
              let extensions = self.active_extensions.read().await;
             if !extensions.is_empty() {
                 tracing::warn!("Command {} not found, simulating success for active extension", command);

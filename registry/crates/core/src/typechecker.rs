@@ -1,7 +1,7 @@
 use crate::ast::Program;
 use crate::error::CompilerError;
 
-pub fn check(program: &Program) -> Result<(), CompilerError> {
+pub fn check(_program: &Program) -> Result<(), CompilerError> {
     // Placeholder type checker
     Ok(())
 }
@@ -14,13 +14,7 @@ mod tests {
     #[test]
     fn test_check_empty_program() {
         let program = Program {
-            statements: vec![],
-            span: Span {
-                start: 0,
-                end: 0,
-                line: 1,
-                column: 1,
-            },
+            declarations: vec![],
         };
         assert!(check(&program).is_ok());
     }

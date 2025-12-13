@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_task_enqueueing() {
-        let config = RuntimeConfig;
+        let config = RuntimeConfig::default();
         let scheduler = Scheduler::new(&config);
 
         let _ = scheduler.spawn_task(

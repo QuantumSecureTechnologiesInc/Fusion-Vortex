@@ -1,10 +1,10 @@
-use fusion_http::{Request, Response, Server};
-use fusion_llm_inference_engine::kv_cache::PagedAttentionManager;
+use fusion_kv_cache::PagedAttentionManager;
 use fusion_llm_lora_manager::LoraManager;
 /// Production LLM Inference Server.
 ///
 /// Integrates Paged KV Cache and LORA Manager for high-throughput, multi-tenant serving.
-use fusion_core_compiler::error::{StdError, StdResult};
+use fusion_std::error::{StdError, StdResult};
+use fusion_web_server::{get, post, Router, Server};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -24,26 +24,13 @@ impl InferenceServer {
 
     /// Primary serving loop.
     pub async fn run(&self, addr: &str) -> StdResult<()> {
-        let cache_ref = self.cache_manager.clone();
-        let lora_ref = self.lora_manager.clone();
+        let app = Router::new()
+            .route("/health", get(|| async { "OK" }))
+            .route("/predict", post(|| async { "Prediction Complete" }));
 
-        let handler = move |req: Request| -> Response {
-            // Asynchronous request handling logic begins
-
-            if req.path == "/health" {
-                return Response::ok().body(b"OK");
-            }
-
-            // 1. Parse Request (e.g., {"prompt": "...", "adapter_id": "cust-a"})
-            // 2. Schedule Sequence (Acquire sequence ID, allocate KV blocks)
-            // 3. Bind LORA (Check lora_ref for adapter_id)
-            // 4. Generate Tokens (Run LLama/Mistral inference loop with cache reads/writes)
-
-            Response::ok().body(b"Prediction Complete")
-        };
-
-        let server = Server::new(handler);
-        server.listen(addr).await
+        Server::bind(addr)
+            .serve(app)
+            .await
+            .map_err(|e| StdError::Io(e))
     }
 }
-

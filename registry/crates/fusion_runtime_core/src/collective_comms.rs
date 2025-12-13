@@ -52,6 +52,7 @@ pub struct CommHandle(pub u64);
 /// Manages distributed training communication primitives
 pub struct CollectiveComms {
     /// Communication backend
+    #[allow(dead_code)]
     backend: CommBackend,
 
     /// Active communicators
@@ -63,8 +64,10 @@ pub struct CollectiveComms {
 
 /// Communicator (process group)
 struct Communicator {
+    #[allow(dead_code)]
     handle: CommHandle,
     world_size: usize,
+    #[allow(dead_code)]
     rank: usize,
 }
 

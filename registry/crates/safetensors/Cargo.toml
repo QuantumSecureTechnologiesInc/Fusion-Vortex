@@ -6,4 +6,8 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+byteorder = "1.4"
+fusion_std = { workspace = true }
 

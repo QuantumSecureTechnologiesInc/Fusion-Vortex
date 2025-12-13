@@ -1,0 +1,184 @@
+//! Policy enforcement engine
+
+use crate::capability::Capability;
+use anyhow::{bail, Result};
+use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Policy enforcer that validates capability requests
+#[derive(Debug, Clone)]
+pub struct PolicyEnforcer {
+    mode: EnforcementMode,
+}
+
+/// Enforcement mode for the policy engine
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum EnforcementMode {
+    /// Strict mode - all violations result in hard failure
+    Strict,
+    /// Warn mode - violations are logged but allowed
+    Warn,
+    /// Disabled - no enforcement (development only)
+    Disabled,
+}
+
+impl Default for EnforcementMode {
+    fn default() -> Self {
+        EnforcementMode::Strict
+    }
+}
+
+impl PolicyEnforcer {
+    /// Create a new enforcer with the specified mode
+    pub fn new(mode: EnforcementMode) -> Self {
+        Self { mode }
+    }
+
+    /// Create a strict enforcer
+    pub fn strict() -> Self {
+        Self::new(EnforcementMode::Strict)
+    }
+
+    /// Create a warn-only enforcer
+    pub fn warn_only() -> Self {
+        Self::new(EnforcementMode::Warn)
+    }
+
+    /// Enforce capability requirements
+    pub fn enforce(&self, requested: &[Capability], allowed: &[Capability]) -> Result<()> {
+        match self.mode {
+            EnforcementMode::Disabled => Ok(()),
+            EnforcementMode::Warn => self.check_capabilities(requested, allowed, true),
+            EnforcementMode::Strict => self.check_capabilities(requested, allowed, false),
+        }
+    }
+
+    /// Check if a single capability is allowed
+    pub fn check_capability(&self, capability: &Capability, allowed: &[Capability]) -> Result<()> {
+        self.enforce(&[capability.clone()], allowed)
+    }
+
+    /// Internal capability checking logic
+    fn check_capabilities(
+        &self,
+        requested: &[Capability],
+        allowed: &[Capability],
+        warn_only: bool,
+    ) -> Result<()> {
+        let mut violations = Vec::new();
+
+        for cap in requested {
+            if !allowed.contains(cap) {
+                violations.push(cap.clone());
+            }
+        }
+
+        if violations.is_empty() {
+            return Ok(());
+        }
+
+        let error_msg = format!(
+            "Capability violations detected: {}",
+            violations
+                .iter()
+                .map(|c| c.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+
+        if warn_only {
+            tracing::warn!("⚠️  POLICY WARNING: {}", error_msg);
+            tracing::warn!("   Enforcement mode is 'Warn' - operation allowed but flagged");
+            Ok(())
+        } else {
+            tracing::error!("🚫 POLICY VIOLATION: {}", error_msg);
+            bail!("{}", error_msg)
+        }
+    }
+
+    /// Get current enforcement mode
+    pub fn mode(&self) -> EnforcementMode {
+        self.mode
+    }
+
+    /// Set enforcement mode
+    pub fn set_mode(&mut self, mode: EnforcementMode) {
+        self.mode = mode;
+    }
+}
+
+impl fmt::Display for EnforcementMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EnforcementMode::Strict => write!(f, "Strict"),
+            EnforcementMode::Warn => write!(f, "Warn"),
+            EnforcementMode::Disabled => write!(f, "Disabled"),
+        }
+    }
+}
+
+/// Enforces capability requirements (functional API)
+pub fn enforce(requested: &[Capability], allowed: &[Capability]) -> Result<()> {
+    let enforcer = PolicyEnforcer::strict();
+    enforcer.enforce(requested, allowed)
+}
+
+/// Checks capabilities in warn mode
+pub fn warn(requested: &[Capability], allowed: &[Capability]) -> Result<()> {
+    let enforcer = PolicyEnforcer::warn_only();
+    enforcer.enforce(requested, allowed)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strict_enforcement() {
+        let enforcer = PolicyEnforcer::strict();
+        let requested = vec![Capability::FilesystemRead, Capability::FilesystemWrite];
+        let allowed = vec![Capability::FilesystemRead];
+
+        let result = enforcer.enforce(&requested, &allowed);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_warn_enforcement() {
+        let enforcer = PolicyEnforcer::warn_only();
+        let requested = vec![Capability::FilesystemWrite];
+        let allowed = vec![Capability::FilesystemRead];
+
+        let result = enforcer.enforce(&requested, &allowed);
+        // Should succeed but log warning
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_disabled_enforcement() {
+        let enforcer = PolicyEnforcer::new(EnforcementMode::Disabled);
+        let requested = vec![Capability::ProcessSpawn];
+        let allowed = vec![];
+
+        let result = enforcer.enforce(&requested, &allowed);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_all_allowed() {
+        let enforcer = PolicyEnforcer::strict();
+        let requested = vec![Capability::FilesystemRead];
+        let allowed = vec![Capability::FilesystemRead, Capability::FilesystemWrite];
+
+        let result = enforcer.enforce(&requested, &allowed);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_functional_api() {
+        let requested = vec![Capability::NetworkOutbound];
+        let allowed = vec![Capability::NetworkOutbound];
+
+        assert!(enforce(&requested, &allowed).is_ok());
+    }
+}

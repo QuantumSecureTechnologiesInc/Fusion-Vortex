@@ -5,7 +5,7 @@ use fusion_ai_core_adapters::{
 };
 use uuid::Uuid;
 
-use crate::agent::{Agent, AgentMetadata, AgentResult, AgentStatus, AgentTask, Capability};
+use crate::agent::{Agent, AgentMetadata, AgentResult, AgentTask, Capability};
 
 // Helper to get adapter (duplicated from ai-cli for now, ideally moved to common lib)
 fn get_adapter() -> Result<Box<dyn ModelSession>> {

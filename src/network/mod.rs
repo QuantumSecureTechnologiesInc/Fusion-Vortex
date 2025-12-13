@@ -15,7 +15,7 @@ use chacha20poly1305::{
     aead::{generic_array::GenericArray, Aead, KeyInit},
     ChaCha20Poly1305,
 };
-use pqcrypto_kyber::kyber768;
+use pqcrypto_mlkem::mlkem768;
 use pqcrypto_traits::kem::{Ciphertext, PublicKey, SharedSecret};
 use rand::RngCore;
 use std::io::{Read, Write};
@@ -94,16 +94,16 @@ impl SecureChannel {
         stream.set_write_timeout(Some(Duration::from_secs(30)))?;
 
         // 1️⃣ Generate our key‑pair.
-        let (pk, _sk) = kyber768::keypair();
+        let (pk, _sk) = mlkem768::keypair();
         // 2️⃣ Send our public key.
         stream.write_all(pk.as_bytes())?;
         // 3️⃣ Receive server's ciphertext.
-        let mut ct_buf = vec![0u8; kyber768::ciphertext_bytes()];
+        let mut ct_buf = vec![0u8; mlkem768::ciphertext_bytes()];
         stream.read_exact(&mut ct_buf)?;
         let ct = Ciphertext::from_bytes(&ct_buf)
             .map_err(|e| NetworkError::Handshake(format!("Invalid ciphertext: {}", e)))?;
         // 4️⃣ Decapsulate to obtain the shared secret.
-        let shared = kyber768::decapsulate(&ct, &_sk);
+        let shared = mlkem768::decapsulate(&ct, &_sk);
         // ChaCha20Poly1305 expects a 32‑byte key.
         let key = GenericArray::from_slice(shared.as_bytes());
         Ok(Self {
@@ -120,7 +120,7 @@ impl SecureChannel {
         stream.set_write_timeout(Some(Duration::from_secs(30)))?;
 
         // 1️⃣ Receive client public key.
-        let mut pk_buf = vec![0u8; kyber768::public_key_bytes()];
+        let mut pk_buf = vec![0u8; mlkem768::public_key_bytes()];
         stream.read_exact(&mut pk_buf)?;
         let client_pk = PublicKey::from_bytes(&pk_buf)
             .map_err(|e| NetworkError::Handshake(format!("Invalid public key: {}", e)))?;
@@ -132,7 +132,7 @@ impl SecureChannel {
         // Server sends CT.
         // So Server knows Shared. Client knows Shared.
 
-        let (shared, ct) = kyber768::encapsulate(&client_pk);
+        let (shared, ct) = mlkem768::encapsulate(&client_pk);
 
         // 4️⃣ Send ciphertext to client.
         stream.write_all(ct.as_bytes())?;

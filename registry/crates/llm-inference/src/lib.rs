@@ -1,6 +1,6 @@
 /// LLM Inference Engine
-use fusion_core_compiler::types::tensor::Matrix;
-use fusion_core_compiler::{FusionError, FusionResult};
+use fusion_core::types::tensor::Matrix;
+use fusion_core::{FusionError, FusionResult};
 
 /// Represents a loaded model ready for inference
 pub struct InferenceEngine {

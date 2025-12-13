@@ -16,3 +16,4 @@ async-trait = { workspace = true }
 tracing = { workspace = true }
 reqwest = { workspace = true }
 fusion-vscode-runtime = { path = "../../../crates/vscode-runtime" }
+fusion-policy = { workspace = true }

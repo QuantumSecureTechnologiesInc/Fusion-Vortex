@@ -19,11 +19,12 @@ pub mod suggestions;
 #[cfg(feature = "agentic-integration")]
 pub mod agentic;
 
+pub use command_parser::NLCommand;
 pub use command_parser::{CommandIntent, CommandParser, ParsedCommand};
 pub use completions::{CompletionEngine, CompletionResult};
 pub use context::{CliContext, ExecutionContext};
 pub use error_handler::{EnhancedErrorHandler, ErrorExplanation};
-pub use natural_language::{NLCommand, NaturalLanguageProcessor};
+pub use natural_language::NaturalLanguageProcessor;
 pub use suggestions::{CommandSuggestion, SuggestionContext, SuggestionEngine};
 
 use parking_lot::RwLock;

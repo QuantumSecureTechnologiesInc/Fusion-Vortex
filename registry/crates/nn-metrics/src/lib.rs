@@ -1,8 +1,8 @@
 /// Production Training Metrics Library.
 ///
 /// Calculates standard classification metrics with numerical stability.
-use fusion_core_compiler::types::tensor::{Matrix, Tensor};
-use fusion_core_compiler::FusionResult;
+use fusion_core::types::tensor::{Matrix, Tensor};
+use fusion_core::FusionResult;
 
 pub struct Metrics;
 
@@ -12,7 +12,7 @@ impl Metrics {
     pub fn accuracy(predictions: &Matrix<f64>, targets: &Matrix<f64>) -> FusionResult<f64> {
         let (rows, cols) = (predictions.shape[0], predictions.shape[1]);
         if targets.shape != predictions.shape {
-            return Err(fusion_core_compiler::FusionError::ShapeMismatch {
+            return Err(fusion_core::FusionError::ShapeMismatch {
                 op: "Accuracy".into(),
                 lhs: predictions.shape.to_vec(),
                 rhs: targets.shape.to_vec(),

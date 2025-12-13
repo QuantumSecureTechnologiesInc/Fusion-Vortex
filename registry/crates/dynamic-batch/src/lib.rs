@@ -1,8 +1,6 @@
 /// Production Dynamic Batch Scheduler.
-/// 
+///
 /// Manages a dynamic list of sequences and groups them into batches for efficient GPU utilization.
-
-use fusion_llm_inference_engine::Sampler; // Required for sampling logic after batch processing
 use fusion_core::FusionResult;
 use std::collections::VecDeque;
 
@@ -37,7 +35,7 @@ impl BatchScheduler {
     /// Selects sequences to form the next execution batch (Continuous Batching logic).
     pub fn schedule_next_batch(&mut self) -> Vec<Sequence> {
         let mut new_batch = Vec::new();
-        
+
         // 1. Prioritize pre-filling new sequences from the queue
         while new_batch.len() < self.max_batch_size {
             if let Some(seq) = self.sequence_queue.pop_front() {
@@ -46,13 +44,13 @@ impl BatchScheduler {
                 break;
             }
         }
-        
+
         // 2. Add decoding sequences from active list (Continuous Batching)
         // Active sequences (active_sequences) are prioritized for throughput
-        
+
         // We simulate moving the new batch into the active list
         self.active_sequences.extend(new_batch.clone());
-        
+
         new_batch
     }
 }

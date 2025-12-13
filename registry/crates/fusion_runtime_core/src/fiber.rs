@@ -34,9 +34,11 @@ pub struct FiberContext {
     pub state: FiberState,
 
     /// Stack pointer (saved when suspended)
+    #[allow(dead_code)]
     stack_ptr: usize,
 
     /// Stack size in bytes
+    #[allow(dead_code)]
     stack_size: usize,
 
     /// Priority level

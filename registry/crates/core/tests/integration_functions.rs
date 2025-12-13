@@ -1,4 +1,4 @@
-use fusion_core_compiler::{
+use fusion_core::{
     compiler::Compiler, lexer::Lexer, parser::Parser, value::Value, vm::VM,
 };
 
@@ -31,7 +31,7 @@ fn test_function_definition_and_call() {
 
     assert!(matches!(
         result,
-        fusion_core_compiler::vm::InterpretResult::Ok
+        fusion_core::vm::InterpretResult::Ok
     ));
 }
 
@@ -64,6 +64,6 @@ fn test_recursive_function() {
 
     assert!(matches!(
         result,
-        fusion_core_compiler::vm::InterpretResult::Ok
+        fusion_core::vm::InterpretResult::Ok
     ));
 }

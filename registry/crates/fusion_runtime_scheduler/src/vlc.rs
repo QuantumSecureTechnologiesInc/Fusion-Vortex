@@ -71,9 +71,11 @@ pub struct VqeResult {
 /// - **4000x reduction in scheduling overhead**
 pub struct VariationalLoopController {
     /// GPU executor for kernel launching
+    #[allow(dead_code)]
     gpu_executor: Option<Arc<GpuExecutorStub>>,
 
     /// QPU interface for quantum circuits
+    #[allow(dead_code)]
     qpu_interface: Option<Arc<QpuInterfaceStub>>,
 
     /// Iteration statistics
@@ -81,11 +83,11 @@ pub struct VariationalLoopController {
 }
 
 #[derive(Debug, Default)]
-struct VlcStats {
-    total_iterations: u64,
-    total_loops: u64,
-    avg_iterations_per_loop: f64,
-    total_time_us: u64,
+pub struct VlcStats {
+    pub total_iterations: u64,
+    pub total_loops: u64,
+    pub avg_iterations_per_loop: f64,
+    pub total_time_us: u64,
 }
 
 // Stub implementations (would be replaced with real HAL references)

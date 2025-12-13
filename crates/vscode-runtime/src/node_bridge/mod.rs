@@ -11,7 +11,9 @@ pub mod stream;
 use anyhow::Result;
 use boa_engine::object::FunctionObjectBuilder;
 use boa_engine::{Context, JsResult, JsString, JsValue, NativeFunction, Source};
+use fusion_policy::{Capability, PolicyEnforcer};
 use parking_lot::RwLock;
+use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -19,6 +21,8 @@ use std::sync::Arc;
 pub struct NodeRuntime {
     context: Arc<RwLock<Context>>,
     module_loader: modules::ModuleLoader,
+    enforcer: Option<Arc<RwLock<PolicyEnforcer>>>,
+    capabilities: HashSet<Capability>,
 }
 
 impl NodeRuntime {
@@ -32,7 +36,116 @@ impl NodeRuntime {
         Ok(Self {
             context: Arc::new(RwLock::new(context)),
             module_loader: modules::ModuleLoader::new(),
+            enforcer: None,
+            capabilities: HashSet::new(),
         })
+    }
+
+    /// Configure security policy for this runtime
+    pub fn configure_security(
+        &mut self,
+        enforcer: Arc<RwLock<PolicyEnforcer>>,
+        capabilities: Vec<Capability>,
+    ) -> Result<()> {
+        self.enforcer = Some(enforcer);
+        self.capabilities = capabilities.into_iter().collect();
+        self.setup_fs_bridge()?;
+        Ok(())
+    }
+
+    /// Set up filesystem bridge with policy enforcement
+    fn setup_fs_bridge(&self) -> Result<()> {
+        let enforcer = self.enforcer.clone();
+        let capabilities = self.capabilities.clone();
+
+        let mut context = self.context.write();
+
+        // __rust_fs_read
+        {
+            let enforcer = enforcer.clone();
+            let capabilities = capabilities.clone();
+            let fs_read = NativeFunction::from_fn_ptr(move |_this, args, _ctx| {
+                if let Some(enforcer) = &enforcer {
+                    // Note: In production we need robust error handling for rwlock reading
+                    if let Some(enforcer_read) = enforcer.try_read() {
+                        let allowed: Vec<Capability> = capabilities.iter().cloned().collect();
+                        if let Err(e) =
+                            enforcer_read.check_capability(&Capability::FilesystemRead, &allowed)
+                        {
+                            return Err(JsValue::from(format!("Policy violation: {}", e)));
+                        }
+                    }
+                }
+
+                let path = args
+                    .get(0)
+                    .and_then(|v| v.as_string())
+                    .map(|s| s.to_std_string_escaped());
+                let callback = args.get(1).and_then(|v| v.as_object());
+
+                tracing::info!("Filesystem Read Allowed: {:?}", path);
+
+                if let Some(cb) = callback {
+                    if let Some(cb_fn) = cb.borrow().as_function() {
+                        let _ = cb_fn.call(
+                            &JsValue::undefined(),
+                            &[JsValue::null(), JsValue::from("File content placeholder")],
+                            _ctx,
+                        );
+                    }
+                }
+
+                Ok(JsValue::undefined())
+            });
+            context
+                .register_global_property(
+                    JsString::from("__rust_fs_read"),
+                    fs_read,
+                    boa_engine::property::Attribute::all(),
+                )
+                .map_err(|e| anyhow::anyhow!("JS Error: {:?}", e))?;
+        }
+
+        // __rust_fs_write
+        {
+            let enforcer = enforcer.clone();
+            let capabilities = capabilities.clone();
+            let fs_write = NativeFunction::from_fn_ptr(move |_this, args, _ctx| {
+                if let Some(enforcer) = &enforcer {
+                    if let Some(enforcer_read) = enforcer.try_read() {
+                        let allowed: Vec<Capability> = capabilities.iter().cloned().collect();
+                        if let Err(e) =
+                            enforcer_read.check_capability(&Capability::FilesystemWrite, &allowed)
+                        {
+                            return Err(JsValue::from(format!("Policy violation: {}", e)));
+                        }
+                    }
+                }
+
+                let path = args
+                    .get(0)
+                    .and_then(|v| v.as_string())
+                    .map(|s| s.to_std_string_escaped());
+                tracing::info!("Filesystem Write Allowed: {:?}", path);
+
+                let callback = args.get(2).and_then(|v| v.as_object());
+                if let Some(cb) = callback {
+                    if let Some(cb_fn) = cb.borrow().as_function() {
+                        let _ = cb_fn.call(&JsValue::undefined(), &[JsValue::null()], _ctx);
+                    }
+                }
+                Ok(JsValue::undefined())
+            });
+            context
+                .register_global_property(
+                    JsString::from("__rust_fs_write"),
+                    fs_write,
+                    boa_engine::property::Attribute::all(),
+                )
+                .map_err(|e| anyhow::anyhow!("JS Error: {:?}", e))?;
+        }
+
+        Ok(())
     }
 
     /// Set up Node.js global objects

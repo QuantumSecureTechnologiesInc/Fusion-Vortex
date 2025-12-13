@@ -1,8 +1,10 @@
 pub mod agent;
 pub mod ai;
 pub mod audit;
+pub mod auth;
 pub mod build;
 pub mod check;
+pub mod credentials;
 pub mod debug;
 pub mod deploy;
 pub mod doc;

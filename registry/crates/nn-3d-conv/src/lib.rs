@@ -3,9 +3,9 @@
 /// Essential for video processing (Time dimension) and volumetric medical imaging.
 /// Note: Requires Rank 5 input [Batch, C, D, H, W] for full production usage.
 /// We assume an internal reshaping mechanism exists to handle this.
-use fusion_ai_core_adapters::{Layer, Linear, Variable};
-use fusion_core_compiler::types::tensor::{Matrix, Tensor};
-use fusion_core_compiler::FusionResult;
+use fusion_ai_core::{Layer, Linear, Variable};
+use fusion_core::types::tensor::Tensor;
+use fusion_core::FusionResult;
 
 pub struct Conv3D {
     pub weights: Variable, // [Out_C, In_C * D * H * W] flattened
@@ -52,4 +52,3 @@ impl Layer for Conv3D {
         self.weights.parameters()
     }
 }
-

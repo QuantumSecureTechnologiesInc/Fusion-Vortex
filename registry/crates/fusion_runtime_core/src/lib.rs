@@ -5,7 +5,7 @@
 
 use parking_lot::RwLock;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::info;
 
 pub use fusion_runtime_hal::{GpuBackend, HardwareLayer};
 pub use fusion_runtime_mem_mgr::{DeviceMemory, MemoryManager};

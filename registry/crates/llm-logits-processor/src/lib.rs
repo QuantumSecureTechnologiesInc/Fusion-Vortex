@@ -1,8 +1,8 @@
 /// Logits Post-Processor.
 ///
 /// Chain of operations applied to raw logits (Repetition Penalty, Bias, Temperature).
-use fusion_core_compiler::types::tensor::Vector1D;
-use fusion_core_compiler::FusionResult;
+use fusion_core::types::tensor::Vector1D;
+use fusion_core::FusionResult;
 
 pub struct LogitsProcessor {
     pub repetition_penalty: f64,
@@ -30,4 +30,3 @@ impl LogitsProcessor {
         Ok(())
     }
 }
-

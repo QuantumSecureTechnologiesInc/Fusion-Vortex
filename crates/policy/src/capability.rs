@@ -1,0 +1,173 @@
+//! Capability definitions for extension security model
+
+use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Represents a specific permission/capability that an extension can request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum Capability {
+    /// Read files from the filesystem
+    FilesystemRead,
+    /// Write/modify files on the filesystem
+    FilesystemWrite,
+    /// Make outbound network requests
+    NetworkOutbound,
+    /// Spawn child processes
+    ProcessSpawn,
+    /// Read stored credentials
+    CredentialRead,
+    /// Write/store credentials
+    CredentialWrite,
+    /// Inspect workspace structure and metadata
+    WorkspaceInspect,
+    /// Access Language Server Protocol servers
+    LspAccess,
+    /// Access terminal/shell
+    TerminalAccess,
+    /// Access clipboard
+    ClipboardAccess,
+    /// Access environment variables
+    EnvironmentAccess,
+}
+
+impl Capability {
+    /// Returns all available capabilities
+    pub fn all() -> Vec<Self> {
+        use Capability::*;
+        vec![
+            FilesystemRead,
+            FilesystemWrite,
+            NetworkOutbound,
+            ProcessSpawn,
+            CredentialRead,
+            CredentialWrite,
+            WorkspaceInspect,
+            LspAccess,
+            TerminalAccess,
+            ClipboardAccess,
+            EnvironmentAccess,
+        ]
+    }
+
+    /// Returns high-risk capabilities that require explicit user consent
+    pub fn high_risk() -> Vec<Self> {
+        use Capability::*;
+        vec![
+            FilesystemWrite,
+            ProcessSpawn,
+            CredentialRead,
+            CredentialWrite,
+            TerminalAccess,
+        ]
+    }
+
+    /// Returns read-only capabilities (generally safe)
+    pub fn read_only() -> Vec<Self> {
+        use Capability::*;
+        vec![
+            FilesystemRead,
+            WorkspaceInspect,
+            ClipboardAccess,
+            EnvironmentAccess,
+        ]
+    }
+
+    /// Returns network-related capabilities
+    pub fn network() -> Vec<Self> {
+        use Capability::*;
+        vec![NetworkOutbound]
+    }
+
+    /// Returns a human-readable description of the capability
+    pub fn description(&self) -> &str {
+        match self {
+            Capability::FilesystemRead => "Read files from the filesystem",
+            Capability::FilesystemWrite => "Write and modify files",
+            Capability::NetworkOutbound => "Make network requests",
+            Capability::ProcessSpawn => "Spawn child processes",
+            Capability::CredentialRead => "Read stored credentials",
+            Capability::CredentialWrite => "Store credentials",
+            Capability::WorkspaceInspect => "Inspect workspace structure",
+            Capability::LspAccess => "Access language servers",
+            Capability::TerminalAccess => "Access terminal/shell",
+            Capability::ClipboardAccess => "Access clipboard",
+            Capability::EnvironmentAccess => "Access environment variables",
+        }
+    }
+
+    /// Returns the risk level (Low, Medium, High)
+    pub fn risk_level(&self) -> RiskLevel {
+        match self {
+            Capability::FilesystemRead
+            | Capability::WorkspaceInspect
+            | Capability::ClipboardAccess => RiskLevel::Low,
+
+            Capability::NetworkOutbound | Capability::LspAccess | Capability::EnvironmentAccess => {
+                RiskLevel::Medium
+            }
+
+            Capability::FilesystemWrite
+            | Capability::ProcessSpawn
+            | Capability::CredentialRead
+            | Capability::CredentialWrite
+            | Capability::TerminalAccess => RiskLevel::High,
+        }
+    }
+}
+
+impl fmt::Display for Capability {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+/// Risk level for a capability
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RiskLevel {
+    Low,
+    Medium,
+    High,
+}
+
+impl fmt::Display for RiskLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RiskLevel::Low => write!(f, "Low"),
+            RiskLevel::Medium => write!(f, "Medium"),
+            RiskLevel::High => write!(f, "High"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_capabilities() {
+        let caps = Capability::all();
+        assert!(caps.len() >= 8);
+        assert!(caps.contains(&Capability::FilesystemRead));
+        assert!(caps.contains(&Capability::NetworkOutbound));
+    }
+
+    #[test]
+    fn test_high_risk_capabilities() {
+        let high_risk = Capability::high_risk();
+        assert!(high_risk.contains(&Capability::FilesystemWrite));
+        assert!(high_risk.contains(&Capability::ProcessSpawn));
+    }
+
+    #[test]
+    fn test_capability_descriptions() {
+        let cap = Capability::FilesystemRead;
+        assert!(!cap.description().is_empty());
+    }
+
+    #[test]
+    fn test_risk_levels() {
+        assert_eq!(Capability::FilesystemRead.risk_level(), RiskLevel::Low);
+        assert_eq!(Capability::FilesystemWrite.risk_level(), RiskLevel::High);
+        assert_eq!(Capability::NetworkOutbound.risk_level(), RiskLevel::Medium);
+    }
+}

@@ -1,6 +1,6 @@
 /// Production INT8 Quantization for LLM weights and KV cache
-use fusion_core_compiler::types::tensor::Matrix;
-use fusion_core_compiler::{FusionError, FusionResult};
+use fusion_core::types::tensor::Matrix;
+use fusion_core::{FusionError, FusionResult};
 
 pub mod int8 {
     use super::*;

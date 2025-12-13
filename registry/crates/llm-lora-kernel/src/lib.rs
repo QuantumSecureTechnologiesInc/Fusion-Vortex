@@ -1,9 +1,9 @@
-use fusion_ai_core_adapters::FusionResult;
 /// Production Fused LORA Kernel.
 ///
 /// Implements the optimized computation: Y = X * (W_base + LORA_A @ LORA_B)
 /// Avoids realizing the large matrix W + AB entirely.
-use fusion_core_compiler::types::tensor::Matrix;
+use fusion_core::types::tensor::Matrix;
+use fusion_core::FusionResult;
 
 pub struct LoraFusedKernel;
 
@@ -28,7 +28,6 @@ impl LoraFusedKernel {
 
         // 4. Fusion: Y_final = Y_base + Y_lora
         // Requires element-wise addition, relying on tensor operator overloading
-        y_base + y_lora
+        Ok(y_base + y_lora)
     }
 }
-

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tracing_subscriber::{fmt, EnvFilter};
 
 mod crd;
-use crd::{FusionApp, FusionAppSpec, FusionAppStatus};
+use crd::{FusionApp, FusionAppStatus};
 
 #[derive(Clone)]
 struct OperatorContext {
@@ -22,7 +22,10 @@ enum ReconcileError {
     SerializationError(#[from] serde_json::Error),
 }
 
-async fn reconcile(fusion_app: Arc<FusionApp>, ctx: Arc<OperatorContext>) -> Result<Action, ReconcileError> {
+async fn reconcile(
+    fusion_app: Arc<FusionApp>,
+    ctx: Arc<OperatorContext>,
+) -> Result<Action, ReconcileError> {
     let name = fusion_app.name_any();
     tracing::info!("Reconciling FusionApp {}", name);
     // Placeholder logic: just set status to Ready
@@ -67,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
         .run(reconcile, error_policy, ctx)
         .for_each(|res| async move {
             match res {
-                Ok((obj_ref, _action)) => tracing::info!("Reconciled: {}", obj_ref.name.unwrap_or_default()),
+                Ok((obj_ref, _action)) => tracing::info!("Reconciled: {}", obj_ref.name),
                 Err(e) => tracing::error!("Reconcile error: {}", e),
             }
         })
