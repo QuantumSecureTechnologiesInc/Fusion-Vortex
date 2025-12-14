@@ -3,6 +3,7 @@
 ## Guides (`docs/guides/`)
 
 *   **[QuickStartGuide.md](guides/QuickStartGuide.md)**: Basic installation and usage instructions.
+*   **[Fusion_VSC_CLI_Coder_Training_Manual.md](guides/Fusion_VSC_CLI_Coder_Training_Manual.md)**: Comprehensive training manual and user guide for the Fusion VSC CLI Coder.
 *   *DeveloperGuide.md* (Pending): Architecture and contribution details.
 
 ## Build Logs (`docs/`)
