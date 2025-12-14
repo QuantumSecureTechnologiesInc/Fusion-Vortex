@@ -10,4 +10,5 @@ fusion_ui_react = { path = "../react-hooks/", version = "0.2.0" } # Built on the
 fusion_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
+fusion_std.workspace = true
 

@@ -14,6 +14,7 @@ pub mod github;
 pub mod lint;
 pub mod mcp;
 pub mod package;
+pub mod policy;
 pub mod profile;
 pub mod project;
 pub mod run;

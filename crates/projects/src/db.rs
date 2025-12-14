@@ -335,7 +335,6 @@ pub struct CodeChange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_create_project() {

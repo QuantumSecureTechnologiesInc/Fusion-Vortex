@@ -1,0 +1,19 @@
+[package]
+name = "fusion-redis"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "A full Redis server implementation for the Fusion ecosystem"
+
+[dependencies]
+fusion_runtime_core = { path = "../fusion_runtime_core" }
+fusion_net = { path = "../fusion_net" }
+bytes = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+fusion_runtime_core = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true } 
+fusion_std = { workspace = true } 

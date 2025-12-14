@@ -1,10 +1,10 @@
-/// Production Layout Builder.
-/// 
-/// Generates React/TSX or Wasm code from a structured, visual layout tree.
-
-use fusion_ui_component_lib::ComponentProps;
 use fusion_core::FusionResult;
-use serde::{Serialize, Deserialize};
+/// Production Layout Builder.
+///
+/// Generates React/TSX or Wasm code from a structured, visual layout tree.
+use fusion_ui_component_lib::{ComponentProps, ComponentType};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LayoutNode {
@@ -33,7 +33,12 @@ impl LayoutBuilder {
     }
 
     /// Adds a component as a child to a target node, validating placement.
-    pub fn add_component(&mut self, root: &mut LayoutNode, parent_id: u64, new_component: ComponentProps) -> FusionResult<()> {
+    pub fn add_component(
+        &mut self,
+        root: &mut LayoutNode,
+        parent_id: u64,
+        new_component: ComponentProps,
+    ) -> FusionResult<()> {
         // Production logic: Traverse the tree using BFS/DFS to find parent_id
         // For simplicity, we assume parent is root for now:
         if root.id == parent_id {
@@ -45,7 +50,9 @@ impl LayoutBuilder {
             });
             Ok(())
         } else {
-            Err(fusion_core::FusionError::UnknownVariable("Parent node not found".into()))
+            Err(fusion_core::FusionError::UnknownVariable(
+                "Parent node not found".into(),
+            ))
         }
     }
 

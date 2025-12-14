@@ -1,0 +1,129 @@
+use anyhow::Result;
+use fusion_mcp::FusionMcpHost;
+use fusion_policy::PolicyEnforcer;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tracing::{info, warn};
+
+use crate::plan::{AgentPlan, AgentStep};
+
+/// Deterministic agent executor
+pub struct AgentExecutor {
+    host: Arc<FusionMcpHost>,
+    enforcer: Arc<RwLock<PolicyEnforcer>>,
+}
+
+impl AgentExecutor {
+    /// Create a new executor
+    pub fn new(host: Arc<FusionMcpHost>, enforcer: Arc<RwLock<PolicyEnforcer>>) -> Self {
+        Self { host, enforcer }
+    }
+
+    /// Execute an agent plan (sequential, deterministic)
+    pub async fn execute(&self, plan: AgentPlan) -> Result<ExecutionResult> {
+        info!("Starting agent execution: {}", plan.goal);
+
+        // 1. Validate plan structure
+        plan.validate()?;
+        let execution_order = plan.execution_order()?;
+
+        info!("Validated plan with {} steps", execution_order.len());
+
+        // 2. Execute steps in dependency order
+        let mut results = Vec::new();
+
+        for step_id in execution_order {
+            let step = plan
+                .steps
+                .iter()
+                .find(|s| s.id == step_id)
+                .expect("Step must exist");
+
+            info!("Executing step: {} (tool: {})", step.id, step.tool);
+
+            match self.execute_step(step).await {
+                Ok(result) => {
+                    results.push(StepResult {
+                        step_id: step.id.clone(),
+                        success: true,
+                        output: Some(result),
+                        error: None,
+                    });
+                }
+                Err(e) => {
+                    warn!("Step {} failed: {}", step.id, e);
+                    results.push(StepResult {
+                        step_id: step.id.clone(),
+                        success: false,
+                        output: None,
+                        error: Some(e.to_string()),
+                    });
+
+                    // Fail fast on error (no backtracking yet)
+                    return Ok(ExecutionResult {
+                        goal: plan.goal.clone(),
+                        steps_executed: results.len(),
+                        results,
+                        success: false,
+                    });
+                }
+            }
+        }
+
+        Ok(ExecutionResult {
+            goal: plan.goal.clone(),
+            steps_executed: results.len(),
+            results,
+            success: true,
+        })
+    }
+
+    /// Execute a single step
+    async fn execute_step(&self, step: &AgentStep) -> Result<serde_json::Value> {
+        // In a full implementation, this would:
+        // 1. Call self.host.handle_request() with the tool invocation
+        // 2. Stream progress events
+        // 3. Return the result
+
+        // For now, placeholder that shows the structure
+        info!(
+            "Would invoke tool: {} with args: {:?}",
+            step.tool, step.arguments
+        );
+
+        // Simulate execution
+        Ok(serde_json::json!({
+            "tool": step.tool,
+            "status": "simulated_success"
+        }))
+    }
+}
+
+/// Result of executing an agent plan
+#[derive(Debug)]
+pub struct ExecutionResult {
+    pub goal: String,
+    pub steps_executed: usize,
+    pub results: Vec<StepResult>,
+    pub success: bool,
+}
+
+/// Result of a single step execution
+#[derive(Debug)]
+pub struct StepResult {
+    pub step_id: String,
+    pub success: bool,
+    pub output: Option<serde_json::Value>,
+    pub error: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::plan::{AgentPlan, AgentStep};
+
+    #[tokio::test]
+    async fn test_executor_validation() {
+        // Executor requires actual host/enforcer, tested in integration
+    }
+}

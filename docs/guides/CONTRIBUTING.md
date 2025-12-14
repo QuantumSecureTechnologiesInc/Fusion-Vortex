@@ -89,11 +89,65 @@ We welcome contributions in these areas:
 
 ### Rust Code
 
-- Follow standard Rust style guidelines (`rustfmt`)
-- Use meaningful variable names
+The Fusion project enforces comprehensive linting standards to ensure code quality and consistency:
+
+#### Formatting
+- Run `cargo fmt` before committing
+- Configuration is defined in `rustfmt.toml` (max width: 100, 4 spaces)
+- Format on save is recommended in your editor
+
+#### Linting
+- Run `cargo clippy --workspace --all-targets` before submitting PRs
+- All Clippy warnings must be addressed or explicitly allowed with justification
+- Configuration is defined in `.clippy.toml` and workspace lints in `Cargo.toml`
+
+#### Customizing Your Lint Level
+
+You can choose your preferred lint strictness:
+
+**Option 1: Use Preset Profiles**
+```powershell
+# Minimal (fewer warnings)
+Copy-Item .lint-profiles\minimal-lints.toml .\Cargo.toml -Force
+
+# Standard (default, balanced)
+Copy-Item .lint-profiles\standard-lints.toml .\Cargo.toml -Force
+
+# Strict (maximum quality)
+Copy-Item .lint-profiles\strict-lints.toml .\Cargo.toml -Force
+```
+
+**Option 2: Per-Crate Customization**
+Add `[lints]` to your crate's `Cargo.toml`:
+```toml
+[lints.clippy]
+unwrap_used = "allow"  # Override for this crate
+```
+
+**Option 3: Local Developer Settings**
+Create `~/.cargo/config.toml` (or `%USERPROFILE%\.cargo\config.toml` on Windows):
+```toml
+[build]
+rustflags = ["-W", "clippy::all"]
+```
+
+See [`.lint-profiles/README.md`](../.lint-profiles/README.md) for details.
+
+
+#### Enforced Standards
+- **Safety**: Unsafe code requires awareness (`unsafe_code` warning)
+- **Code Quality**: No unused imports, variables, or dead code
+- **Clippy**: Standard lint set enabled
+
+#### Best Practices
+- Use meaningful variable and function names
 - Add comments for complex logic
-- Write comprehensive tests
-- Document public APIs
+- Write comprehensive tests for all features
+- Keep cognitive complexity reasonable (threshold: 25)
+- Prefer `Result` and `Option` over panicking where appropriate
+- Document public APIs when practical
+
+
 
 ### Fusion Code
 

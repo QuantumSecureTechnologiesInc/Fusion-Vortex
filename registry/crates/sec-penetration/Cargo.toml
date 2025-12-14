@@ -6,4 +6,9 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_net = { path = "../fusion_net" }
+fusion_runtime_core = { workspace = true }
+futures = { workspace = true }
+thiserror = { workspace = true }
 

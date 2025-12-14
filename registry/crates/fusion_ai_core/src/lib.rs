@@ -9,6 +9,10 @@ use fusion_core::{FusionType, TensorDType, TensorType};
 use ndarray::{ArrayD, IxDyn};
 use tracing::{debug, trace};
 
+pub use nn::Linear;
+pub use nn::Module as Layer;
+pub type Variable = Tensor;
+
 pub mod nn;
 pub mod ops;
 pub mod optim;
@@ -16,9 +20,9 @@ pub mod optim;
 /// Tensor builder for AI/ML workloads
 #[derive(Debug, Clone)]
 pub struct Tensor {
-    data: ArrayD<f32>, // Using f32 as default for ML
-    device: String,
-    requires_grad: bool,
+    pub data: ArrayD<f32>, // Using f32 as default for ML
+    pub device: String,
+    pub requires_grad: bool,
 }
 
 impl Tensor {
@@ -154,6 +158,14 @@ impl Tensor {
         // Assuming single item tensor
         let val = self.data.first().cloned().unwrap_or(0.0);
         T::from(val)
+    }
+
+    pub fn clone(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+            device: self.device.clone(),
+            requires_grad: self.requires_grad,
+        }
     }
 }
 

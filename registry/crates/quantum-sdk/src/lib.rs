@@ -1,7 +1,5 @@
 /// Fusion Quantum SDK
 /// Provides interfaces for Quantum Processing Units (QPUs).
-use fusion_core::types::tensor::Matrix;
-use fusion_core::FusionResult;
 
 pub struct QuantumCircuit;
 

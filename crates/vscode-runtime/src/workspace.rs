@@ -1,7 +1,7 @@
 //! Workspace management for VS Code extension runtime
 
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 /// Workspace configuration
@@ -104,6 +104,7 @@ impl Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn test_workspace_creation() {

@@ -7,6 +7,7 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+fusion_std = { workspace = true }
 fusion_http = { path = "../http/", version = "0.2.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }

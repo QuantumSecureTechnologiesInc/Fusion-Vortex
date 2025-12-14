@@ -8,5 +8,5 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 

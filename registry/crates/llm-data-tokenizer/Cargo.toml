@@ -8,6 +8,7 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_llm_tokenizers = { path = "../llm-tokenizers/", version = "0.2.0" }
+fusion_std = { workspace = true }
 futures.workspace = true
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 

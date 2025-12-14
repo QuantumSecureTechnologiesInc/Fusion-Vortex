@@ -1,0 +1,146 @@
+use crate::protocol::{
+    CallToolResult, InitializeResult, ListToolsResult, McpError, McpRequest, McpResponse,
+    ServerCapabilities, ServerInfo, Tool, ToolsCapability,
+};
+use crate::registry::ToolRegistry;
+use fusion_policy::PolicyEnforcer;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+/// Fusion MCP Host implementation
+/// Acts as the server side of the Model Context Protocol
+pub struct FusionMcpHost {
+    registry: Arc<RwLock<ToolRegistry>>,
+    _enforcer: Arc<RwLock<PolicyEnforcer>>,
+}
+
+impl FusionMcpHost {
+    pub fn new(registry: Arc<RwLock<ToolRegistry>>, enforcer: Arc<RwLock<PolicyEnforcer>>) -> Self {
+        Self {
+            registry,
+            _enforcer: enforcer,
+        }
+    }
+
+    /// Handle an incoming MCP request
+    pub async fn handle_request(&self, request: McpRequest) -> McpResponse {
+        match request {
+            McpRequest::Initialize { params: _ } => {
+                let result = InitializeResult {
+                    protocol_version: crate::protocol::MCP_VERSION.to_string(),
+                    capabilities: ServerCapabilities {
+                        tools: Some(ToolsCapability { list_changed: true }),
+                        ..Default::default()
+                    },
+                    server_info: ServerInfo {
+                        name: "fusion-mcp-host".to_string(),
+                        version: env!("CARGO_PKG_VERSION").to_string(),
+                    },
+                };
+                McpResponse::Initialize(result)
+            }
+            McpRequest::ListTools => {
+                let registry = self.registry.read().await;
+                let tools_list = registry.list();
+
+                // Convert internal McpTool to protocol Tool
+                // Flattening facets into distinct tools for the client
+                let mut protocol_tools = Vec::new();
+
+                for tool in tools_list {
+                    if tool.facets.is_empty() {
+                        protocol_tools.push(Tool {
+                            name: tool.name.clone(),
+                            description: tool.description.clone(),
+                            input_schema: tool.input_schema.clone(),
+                        });
+                    } else {
+                        // Expose facets as dot-separated tools
+                        for facet in &tool.facets {
+                            protocol_tools.push(Tool {
+                                name: format!("{}.{}", tool.name, facet.name),
+                                description: facet.description.clone(),
+                                input_schema: tool.input_schema.clone(),
+                            });
+                        }
+                    }
+                }
+
+                McpResponse::ListTools(ListToolsResult {
+                    tools: protocol_tools,
+                })
+            }
+            McpRequest::CallTool { params } => {
+                let registry = self.registry.read().await;
+                let tool_name = params.name;
+
+                // Parse split name for facets (e.g. tool.facet)
+                let parts: Vec<&str> = tool_name.splitn(2, '.').collect();
+                let (base_name, facet_name) = if parts.len() == 2 {
+                    (parts[0], Some(parts[1]))
+                } else {
+                    (parts[0], None)
+                };
+
+                if let Some(tool) = registry.get(base_name) {
+                    // Convert HashMap<String, Value> to generic Value
+                    let args_value = params.arguments.map(|args| {
+                        let map: serde_json::Map<String, serde_json::Value> =
+                            args.into_iter().collect();
+                        serde_json::Value::Object(map)
+                    });
+
+                    if let Some(facet) = facet_name {
+                        // Find the facet handler
+                        if let Some(f) = tool.facets.iter().find(|x| x.name == facet) {
+                            match f.handler.handle(args_value).await {
+                                Ok(res) => McpResponse::CallTool(res),
+                                Err(e) => McpResponse::Error(McpError {
+                                    code: -32000,
+                                    message: e.to_string(),
+                                    data: None,
+                                }),
+                            }
+                        } else {
+                            McpResponse::Error(McpError {
+                                code: -32601,
+                                message: format!(
+                                    "Facet '{}' not found on tool '{}'",
+                                    facet, base_name
+                                ),
+                                data: None,
+                            })
+                        }
+                    } else if tool.facets.is_empty() {
+                        McpResponse::Error(McpError {
+                            code: -32601,
+                            message: format!("Tool '{}' requires a facet (sub-command)", base_name),
+                            data: None,
+                        })
+                    } else {
+                        McpResponse::Error(McpError {
+                            code: -32601,
+                            message: format!(
+                                "Tool '{}' has multiple facets. Please specify one: {:?}",
+                                base_name,
+                                tool.flattened_names()
+                            ),
+                            data: None,
+                        })
+                    }
+                } else {
+                    McpResponse::Error(McpError {
+                        code: -32601,
+                        message: format!("Tool '{}' not found", tool_name),
+                        data: None,
+                    })
+                }
+            }
+            _ => McpResponse::Error(McpError {
+                code: -32601,
+                message: "Method not implemented".to_string(),
+                data: None,
+            }),
+        }
+    }
+}

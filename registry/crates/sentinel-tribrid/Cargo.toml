@@ -1,0 +1,42 @@
+[package]
+name = "sentinael-tribrid"
+version = "1.0.0"
+edition.workspace = true
+authors = ["Sentinael Architecture Team"]
+description = "Automated autonomous update agent with Chaos-Enhanced Security Mesh"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# Fusion Runtime (replaces tokio)
+fusion_runtime_core = { path = "../fusion_runtime_core" }
+fusion_core = { workspace = true }
+
+# Serialization & Persistence
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# Cryptography
+sha2 = { workspace = true }
+hmac = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
+
+# Error Handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging & Telemetry
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+tempfile = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "chaos_benchmarks"
+# harness = false

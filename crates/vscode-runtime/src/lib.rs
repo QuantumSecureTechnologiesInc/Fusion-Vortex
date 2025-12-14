@@ -3,13 +3,14 @@
 //! This crate provides a complete runtime for executing VS Code extensions
 //! outside of VS Code itself, enabling CLI integration.
 
+pub mod compat;
 pub mod extension_host;
 pub mod extension_loader;
 pub mod lsp_client;
 pub mod marketplace;
 pub mod node_bridge;
 pub mod vscode_api;
-pub mod wasm_runtime;
+// pub mod wasm_runtime;
 pub mod workspace;
 
 use anyhow::Result;
@@ -17,13 +18,14 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 // Re-exports
+pub use compat::{CompatibilityLevel, ExtensionCompatibility, UiFeature};
 pub use extension_host::ExtensionHost;
 pub use extension_loader::ExtensionLoader;
 pub use lsp_client::LspClient;
 pub use marketplace::{ExtensionSummary, MarketplaceClient};
 pub use node_bridge::NodeRuntime;
 pub use vscode_api::VscodeApi;
-pub use wasm_runtime::{WasmExtensionMeta, WasmRuntime};
+// pub use wasm_runtime::{WasmExtensionMeta, WasmRuntime};
 
 /// Extension capability enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -67,7 +69,8 @@ pub struct ExtensionInfo {
 pub struct VsCodeRuntime {
     extension_host: ExtensionHost,
     extension_loader: ExtensionLoader,
-    wasm_runtime: WasmRuntime,
+
+    // wasm_runtime: WasmRuntime,
     marketplace: MarketplaceClient,
 }
 
@@ -77,7 +80,7 @@ impl VsCodeRuntime {
         Ok(Self {
             extension_host: ExtensionHost::new(),
             extension_loader: ExtensionLoader::new(extensions_dir.clone()),
-            wasm_runtime: WasmRuntime::new()?,
+            // wasm_runtime: WasmRuntime::new()?,
             marketplace: MarketplaceClient::new(extensions_dir)?,
         })
     }
@@ -113,6 +116,7 @@ impl VsCodeRuntime {
     }
 
     /// Activate a WASM extension
+    /*
     pub async fn activate_wasm_extension(
         &mut self,
         extension_id: &str,
@@ -123,6 +127,7 @@ impl VsCodeRuntime {
             .await?;
         self.wasm_runtime.activate(extension_id)
     }
+    */
 
     /// Start an LSP server for an extension
     pub async fn start_lsp_server(
@@ -145,6 +150,7 @@ impl VsCodeRuntime {
     }
 
     /// Get WASM runtime
+    /*
     pub fn wasm_runtime(&self) -> &WasmRuntime {
         &self.wasm_runtime
     }
@@ -153,6 +159,7 @@ impl VsCodeRuntime {
     pub fn wasm_runtime_mut(&mut self) -> &mut WasmRuntime {
         &mut self.wasm_runtime
     }
+    */
 
     /// Get marketplace client
     pub fn marketplace(&self) -> &MarketplaceClient {

@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_agentic_core_creation() {
-        let core = AgenticCore::new();
+        let _core = AgenticCore::new();
         assert!(true); // Core created successfully
     }
 

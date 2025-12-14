@@ -51,6 +51,6 @@ fusion-ai-enhanced = { path = "../../crates/ai-enhanced" }
 fusion-agentic-core = { path = "../../registry/crates/fusion-agentic-core" }
 fusion-vscode-runtime = { path = "../../crates/vscode-runtime" }
 fusion-policy = { workspace = true }
-fusion-terminal-browser = { path = "../../registry/crates/fusion-terminal-browser" }
+# fusion-terminal-browser = { path = "../../registry/crates/fusion-terminal-browser" }
 lazy_static = "1.4"
 

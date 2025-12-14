@@ -1,15 +1,39 @@
 use crate::Tensor;
 
+pub trait Optimizer {
+    fn step(&mut self);
+}
+
 pub struct Adam {
     lr: f64,
+    params: Vec<Tensor>,
 }
 
 impl Adam {
-    pub fn new(lr: f64) -> Self {
-        Self { lr }
+    pub fn new(params: Vec<Tensor>, lr: f64) -> Self {
+        Self { lr, params }
     }
+}
 
-    pub fn step(&self, _params: &mut [Tensor]) {
+impl Optimizer for Adam {
+    fn step(&mut self) {
+        // Mock optimization step
+    }
+}
+
+pub struct SGD {
+    lr: f64,
+    params: Vec<Tensor>,
+}
+
+impl SGD {
+    pub fn new(params: Vec<Tensor>, lr: f64) -> Self {
+        Self { lr, params }
+    }
+}
+
+impl Optimizer for SGD {
+    fn step(&mut self) {
         // Mock optimization step
     }
 }

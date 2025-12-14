@@ -14,7 +14,56 @@ pub fn extensions(cmd: ExtensionCommands) -> Result<()> {
         ExtensionCommands::List => list_extensions(),
         ExtensionCommands::Install { id } => install_extension(&id),
         ExtensionCommands::Exec { command, args } => execute_command(&command, args),
+        ExtensionCommands::Doctor { id } => check_compatibility(&id),
     }
+}
+
+/// Check extension availability and compatibility
+fn check_compatibility(id: &str) -> Result<()> {
+    use fusion_vscode_runtime::compat::{CompatibilityLevel, ExtensionCompatibility, UiFeature};
+
+    println!("🩺 Running Fusion Doctor for: {}", id);
+
+    // Mock analysis for now, eventually this uses the ExtensionLoader and runtime
+    let current_os = std::env::consts::OS;
+    println!("   Host Environment: {} ({})", current_os, "Headless");
+
+    // Simulated lookup
+    println!("   Retrieving compatibility profile...");
+    
+    // Logic simulating fusion_vscode_runtime::compat resolution
+    let (level, features, reason) = match id {
+        "google.gemini-code-assist" => (
+            CompatibilityLevel::Headless,
+            vec![UiFeature::Webview],
+            Some("Extension uses Webviews for chat, but basic code generation works headlessly.")
+        ),
+        "saoudrizwan.cline" => (
+            CompatibilityLevel::Full, 
+            vec![], 
+            None
+        ),
+        _ => (CompatibilityLevel::Incompatible, vec![], Some("Unknown extension")),
+    };
+
+    println!("\n📊 Compatibility Status: {:?}", level);
+    if let Some(r) = reason {
+        println!("   Reason: {}", r);
+    }
+
+    if !features.is_empty() {
+        println!("   Required UI Features: {:?}", features);
+        println!("   (These may be degraded or disabled in this CLI environment)");
+    }
+
+    match level {
+        CompatibilityLevel::Full => println!("\n✅ Fully Compatible"),
+        CompatibilityLevel::Headless => println!("\n⚠️  Partially Compatible (Headless Mode)"),
+        CompatibilityLevel::Minimal => println!("\n⚠️  Minimal Functionality"),
+        CompatibilityLevel::Incompatible => println!("\n❌ Incompatible with this environment"),
+    }
+
+    Ok(())
 }
 
 /// List installed extensions

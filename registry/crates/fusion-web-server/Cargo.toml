@@ -8,6 +8,6 @@ license = "MIT"
 
 [dependencies]
 axum = "0.7"
-tokio = { workspace = true, features = ["full"] }
+fusion_runtime_core = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }

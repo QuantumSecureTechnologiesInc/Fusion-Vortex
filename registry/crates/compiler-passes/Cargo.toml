@@ -6,6 +6,6 @@ description = "Advanced compiler passes: gate equivalence, basis transformation,
 license = "MIT"
 
 [dependencies]
-# fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.2.0" }
+fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.2.0" }
 # fusion_quantfusion_core = { workspace = true }
 fusion_core = { workspace = true }

@@ -8,4 +8,5 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" } # Inter-GPU communication
+fusion_ai_core = { workspace = true }
 

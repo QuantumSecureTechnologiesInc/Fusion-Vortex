@@ -6,4 +6,5 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+num_complex = { workspace = true }
 

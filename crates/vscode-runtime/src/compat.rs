@@ -1,0 +1,103 @@
+//! Compatibility profiles for VS Code extensions
+//!
+//! This module defines the compatibility levels for extensions depending on whether they require
+//! UI components, terminal access, or specific VS Code APIs not available in headless environments.
+
+use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Defines the compatibility level of an extension with the Fusion runtime
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CompatibilityLevel {
+    /// Fully compatible - Supports all requested capabilities
+    Full,
+    /// Headless - UI components will be mocked or ignored, but logic works
+    Headless,
+    /// Minimal - Basic functionality only, many features disabled
+    Minimal,
+    /// Incompatible - Cannot run in the current environment
+    Incompatible,
+}
+
+impl Default for CompatibilityLevel {
+    fn default() -> Self {
+        CompatibilityLevel::Full
+    }
+}
+
+impl fmt::Display for CompatibilityLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CompatibilityLevel::Full => write!(f, "Full"),
+            CompatibilityLevel::Headless => write!(f, "Headless"),
+            CompatibilityLevel::Minimal => write!(f, "Minimal"),
+            CompatibilityLevel::Incompatible => write!(f, "Incompatible"),
+        }
+    }
+}
+
+/// Metadata describing an extension's compatibility profile
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExtensionCompatibility {
+    /// Extension ID (publisher.name)
+    pub id: String,
+
+    /// Target compatibility level
+    pub level: CompatibilityLevel,
+
+    /// List of UI features this extension expects (for doctor checks)
+    #[serde(default)]
+    pub required_ui_features: Vec<UiFeature>,
+
+    /// Reason for current compatibility level
+    #[serde(default)]
+    pub fallback_reason: Option<String>,
+}
+
+/// UI features an extension might request
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum UiFeature {
+    Webview,
+    CustomEditor,
+    Terminal,
+    Notifications,
+    StatusBar,
+    InputBox,
+    QuickPick,
+    FilePicker,
+    TreeData,
+    Decoration,
+}
+
+impl ExtensionCompatibility {
+    pub fn new(id: impl Into<String>, level: CompatibilityLevel) -> Self {
+        Self {
+            id: id.into(),
+            level,
+            required_ui_features: Vec::new(),
+            fallback_reason: None,
+        }
+    }
+
+    /// Checks if the extension is runnable in the current environment
+    pub fn is_runnable_in(&self, environment: CompatibilityLevel) -> bool {
+        match (self.level, environment) {
+            (CompatibilityLevel::Incompatible, _) => false,
+            // Full extension in headless env -> might run if we allow degradation
+            (CompatibilityLevel::Full, CompatibilityLevel::Headless) => true,
+            // Headless ext in headless env -> OK
+            (CompatibilityLevel::Headless, CompatibilityLevel::Headless) => true,
+            // Minimal in headless -> OK
+            (CompatibilityLevel::Minimal, CompatibilityLevel::Headless) => true,
+            // Anything in full env -> OK
+            (_, CompatibilityLevel::Full) => true,
+
+            // Headless in minimal -> maybe
+            (CompatibilityLevel::Headless, CompatibilityLevel::Minimal) => false,
+            // Full in minimal -> no
+            (CompatibilityLevel::Full, CompatibilityLevel::Minimal) => false,
+
+            _ => true,
+        }
+    }
+}

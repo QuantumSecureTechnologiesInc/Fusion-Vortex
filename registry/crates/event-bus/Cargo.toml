@@ -8,6 +8,6 @@ license = "MIT"
 [dependencies]
 fusion_std = { path = "../std" }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" } # For transport
-tokio = { workspace = true, features = ["sync"] }
+fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }

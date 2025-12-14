@@ -1,11 +1,8 @@
 /// Production UI Component Library.
-/// 
+///
 /// Defines the base types for a consistent Design System (e.g., Shadcn/MUI equivalent).
-
-use fusion_ui_react::ReactHookApi; // Use the bridge for state access
-use fusion_core::types::hybrid::HybridValue;
 use fusion_std::error::StdResult;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComponentType {
@@ -30,7 +27,10 @@ pub struct ThemeManager;
 impl ThemeManager {
     /// Applies a dark or light theme to the global rendering context.
     pub fn apply_theme(&self, is_dark: bool) -> StdResult<()> {
-        println!("[Theme] Setting global theme: {}", if is_dark { "Dark" } else { "Light" });
+        println!(
+            "[Theme] Setting global theme: {}",
+            if is_dark { "Dark" } else { "Light" }
+        );
         // In prod: Calls FFI to apply CSS variables or Tailwind classes.
         Ok(())
     }

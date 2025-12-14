@@ -1,0 +1,25 @@
+use serde::{Deserialize, Serialize};
+
+/// Events emitted during streaming tool execution
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
+pub enum StreamEvent {
+    /// Execution started
+    Started,
+
+    /// Progress update
+    Progress {
+        message: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        percentage: Option<u8>,
+    },
+
+    /// Partial data chunk
+    Data { payload: serde_json::Value },
+
+    /// Execution completed
+    Completed,
+
+    /// Execution failed
+    Error { message: String },
+}

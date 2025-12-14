@@ -1,10 +1,10 @@
 /// Asynchronous Quantum Cloud Agent.
-/// 
+///
 /// Handles job submission, status polling, and result retrieval for QPU jobs.
-
 use fusion_core::types::quantum::QuantumCircuit;
 use fusion_quantum_sdk::QuantumBackend; // Trait reference
-use fusion_std::error::{StdResult, StdError};
+use fusion_std::error::{StdError, StdResult};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
@@ -25,12 +25,21 @@ impl CloudAgent {
     }
 
     /// Submit a circuit to a named backend.
-    pub async fn submit(&self, backend_name: &str, circuit: QuantumCircuit) -> StdResult<QuantumJob> {
-        let backend = self.backends.get(backend_name)
-            .ok_or(StdError::Serialization(format!("Backend {} not registered", backend_name)))?;
-        
+    pub async fn submit(
+        &self,
+        backend_name: &str,
+        circuit: QuantumCircuit,
+    ) -> StdResult<QuantumJob> {
+        let backend = self
+            .backends
+            .get(backend_name)
+            .ok_or(StdError::Serialization(format!(
+                "Backend {} not registered",
+                backend_name
+            )))?;
+
         // In prod, this would call backend.submit_job_async(circuit)
-        
+
         let job_id = format!("job-{}", rand::random::<u64>());
         println!("[Cloud Agent] Job {} submitted to {}", job_id, backend_name);
 
@@ -45,9 +54,9 @@ impl CloudAgent {
     pub async fn poll_status(&self, job: &QuantumJob) -> StdResult<String> {
         // Simulating exponential backoff polling
         sleep(Duration::from_secs(1)).await;
-        
+
         // This is where the K8s Operator gets updated via HTTP/gRPC.
-        
+
         Ok("Completed".into())
     }
 }

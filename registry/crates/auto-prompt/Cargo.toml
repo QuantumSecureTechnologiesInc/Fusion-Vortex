@@ -4,6 +4,7 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-fusion-ai-core = { workspace = true }
-fusion_std = { package = "fusion_std_ext", path = "../std-ext" }
+fusion_ai_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_core = { workspace = true }
 

@@ -9,11 +9,11 @@ description = "High-performance networking leveraging fusion_runtime_core"
 
 [dependencies]
 fusion_core = { workspace = true }
-fusion_runtime_core = { path = "../fusion_runtime_core/" }
 fusion_runtime_hal = { path = "../fusion_runtime_hal/" }
 socket2 = { workspace = true }
 futures = { workspace = true }
 tracing = { workspace = true }
+fusion_runtime_core = { workspace = true }
+
 [dev-dependencies]
 criterion = { workspace = true }
-

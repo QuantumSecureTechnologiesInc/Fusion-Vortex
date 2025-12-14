@@ -9,4 +9,4 @@ license = "MIT"
 fusion_core.workspace = true
 fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }

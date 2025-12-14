@@ -8,7 +8,7 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" } # KV Cache references
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 

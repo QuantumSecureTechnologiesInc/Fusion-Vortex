@@ -6,4 +6,8 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_runtime_core = { workspace = true }
+fusion_sec_audit_log = { workspace = true }
+fusion_sec_policy_engine = { workspace = true }
 

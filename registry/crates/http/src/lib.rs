@@ -1,8 +1,8 @@
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
-use hyper::body::Incoming;
+pub use hyper::body::Incoming;
 use hyper::service::Service;
-use hyper::{Request, Response};
+pub use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use hyper_util::server::conn::auto::Builder as ServerBuilder;
 use std::convert::Infallible;

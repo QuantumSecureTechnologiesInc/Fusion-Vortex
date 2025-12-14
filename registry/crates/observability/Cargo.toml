@@ -8,6 +8,6 @@ license = "MIT"
 [dependencies]
 fusion_std = { path = "../std" }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 prometheus = "0.13" # Standard metrics library
 opentelemetry = "0.20" # Tracing interface

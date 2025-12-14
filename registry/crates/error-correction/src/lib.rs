@@ -1,10 +1,10 @@
 /// Quantum Error Correction (QEC).
-/// 
+///
 /// Implements surface codes and syndrome decoding logic.
-
 use fusion_core::types::quantum::QuantumCircuit;
 use fusion_quantum_sdk::QuantumBackend;
-use fusion_std::error::{StdResult, StdError};
+use fusion_std::error::{StdError, StdResult};
+use std::collections::HashMap;
 
 pub enum QECCode {
     SurfaceCode(usize), // Distance d
@@ -26,7 +26,7 @@ impl SyndromeDecoder {
                 } else {
                     Err(StdError::Serialization("Syndrome decoding failed".into()))
                 }
-            },
+            }
             _ => Ok(vec![]),
         }
     }
@@ -39,7 +39,7 @@ impl ResourceEstimator {
     pub fn estimate(&self, circuit: &QuantumCircuit) -> StdResult<HashMap<String, u64>> {
         let t_gate_count = circuit.gates.iter().filter(|(g, _)| g.name == "T").count() as u64;
         let depth = circuit.gates.len() as u64; // Simplified
-        
+
         Ok(HashMap::from([
             ("T_gates".into(), t_gate_count),
             ("Depth".into(), depth),

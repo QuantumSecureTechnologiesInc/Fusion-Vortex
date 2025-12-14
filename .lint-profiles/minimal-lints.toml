@@ -1,0 +1,9 @@
+# Minimal Lint Profile
+# Fewer warnings, best for rapid development
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[workspace.lints.clippy]
+# Only critical issues
+correctness = { level = "deny", priority = -1 }

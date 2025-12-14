@@ -150,7 +150,7 @@ impl CodeRefactorer {
         response.to_string()
     }
 
-    fn extract_changes(&self, response: &str) -> Vec<String> {
+    fn extract_changes(&self, _response: &str) -> Vec<String> {
         // Simple extraction - could be improved with better parsing
         vec!["Code refactored".to_string()]
     }

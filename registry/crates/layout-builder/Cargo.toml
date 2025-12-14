@@ -10,4 +10,5 @@ fusion_ui_component_lib = { path = "../component-lib/", version = "0.2.0" }
 fusion_core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+rand.workspace = true
 

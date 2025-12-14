@@ -2,7 +2,6 @@
 
 use crate::{AIProvider, CompletionOptions, Message, MessageRole};
 use anyhow::Result;
-use std::path::Path;
 use std::sync::Arc;
 
 pub struct CodeAnalyzer {

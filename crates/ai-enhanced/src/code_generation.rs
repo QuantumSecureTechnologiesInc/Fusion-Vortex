@@ -119,7 +119,7 @@ impl CodeGenerator {
         &self,
         partial_code: &str,
         language: &str,
-        cursor_position: Option<usize>,
+        _cursor_position: Option<usize>,
     ) -> Result<Vec<Completion>> {
         let messages = vec![
             Message {
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_extract_code_from_markdown() {
-        let response = r#"Here's the code:
+        let _response = r#"Here's the code:
 
 ```rust
 fn main() {

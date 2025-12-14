@@ -1,0 +1,187 @@
+use serde::{Deserialize, Serialize};
+
+/// Agent execution plan (explicit, auditable, replayable)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentPlan {
+    /// High-level goal for this agent execution
+    pub goal: String,
+    /// Ordered list of steps to execute
+    pub steps: Vec<AgentStep>,
+}
+
+/// Individual step in an agent plan
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentStep {
+    /// Unique step identifier
+    pub id: String,
+    /// Tool to invoke (e.g., "gemini.generateCode.preview")
+    pub tool: String,
+    /// Arguments to pass to the tool
+    pub arguments: serde_json::Value,
+    /// Steps that must complete before this step
+    pub depends_on: Vec<String>,
+}
+
+impl AgentPlan {
+    /// Create a new empty plan
+    pub fn new(goal: impl Into<String>) -> Self {
+        Self {
+            goal: goal.into(),
+            steps: Vec::new(),
+        }
+    }
+
+    /// Add a step to the plan
+    pub fn add_step(&mut self, step: AgentStep) {
+        self.steps.push(step);
+    }
+
+    /// Validate the plan structure
+    pub fn validate(&self) -> anyhow::Result<()> {
+        // Check for cycles in dependencies
+        for step in &self.steps {
+            self.check_cycles(&step.id, &mut vec![])?;
+        }
+
+        // Verify all dependencies exist
+        let step_ids: std::collections::HashSet<_> =
+            self.steps.iter().map(|s| s.id.as_str()).collect();
+
+        for step in &self.steps {
+            for dep in &step.depends_on {
+                if !step_ids.contains(dep.as_str()) {
+                    anyhow::bail!("Step '{}' depends on non-existent step '{}'", step.id, dep);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check for circular dependencies
+    fn check_cycles(&self, step_id: &str, visited: &mut Vec<String>) -> anyhow::Result<()> {
+        if visited.contains(&step_id.to_string()) {
+            anyhow::bail!("Circular dependency detected involving step: {}", step_id);
+        }
+
+        visited.push(step_id.to_string());
+
+        if let Some(step) = self.steps.iter().find(|s| s.id == step_id) {
+            for dep in &step.depends_on {
+                self.check_cycles(dep, visited)?;
+            }
+        }
+
+        visited.pop();
+        Ok(())
+    }
+
+    /// Get execution order (topological sort)
+    pub fn execution_order(&self) -> anyhow::Result<Vec<String>> {
+        self.validate()?;
+
+        let mut result = Vec::new();
+        let mut visited = std::collections::HashSet::new();
+
+        for step in &self.steps {
+            self.visit_step(&step.id, &mut visited, &mut result)?;
+        }
+
+        Ok(result)
+    }
+
+    fn visit_step(
+        &self,
+        step_id: &str,
+        visited: &mut std::collections::HashSet<String>,
+        result: &mut Vec<String>,
+    ) -> anyhow::Result<()> {
+        if visited.contains(step_id) {
+            return Ok(());
+        }
+
+        if let Some(step) = self.steps.iter().find(|s| s.id == step_id) {
+            // Visit dependencies first
+            for dep in &step.depends_on {
+                self.visit_step(dep, visited, result)?;
+            }
+
+            visited.insert(step_id.to_string());
+            result.push(step_id.to_string());
+        }
+
+        Ok(())
+    }
+}
+
+impl AgentStep {
+    /// Create a new step
+    pub fn new(
+        id: impl Into<String>,
+        tool: impl Into<String>,
+        arguments: serde_json::Value,
+    ) -> Self {
+        Self {
+            id: id.into(),
+            tool: tool.into(),
+            arguments,
+            depends_on: Vec::new(),
+        }
+    }
+
+    /// Add a dependency to this step
+    pub fn depends_on(mut self, step_id: impl Into<String>) -> Self {
+        self.depends_on.push(step_id.into());
+        self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_plan_validation() {
+        let mut plan = AgentPlan::new("Test goal");
+
+        plan.add_step(AgentStep::new("step1", "tool.a", serde_json::json!({})));
+        plan.add_step(AgentStep::new("step2", "tool.b", serde_json::json!({})).depends_on("step1"));
+
+        assert!(plan.validate().is_ok());
+    }
+
+    #[test]
+    fn test_circular_dependency_detection() {
+        let mut plan = AgentPlan::new("Test goal");
+
+        let mut step1 = AgentStep::new("step1", "tool.a", serde_json::json!({}));
+        step1.depends_on.push("step2".to_string());
+
+        let mut step2 = AgentStep::new("step2", "tool.b", serde_json::json!({}));
+        step2.depends_on.push("step1".to_string());
+
+        plan.add_step(step1);
+        plan.add_step(step2);
+
+        assert!(plan.validate().is_err());
+    }
+
+    #[test]
+    fn test_execution_order() {
+        let mut plan = AgentPlan::new("Test goal");
+
+        plan.add_step(AgentStep::new("step3", "tool.c", serde_json::json!({})).depends_on("step1"));
+        plan.add_step(AgentStep::new("step1", "tool.a", serde_json::json!({})));
+        plan.add_step(AgentStep::new("step2", "tool.b", serde_json::json!({})).depends_on("step1"));
+
+        let order = plan.execution_order().unwrap();
+
+        // step1 must come before step2 and step3
+        let pos1 = order.iter().position(|s| s == "step1").unwrap();
+        let pos2 = order.iter().position(|s| s == "step2").unwrap();
+        let pos3 = order.iter().position(|s| s == "step3").unwrap();
+
+        assert!(pos1 < pos2);
+        assert!(pos1 < pos3);
+    }
+}

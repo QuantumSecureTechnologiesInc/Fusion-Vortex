@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 pub mod error;
+pub mod ops;
 pub mod types;
 
 pub use error::{FusionError, FusionResult};

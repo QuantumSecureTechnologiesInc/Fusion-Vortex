@@ -38,7 +38,12 @@ impl GqaKernel {
                 // Repeat the data 'repetition_factor' times
                 for _ in 0..repetition_factor {
                     for i in kv_head_start..kv_head_end {
-                        let val = kv_tensor.get(&[t, i])?;
+                        let val =
+                            *kv_tensor
+                                .get(&[t, i])
+                                .ok_or(fusion_core::FusionError::Generic(
+                                    "Index out of bounds".into(),
+                                ))?;
                         new_data.push(val);
                     }
                 }

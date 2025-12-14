@@ -4,8 +4,8 @@
 //!
 //! Leverages `fusion_runtime_core`'s low-jitter queue for sub-10μs order processing.
 
-use serde::{Deserialize, Serialize};
 use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use tracing::{debug, trace};
@@ -21,24 +21,24 @@ impl OrderBook {
     pub fn new(symbol: impl Into<String>) -> Self {
         let symbol = symbol.into();
         debug!("Creating order book for {}", symbol);
-        
+
         Self {
             symbol,
             bids: Arc::new(RwLock::new(BTreeMap::new())),
             asks: Arc::new(RwLock::new(BTreeMap::new())),
         }
     }
-    
+
     /// Place an order (scheduled on low-jitter queue)
     pub async fn place_order(&self, order: Order) -> OrderId {
         trace!("Placing order: {:?}", order);
-        
+
         // In a real implementation:
         // 1. Validate order
         // 2. Schedule on fusion_runtime_core's high-priority queue
         // 3. Match against existing orders
         // 4. Update order book atomically
-        
+
         match order.side {
             OrderSide::Buy => {
                 let mut bids = self.bids.write();
@@ -51,15 +51,15 @@ impl OrderBook {
                 price_level.push(order.clone());
             }
         }
-        
+
         OrderId(rand_u64())
     }
-    
+
     /// Get best bid price
     pub fn best_bid(&self) -> Option<f64> {
         self.bids.read().keys().next_back().map(|k| k.0)
     }
-    
+
     /// Get best ask price
     pub fn best_ask(&self) -> Option<f64> {
         self.asks.read().keys().next().map(|k| k.0)
@@ -84,7 +84,7 @@ impl Order {
             order_type: OrderType::Limit,
         }
     }
-    
+
     pub fn limit_sell(price: f64, quantity: f64) -> Self {
         Self {
             side: OrderSide::Sell,
@@ -112,14 +112,22 @@ pub enum OrderType {
 pub struct OrderId(u64);
 
 /// Wrapper for f64 that implements Ord (lexicographic ordering)
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct OrderedFloat(f64);
+
+impl PartialOrd for OrderedFloat {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 impl Eq for OrderedFloat {}
 
 impl Ord for OrderedFloat {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.partial_cmp(&other.0).unwrap_or(std::cmp::Ordering::Equal)
+        self.0
+            .partial_cmp(&other.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
@@ -135,14 +143,14 @@ fn rand_u64() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_order_book() {
         let book = OrderBook::new("BTC/USD");
         let order = Order::limit_buy(50000.0, 1.0);
-        
+
         let _order_id = book.place_order(order).await;
-        
+
         assert_eq!(book.best_bid(), Some(50000.0));
     }
 }

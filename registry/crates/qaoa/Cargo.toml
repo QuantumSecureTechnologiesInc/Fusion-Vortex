@@ -5,5 +5,8 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
+fusion_ai_core.workspace = true
 fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_quantum_sdk = { workspace = true }
 

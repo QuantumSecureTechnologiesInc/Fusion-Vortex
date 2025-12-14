@@ -9,12 +9,11 @@ description = "AI/ML core with autodiff and zero-copy tensor operations"
 
 [dependencies]
 fusion_core = { workspace = true }
-fusion_runtime_core = { path = "../fusion_runtime_core/" }
 serde = { workspace = true }
 tracing = { workspace = true }
 ndarray = "0.15"
 rand = { workspace = true }
-tokio.workspace = true
+fusion_runtime_core = { workspace = true }
 futures.workspace = true
 [dev-dependencies]
 criterion = { workspace = true }

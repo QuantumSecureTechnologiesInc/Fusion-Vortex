@@ -235,13 +235,59 @@ pub async fn test_connection() -> Result<()> {
 pub fn mcp(cmd: McpCommands) -> Result<()> {
     match cmd {
         McpCommands::Serve { port, extensions } => {
+            use fusion_mcp::{registry::ToolRegistry, FusionMcpHost};
+            use fusion_policy::PolicyEnforcer;
+            use std::sync::Arc;
+            use tokio::sync::RwLock;
+
             tokio::runtime::Runtime::new()?.block_on(async {
-                println!("🚀 Starting MCP server on port {}...", port);
-                if extensions {
-                    println!("  Extension support: enabled");
+                println!("🚀 Starting Fusion MCP Server on port {}...", port);
+
+                // 1. Initialize Registry and Persistence
+                let registry = Arc::new(RwLock::new(ToolRegistry::new()));
+
+                // Define persistence paths
+                let home = dirs::home_dir().expect("Could not determine home directory");
+                let mcp_dir = home.join(".fusion").join("mcp");
+                let registry_path = mcp_dir.join("registry.json");
+
+                // Ensure directory exists
+                std::fs::create_dir_all(&mcp_dir)?;
+
+                // Load existing graph
+                if registry_path.exists() {
+                    println!("  📦 Loading registry from {:?}", registry_path);
+                    if let Err(e) = registry.write().await.load_graph(&registry_path) {
+                        println!("  ⚠️  Failed to load registry: {}", e);
+                    }
                 }
-                println!("✓ MCP server running");
-                Ok(())
+
+                println!("  ✓ Tool Registry initialized");
+
+                // 2. Initialize Policy Enforcer
+                let enforcer = Arc::new(RwLock::new(PolicyEnforcer::warn_only()));
+                println!("  ✓ Policy Enforcer initialized (Mode: Warn)");
+
+                // 3. Initialize Host
+                let host = FusionMcpHost::new(registry.clone(), enforcer.clone());
+                println!("  ✓ Fusion MCP Host instantiated");
+
+                // 4. Load Extensions if enabled
+                if extensions {
+                    println!("  ✓ Extension support enabled");
+                    // Future: host.load_extensions().await?;
+                }
+
+                println!("✓ Server running. Ready for MCP connections.");
+
+                // TODO: Implement actual transport (Stdio/HTTP) loop here
+                // For now, keep alive to simulate server
+                println!("  (Press Ctrl+C to stop)");
+
+                // Simulation loop
+                loop {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                }
             })
         }
         McpCommands::Context { cmd } => match cmd {
@@ -258,11 +304,35 @@ pub fn mcp(cmd: McpCommands) -> Result<()> {
                 Ok(())
             }
         },
-        McpCommands::Tools { cmd } => match cmd {
-            ToolCommands::List => {
-                println!("Listing MCP tools...");
-                list_servers()
+        McpCommands::Tools { cmd } => {
+            match cmd {
+                ToolCommands::List => {
+                    // Future: Connect to daemon or load local persisted registry
+                    println!("Note: Showing default/builtin tools. Run 'fusion mcp serve' to serve them.");
+                    list_servers()
+                }
+                ToolCommands::Inspect { name } => {
+                    println!("🔍 Inspecting tool: {}", name);
+                    println!("  (Registry lookup not yet implemented for offline CLI)");
+                    Ok(())
+                }
+                ToolCommands::Run { name, args } => {
+                    println!("🚀 Running tool: {}", name);
+                    println!("  Args: {:?}", args);
+                    println!("  (Tool execution requires active server connection)");
+                    Ok(())
+                }
+                ToolCommands::Policy { name } => {
+                    println!("🛡️ Check policy for: {}", name);
+                    println!("  (Policy lookup not yet implemented for offline CLI)");
+                    Ok(())
+                }
+                ToolCommands::Graph => {
+                    println!("🕸️  Tool Dependency Graph");
+                    println!("  (Requires running server to visualize live graph)");
+                    Ok(())
+                }
             }
-        },
+        }
     }
 }

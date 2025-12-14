@@ -8,6 +8,6 @@ license = "MIT"
 [dependencies]
 fusion_net = { path = "../fusion_net/", version = "0.2.0" }
 fusion_std = { path = "../std" }
-tokio = { workspace = true, features = ["net"] }
+fusion_runtime_core = { workspace = true }
 tonic = "0.10" # Standard Rust gRPC library
 prost = "0.12" # Protocol Buffer compiler

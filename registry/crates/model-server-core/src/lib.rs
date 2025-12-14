@@ -1,13 +1,12 @@
+use fusion_ai_core::{Layer, Linear, Variable};
+use fusion_core::types::hybrid::HybridValue;
+use fusion_core::types::tensor::{Matrix, Tensor};
 /// Fusion AI Model Server.
-/// 
+///
 /// This application demonstrates the "Interwoven" strategy in action.
 /// It uses the Tensor engine (Core) inside a Web Server (Ext) to serve AI predictions (Pillar).
-
-use fusion_http::{Server, Request, Response};
+use fusion_http::{Request, Response, Server};
 use fusion_json;
-use fusion_core::types::hybrid::HybridValue;
-use fusion_core::types::tensor::{Tensor, Matrix};
-use fusion_ai_core::{Linear, Layer, Variable};
 use fusion_std::error::StdResult;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -34,7 +33,7 @@ impl MyModel {
 
         // Forward pass
         let output_var = self.layer.forward(input_var);
-        
+
         // Extract result (Tensor -> f64)
         // Simplified: getting index [0,0]
         output_var.data.get([0, 0])
@@ -58,12 +57,12 @@ async fn main() -> StdResult<()> {
     let model = Arc::new(Mutex::new(MyModel::new()));
 
     // Define Request Handler
-    let handler = move |req: Request| -> Response {
+    let handler = move |req: Request<Vec<u8>>| -> Response<Vec<u8>> {
         match (req.method.as_str(), req.path.as_str()) {
             ("POST", "/predict") => {
                 // Parse Body
-                let body_str = String::from_utf8_lossy(&req.body);
-                
+                let body_str = String::from_utf8_lossy(req.body());
+
                 // Use Serde directly for DTO parsing (Standard Rust pattern)
                 // In a pure Fusion app, we might use fusion_json::parse -> HybridValue -> Struct
                 let inference_req: InferenceRequest = match serde_json::from_str(&body_str) {
@@ -86,14 +85,13 @@ async fn main() -> StdResult<()> {
                 let response_val = HybridValue::Float(prediction);
                 let json_body = fusion_json::to_string(&response_val).unwrap_or_default();
 
-                Response::ok()
-                    .body(json_body)
-            },
-            
+                Response::ok().body(json_body)
+            }
+
             ("GET", "/health") => {
                 Response::ok().body(b"{\"status\": \"healthy\", \"framework\": \"Fusion AI\"}")
-            },
-            
+            }
+
             _ => Response::not_found(),
         }
     };

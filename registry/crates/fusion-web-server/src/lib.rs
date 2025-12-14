@@ -35,12 +35,8 @@ impl Router {
         Self(AxumRouter::new())
     }
 
-    pub fn route<H, T>(self, path: &str, handler: H) -> Self
-    where
-        H: axum::handler::Handler<T, ()>,
-        T: 'static,
-    {
-        Self(self.0.route(path, handler))
+    pub fn route(self, path: &str, method_router: axum::routing::MethodRouter) -> Self {
+        Self(self.0.route(path, method_router))
     }
 
     pub fn into_make_service(self) -> AxumRouter {

@@ -15,6 +15,7 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 walkdir = { workspace = true }
 fusion-policy = { workspace = true }
+dirs = { workspace = true }
 
 # For VS Code extension protocol
 jsonrpc-core = { workspace = true }
@@ -22,8 +23,8 @@ jsonrpc-derive = { workspace = true }
 tower-lsp = { workspace = true }
 
 # For extension execution - external crates
-wasmer = "4.3"
-wasmer-compiler-cranelift = "4.3"
+# wasmer = "4.3"
+# wasmer-compiler-cranelift = "4.3"
 # wasmtime = "14.0"
 reqwest = { workspace = true, features = ["stream"] }
 

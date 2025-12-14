@@ -138,7 +138,7 @@ impl MarketplaceClient {
 
         // Search for the extension to get download URL
         let summaries = self.search(extension_id).await?;
-        let extension = summaries
+        let _extension = summaries
             .into_iter()
             .find(|e| e.id == extension_id)
             .ok_or_else(|| anyhow::anyhow!("Extension not found: {}", extension_id))?;

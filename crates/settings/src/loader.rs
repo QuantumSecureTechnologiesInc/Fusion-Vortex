@@ -1,4 +1,4 @@
-use crate::{schema::*, FusionSettings};
+use crate::FusionSettings;
 use anyhow::{Context, Result};
 use std::env;
 use std::fs;

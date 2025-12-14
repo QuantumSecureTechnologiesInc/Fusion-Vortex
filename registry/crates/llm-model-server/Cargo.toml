@@ -12,8 +12,9 @@ fusion_http = { path = "../http/", version = "0.2.0" }
 fusion_kv_cache = { version = "0.2.0", path = "../kv-cache" }
 fusion_llm_inference_engine = { version = "0.2.0", path = "../llm-inference" }
 fusion_llm_lora_manager = { version = "0.2.0", path = "../llm-lora-manager" }
-fusion_std.workspace = true
+fusion_std = { workspace = true }
 # fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
 # fusion_llm_lora_manager = { path = "../llm-lora-manager/", version = "0.2.0" }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
+axum = { workspace = true }
 

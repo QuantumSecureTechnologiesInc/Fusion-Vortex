@@ -1,15 +1,14 @@
 /// Production K-Means Clustering.
-/// 
+///
 /// Features:
 /// - K-Means++ Initialization (Probabilistic).
 /// - Tolerance-based Convergence.
 /// - Thread-safe RNG.
-
 use fusion_core::types::tensor::{Matrix, Vector1D};
-use fusion_core::FusionResult;
 use fusion_core::FusionError;
+use fusion_core::FusionResult;
+use rand::distributions::{Distribution, WeightedIndex};
 use rand::Rng;
-use rand::distributions::{WeightedIndex, Distribution};
 
 pub struct KMeans {
     k: usize,
@@ -20,7 +19,12 @@ pub struct KMeans {
 
 impl KMeans {
     pub fn new(k: usize, max_iters: usize, tol: f64) -> Self {
-        Self { k, max_iters, tol, centroids: None }
+        Self {
+            k,
+            max_iters,
+            tol,
+            centroids: None,
+        }
     }
 
     /// K-Means++ Initialization.
@@ -29,9 +33,12 @@ impl KMeans {
     /// 3. Choose one new data point at random as a new center, using a weighted probability distribution where a point x is chosen with probability proportional to D(x)^2.
     /// 4. Repeat Steps 2 and 3 until k centers have been chosen.
     fn init_centroids(&self, data: &Matrix<f64>) -> FusionResult<Matrix<f64>> {
-        let (n_samples, n_features) = (data.shape[0], data.shape[1]);
+        let n_samples = data.shape()[0];
+        let n_features = data.shape()[1];
         if n_samples < self.k {
-            return Err(FusionError::InvalidDimension("More clusters than samples".into()));
+            return Err(FusionError::InvalidDimension(
+                "More clusters than samples".into(),
+            ));
         }
 
         let mut rng = rand::thread_rng();
@@ -42,23 +49,27 @@ impl KMeans {
         let first_idx = rng.gen_range(0..n_samples);
         chosen_indices.push(first_idx);
         for j in 0..n_features {
-            centroids_vec.push(data.get([first_idx, j])?);
+            centroids_vec.push(
+                *data
+                    .get([first_idx, j])
+                    .ok_or(FusionError::IndexOutOfBounds)?,
+            );
         }
 
         // 2-4. Pick remaining k-1
         for _ in 1..self.k {
             let mut dists_sq = Vec::with_capacity(n_samples);
-            
+
             for i in 0..n_samples {
                 // Find min dist to ANY existing centroid
                 let mut min_d_sq = f64::MAX;
-                
+
                 for c_idx in 0..chosen_indices.len() {
                     let mut d_sq = 0.0;
                     for j in 0..n_features {
                         // Logic to access existing centroids from the flat vec
                         let c_val = centroids_vec[c_idx * n_features + j];
-                        let x_val = data.get([i, j])?;
+                        let x_val = *data.get([i, j]).ok_or(FusionError::IndexOutOfBounds)?;
                         let diff = x_val - c_val;
                         d_sq += diff * diff;
                     }
@@ -72,16 +83,21 @@ impl KMeans {
             // Weighted Sample
             let dist_distrib = WeightedIndex::new(&dists_sq)
                 .map_err(|e| FusionError::CompilationError(format!("KMeans++ error: {}", e)))?;
-            
+
             let next_idx = dist_distrib.sample(&mut rng);
             chosen_indices.push(next_idx);
-            
+
             for j in 0..n_features {
-                centroids_vec.push(data.get([next_idx, j])?);
+                centroids_vec.push(
+                    *data
+                        .get([next_idx, j])
+                        .ok_or(FusionError::IndexOutOfBounds)?,
+                );
             }
         }
 
-        Matrix::new(centroids_vec, [self.k, n_features])
+        Matrix::from_shape_vec((self.k, n_features), centroids_vec)
+            .map_err(|_| FusionError::InvalidDimension("Shape mismatch".into()))
     }
 
     pub fn fit(&mut self, data: &Matrix<f64>) -> FusionResult<()> {

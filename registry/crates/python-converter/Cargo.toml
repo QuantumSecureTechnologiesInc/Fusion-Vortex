@@ -8,6 +8,6 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { path = "../std" }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 anyhow = { workspace = true } # For external command execution errors
 

@@ -1,9 +1,8 @@
 /// Production Portfolio Optimization.
-/// 
+///
 /// Converts Mean-Variance Optimization problem into a QUBO (Quadratic Unconstrained Binary Optimization).
 /// Problem: Minimize w^T * Sigma * w - q * mu^T * w  (subject to constraints)
 /// w = binary vector (asset selection)
-
 use fusion_core::types::tensor::{Matrix, Vector1D};
 use fusion_core::FusionResult;
 
@@ -24,7 +23,7 @@ impl PortfolioProblem {
     /// Convert to Ising Hamiltonian for QAOA/Annealing.
     /// H = sum(sigma_ij * x_i * x_j) - q * sum(mu_i * x_i) + penalty(sum(x) - budget)^2
     pub fn to_ising(&self) -> FusionResult<Vec<IsingTerm>> {
-        let n = self.expected_returns.shape[0];
+        let n = self.expected_returns.shape()[0];
         let mut hamiltonian = Vec::new();
 
         // 1. Risk Term: w^T * Cov * w -> sum(cov_ij * x_i * x_j)
@@ -32,7 +31,7 @@ impl PortfolioProblem {
         // This mapping generates constant, linear (Z_i), and quadratic (Z_i Z_j) terms.
 
         // 2. Return Term: -q * mu^T * w
-        
+
         // 3. Constraint Penalty: A * (sum(x_i) - B)^2
         // Expands to A * (sum(x_i^2) + sum_{i!=j}(x_i x_j) - 2B*sum(x_i) + B^2)
         // Since x_i is binary, x_i^2 = x_i.
@@ -41,12 +40,15 @@ impl PortfolioProblem {
 
         // Generate Linear Terms (h_i Z_i)
         for i in 0..n {
-            let mu = self.expected_returns.get([i])?;
+            let mu = *self
+                .expected_returns
+                .get([i])
+                .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
             let mut h_i = -self.risk_factor * mu;
-            
+
             // Add penalty linear contribution
             // (1-s_i)/2 logic...
-            
+
             hamiltonian.push(IsingTerm {
                 indices: vec![i],
                 coefficient: h_i, // Placeholder for calculated coeff
@@ -55,12 +57,15 @@ impl PortfolioProblem {
 
         // Generate Quadratic Terms (J_ij Z_i Z_j)
         for i in 0..n {
-            for j in (i+1)..n {
-                let cov = self.covariance.get([i, j])?;
+            for j in (i + 1)..n {
+                let cov = *self
+                    .covariance
+                    .get([i, j])
+                    .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
                 let j_ij = self.risk_factor * cov; // Risk part
-                
+
                 // Add penalty quadratic contribution (2 * A * x_i * x_j)
-                
+
                 hamiltonian.push(IsingTerm {
                     indices: vec![i, j],
                     coefficient: j_ij + penalty_weight, // Simplified

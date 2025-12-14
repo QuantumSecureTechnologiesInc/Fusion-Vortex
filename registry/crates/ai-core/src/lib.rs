@@ -1,10 +1,13 @@
 pub mod adapter;
+pub mod autograd;
 pub mod cache;
 pub mod policy;
 pub mod preview;
 pub mod prompt;
 pub mod safety;
 pub mod workspace;
+
+pub use autograd::{Variable, SGD};
 
 // Re-export production adapters
 pub use adapter::{

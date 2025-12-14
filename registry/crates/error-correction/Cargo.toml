@@ -7,5 +7,6 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
-# fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.2.0" } # TODO: Create quantum-sdk crate
+fusion_quantum_sdk = { workspace = true }
+fusion_std = { workspace = true }
 

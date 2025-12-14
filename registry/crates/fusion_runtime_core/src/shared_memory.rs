@@ -73,7 +73,7 @@ impl SharedMemoryManager {
     /// let shm = SharedMemoryManager::new();
     /// let id = shm.allocate(1024 * 1024, Some("tensor_buffer"));  // 1MB
     /// ```
-    pub fn allocate(&self, size: usize, name: Option<&str>) -> Result<ShmId, String> {
+    pub fn allocate(&self, size: usize, _name: Option<&str>) -> Result<ShmId, String> {
         let mut next_id = self.next_id.write();
         let id = ShmId(*next_id);
         *next_id += 1;

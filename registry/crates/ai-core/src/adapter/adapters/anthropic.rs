@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
+use bytes::Bytes;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, warn};
-use bytes::Bytes;
 
 const ANTHROPIC_API_BASE: &str = "https://api.anthropic.com/v1";
 const ANTHROPIC_VERSION: &str = "2023-06-01";
@@ -151,10 +151,7 @@ impl AnthropicAdapter {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "x-api-key",
-            config
-                .api_key
-                .parse()
-                .context("Invalid API key format")?,
+            config.api_key.parse().context("Invalid API key format")?,
         );
         headers.insert(
             "anthropic-version",
@@ -233,13 +230,11 @@ impl AnthropicAdapter {
                                 for line in text.lines() {
                                     if line.starts_with("data: ") {
                                         let data = &line[6..];
-                                       
+
                                         if let Ok(event) = serde_json::from_str::<StreamEvent>(data)
                                         {
                                             if event.event_type == "content_block_delta" {
-                                                if let Some(delta) =
-                                                    event.data.get("delta")
-                                                {
+                                                if let Some(delta) = event.data.get("delta") {
                                                     if let Some(text) = delta.get("text") {
                                                         if let Some(text_str) = text.as_str() {
                                                             if tx
@@ -273,10 +268,7 @@ impl AnthropicAdapter {
         Ok(rx)
     }
 
-    async fn make_request_with_retry(
-        &self,
-        request: &MessagesRequest,
-    ) -> Result<MessagesResponse> {
+    async fn make_request_with_retry(&self, request: &MessagesRequest) -> Result<MessagesResponse> {
         let mut last_error = None;
         let mut delay = INITIAL_RETRY_DELAY;
 

@@ -8,5 +8,6 @@ license = "MIT"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
+serde_json = { workspace = true }
 # In prod: plotly.js / d3.js bindings via WebAssembly
 

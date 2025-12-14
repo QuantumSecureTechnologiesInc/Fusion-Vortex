@@ -7,9 +7,10 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
-# fusion_std = { workspace = true }  # Not yet implemented
+fusion_std = { workspace = true }
 fusion_net = { path = "../fusion_net" }
 fusion_http = { path = "../http" }
-# fusion_k8s_operator = { workspace = true }  # Check if exists
-tokio = { workspace = true }
+fusion_quantum_sdk = { workspace = true }
+fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
+rand = { workspace = true }

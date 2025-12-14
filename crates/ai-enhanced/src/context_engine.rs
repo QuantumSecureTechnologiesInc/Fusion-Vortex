@@ -11,7 +11,7 @@ pub struct ContextEngine {
 
 #[derive(Debug, Clone)]
 struct ContextEntry {
-    context_type: String,
+    _context_type: String,
     content: String,
 }
 
@@ -27,7 +27,7 @@ impl ContextEngine {
         self.contexts.insert(
             key,
             ContextEntry {
-                context_type: format!("{:?}", context_type),
+                _context_type: format!("{:?}", context_type),
                 content,
             },
         );

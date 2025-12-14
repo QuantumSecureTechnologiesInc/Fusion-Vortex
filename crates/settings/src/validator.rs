@@ -1,5 +1,5 @@
 use crate::FusionSettings;
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 /// Settings validator
 pub struct SettingsValidator;

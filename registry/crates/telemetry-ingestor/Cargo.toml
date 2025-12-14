@@ -6,4 +6,7 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+fusion_net.workspace = true
+fusion_std.workspace = true
+prometheus = "0.14.0"
 

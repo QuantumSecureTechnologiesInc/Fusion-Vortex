@@ -4,6 +4,7 @@ use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
 mod commands;
+mod welcome;
 
 /// Fusion Programming Language CLI
 ///
@@ -194,6 +195,12 @@ enum Commands {
         #[command(subcommand)]
         cmd: ExtensionCommands,
     },
+
+    /// Manage policies
+    Policy {
+        #[command(subcommand)]
+        cmd: PolicyCommands,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -273,6 +280,26 @@ enum ContextCommands {
 enum ToolCommands {
     /// List available tools
     List,
+    /// Inspect a tool
+    Inspect {
+        /// Tool name
+        name: String,
+    },
+    /// Run a tool
+    Run {
+        /// Tool name
+        name: String,
+        /// Arguments (JSON)
+        #[arg(short, long)]
+        args: Option<String>,
+    },
+    /// Check tool policy
+    Policy {
+        /// Tool name
+        name: String,
+    },
+    /// Show tool dependency graph
+    Graph,
 }
 
 #[derive(Subcommand, Debug)]
@@ -294,6 +321,12 @@ enum ExtensionCommands {
         /// Arguments (JSON)
         #[arg(short, long)]
         args: Option<String>,
+    },
+
+    /// Diagnose extension issues
+    Doctor {
+        /// Extension ID
+        id: String,
     },
 }
 
@@ -457,11 +490,58 @@ enum AiCommands {
     },
 }
 
+#[derive(Subcommand, Debug)]
+pub enum PolicyCommands {
+    /// Show policy for extension
+    Show {
+        /// Extension ID (publisher.name)
+        id: String,
+    },
+
+    /// Grant capability
+    Grant {
+        /// Extension ID
+        id: String,
+
+        /// Capability name
+        capability: String,
+    },
+
+    /// Revoke capability
+    Revoke {
+        /// Extension ID
+        id: String,
+
+        /// Capability name
+        capability: String,
+    },
+
+    /// Set enforcement mode
+    Mode {
+        /// Mode (strict, warn, disabled)
+        mode: String,
+    },
+
+    /// Audit extension security
+    Audit {
+        /// Extension ID
+        id: String,
+    },
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Initialize logging
-    let log_level = if cli.debug {
+    // First-run welcome experience
+    if welcome::WelcomeScreen::is_first_run() {
+        welcome::WelcomeScreen::display();
+        if let Err(e) = welcome::WelcomeScreen::mark_initialized() {
+            eprintln!("Warning: Could not mark first-run complete: {}", e);
+        }
+    }
+
+    // Configure logging
+    let level = if cli.debug {
         Level::DEBUG
     } else if cli.verbose {
         Level::INFO
@@ -470,7 +550,7 @@ fn main() -> Result<()> {
     };
 
     let subscriber = FmtSubscriber::builder()
-        .with_max_level(log_level)
+        .with_max_level(level)
         .with_target(false)
         .with_thread_ids(false)
         .with_file(cli.debug)
@@ -515,5 +595,6 @@ fn main() -> Result<()> {
         Commands::Ai { cmd } => commands::ai::ai(cmd),
         Commands::Mcp { cmd } => commands::mcp::mcp(cmd),
         Commands::Extensions { cmd } => commands::extensions::extensions(cmd),
+        Commands::Policy { cmd } => commands::policy::policy(cmd),
     }
 }

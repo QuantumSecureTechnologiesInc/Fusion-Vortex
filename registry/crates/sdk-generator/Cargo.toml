@@ -7,4 +7,5 @@ license = "MIT"
 
 [dependencies]
 fusion_std = { path = "../std", version = "0.2.0" }
+fusion_core = { workspace = true }
 # In prod: rust-codegen, openapi-generator-types

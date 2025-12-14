@@ -7,6 +7,5 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
-fusion-ai-core = { workspace = true }
-fusion_ai_core.workspace = true
+fusion_ai_core = { workspace = true }
 

@@ -61,13 +61,13 @@ impl WorkspaceNamespace {
 
 /// window namespace
 pub struct WindowNamespace {
-    active_text_editor: Arc<RwLock<Option<String>>>,
+    _active_text_editor: Arc<RwLock<Option<String>>>,
 }
 
 impl WindowNamespace {
     pub fn new() -> Self {
         Self {
-            active_text_editor: Arc::new(RwLock::new(None)),
+            _active_text_editor: Arc::new(RwLock::new(None)),
         }
     }
 

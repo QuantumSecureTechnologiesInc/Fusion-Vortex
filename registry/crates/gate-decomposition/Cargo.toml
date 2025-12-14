@@ -6,4 +6,5 @@ license = "MIT"
 
 [dependencies]
 fusion_core = { workspace = true }
+fusion_quantum_sdk = { workspace = true }
 

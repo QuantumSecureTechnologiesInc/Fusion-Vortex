@@ -15,5 +15,5 @@ tracing = { workspace = true }
 parking_lot = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true }
-tokio.workspace = true
+fusion_runtime_core = { workspace = true }
 

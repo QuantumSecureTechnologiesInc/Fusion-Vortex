@@ -15,7 +15,8 @@ pub struct ExtensionManifest {
     pub description: Option<String>,
     pub publisher: Option<String>,
     pub main: Option<String>,
-    pub activationEvents: Option<Vec<String>>,
+    #[serde(rename = "activationEvents")]
+    pub activation_events: Option<Vec<String>>,
     pub contributes: Option<serde_json::Value>,
     pub engines: EngineRequirements,
 }
@@ -165,7 +166,7 @@ mod tests {
             description: None,
             publisher: None,
             main: None,
-            activationEvents: None,
+            activation_events: None,
             contributes: Some(serde_json::json!({
                 "languages": [{"id": "rust"}]
             })),

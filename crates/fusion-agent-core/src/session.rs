@@ -1,0 +1,106 @@
+//! Agent session management
+//!
+//! Handles session lifecycle, state persistence, and execution context
+
+use crate::conversation::ConversationContext;
+use crate::modes::{AgentMode, AgentModeType};
+use anyhow::Result;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentSession {
+    pub id: String,
+    pub mode: AgentModeType,
+    pub created_at: DateTime<Utc>,
+    pub last_active: DateTime<Utc>,
+    pub workspace_dir: PathBuf,
+    pub conversation: ConversationContext,
+    pub metadata: SessionMetadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionMetadata {
+    pub user_name: Option<String>,
+    pub project_name: Option<String>,
+    pub total_messages: usize,
+    pub total_tasks: usize,
+}
+
+impl AgentSession {
+    pub fn new(mode: AgentModeType, workspace_dir: PathBuf) -> Self {
+        let now = Utc::now();
+        Self {
+            id: Uuid::new_v4().to_string(),
+            mode,
+            created_at: now,
+            last_active: now,
+            workspace_dir,
+            conversation: ConversationContext::new(),
+            metadata: SessionMetadata {
+                user_name: None,
+                project_name: None,
+                total_messages: 0,
+                total_tasks: 0,
+            },
+        }
+    }
+
+    pub fn update_activity(&mut self) {
+        self.last_active = Utc::now();
+    }
+
+    pub fn add_message(&mut self, role: &str, content: String) {
+        self.conversation.add_message(role, content);
+        self.metadata.total_messages += 1;
+        self.update_activity();
+    }
+
+    pub fn switch_mode(&mut self, new_mode: AgentModeType) {
+        self.mode = new_mode;
+        self.update_activity();
+    }
+
+    /// Get session age in seconds
+    pub fn age_seconds(&self) -> i64 {
+        (Utc::now() - self.created_at).num_seconds()
+    }
+
+    /// Check if session is inactive (no activity in last N seconds)
+    pub fn is_inactive(&self, threshold_seconds: i64) -> bool {
+        (Utc::now() - self.last_active).num_seconds() > threshold_seconds
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_session_creation() {
+        let session = AgentSession::new(AgentModeType::Planning, PathBuf::from("/test/workspace"));
+
+        assert_eq!(session.mode, AgentModeType::Planning);
+        assert_eq!(session.metadata.total_messages, 0);
+        assert!(session.id.len() > 0);
+    }
+
+    #[test]
+    fn test_add_message() {
+        let mut session = AgentSession::new(AgentModeType::Fast, PathBuf::from("/test"));
+
+        session.add_message("user", "Hello".to_string());
+        assert_eq!(session.metadata.total_messages, 1);
+    }
+
+    #[test]
+    fn test_mode_switching() {
+        let mut session = AgentSession::new(AgentModeType::Planning, PathBuf::from("/test"));
+
+        session.switch_mode(AgentModeType::Fast);
+        assert_eq!(session.mode, AgentModeType::Fast);
+    }
+}

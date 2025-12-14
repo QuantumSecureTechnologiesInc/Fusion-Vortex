@@ -1,5 +1,4 @@
 /// LLM Tokenizers - BPE, WordPiece, SentencePiece implementations
-use fusion_core::{FusionError, FusionResult};
 use std::collections::{HashMap, HashSet};
 
 pub mod bpe {
@@ -217,3 +216,11 @@ pub mod sentencepiece {
     }
 }
 
+#[derive(Clone)]
+pub struct LLMTokenizer;
+
+impl LLMTokenizer {
+    pub fn encode(&self, _text: &str) -> Vec<usize> {
+        vec![]
+    }
+}

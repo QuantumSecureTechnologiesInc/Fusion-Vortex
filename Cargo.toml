@@ -7,6 +7,17 @@ description = "Fusion Programming Language Compiler"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)'] }
+unsafe_code = "warn"
+unused_imports = "warn"
+unused_variables = "warn"
+dead_code = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+# Allow common patterns
+module_name_repetitions = "allow"
+
+
 
 [dependencies]
 # Core Dependencies
@@ -56,11 +67,14 @@ tempfile = "3.8"
 resolver = "2"
 members = [
     "cmd/fusion",
+    "cmd/fusion-coder",
     "crates/*",
     "registry/crates/*",
 ]
 exclude = [
     "crates/tensorweave",
+    "crates/fusion-monolith-core",
+    "registry/crates/fusion-terminal-browser",
 ]
 
 
@@ -72,6 +86,19 @@ license = "MIT"
 repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
 homepage = "https://fusion-lang.org"
 rust-version = "1.80"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+unused_imports = "warn"
+unused_variables = "warn"
+dead_code = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+# Allow common patterns
+module_name_repetitions = "allow"
+
+
 
 [workspace.dependencies]
 anyhow = "1.0.94"
@@ -113,8 +140,14 @@ diff = "0.1.13"
 git2 = { version = "0.19.0", default-features = false }
 handlebars = "6.2.0"
 proptest = "1.6.0"
+async-graphql = "7.0"
+petgraph = "0.6"
+axum = "0.7"
+wasmtime = "17.0"
+pyo3 = "0.20"
 
 # Crypto
+hmac = "0.12.1"
 blake3 = "1.5.0"
 sha3 = "0.10.8"
 pqcrypto = "0.17.0"
@@ -133,9 +166,21 @@ fusion_ai_core = { path = "registry/crates/fusion_ai_core", version = "0.2.0" }
 fusion-monolith-core = { path = "crates/fusion-monolith-core", version = "3.4.1" }
 fusion-policy = { path = "crates/policy", version = "0.1.0" }
 fusion_std = { path = "registry/crates/std", version = "0.2.0" }
+fusion_runtime_core = { path = "registry/crates/fusion_runtime_core", version = "0.2.0" }
 fusion_net = { path = "registry/crates/fusion_net", version = "0.2.0" }
 fusion_http = { path = "registry/crates/http", version = "0.2.0" }
+fusion_quantum_sdk = { path = "registry/crates/quantum-sdk", version = "0.2.0" }
 fusion_k8s_operator = { path = "registry/crates/k8s-operator", version = "0.2.0" }
+sentinael-tribrid = { path = "registry/crates/sentinel-tribrid", version = "1.0.0" }
+num_complex = "0.4"
+semver = "1.0"
+fusion_llm_inference_engine = { path = "registry/crates/llm-inference", version = "0.2.0" }
+fusion_llm_lora_manager = { path = "registry/crates/llm-lora-manager", version = "0.2.0" }
+fusion_tensor_sparse = { path = "registry/crates/tensor-sparse", version = "0.2.0" }
+fusion_sec_policy_engine = { path = "registry/crates/sec-policy-engine", version = "0.2.0" }
+fusion_audit = { path = "registry/crates/audit", version = "0.2.0" }
+fusion_sec_audit_log = { path = "registry/crates/audit", version = "0.2.0", package = "fusion-audit" }
+fusion_ai_core_adapters = { path = "registry/crates/ai-core", version = "0.2.0", package = "fusion-ai-core" }
 
 
 # Additional from golden-singularity

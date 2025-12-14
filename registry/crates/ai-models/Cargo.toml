@@ -10,7 +10,7 @@ description = "Fusion AI models - Local model runners (llama.cpp, ONNX)"
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
-tokio = { workspace = true }
+fusion_runtime_core = { workspace = true }
 async-trait = { workspace = true }
 
 # Optional local model integrations
