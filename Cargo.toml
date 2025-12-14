@@ -75,6 +75,7 @@ exclude = [
     "crates/tensorweave",
     "crates/fusion-monolith-core",
     "registry/crates/fusion-terminal-browser",
+    "crates/settings",
 ]
 
 

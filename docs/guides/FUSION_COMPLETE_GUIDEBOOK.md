@@ -2509,6 +2509,12 @@ Flux-Resolve v2.0 represents a paradigm shift in dependency management, introduc
 
 Unlike traditional package managers that operate in isolation, Flux-Resolve v2.0 implements a distributed consensus mechanism where multiple nodes collaborate to solve complex dependency graphs. This architecture brings several revolutionary capabilities:
 
+**Visual: Flux-Resolve Hive Mind Architecture**
+
+![Flux-Resolve Hive Mind - Distributed Dependency Caching](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/flux_resolve_hive_1765648023008.png)
+
+The Hive Mind connects multiple developer workstations and CI/CD build agents through a distributed Redis cache, enabling instantaneous dependency resolution across your entire team.
+
 **Distributed Cache Intelligence**: When one developer resolves a dependency tree, the solution is cached not just locally but across the entire team's infrastructure. Subsequent resolutions are instantaneous, pulling from the distributed cache backed by Redis.
 
 **Conflict Prediction**: The Hive Mind learns from resolution failures across all users. If a particular combination of package versions is known to conflict, the system proactively avoids those combinations before attempting resolution.
@@ -3100,7 +3106,47 @@ HAFT (Hyper-Adaptive Flux Tensors) represents Fusion's revolutionary approach to
 
 ### The Three-Agent Architecture
 
-HAFT's intelligence comes from three specialized autonomous agents working in concert:
+H AFT's intelligence comes from three specialized autonomous agents working in concert:
+
+**Visual: HAFT Three Autonomous Agents**
+
+![HAFT - Researcher, Builder, Optimizer Agents](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/haft_three_agents_1765648007493.png)
+
+The Researcher agent analyzes access patterns, the Builder reorganizes data across GPU/RAM/SSD tiers, and the Optimizer fine-tunes operations—all working autonomously on the central tensor cube.
+
+**HAFT Memory Tier Decision Process:**
+
+```mermaid
+graph TB
+    START[Access Pattern Detected] --> RESEARCHER[Researcher Agent<br/>Analyzes Pattern]
+    
+    RESEARCHER --> CLASSIFY{Pattern Type?}
+    
+    CLASSIFY -->|Sequential| SEQ[Sequential Access]
+    CLASSIFY -->|Random| RAND[Random Access]
+    CLASSIFY -->|Sparse| SPARSE[Sparse Access]
+    CLASSIFY -->|Hot| HOT[Frequently Accessed]
+    
+    SEQ --> BUILDER1[Builder: Keep in RAM<br/>Prefetch Next Blocks]
+    RAND --> BUILDER2[Builder: Pin to GPU<br/>for Fast Random Access]
+    SPARSE --> BUILDER3[Builder: Convert to<br/>Sparse Format, SSD Storage]
+    HOT --> BUILDER4[Builder: Pin to<br/>GPU Hot Tier]
+    
+    BUILDER1 --> OPTIMIZE
+    BUILDER2 --> OPTIMIZE
+    BUILDER3 --> OPTIMIZE
+    BUILDER4 --> OPTIMIZE
+    
+    OPTIMIZE[Optimizer Agent<br/>Tunes Layout] --> MONITOR[Continue Monitoring]
+    MONITOR -->|Pattern Changes| RESEARCHER
+    
+    style RESEARCHER fill:#ff9800
+    style BUILDER1 fill:#2196f3
+    style BUILDER2 fill:#2196f3
+    style BUILDER3 fill:#2196f3
+    style BUILDER4 fill:#2196f3
+    style OPTIMIZE fill:#4caf50
+```
 
 #### 1. The Researcher Agent
 
@@ -3260,9 +3306,65 @@ Sentinel TriBrid is Fusion's autonomous security subsystem that provides continu
 
 #### 1. Chaos Math Engine
 
+**Visual: Sentinel TriBrid Security Architecture**
+
+![Sentinel TriBrid - Three Protective Layers](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/sentinel_tribrid_layers_1765647993998.png)
+
+The TriBrid system provides defense-in-depth with three autonomous layers: Chaos Math Cipher (purple fractals), Oscillating Security Mesh (green rotating patterns), and Adaptive AI Threat Detection (red neural network). All three work together to protect your application core.
+
 Traditional security relies on mathematical hardness assumptions (e.g., factoring large primes). Sentinel's Chaos Math Engine adds an additional layer by using chaotic dynamical systems whose behaviour is unpredictable even to observers with full knowledge of the system.
 
 **Key Concept**: A chaotic system has sensitive dependence on initial conditions. Even if an attacker knows the exact algorithm, a tiny difference in the starting state produces completely different outputs.
+
+**Visual: Lorenz Chaos Attractor**
+
+![Chaos Cipher - Lorenz Strange Attractor](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/chaos_cipher_attractor_1765651890548.png)
+
+The Lorenz attractor demonstrates sensitive dependence on initial conditions—the mathematical foundation of Sentinel's Chaos Cipher. Tiny differences in starting state produce completely different trajectories, making encryption unpredictable even with full knowledge of the algorithm.
+
+**Chaos Cipher Encryption Flow:**
+
+```mermaid
+graph TD
+    KEY[256-bit Key] --> INIT[Initialize Chaotic System<br/>Lorenz Attractor]
+    PLAINTEXT[Plaintext] --> BLOCKS[Split into Blocks]
+    
+    INIT --> STATE[Initial State<br/>x,y,z coordinates]
+    
+    BLOCKS --> BLOCK1[Block 1]
+    BLOCKS --> BLOCK2[Block 2]
+    BLOCKS --> BLOCKN[Block N]
+    
+    BLOCK1 --> ITERATE1[Iterate Attractor<br/>1000 steps]
+    STATE --> ITERATE1
+    
+    ITERATE1 --> XOR1[XOR with<br/>Chaotic Output]
+    XOR1 --> CIPHER1[Ciphertext Block 1]
+    
+    ITERATE1 --> STATE2[New State]
+    BLOCK2 --> ITERATE2[Iterate Attractor<br/>1000 steps]
+    STATE2 --> ITERATE2
+    
+    ITERATE2 --> XOR2[XOR with<br/>Chaotic Output]
+    XOR2 --> CIPHER2[Ciphertext Block 2]
+    
+    ITERATE2 --> STATEN[State Update]
+    BLOCKN --> ITERATEN[Iterate]
+    STATEN --> ITERATEN
+    ITERATEN --> XORN[XOR]
+    XORN --> CIPHERN[Ciphertext Block N]
+    
+    CIPHER1 --> COMBINE[Combine Blocks]
+    CIPHER2 --> COMBINE
+    CIPHERN --> COMBINE
+    
+    COMBINE --> OUTPUT[Final Ciphertext]
+    
+    style ITERATE1 fill:#9c27b0
+    style ITERATE2 fill:#9c27b0
+    style ITERATEN fill:#9c27b0
+    style OUTPUT fill:#4caf50
+```
 
 ```fusion
 use fusion::sentinel::chaos::ChaosCipher;
@@ -3400,6 +3502,37 @@ TensorWeave is Fusion's advanced tensor computation orchestration layer that sit
 ### Core Concepts
 
 While HAFT focuses on single-tensor optimization, TensorWeave manages **computation graphs**—networks of tensors and operations that define complex algorithms like neural networks, physics simulations, or optimization problems.
+
+**Visual: TensorWeave Graph Optimization**
+
+![TensorWeave - Before and After Optimization](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/tensorweave_graph_1765648058518.png)
+
+Left side shows a naive computation graph with redundant operations. Right side shows the optimized graph with fused operations and parallel execution paths, demonstrating how TensorWeave automatically improves performance.
+
+**Graph Optimization Pipeline:**
+
+```mermaid
+graph LR
+    START[Source Graph] --> PARSE[Parse Operations]
+    PARSE --> ANALYZE[Analyze Dependencies]
+    
+    ANALYZE --> OPT1[Fusion Pass]
+    ANALYZE --> OPT2[Parallelization Pass]
+    ANALYZE --> OPT3[Memory Optimization]
+    
+    OPT1 --> |matmul+bias → fused_linear| COMBINE[Combine Optimizations]
+    OPT2 --> |Independent ops → parallel| COMBINE
+    OPT3 --> |Reuse buffers| COMBINE
+    
+    COMBINE --> CODEGEN[Generate Kernel Code]
+    CODEGEN --> COMPILE[Compile to GPU/CPU]
+    COMPILE --> EXEC[Optimized Graph]
+    
+    style OPT1 fill:#4caf50
+    style OPT2 fill:#2196f3
+    style OPT3 fill:#ff9800
+    style EXEC fill:#9c27b0
+```
 
 ### Automatic Differentiation (Autodiff)
 
@@ -3801,7 +3934,48 @@ fn train_with_checkpointing() {
 
 ## 16. TermBlink: Ultra-Fast Terminal Interface {#termblink}
 
-TermBlink is Fusion's next-generation terminal UI framework for building blazingly fast, highly interactive terminal applications. Unlike traditional terminal libraries that re-render entire screens, TermBlink uses differential rendering and GPU-accelerated text composition.
+TermBlink is Fusion's next-generation terminal UI framework for building blazingly fast, highly interactive terminal applications.
+TermBlink is Fusion's ultra-fast, GPU-accelerated terminal UI library, enabling rich, interactive interfaces within the familiar and accessible terminal environment.
+
+**Visual: TermBlink GPU-Accelerated Terminal UI**
+
+![TermBlink - Modern Terminal Dashboard](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a384f/termblink_ui_rendering_1765651841975.png)
+
+TermBlink renders rich, interactive terminal UIs with GPU acceleration, supporting charts, tables, and virtualized scrolling through massive datasets—all whilst maintaining the portability and accessibility of terminal applications.
+
+**TermBlink Widget Rendering Pipeline:**
+
+```mermaid
+graph TD
+    APP[Application Code] --> WIDGETS[Widget Tree]
+    WIDGETS --> LAYOUT[Layout Engine]
+    
+    LAYOUT --> VIRT{Virtualization<br/>Needed?}
+    
+    VIRT -->|Large Dataset| VIEWPORT[Render Only<br/>Visible Viewport]
+    VIRT -->|Small Dataset| FULL[Render All Items]
+    
+    VIEWPORT --> BUFFER[Frame Buffer]
+    FULL --> BUFFER
+    
+    BUFFER --> GPU_CHECK{GPU Available?}
+    
+    GPU_CHECK -->|Yes| GPU_RENDER[GPU-Accelerated<br/>Rendering]
+    GPU_CHECK -->|No| CPU_RENDER[CPU Fallback<br/>Rendering]
+    
+    GPU_RENDER --> TERMINAL[Terminal Output]
+    CPU_RENDER --> TERMINAL
+    
+    TERMINAL --> REFRESH{60 FPS<br/>Update?}
+    REFRESH -->|Yes| WIDGETS
+    REFRESH -->|No| WAIT[Wait for Event]
+    WAIT --> WIDGETS
+    
+    style GPU_RENDER fill:#4caf50
+    style VIEWPORT fill:#2196f3
+    style TERMINAL fill:#ff9800
+```
+ Unlike traditional terminal libraries that re-render entire screens, TermBlink uses differential rendering and GPU-accelerated text composition.
 
 ### Key Features
 
@@ -4405,6 +4579,60 @@ graph LR
 ```
 
 ---
+Fusion provides a rich standard library of collection types optimized for different use cases. All collections are generic, type-safe, and integrate seamlessly with iterators for functional-style programming.
+
+**Visual: Iterator Chain Transformations**
+
+![Collections - Iterator Data Flow](C:/Users/Matth/.gemini/antigravity/brain/b4914301-30b2-4067-be9f-95deb8a3684f/collections_iterator_chain_1765651875151.png)
+
+Fusion's iterator chains provide zero-cost abstractions for data transformations, allowing elegant functional-style programming without runtime overhead.
+
+**Iterator Lazy Evaluation:**
+
+```mermaid
+sequenceDiagram
+    participant Code
+    participant Iterator
+    participant Filter
+    participant Map
+    participant Collect
+    
+    Code->>Iterator: vec.iter()
+    Note over Iterator: No work done yet<br/>(lazy evaluation)
+    
+    Code->>Filter: .filter(|x| x > 5)
+    Note over Filter: Creates filter adapter<br/>No iteration yet
+    
+    Code->>Map: .map(|x| x * 2)
+    Note over Map: Creates map adapter<br/>Still no iteration
+    
+    Code->>Collect: .collect::<Vec<_>>()
+    Note over Collect: NOW iteration begins
+    
+    Collect->>Map: Request next item
+    Map->>Filter: Request next item
+    Filter->>Iterator: Request next item
+    Iterator-->>Filter: Item: 3
+    Filter->>Filter: 3 > 5? No, skip
+    
+    Filter->>Iterator: Request next item
+    Iterator-->>Filter: Item: 7
+    Filter->>Filter: 7 > 5? Yes, pass through
+    Filter-->>Map: Item: 7
+    
+    Map->>Map: 7 * 2 = 14
+    Map-->>Collect: Item: 14
+    
+    Collect->>Collect: Add 14 to result vector
+    
+    Note over Code,Collect: Process continues until<br/>iterator exhausted
+    
+    Collect-->>Code: Final Vec: [14, 18, 22, ...]
+    
+    style Collect fill:#4caf50
+    style Filter fill:#ff9800
+    style Map fill:#2196f3
+```
 
 ## 19. Advanced Type System {#type-system}
 

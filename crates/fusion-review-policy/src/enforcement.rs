@@ -1,3 +1,8 @@
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
 //! Policy enforcement implementation
 //!
 //! Validates terminal commands, browser actions, and artifact requests

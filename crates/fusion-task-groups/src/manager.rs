@@ -1,3 +1,8 @@
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
 //! Task group management implementation
 //!
 //! Extensions to core task group types with management functionality

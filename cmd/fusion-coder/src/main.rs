@@ -1,3 +1,8 @@
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
 //! Fusion VSC CLI Coder
 //!
 //! Advanced agent orchestration CLI combining:
@@ -12,6 +17,7 @@ use std::path::PathBuf;
 
 mod commands;
 mod exec_mode;
+mod help;
 mod interactive;
 mod tui;
 
@@ -20,7 +26,8 @@ use fusion_settings::Settings;
 
 #[derive(Parser)]
 #[command(name = "fusion-coder")]
-#[command(about = "Fusion VSC CLI Coder - Advanced agent orchestration", long_about = None)]
+#[command(about = "Fusion VSC CLI Coder - Advanced agent orchestration")]
+#[command(long_about = help::LONG_ABOUT)]
 #[command(version)]
 struct Cli {
     /// Agent mode: planning or fast
@@ -74,6 +81,12 @@ enum Commands {
         /// Shell type (bash, zsh, fish)
         shell: String,
     },
+
+    /// Show detailed help for topics
+    Help {
+        /// Help topic (modes, secure, resume, exec, completion)
+        topic: Option<String>,
+    },
 }
 
 #[tokio::main]
@@ -112,27 +125,31 @@ async fn main() -> Result<()> {
         Some(Commands::Completion { shell }) => {
             println!("Generating {} completions - not yet implemented", shell);
         }
+        Some(Commands::Help { topic }) => {
+            if let Some(t) = topic {
+                help::print_topic_help(&t);
+            } else {
+                println!("{}", help::LONG_ABOUT);
+                println!("\nFor topic-specific help:");
+                println!("  fusion-coder help modes");
+                println!("  fusion-coder help secure");
+                println!("  fusion-coder help resume");
+                println!("  fusion-coder help exec");
+                println!("  fusion-coder help completion");
+            }
+        }
         None => {
             // Interactive mode (default)
             println!("🚀 Fusion VSC CLI Coder v1.0.0");
-            println!("Mode: {}", mode_type);
-            if cli.secure {
-                println!("🔒 Secure mode: ENABLED");
-            }
-            if let Some(model) = cli.model {
-                println!("Model: {}", model);
-            }
-            println!("Workspace: {}", workspace_dir.display());
-            println!();
+            println!("Starting TUI...");
 
             // Create session
             let session = AgentSession::new(mode_type, workspace_dir);
-            println!("Session ID: {}", session.id);
-            println!();
 
-            // TODO: Launch TUI
-            println!("Interactive TUI mode - not yet fully implemented");
-            println!("Agent ready in {} mode", mode_type);
+            // Launch TUI
+            if let Err(e) = tui::run_interactive(session, settings).await {
+                eprintln!("Error running TUI: {}", e);
+            }
         }
     }
 

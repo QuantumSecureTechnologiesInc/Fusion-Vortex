@@ -1,4 +1,4 @@
-# Sentinael Tri-Brid
+# Sentinel Tri-Brid
 
 > **Autonomous update agent with chaos-enhanced security mesh**
 
@@ -33,10 +33,10 @@ Three-tier fallback system ensures operational resilience:
 ## Quick Start
 
 ```rust
-use sentinael_tribrid::SentinaelAgent;
+use sentinel_tribrid::SentinelAgent;
 
 // Create and initialize agent
-let agent = SentinaelAgent::new("vault.json")?;
+let agent = SentinelAgent::new("vault.json")?;
 agent.initialize()?;
 
 // Monitor a crate
@@ -51,7 +51,7 @@ agent.monitor_and_optimize("my_crate", false)?;
 fusion sentinel init
 ```
 
-Creates `sentinael_vault.json` and registers core components.
+Creates `sentinel_vault.json` and registers core components.
 
 ### Start Monitoring
 

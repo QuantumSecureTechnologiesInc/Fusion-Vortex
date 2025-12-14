@@ -1,13 +1,18 @@
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
 //! Fusion Settings
 //!
 //! Hierarchical settings management with precedence:
 //! Enterprise > CLI > Local > Project > User
 
 use anyhow::Result;
-use fusion_review_policy::ReviewPolicy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+
+pub mod loader;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
@@ -35,11 +40,11 @@ pub struct AgentSettings {
 }
 
 pub struct SettingsLoader {
-    enterprise: Option<Settings>,
-    cli_args: Option<Settings>,
-    local: Option<Settings>,
-    project: Option<Settings>,
-    user: Option<Settings>,
+    pub(crate) enterprise: Option<Settings>,
+    pub(crate) cli_args: Option<Settings>,
+    pub(crate) local: Option<Settings>,
+    pub(crate) project: Option<Settings>,
+    pub(crate) user: Option<Settings>,
 }
 
 impl SettingsLoader {
@@ -52,9 +57,10 @@ impl SettingsLoader {
             user: None,
         }
     }
+}
 
-    pub fn load() -> Result<Settings> {
-        // TODO: Load from all sources and merge
-        Ok(Settings::default())
+impl Default for SettingsLoader {
+    fn default() -> Self {
+        Self::new()
     }
 }

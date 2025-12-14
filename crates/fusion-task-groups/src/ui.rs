@@ -1,3 +1,8 @@
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
 //! UI rendering helpers for task groups
 //!
 //! Provides display formatting for TUI integration

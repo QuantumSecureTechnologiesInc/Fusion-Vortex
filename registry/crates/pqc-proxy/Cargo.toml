@@ -9,5 +9,5 @@ fusion_core = { workspace = true }
 fusion_runtime_core = { workspace = true }
 fusion_std = { workspace = true }
 fusion_net = { workspace = true }
-fusion_security = { workspace = true }
+
 
