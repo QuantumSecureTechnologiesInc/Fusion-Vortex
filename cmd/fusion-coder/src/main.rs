@@ -8,11 +8,15 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 mod commands;
 mod exec_mode;
 mod interactive;
 mod tui;
+
+use fusion_agent_core::{AgentModeType, AgentSession, SecureMode};
+use fusion_settings::Settings;
 
 #[derive(Parser)]
 #[command(name = "fusion-coder")]
@@ -30,6 +34,14 @@ struct Cli {
     /// Enable web search
     #[arg(long)]
     search: bool,
+
+    /// Model to use
+    #[arg(long)]
+    model: Option<String>,
+
+    /// Working directory
+    #[arg(long)]
+    path: Option<PathBuf>,
 
     #[command(subcommand)]
     command: Option<Commands>,
@@ -59,7 +71,7 @@ enum Commands {
 
     /// Generate shell completions
     Completion {
-        /// Shell type
+        /// Shell type (bash, zsh, fish)
         shell: String,
     },
 }
@@ -68,32 +80,59 @@ enum Commands {
 async fn main() -> Result<()> {
     // Initialize tracing
     tracing_subscriber::fmt()
-        .with_env_filter("fusion_coder=debug")
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "fusion_coder=info".into()),
+        )
         .init();
 
     let cli = Cli::parse();
 
+    // Parse agent mode
+    let mode_type: AgentModeType = cli.mode.parse()?;
+
+    // Load settings
+    let settings = Settings::load().unwrap_or_default();
+
+    // Create secure mode
+    let secure_mode = SecureMode::new(cli.secure);
+
+    // Get workspace directory
+    let workspace_dir = cli
+        .path
+        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get current directory"));
+
     match cli.command {
         Some(Commands::Resume { session_id, last }) => {
-            // Resume session logic
-            println!("Resume mode - not yet implemented");
+            commands::handle_resume(session_id, last);
         }
         Some(Commands::Exec { task, json }) => {
-            // Exec mode logic
-            println!("Exec mode - not yet implemented");
+            exec_mode::execute(&task, json);
         }
         Some(Commands::Completion { shell }) => {
-            // Generate completions
-            println!("Completions - not yet implemented");
+            println!("Generating {} completions - not yet implemented", shell);
         }
         None => {
             // Interactive mode (default)
             println!("🚀 Fusion VSC CLI Coder v1.0.0");
-            println!("Starting in {} mode...", cli.mode);
+            println!("Mode: {}", mode_type);
             if cli.secure {
-                println!("🔒 Secure mode enabled");
+                println!("🔒 Secure mode: ENABLED");
             }
+            if let Some(model) = cli.model {
+                println!("Model: {}", model);
+            }
+            println!("Workspace: {}", workspace_dir.display());
+            println!();
+
+            // Create session
+            let session = AgentSession::new(mode_type, workspace_dir);
+            println!("Session ID: {}", session.id);
+            println!();
+
             // TODO: Launch TUI
+            println!("Interactive TUI mode - not yet fully implemented");
+            println!("Agent ready in {} mode", mode_type);
         }
     }
 
