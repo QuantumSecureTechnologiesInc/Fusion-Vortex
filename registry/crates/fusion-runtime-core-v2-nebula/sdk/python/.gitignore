@@ -1,0 +1,10 @@
+# Python SDK - Generated Protobuf Files
+# These files are auto-generated from proto/fusion_core_v2.proto
+# Run 'python generate_proto.py' to regenerate them
+*_pb2.py
+*_pb2_grpc.py
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
