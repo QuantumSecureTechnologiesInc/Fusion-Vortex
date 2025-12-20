@@ -83,6 +83,7 @@ struct CommandPattern {
     name: String,
     aliases: Vec<String>,
     intent: CommandIntent,
+    #[allow(dead_code)]
     signature: String,
 }
 

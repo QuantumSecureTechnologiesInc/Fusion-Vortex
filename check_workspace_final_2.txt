@@ -1,0 +1,556 @@
+warning: C:\Projects\Fusion - Programming Language\registry\crates\tensor-sparse\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+    Blocking waiting for file lock on build directory
+    Checking fusion-core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-core)
+   Compiling pyo3-build-config v0.20.3
+warning: unused import: `anyhow::Result`
+  --> crates\fusion-review-policy\src\enforcement.rs:15:5
+   |
+15 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `fusion-review-policy` (lib) generated 1 warning (run `cargo fix --lib -p fusion-review-policy` to apply 1 suggestion)
+warning: unused import: `Path`
+  --> crates\fusion-settings\src\lib.rs:17:17
+   |
+17 | use std::path::{Path, PathBuf};
+   |                 ^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `fusion-settings` (lib) generated 1 warning (run `cargo fix --lib -p fusion-settings` to apply 1 suggestion)
+warning: unused import: `anyhow::Result`
+  --> crates\fusion-task-groups\src\manager.rs:11:5
+   |
+11 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `PendingStep`
+  --> crates\fusion-task-groups\src\ui.rs:10:13
+   |
+10 | use crate::{PendingStep, Subtask, TaskGroup};
+   |             ^^^^^^^^^^^
+
+warning: `fusion-task-groups` (lib) generated 2 warnings (run `cargo fix --lib -p fusion-task-groups` to apply 2 suggestions)
+warning: unused variable: `json`
+ --> cmd\fusion-coder\src\exec_mode.rs:2:28
+  |
+2 | pub fn execute(task: &str, json: bool) {
+  |                            ^^^^ help: if this is intentional, prefix it with an underscore: `_json`
+  |
+  = note: `#[warn(unused_variables)]` on by default
+
+warning: function `start` is never used
+ --> cmd\fusion-coder\src\interactive.rs:2:8
+  |
+2 | pub fn start() {
+  |        ^^^^^
+  |
+  = note: `#[warn(dead_code)]` on by default
+
+warning: `fusion-coder` (bin "fusion-coder") generated 2 warnings
+    Checking fusion_runtime_hal v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_hal)
+    Checking fusion_runtime_scheduler v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_scheduler)
+    Checking fusion_runtime_mem_mgr v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_mem_mgr)
+    Checking fusion_std v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\std)
+    Checking fusion_llm_inference_engine v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\llm-inference)
+    Checking fusion_quantum_sdk v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\quantum-sdk)
+    Checking fusion-audit v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\audit)
+    Checking fusion_q_sim v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\q-sim)
+    Checking fusion-agentic-core v0.1.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-agentic-core)
+    Checking fusion-toolchain v0.2.0 (C:\Projects\Fusion - Programming Language\crates\toolchain)
+    Checking fusion_llm_lora_manager v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\llm-lora-manager)
+    Checking fusion-docgen v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\docgen)
+    Checking fusion_kv_cache v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\kv-cache)
+    Checking fusion-formatter v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\formatter)
+    Checking fusion_llm_tokenizers v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\llm-tokenizers)
+warning: unused import: `parking_lot::RwLock`
+  --> registry\crates\fusion_runtime_hal\src\lib.rs:19:5
+   |
+19 | use parking_lot::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `warn`
+  --> registry\crates\fusion_runtime_hal\src\lib.rs:22:28
+   |
+22 | use tracing::{debug, info, warn};
+   |                            ^^^^
+
+warning: field `total_size` is never read
+   --> registry\crates\fusion_runtime_mem_mgr\src\lib.rs:191:5
+    |
+189 | pub struct BufferPool {
+    |            ---------- field in this struct
+190 |     device: DeviceType,
+191 |     total_size: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: field `size` is never read
+   --> registry\crates\fusion_runtime_mem_mgr\src\lib.rs:242:5
+    |
+240 | pub struct Allocation {
+    |            ---------- field in this struct
+241 |     ptr: usize,
+242 |     size: usize,
+    |     ^^^^
+
+    Checking fusion_ui_react v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\react-hooks)
+warning: field `config` is never read
+  --> registry\crates\fusion_runtime_hal\src\lib.rs:44:5
+   |
+33 | pub struct HardwareLayer {
+   |            ------------- field in this struct
+...
+44 |     config: HalConfig,
+   |     ^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `backend` is never read
+  --> registry\crates\fusion_runtime_hal\src\gpu.rs:27:5
+   |
+26 | pub struct GpuKernelExecutor {
+   |            ----------------- field in this struct
+27 |     backend: GpuBackend,
+   |     ^^^^^^^
+
+   Compiling pyo3-macros-backend v0.20.3
+warning: unused `Result` that must be used
+   --> registry\crates\kv-cache\src\lib.rs:139:13
+    |
+139 |             writer.key_block.set([i, pos], *k_val);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+139 |             let _ = writer.key_block.set([i, pos], *k_val);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> registry\crates\kv-cache\src\lib.rs:140:13
+    |
+140 |             writer.value_block.set([i, pos], *v_val);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+140 |             let _ = writer.value_block.set([i, pos], *v_val);
+    |             +++++++
+
+warning: unused variable: `c_p`
+  --> registry\crates\q-sim\src\lib.rs:26:21
+   |
+26 |                 let c_p = Complex64::new(p_div_3.sqrt(), 0.0);
+   |                     ^^^ help: if this is intentional, prefix it with an underscore: `_c_p`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `e0_scalar`
+  --> registry\crates\q-sim\src\lib.rs:36:21
+   |
+36 |                 let e0_scalar = (1.0 - 3.0 * p / 4.0).sqrt();
+   |                     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_e0_scalar`
+
+warning: unused variable: `e0`
+  --> registry\crates\q-sim\src\lib.rs:42:21
+   |
+42 |                 let e0 = e0.unwrap();
+   |                     ^^ help: if this is intentional, prefix it with an underscore: `_e0`
+
+warning: unused import: `std::collections::VecDeque`
+ --> registry\crates\fusion-agentic-core\src\chain_of_thought.rs:5:5
+  |
+5 | use std::collections::VecDeque;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unnecessary parentheses around assigned value
+  --> registry\crates\fusion-agentic-core\src\code_excellence.rs:53:30
+   |
+53 |         self.overall_score = (self.readability * 0.2
+   |                              ^
+...
+58 |             + self.documentation * 0.05);
+   |                                        ^
+   |
+   = note: `#[warn(unused_parens)]` on by default
+help: remove these parentheses
+   |
+53 ~         self.overall_score = self.readability * 0.2
+54 |             + self.maintainability * 0.25
+...
+57 |             + self.test_coverage * 0.1
+58 ~             + self.documentation * 0.05;
+   |
+
+warning: unnecessary parentheses around assigned value
+   --> registry\crates\fusion-agentic-core\src\code_excellence.rs:348:22
+    |
+348 |             score -= (unwrap_count as f64 * 5.0);
+    |                      ^                         ^
+    |
+help: remove these parentheses
+    |
+348 -             score -= (unwrap_count as f64 * 5.0);
+348 +             score -= unwrap_count as f64 * 5.0;
+    |
+
+    Checking fusion-tester v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\tester)
+warning: `fusion_runtime_mem_mgr` (lib) generated 2 warnings
+    Checking fusion-analyzer v0.2.0 (C:\Projects\Fusion - Programming Language\crates\analyzer)
+    Checking fusion-profiler v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\profiler)
+    Checking fusion-runtime-core-v2-nebula v2.0.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-runtime-core-v2-nebula)
+warning: `fusion_runtime_hal` (lib) generated 4 warnings (run `cargo fix --lib -p fusion_runtime_hal` to apply 2 suggestions)
+warning: `fusion_q_sim` (lib) generated 3 warnings
+    Checking fusion_q_ibm_backend v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\q-ibm-backend)
+    Checking fusion_llm_trie_search v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\trie-search)
+    Checking fusion_q_aws_backend v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\q-aws-backend)
+warning: `fusion_kv_cache` (lib) generated 2 warnings
+    Checking fusion_q_error_corr v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\error-correction)
+    Checking fusion_gate_decomposition v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\gate-decomposition)
+    Checking fusion_runtime_core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_core)
+    Checking fusion_q_compiler_pass v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\compiler-passes)
+warning: unused import: `HashSet`
+ --> registry\crates\llm-tokenizers\src\lib.rs:2:33
+  |
+2 | use std::collections::{HashMap, HashSet};
+  |                                 ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `super::*`
+   --> registry\crates\llm-tokenizers\src\lib.rs:194:9
+    |
+194 |     use super::*;
+    |         ^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> registry\crates\llm-tokenizers\src\lib.rs:139:21
+    |
+139 |                 let mut chars: Vec<char> = token.chars().collect();
+    |                     ----^^^^^
+    |                     |
+    |                     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+    Checking fusion_ui_component_lib v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\component-lib)
+warning: field `reasoning` is never read
+   --> registry\crates\fusion-agentic-core\src\agentic.rs:221:5
+    |
+218 | struct SolutionCandidate {
+    |        ----------------- field in this struct
+...
+221 |     reasoning: Vec<String>,
+    |     ^^^^^^^^^
+    |
+    = note: `SolutionCandidate` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` on by default
+
+warning: field `max_depth` is never read
+   --> registry\crates\fusion-agentic-core\src\chain_of_thought.rs:121:5
+    |
+119 | pub struct ChainOfThought {
+    |            -------------- field in this struct
+120 |     /// Maximum chain depth
+121 |     max_depth: usize,
+    |     ^^^^^^^^^
+
+warning: `fusion_llm_tokenizers` (lib) generated 3 warnings (run `cargo fix --lib -p fusion_llm_tokenizers` to apply 3 suggestions)
+    Checking fusion_safetensors v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\safetensors)
+warning: unused variable: `circuit`
+  --> registry\crates\q-ibm-backend\src\lib.rs:15:40
+   |
+15 |     pub async fn submit_circuit(&self, circuit: &QuantumCircuit) -> StdResult<String> {
+   |                                        ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_circuit`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `job_id`
+  --> registry\crates\q-ibm-backend\src\lib.rs:21:37
+   |
+21 |     pub async fn get_results(&self, job_id: &str) -> StdResult<QuantumState> {
+   |                                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_job_id`
+
+warning: unused variable: `api_key`
+  --> registry\crates\q-ibm-backend\src\lib.rs:11:16
+   |
+11 |     pub fn new(api_key: &str) -> Self {
+   |                ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_api_key`
+
+    Checking fusion_sec_supply_chain v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\supply-chain)
+    Checking fusion_tree v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\tree)
+    Checking fusion_tokenizers v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\tokenizers)
+warning: `fusion_q_ibm_backend` (lib) generated 3 warnings
+    Checking fusion_vault v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\vault)
+    Checking fusion_llm_stream_monitor v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\stream-monitor)
+warning: unused import: `QuantumGate`
+ --> registry\crates\gate-decomposition\src\lib.rs:1:51
+  |
+1 | use fusion_core::types::quantum::{QuantumCircuit, QuantumGate};
+  |                                                   ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `CircuitCompiler`
+ --> registry\crates\gate-decomposition\src\lib.rs:5:26
+  |
+5 | use fusion_quantum_sdk::{CircuitCompiler, OptimizationPass};
+  |                          ^^^^^^^^^^^^^^^
+
+warning: unused variable: `circuit`
+  --> registry\crates\gate-decomposition\src\lib.rs:33:19
+   |
+33 |     fn run(&self, circuit: &mut QuantumCircuit) {
+   |                   ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_circuit`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: `fusion-agentic-core` (lib) generated 5 warnings (run `cargo fix --lib -p fusion-agentic-core` to apply 3 suggestions)
+    Checking fusion_sec_sandbox v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\sandbox-manager)
+   Compiling pyo3-ffi v0.20.3
+warning: unused variable: `circuit`
+  --> registry\crates\q-aws-backend\src\lib.rs:15:40
+   |
+15 |     pub async fn submit_circuit(&self, circuit: &QuantumCircuit) -> StdResult<String> {
+   |                                        ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_circuit`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `job_id`
+  --> registry\crates\q-aws-backend\src\lib.rs:21:37
+   |
+21 |     pub async fn get_results(&self, job_id: &str) -> StdResult<QuantumState> {
+   |                                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_job_id`
+
+warning: unused variable: `api_key`
+  --> registry\crates\q-aws-backend\src\lib.rs:11:16
+   |
+11 |     pub fn new(api_key: &str) -> Self {
+   |                ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_api_key`
+
+   Compiling pyo3 v0.20.3
+warning: `fusion_gate_decomposition` (lib) generated 3 warnings (run `cargo fix --lib -p fusion_gate_decomposition` to apply 2 suggestions)
+    Checking fusion_version v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\version)
+warning: unused import: `fusion_quantum_sdk::QuantumBackend`
+ --> registry\crates\error-correction\src\lib.rs:5:5
+  |
+5 | use fusion_quantum_sdk::QuantumBackend;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: field `algorithm` is never read
+  --> registry\crates\vault\src\lib.rs:15:5
+   |
+13 | struct KeyObject {
+   |        --------- field in this struct
+14 |     material: Vec<u8>, // In real HSM: Encrypted with Master Key
+15 |     algorithm: String,
+   |     ^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+    Checking fusion_ui_layout_builder v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\layout-builder)
+    Checking fusion_llm_custom_tokenizer v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\custom-tokenizer)
+warning: unused import: `std::collections::HashMap`
+ --> registry\crates\tokenizers\src\lib.rs:7:5
+  |
+7 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `fusion_core::types::tensor::Vector1D`
+ --> registry\crates\tree\src\lib.rs:5:5
+  |
+5 | use fusion_core::types::tensor::Vector1D;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `fusion_core::FusionResult`
+ --> registry\crates\tree\src\lib.rs:6:5
+  |
+6 | use fusion_core::FusionResult;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `text`
+  --> registry\crates\tokenizers\src\lib.rs:34:26
+   |
+34 |     pub fn encode(&self, text: &str) -> Vec<u32> {
+   |                          ^^^^ help: if this is intentional, prefix it with an underscore: `_text`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: `fusion_q_aws_backend` (lib) generated 3 warnings
+    Checking fusion_sec_forensics v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\sec-forensics)
+    Checking fusion_sec_policy_engine v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\policy-engine)
+warning: `fusion_vault` (lib) generated 1 warning
+    Checking fusion_finite_fields v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\finite-fields)
+warning: `fusion_tokenizers` (lib) generated 2 warnings (run `cargo fix --lib -p fusion_tokenizers` to apply 1 suggestion)
+    Checking fusion_ui_data_vis v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\data-vis)
+warning: `fusion_tree` (lib) generated 2 warnings (run `cargo fix --lib -p fusion_tree` to apply 2 suggestions)
+    Checking fusion_q_algo v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\q-algo)
+warning: `fusion_q_error_corr` (lib) generated 1 warning (run `cargo fix --lib -p fusion_q_error_corr` to apply 1 suggestion)
+    Checking fusion_crate_analyzer v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\crate-analyzer)
+    Checking fusion_sbom_generator v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\sbom-generator)
+error[E0277]: `?` couldn't convert the error to `StdError`
+  --> registry\crates\sandbox-manager\src\lib.rs:40:45
+   |
+40 |             Err(SandboxError::UnsupportedOS)?
+   |             --------------------------------^ the trait `From<SandboxError>` is not implemented for `StdError`
+   |             |
+   |             this can't be annotated with `?` because it has type `Result<_, SandboxError>`
+   |
+note: `SandboxError` needs to implement `Into<StdError>`
+  --> registry\crates\sandbox-manager\src\lib.rs:9:1
+   |
+ 9 | pub enum SandboxError {
+   | ^^^^^^^^^^^^^^^^^^^^^
+   = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+   = help: the following other types implement trait `From<T>`:
+             `StdError` implements `From<fusion_core::error::FusionError>`
+             `StdError` implements `From<std::io::Error>`
+
+For more information about this error, try `rustc --explain E0277`.
+    Checking fusion_ai_core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_ai_core)
+error: could not compile `fusion_sec_sandbox` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: unused import: `StdError`
+ --> registry\crates\policy-engine\src\lib.rs:5:36
+  |
+5 | use fusion_std::error::{StdResult, StdError};
+  |                                    ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused imports: `StdError` and `StdResult`
+ --> registry\crates\finite-fields\src\lib.rs:6:25
+  |
+6 | use fusion_std::error::{StdResult, StdError};
+  |                         ^^^^^^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: field `rules` is never read
+  --> registry\crates\policy-engine\src\lib.rs:17:5
+   |
+15 | pub struct PolicyEngine {
+   |            ------------ field in this struct
+16 |     // Compiled policy rules (OPA/Rego graph structure simulation)
+17 |     rules: Value, 
+   |     ^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: unused imports: `StdError` and `StdResult`
+ --> registry\crates\sec-forensics\src\lib.rs:6:25
+  |
+6 | use fusion_std::error::{StdResult, StdError};
+  |                         ^^^^^^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `QuantumGate`
+ --> registry\crates\q-algo\src\lib.rs:4:51
+  |
+4 | use fusion_core::types::quantum::{QuantumCircuit, QuantumGate};
+  |                                                   ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `StdError`
+ --> registry\crates\crate-analyzer\src\lib.rs:5:36
+  |
+5 | use fusion_std::error::{StdResult, StdError};
+  |                                    ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: `fusion_sec_forensics` (lib) generated 1 warning (run `cargo fix --lib -p fusion_sec_forensics` to apply 1 suggestion)
+warning: `fusion_finite_fields` (lib) generated 1 warning (run `cargo fix --lib -p fusion_finite_fields` to apply 1 suggestion)
+warning: `fusion_sec_policy_engine` (lib) generated 2 warnings (run `cargo fix --lib -p fusion_sec_policy_engine` to apply 1 suggestion)
+warning: unused import: `Matrix`
+ --> registry\crates\data-vis\src\lib.rs:5:44
+  |
+5 | use fusion_core::types::tensor::{Vector1D, Matrix};
+  |                                            ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+error[E0615]: attempted to take value of method `shape` on type `&fusion_core::Tensor<f64, 1>`
+  --> registry\crates\data-vis\src\lib.rs:14:41
+   |
+14 |         let x_data: Vec<u32> = (0..data.shape[0] as u32).collect();
+   |                                         ^^^^^ method, not a field
+   |
+help: use parentheses to call the method
+   |
+14 |         let x_data: Vec<u32> = (0..data.shape()[0] as u32).collect();
+   |                                              ++
+
+warning: unused import: `StdError`
+ --> registry\crates\sbom-generator\src\lib.rs:5:36
+  |
+5 | use fusion_std::error::{StdResult, StdError};
+  |                                    ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+For more information about this error, try `rustc --explain E0615`.
+warning: `fusion_q_algo` (lib) generated 1 warning (run `cargo fix --lib -p fusion_q_algo` to apply 1 suggestion)
+warning: `fusion_crate_analyzer` (lib) generated 1 warning (run `cargo fix --lib -p fusion_crate_analyzer` to apply 1 suggestion)
+warning: `fusion_ui_data_vis` (lib) generated 1 warning
+error: could not compile `fusion_ui_data_vis` (lib) due to 1 previous error; 1 warning emitted
+warning: `fusion_sbom_generator` (lib) generated 1 warning (run `cargo fix --lib -p fusion_sbom_generator` to apply 1 suggestion)
+warning: unused variable: `rows`
+  --> registry\crates\fusion_ai_core\src\lib.rs:87:13
+   |
+87 |         let rows = self_shape[0];
+   |             ^^^^ help: if this is intentional, prefix it with an underscore: `_rows`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `cols`
+  --> registry\crates\fusion_ai_core\src\lib.rs:88:13
+   |
+88 |         let cols = other_shape[1];
+   |             ^^^^ help: if this is intentional, prefix it with an underscore: `_cols`
+
+warning: fields `lr` and `params` are never read
+ --> registry\crates\fusion_ai_core\src\optim.rs:8:5
+  |
+7 | pub struct Adam {
+  |            ---- fields in this struct
+8 |     lr: f64,
+  |     ^^
+9 |     params: Vec<Tensor>,
+  |     ^^^^^^
+  |
+  = note: `#[warn(dead_code)]` on by default
+
+warning: fields `lr` and `params` are never read
+  --> registry\crates\fusion_ai_core\src\optim.rs:25:5
+   |
+24 | pub struct SGD {
+   |            --- fields in this struct
+25 |     lr: f64,
+   |     ^^
+26 |     params: Vec<Tensor>,
+   |     ^^^^^^
+
+warning: `fusion_ai_core` (lib) generated 4 warnings

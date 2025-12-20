@@ -1,3 +1,3 @@
 /// offload implementation
 
-pub struct offloadModule;
+pub struct OffloadModule;

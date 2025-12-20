@@ -7,7 +7,7 @@
 //!
 //! Provides display formatting for TUI integration
 
-use crate::{PendingStep, Subtask, TaskGroup};
+use crate::{Subtask, TaskGroup};
 
 impl TaskGroup {
     /// Get a formatted header for display

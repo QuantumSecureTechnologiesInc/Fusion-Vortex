@@ -144,7 +144,7 @@ async fn main() -> Result<()> {
             println!("Starting TUI...");
 
             // Create session
-            let session = AgentSession::new(mode_type, workspace_dir);
+            let session = AgentSession::new(mode_type, workspace_dir, secure_mode);
 
             // Launch TUI
             if let Err(e) = tui::run_interactive(session, settings).await {

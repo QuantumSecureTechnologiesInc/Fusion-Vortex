@@ -54,42 +54,24 @@ impl InferenceEngine {
 
     fn matmul(&self, a: &Matrix<f64>, b: &Matrix<f64>) -> FusionResult<Matrix<f64>> {
         // Validation
-        if a.shape.len() != 2 || b.shape.len() != 2 || a.shape[1] != b.shape[0] {
+        if a.shape().len() != 2 || b.shape().len() != 2 || a.shape()[1] != b.shape()[0] {
             return Err(FusionError::ShapeMismatch {
-                op: "matmul".into(),
-                lhs: a.shape.clone(),
-                rhs: b.shape.clone(),
+                op: "matmul".to_string(),
+                lhs: a.shape().to_vec(),
+                rhs: b.shape().to_vec(),
             });
         }
 
-        let m = a.shape[0];
-        let n = a.shape[1];
-        let p = b.shape[1];
-        let mut result_data = vec![0.0; m * p];
-
-        // Naive O(n^3) matmul
-        for i in 0..m {
-            for j in 0..p {
-                let mut sum = 0.0;
-                for k in 0..n {
-                    sum += a.data[i * n + k] * b.data[k * p + j];
-                }
-                result_data[i * p + j] = sum;
-            }
-        }
-
-        Ok(Matrix {
-            data: result_data,
-            shape: vec![m, p],
-        })
+        // Use fusion-core's matmul
+        a.matmul(b)
     }
 
     fn add(&self, a: &Matrix<f64>, b: &Matrix<f64>) -> FusionResult<Matrix<f64>> {
-        if a.shape != b.shape {
+        if a.shape() != b.shape() {
             return Err(FusionError::ShapeMismatch {
-                op: "add".into(),
-                lhs: a.shape.clone(),
-                rhs: b.shape.clone(),
+                op: "add".to_string(),
+                lhs: a.shape().to_vec(),
+                rhs: b.shape().to_vec(),
             });
         }
 
@@ -99,10 +81,9 @@ impl InferenceEngine {
             .zip(b.data.iter())
             .map(|(x, y)| x + y)
             .collect();
-        Ok(Matrix {
-            data,
-            shape: a.shape.clone(),
-        })
+        // shape is &[usize], convert to [usize; 2]
+        let shape = [a.shape()[0], a.shape()[1]];
+        Ok(Matrix::new(data, shape).unwrap())
     }
 
     fn relu(&self, a: &Matrix<f64>) -> Matrix<f64> {
@@ -111,10 +92,7 @@ impl InferenceEngine {
             .iter()
             .map(|&x| if x > 0.0 { x } else { 0.0 })
             .collect();
-        Matrix {
-            data,
-            shape: a.shape.clone(),
-        }
+        let shape = [a.shape()[0], a.shape()[1]];
+        Matrix::new(data, shape).unwrap()
     }
 }
-

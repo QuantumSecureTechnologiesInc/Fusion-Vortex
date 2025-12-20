@@ -1,10 +1,10 @@
+#![allow(unused_imports)]
 /// Production Event Bus.
 /// Implements a simple Pub/Sub model with durable, partitioned queues.
-
-use fusion_std::error::{StdResult, StdError};
-use tokio::sync::broadcast::{self, Sender};
+use fusion_std::error::{StdError, StdResult};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::broadcast::{self, Sender};
 use tokio::sync::Mutex;
 
 const MAX_QUEUE_SIZE: usize = 4096;
@@ -16,7 +16,9 @@ pub struct EventBus {
 
 impl EventBus {
     pub fn new() -> Self {
-        Self { topics: Arc::new(Mutex::new(HashMap::new())) }
+        Self {
+            topics: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 
     /// Ensure a topic exists and return its sender.
@@ -34,7 +36,8 @@ impl EventBus {
     pub async fn publish(&self, topic: &str, message: String) -> StdResult<usize> {
         let tx = self.get_sender(topic).await;
         // Broadcast send returns the number of subscribers
-        tx.send(message).map_err(|e| StdError::Io(e.into()))
+        tx.send(message)
+            .map_err(|e| StdError::Serialization(format!("Broadcast error: {}", e)))
     }
 
     /// Subscribe to a topic.

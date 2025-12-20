@@ -1,9 +1,8 @@
 /// Software Bill of Materials (SBOM) and Verification.
-/// 
+///
 /// Generates SPDX/CycloneDX reports and verifies artifact signatures (Sigstore/PQC).
-
-use fusion_std::error::{StdResult, StdError};
-use sha2::{Sha256, Digest};
+use fusion_std::error::StdResult;
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -18,7 +17,10 @@ pub struct SBOMGenerator;
 
 impl SBOMGenerator {
     /// Generates a CycloneDX-style report for the current build.
-    pub fn generate_report(&self, dependencies: &HashMap<String, String>) -> StdResult<Vec<Component>> {
+    pub fn generate_report(
+        &self,
+        dependencies: &HashMap<String, String>,
+    ) -> StdResult<Vec<Component>> {
         let mut components = Vec::new();
 
         for (name, version) in dependencies {
@@ -32,7 +34,7 @@ impl SBOMGenerator {
                 hash_sha256: hash,
             });
         }
-        
+
         Ok(components)
     }
 }

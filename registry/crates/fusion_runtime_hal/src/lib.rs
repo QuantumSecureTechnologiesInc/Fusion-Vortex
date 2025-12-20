@@ -16,9 +16,11 @@
 //! 2. **Network Device Interface**: Bypass kernel for packet processing
 //! 3. **QPU Interface**: Async job submission to quantum hardware
 
+#[allow(unused_imports)]
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+#[allow(unused_imports)]
 use tracing::{debug, info, warn};
 
 mod gpu;
@@ -41,6 +43,7 @@ pub struct HardwareLayer {
     qpu: Option<Arc<QpuInterface>>,
 
     /// Configuration
+    #[allow(dead_code)]
     config: HalConfig,
 }
 

@@ -17,9 +17,15 @@ pub mod error {
         Runtime(String),
         #[error("Core error: {0}")]
         Core(#[from] fusion_core::FusionError),
+        #[error("Serialization error: {0}")]
+        Serialization(String),
+        #[error("Permission denied: {0}")]
+        PermissionDenied(String),
     }
 
     pub type StdResult<T> = Result<T, StdError>;
 }
 
 pub use error::{StdError, StdResult};
+
+pub mod io;

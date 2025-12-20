@@ -1,5 +1,5 @@
 use fusion_kv_cache::PagedAttentionManager;
-use fusion_llm_lora_manager::LoraManager;
+use fusion_llm_lora_manager::LoRAManager;
 /// Production LLM Inference Server.
 ///
 /// Integrates Paged KV Cache and LORA Manager for high-throughput, multi-tenant serving.
@@ -10,12 +10,12 @@ use tokio::sync::Mutex;
 
 pub struct InferenceServer {
     pub cache_manager: Arc<Mutex<PagedAttentionManager>>,
-    pub lora_manager: Arc<LoraManager>,
+    pub lora_manager: Arc<LoRAManager>,
     // Add reference to model weights/engine here
 }
 
 impl InferenceServer {
-    pub fn new(cache: PagedAttentionManager, lora_manager: LoraManager) -> Self {
+    pub fn new(cache: PagedAttentionManager, lora_manager: LoRAManager) -> Self {
         Self {
             cache_manager: Arc::new(Mutex::new(cache)),
             lora_manager: Arc::new(lora_manager),

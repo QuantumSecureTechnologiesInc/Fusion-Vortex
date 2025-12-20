@@ -1,5 +1,20 @@
-error: no matching package found
-searched package name: `fusion-core`
-perhaps you meant:      fusion_core
-location searched: C:\Projects\Fusion - Programming Language\crates\fusion_core
-required by package `fusion_ai_core v0.2.0 (C:\Projects\Fusion - Programming Language\ecosystem\crates\fusion_ai_core)`
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\tensor-sparse\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+    Updating crates.io index
+error: failed to select a version for `hyper-util`.
+    ... required by package `fusion_http v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\http)`
+    ... which satisfies path dependency `fusion_http` of package `cloud-aws v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\cloud-aws)`
+versions that meet the requirements `^0.1` are: 0.1.19, 0.1.18, 0.1.17, 0.1.16, 0.1.15, 0.1.14, 0.1.13, 0.1.12, 0.1.11, 0.1.10, 0.1.9, 0.1.8, 0.1.7, 0.1.6, 0.1.5, 0.1.4, 0.1.3, 0.1.2, 0.1.1, 0.1.0
+
+package `fusion_http` depends on `hyper-util` with feature `tls` but `hyper-util` does not have that feature.
+ package `hyper-util` does have feature `full`
+
+
+all possible versions conflict with previously selected packages.
+
+  previously selected package `hyper-util v0.1.3`
+    ... which satisfies dependency `hyper-util = "^0.1.2"` of package `axum v0.7.4`
+    ... which satisfies dependency `axum = "^0.7"` of package `fusion_llm_model_server v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\llm-model-server)`
+
+failed to select a version for `hyper-util` which could resolve this conflict

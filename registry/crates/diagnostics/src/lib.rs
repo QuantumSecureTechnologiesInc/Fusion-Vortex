@@ -1,3 +1,3 @@
 /// diagnostics implementation
 
-pub struct diagnosticsModule;
+pub struct DiagnosticsModule;

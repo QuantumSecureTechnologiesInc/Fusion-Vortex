@@ -2,8 +2,19 @@
 name = "fusion_http"
 version = "0.2.0"
 edition = "2021"
-description = "HTTP server and client library for Fusion"
+description = "Integration: Ergonomic HTTP server and client library with async/blocking support"
 license = "MIT"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["http", "server", "client", "async"]
+categories = ["network-programming", "web-programming::http-server"]
+readme = "README.md"
+
+[features]
+default = ["server", "client"]
+server = []
+client = []
+tls = [] # "hyper-util/tls" feature does not exist in 0.1
 
 [dependencies]
 anyhow = { workspace = true }
@@ -13,4 +24,9 @@ hyper-util = { version = "0.1", features = ["tokio", "server", "client-legacy"] 
 http-body-util = "0.1"
 tower = { workspace = true }
 serde = { workspace = true }
+reqwest = { workspace = true }
 serde_json = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

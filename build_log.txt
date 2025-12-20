@@ -1,5 +1,11 @@
-error: no matching package found
-searched package name: `fusion_core`
-perhaps you meant:      fusion-core
-location searched: C:\Projects\Fusion - Programming Language\crates\core
-required by package `fusion_llm_attention_mask v0.1.0 (C:\Projects\Fusion - Programming Language\ecosystem\crates\llm-attention-mask)`
+error: failed to load manifest for workspace member `C:\Projects\Fusion - Programming Language\crates\ai-core`
+referenced via `crates/*` by workspace at `C:\Projects\Fusion - Programming Language\Cargo.toml`
+
+Caused by:
+  failed to parse manifest at `C:\Projects\Fusion - Programming Language\crates\ai-core\Cargo.toml`
+
+Caused by:
+  error inheriting `pqcrypto-dilithium` from workspace root manifest's `workspace.dependencies.pqcrypto-dilithium`
+
+Caused by:
+  `dependency.pqcrypto-dilithium` was not found in `workspace.dependencies`

@@ -1,12 +1,16 @@
-[package]
+﻿[package]
 name = "fusion-github"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "Fusion GitHub API integration"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Integration: GitHub API integration and workflow automation."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "integration", "github", "api", "integration"]
+categories = ["external-ffi-bindings", "network-programming"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
@@ -14,3 +18,4 @@ serde_json = { workspace = true }
 reqwest = { workspace = true }
 fusion_runtime_core = { workspace = true }
 chrono = { workspace = true }
+

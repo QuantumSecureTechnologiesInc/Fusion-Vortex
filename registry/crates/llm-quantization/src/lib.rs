@@ -1,6 +1,6 @@
 /// Production INT8 Quantization for LLM weights and KV cache
 use fusion_core::types::tensor::Matrix;
-use fusion_core::{FusionError, FusionResult};
+use fusion_core::FusionResult;
 
 pub mod int8 {
     use super::*;
@@ -20,7 +20,7 @@ pub mod int8 {
     impl QuantizedMatrix {
         /// Quantize a float matrix to INT8
         pub fn quantize(input: &Matrix<f64>) -> FusionResult<Self> {
-            let data_flat: Vec<f64> = input.data.clone();
+            let data_flat: Vec<f64> = input.data.iter().cloned().collect();
 
             // Find min/max for symmetric quantization
             let min_val = data_flat.iter().cloned().fold(f64::INFINITY, f64::min);
@@ -43,7 +43,7 @@ pub mod int8 {
                 data: quantized,
                 scale,
                 zero_point,
-                shape: input.shape.clone(),
+                shape: input.shape().to_vec(),
             })
         }
 
@@ -55,10 +55,8 @@ pub mod int8 {
                 .map(|&q| (q as f64 + 127.0) * self.scale)
                 .collect();
 
-            Ok(Matrix {
-                data: dequantized,
-                shape: self.shape.clone(),
-            })
+            let shape = [self.shape[0], self.shape[1]];
+            Matrix::new(dequantized, shape)
         }
     }
 }
@@ -77,7 +75,7 @@ pub mod int4 {
     impl QuantizedMatrix {
         pub fn quantize(input: &Matrix<f64>) -> FusionResult<Self> {
             // Stub implementation - pack 2 INT4 values per byte
-            let data_flat: Vec<f64> = input.data.clone();
+            let data_flat: Vec<f64> = input.data.iter().cloned().collect();
             let min_val = data_flat.iter().cloned().fold(f64::INFINITY, f64::min);
             let max_val = data_flat.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
             let scale = (max_val - min_val) / 14.0; // INT4 range: -7 to 7
@@ -101,7 +99,7 @@ pub mod int4 {
             Ok(Self {
                 data: packed,
                 scale,
-                shape: input.shape.clone(),
+                shape: input.shape().to_vec(),
             })
         }
 
@@ -116,11 +114,8 @@ pub mod int4 {
             // Trim to original size
             dequantized.truncate(self.shape.iter().product());
 
-            Ok(Matrix {
-                data: dequantized,
-                shape: self.shape.clone(),
-            })
+            let shape = [self.shape[0], self.shape[1]];
+            Matrix::new(dequantized, shape)
         }
     }
 }
-

@@ -1,4 +1,5 @@
 // src/async_runtime/executor.rs - Task Executor
+#![allow(unsafe_code)]
 
 use super::task::Task;
 use std::collections::VecDeque;

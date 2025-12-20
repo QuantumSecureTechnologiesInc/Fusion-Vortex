@@ -16,45 +16,45 @@ impl RotaryKernel {
         inv_freq: &Vector1D<f64>,
         head_dim: usize,
     ) -> FusionResult<Matrix<f64>> {
-        let (seq_len, _dim) = (input.shape[0], input.shape[1]);
+        let (seq_len, _dim) = (input.shape()[0], input.shape()[1]);
         let mut output = input.clone();
 
         for t in 0..seq_len {
             // Get position ID safely
-            let pos = *position_ids
-                .get(&[t])
-                .ok_or(fusion_core::FusionError::Generic(
-                    "Index out of bounds".into(),
-                ))? as f64;
+            let pos =
+                *position_ids
+                    .get(&[t] as &[usize])
+                    .ok_or(fusion_core::FusionError::Generic(
+                        "Index out of bounds".into(),
+                    ))? as f64;
 
             for i in 0..head_dim / 2 {
                 // Get precomputed frequency
-                let freq = *inv_freq.get(&[i]).ok_or(fusion_core::FusionError::Generic(
-                    "Index out of bounds".into(),
-                ))?;
+                let freq =
+                    *inv_freq
+                        .get(&[i] as &[usize])
+                        .ok_or(fusion_core::FusionError::Generic(
+                            "Index out of bounds".into(),
+                        ))?;
                 let theta = pos * freq;
 
                 let cos = theta.cos();
                 let sin = theta.sin();
 
                 // Get current pair (x0, x1)
-                let x0 = *input
-                    .get(&[t, 2 * i])
-                    .ok_or(fusion_core::FusionError::Generic(
-                        "Index out of bounds".into(),
-                    ))?;
-                let x1 = *input
-                    .get(&[t, 2 * i + 1])
-                    .ok_or(fusion_core::FusionError::Generic(
-                        "Index out of bounds".into(),
-                    ))?;
+                let x0 = *input.get(&[t, 2 * i] as &[usize]).ok_or(
+                    fusion_core::FusionError::Generic("Index out of bounds".into()),
+                )?;
+                let x1 = *input.get(&[t, 2 * i + 1] as &[usize]).ok_or(
+                    fusion_core::FusionError::Generic("Index out of bounds".into()),
+                )?;
 
                 // Apply rotation: x0' = x0*cos - x1*sin, x1' = x1*cos + x0*sin
                 let x0_prime = x0 * cos - x1 * sin;
                 let x1_prime = x1 * cos + x0 * sin;
 
-                output.set([t, 2 * i], x0_prime)?;
-                output.set([t, 2 * i + 1], x1_prime)?;
+                output.set(&[t, 2 * i][..], x0_prime)?;
+                output.set(&[t, 2 * i + 1][..], x1_prime)?;
             }
         }
 

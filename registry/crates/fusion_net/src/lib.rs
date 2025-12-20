@@ -4,6 +4,8 @@
 //!
 //! Replaces Tokio's networking with direct HAL access for maximum performance.
 
+pub mod pqc;
 pub mod tcp;
 
 pub use tcp::{TcpListener, TcpStream};
+pub use tcp::{TcpListener as FusionTcpListener, TcpStream as FusionTcpStream};

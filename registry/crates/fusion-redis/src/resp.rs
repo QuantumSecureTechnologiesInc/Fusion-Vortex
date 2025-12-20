@@ -1,5 +1,5 @@
 use bytes::{Bytes, BytesMut};
-use std::fmt;
+// use std::fmt;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -144,7 +144,6 @@ impl RespParser {
             return Ok(None);
         }
 
-        let mut cursor = std::io::Cursor::new(&src[..]);
         // To implement this fully robustly without `redis-protocol` crate is tedious.
         // I'll implement a simplified synchronous parser that peeks.
 

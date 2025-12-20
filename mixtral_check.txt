@@ -1,0 +1,58 @@
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\tensor-sparse\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+    Checking fusion-core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-core)
+    Checking pqcrypto-mldsa v0.1.2
+    Checking fusion_runtime_hal v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_hal)
+    Checking fusion_runtime_scheduler v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_scheduler)
+    Checking fusion_runtime_mem_mgr v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_mem_mgr)
+    Checking fusion_std v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\std)
+    Checking fusion_runtime_core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion_runtime_core)
+    Checking fusion-ai-core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\ai-core)
+    Checking fusion_llm_mixtral_routing v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\llm-mixtral-routing)
+error[E0433]: failed to resolve: use of undeclared type `FusionError`
+  --> registry\crates\llm-mixtral-routing\src\lib.rs:42:13
+   |
+42 |             FusionError::ShapeError("Failed to get input data as slice".to_string())
+   |             ^^^^^^^^^^^ use of undeclared type `FusionError`
+   |
+help: consider importing this enum
+   |
+ 1 + use fusion_core::FusionError;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `FusionError`
+  --> registry\crates\llm-mixtral-routing\src\lib.rs:46:13
+   |
+46 |             FusionError::ShapeError("Failed to get gate weights as slice".to_string())
+   |             ^^^^^^^^^^^ use of undeclared type `FusionError`
+   |
+help: consider importing this enum
+   |
+ 1 + use fusion_core::FusionError;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `FusionError`
+  --> registry\crates\llm-mixtral-routing\src\lib.rs:99:13
+   |
+99 |             FusionError::ShapeError("Failed to get dispatch mask data as slice".to_string())
+   |             ^^^^^^^^^^^ use of undeclared type `FusionError`
+   |
+help: consider importing this enum
+   |
+ 1 + use fusion_core::FusionError;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `FusionError`
+   --> registry\crates\llm-mixtral-routing\src\lib.rs:102:13
+    |
+102 |             FusionError::ShapeError("Failed to get routing scores data as slice".to_string())
+    |             ^^^^^^^^^^^ use of undeclared type `FusionError`
+    |
+help: consider importing this enum
+    |
+  1 + use fusion_core::FusionError;
+    |
+
+For more information about this error, try `rustc --explain E0433`.
+error: could not compile `fusion_llm_mixtral_routing` (lib) due to 4 previous errors

@@ -1,14 +1,19 @@
-[package]
+﻿[package]
 name = "fusion_ui_layout_builder"
 version = "0.2.0"
 edition = "2021"
-description = "Developer tool for visual drag-and-drop UI layout construction"
 license = "MIT"
-
+description = "Algorithm: Fusion Algorithm crate: layout-builder."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_ui_component_lib = { path = "../component-lib/", version = "0.2.0" }
 fusion_core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 rand.workspace = true
+
 

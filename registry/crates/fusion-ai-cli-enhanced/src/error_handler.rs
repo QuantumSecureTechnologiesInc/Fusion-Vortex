@@ -1,6 +1,6 @@
 //! Enhanced error handling with AI-generated explanations
 
-use crate::{context::CliContext, CliError, Result};
+use crate::{context::CliContext, Result};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 

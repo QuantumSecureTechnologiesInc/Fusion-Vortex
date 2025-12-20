@@ -1,12 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_runtime_mem_mgr"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-description = "Zero-copy memory manager for CPU/GPU/QPU unified memory"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Memory Manager (GC & Allocator) for Fusion Runtime."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["framework", "runtime", "fusion", "memory-management", "allocator"]
+categories = ["development-tools", "os::kernel-apis"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 parking_lot = { workspace = true }
@@ -16,4 +18,5 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+
 

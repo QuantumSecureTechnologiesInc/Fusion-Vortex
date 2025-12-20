@@ -24,6 +24,7 @@ pub enum GpuBackend {
 
 /// GPU kernel executor providing direct hardware access
 pub struct GpuKernelExecutor {
+    #[allow(dead_code)]
     backend: GpuBackend,
     device_count: u32,
 }

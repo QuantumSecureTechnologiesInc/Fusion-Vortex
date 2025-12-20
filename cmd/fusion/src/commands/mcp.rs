@@ -38,10 +38,12 @@ pub async fn connect_server(server_type: String, args: Vec<String>) -> Result<()
 
     let mut client = match server_type.as_str() {
         "filesystem" => {
-            let path = args
-                .first()
-                .map(PathBuf::from)
-                .unwrap_or_else(|| std::env::current_dir().unwrap());
+            let path = if let Some(arg_path) = args.first() {
+                PathBuf::from(arg_path)
+            } else {
+                std::env::current_dir()
+                    .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
+            };
 
             let server = FilesystemServer::new(path.clone());
             println!("  Root: {}", path.display());
@@ -247,7 +249,8 @@ pub fn mcp(cmd: McpCommands) -> Result<()> {
                 let registry = Arc::new(RwLock::new(ToolRegistry::new()));
 
                 // Define persistence paths
-                let home = dirs::home_dir().expect("Could not determine home directory");
+                let home = dirs::home_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
                 let mcp_dir = home.join(".fusion").join("mcp");
                 let registry_path = mcp_dir.join("registry.json");
 

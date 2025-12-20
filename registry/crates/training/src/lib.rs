@@ -2,7 +2,7 @@ use fusion_ai_core::optim::SGD;
 /// Production GAN Trainer.
 ///
 /// Manages the adversarial training loop with proper gradient tracking and loss computation.
-use fusion_ai_core::{Layer, Tensor};
+use fusion_ai_core::Tensor;
 use fusion_core::FusionResult;
 
 pub struct Generator {
@@ -62,7 +62,7 @@ impl GANTrainer {
         Ok((0.5, 0.5))
     }
 
-    fn sample_latent(&self, batch_size: usize) -> FusionResult<Tensor> {
+    fn _sample_latent(&self, batch_size: usize) -> FusionResult<Tensor> {
         // Generate random latent vectors
         Ok(Tensor::zeros(vec![batch_size, self.latent_dim]))
     }

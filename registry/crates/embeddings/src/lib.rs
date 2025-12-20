@@ -1,2 +1,2 @@
 /// embeddings implementation
-pub struct embeddingsModule;
+pub struct EmbeddingsModule;

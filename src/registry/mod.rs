@@ -19,8 +19,6 @@ pub mod database;
 pub mod packages;
 pub mod storage;
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 

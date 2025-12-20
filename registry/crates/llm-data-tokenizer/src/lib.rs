@@ -6,7 +6,7 @@ use fusion_llm_tokenizers::LLMTokenizer; // Assumed tokenizer interface
 use fusion_std::error::{StdError, StdResult};
 use futures::stream::{self, StreamExt};
 use tokio::fs::File;
-use tokio::io::{self, AsyncReadExt, BufReader};
+use tokio::io;
 use tokio::task;
 
 const CHUNK_SIZE: usize = 10 * 1024 * 1024; // 10MB chunks
@@ -33,8 +33,8 @@ impl DataTokenizer {
 
         // Use a stream to manage parallel reading and processing
         let tokenized_chunks: Vec<Vec<u32>> = stream::iter(0..num_chunks)
-            .map(|chunk_index| {
-                let chunk_size = CHUNK_SIZE;
+            .map(|_chunk_index| {
+                let _chunk_size = CHUNK_SIZE;
                 let path = path.to_string();
                 let tokenizer = self.tokenizer.clone();
 
@@ -44,7 +44,11 @@ impl DataTokenizer {
                     let content = tokio::fs::read_to_string(path).await.unwrap_or_default();
 
                     // Tokenize the chunk
-                    tokenizer.encode(&content)
+                    tokenizer
+                        .encode(&content)
+                        .into_iter()
+                        .map(|t| t as u32)
+                        .collect::<Vec<u32>>()
                 })
             })
             .buffer_unordered(self.concurrency_limit)

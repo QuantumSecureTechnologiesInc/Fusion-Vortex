@@ -1,6 +1,5 @@
-use fusion_std::error::{StdResult, StdError};
+use fusion_std::error::StdResult;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 pub enum ViolationType {
     PiiLeak,

@@ -1,0 +1,9 @@
+error: failed to load manifest for workspace member `C:\Projects\Fusion - Programming Language\registry\crates\fusion_core`
+referenced via `registry/crates/*` by workspace at `C:\Projects\Fusion - Programming Language\Cargo.toml`
+
+Caused by:
+  failed to parse manifest at `C:\Projects\Fusion - Programming Language\registry\crates\fusion_core\Cargo.toml`
+
+Caused by:
+  feature `quantum` includes `num_complex`, but `num_complex` is not an optional dependency
+  A non-optional dependency of the same name is defined; consider adding `optional = true` to its definition.

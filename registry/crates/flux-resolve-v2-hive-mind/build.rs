@@ -1,8 +1,11 @@
 // Build script for Flux-Resolve v2.0
 // Handles optional CUDA kernel compilation
 
+#[cfg(feature = "gpu")]
 use std::env;
+#[cfg(feature = "gpu")]
 use std::path::PathBuf;
+#[cfg(feature = "gpu")]
 use std::process::Command;
 
 fn main() {
@@ -52,9 +55,4 @@ fn compile_cuda_kernel() {
             println!("cargo:warning=Ensure CUDA Toolkit is properly installed");
         }
     }
-}
-
-#[cfg(not(feature = "gpu"))]
-fn compile_cuda_kernel() {
-    // No-op when GPU feature is disabled
 }

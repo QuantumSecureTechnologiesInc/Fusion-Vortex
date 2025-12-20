@@ -2,10 +2,11 @@
 ///
 /// Implements the Quantum Approximate Optimization Algorithm loop.
 use fusion_core::types::quantum::QuantumCircuit;
-use fusion_std::error::{StdError, StdResult};
+use fusion_std::error::StdResult;
 
 pub struct QAOA {
-    p: usize,                            // Depth
+    p: usize, // Depth
+    #[allow(dead_code)]
     hamiltonian: Vec<(f64, Vec<usize>)>, // Ising Model: (J, [qubit_i, qubit_j])
 }
 

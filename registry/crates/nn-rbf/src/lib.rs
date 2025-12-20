@@ -2,7 +2,6 @@
 ///
 /// Radial Basis Function implementation for specialized neural networks (e.g. control systems).
 use fusion_ai_core::{Layer, Linear, Tensor};
-use fusion_core::FusionResult;
 
 pub struct RBFLayer {
     pub centers: Tensor,

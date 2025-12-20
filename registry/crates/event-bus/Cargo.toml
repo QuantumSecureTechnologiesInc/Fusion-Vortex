@@ -1,13 +1,20 @@
-[package]
+﻿[package]
 name = "fusion_server_event_bus"
 version = "0.2.0"
 edition = "2021"
-description = "Asynchronous message queue and event bus implementation"
 license = "MIT"
-
+description = "Framework: Asynchronous message queue and event-driven architecture."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework", "event-bus", "messaging", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
 fusion_std = { path = "../std" }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" } # For transport
 fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
+tokio = { workspace = true }
+

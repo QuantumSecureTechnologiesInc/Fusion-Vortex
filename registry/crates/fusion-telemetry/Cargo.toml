@@ -1,9 +1,17 @@
-[package]
+﻿[package]
 name = "fusion-telemetry"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: fusion-telemetry"
 license = "MIT"
-
+description = "Tool: Fusion tool: fusion-telemetry. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+fusion_core = { workspace = true }
+
+

@@ -1,11 +1,16 @@
-[package]
+﻿[package]
 name = "fusion_llm_trie_search"
 version = "0.2.0"
 edition = "2021"
-description = "Trie structure for fast prefix matching and constrained decoding"
 license = "MIT"
-
+description = "Algorithm: Fusion Algorithm crate: trie-search."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
+
 

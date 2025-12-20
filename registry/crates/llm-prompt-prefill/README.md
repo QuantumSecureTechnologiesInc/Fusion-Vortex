@@ -1,32 +1,35 @@
-# llm-prompt-prefill
+# Fusion LLM Prompt Prefill
 
-Optimized prompt prefilling and management for LLM inference.
+**Version:** 0.2.0  
+**Type:** Optimization  
+**License:** MIT
+
+## Overview
+
+Fusion LLM Prompt Prefill (`llm-prompt-prefill`) optimizes the processing of long system prompts and context. It enables "prefix caching" where common prompt segments are processed once and cached, reducing latency for subsequent requests.
 
 ## Features
 
-- KV-cache pre-population
-- Prompt template management
-- Efficient context handling
-
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-llm-prompt-prefill = "0.1.0"
-```
+- **Prefix Caching**: Reuse KV cache for shared prompt prefixes
+- **Context Management**: Efficient handling of multi-turn conversations
+- **Serialization**: Save and load processed prompt states
 
 ## Usage
 
 ```rust
-use llm_prompt_prefill::Prefiller;
+use llm_prompt_prefill::{PrefillManager, Prompt};
 
-fn main() {
-    let p = Prefiller::new();
-}
+let manager = PrefillManager::new();
+let system_prompt = Prompt::from_text(LONG_SYSTEM_PROMPT);
+let cache_id = manager.prefill(&system_prompt).await?;
+
+// Use cache_id for subsequent requests
 ```
 
-## License
+## Dependencies
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `fusion_core`
+
+## Contributing
+
+See [CONTRIBUTING.md](../../../CONTRIBUTING.md)

@@ -1,0 +1,8 @@
+warning: C:\Projects\Fusion - Programming Language\registry\crates\tensor-sparse\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+    Blocking waiting for file lock on build directory
+   Compiling clap_derive v4.5.49
+    Checking clap v4.5.53
+    Checking fusion-core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 26.31s

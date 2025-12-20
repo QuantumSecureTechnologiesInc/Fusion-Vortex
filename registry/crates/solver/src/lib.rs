@@ -1,4 +1,3 @@
-use fusion_core::traits::Numeric;
 /// Production PCA Solver.
 ///
 /// Uses Power Iteration method to find the dominant eigenvalue/vector
@@ -16,12 +15,12 @@ pub fn power_iteration(
     assert_eq!(n, a.shape()[1], "Matrix must be square");
 
     // Random initial vector
-    let mut b_k = Vector1D::from_vec(vec![1.0; n]); // Should be random in prod
+    let mut b_k = Vector1D::from_vec(vec![1.0; n], [n])?; // Should be random in prod
 
     // Normalize
     // b_k = b_k / norm(&b_k);
     let n_val = norm(&b_k);
-    scale(&mut b_k, 1.0 / n_val);
+    scale(&mut b_k, 1.0 / n_val)?;
 
     for _ in 0..num_simulations {
         // Calculate the matrix-by-vector product Ab
@@ -32,16 +31,19 @@ pub fn power_iteration(
         for r in 0..n {
             let mut sum = 0.0;
             for c in 0..n {
-                sum += a
-                    .get([r, c])
-                    .ok_or(fusion_core::FusionError::IndexOutOfBounds)?
-                    * b_k
-                        .get([c])
-                        .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
+                sum += a.get(&[r, c] as &[usize]).ok_or(
+                    fusion_core::FusionError::IndexOutOfBounds(
+                        "Matrix index out of bounds".to_string(),
+                    ),
+                )? * b_k.get(&[c] as &[usize]).ok_or(
+                    fusion_core::FusionError::IndexOutOfBounds(
+                        "Vector index out of bounds".to_string(),
+                    ),
+                )?;
             }
             b_k1_data[r] = sum;
         }
-        let mut b_k1 = Vector1D::from_vec(b_k1_data);
+        let mut b_k1 = Vector1D::from_vec(b_k1_data, [n])?;
 
         // Normalize
         let norm_k1 = norm(&b_k1);
@@ -49,7 +51,7 @@ pub fn power_iteration(
             break;
         } // Converged to zero?
 
-        scale(&mut b_k1, 1.0 / norm_k1);
+        scale(&mut b_k1, 1.0 / norm_k1)?;
         b_k = b_k1;
     }
 
@@ -62,14 +64,14 @@ pub fn power_iteration(
 }
 
 fn norm(v: &Vector1D<f64>) -> f64 {
-    let sum_sq: f64 = v.data.iter().map(|x| x * x).sum();
-    sum_sq.sqrt()
+    v.data.iter().map(|x| x * x).sum::<f64>().sqrt()
 }
 
-fn scale(v: &mut Vector1D<f64>, s: f64) {
+fn scale(v: &mut Vector1D<f64>, s: f64) -> FusionResult<()> {
     // In production we'd use the mutable Arc iterator or unsafe for performance
     // Here we re-allocate for safety/correctness demonstration
-    let new_data: Vec<f64> = v.iter().map(|x| x * s).collect();
+    let new_data: Vec<f64> = v.data.iter().map(|x| x * s).collect();
     // Reconstruct (would be set logic in real impl)
-    *v = Vector1D::from_vec(new_data);
+    *v = Vector1D::from_vec(new_data, [v.shape()[0]])?;
+    Ok(())
 }

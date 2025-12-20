@@ -2,7 +2,7 @@
 ///
 /// Implements the Key/Value repetition logic for Grouped Query Attention.
 /// Essential for Mistral/Llama efficiency.
-use fusion_core::types::tensor::{Matrix, Tensor};
+use fusion_core::types::tensor::Matrix;
 use fusion_core::FusionResult;
 
 pub struct GqaKernel;
@@ -17,7 +17,7 @@ impl GqaKernel {
         num_q_heads: usize,
         num_kv_heads: usize,
     ) -> FusionResult<Matrix<f64>> {
-        let (seq_len, kv_dim) = (kv_tensor.shape[0], kv_tensor.shape[1]);
+        let (seq_len, kv_dim) = (kv_tensor.shape()[0], kv_tensor.shape()[1]);
         let head_dim = kv_dim / num_kv_heads;
         let repetition_factor = num_q_heads / num_kv_heads;
 
@@ -38,18 +38,15 @@ impl GqaKernel {
                 // Repeat the data 'repetition_factor' times
                 for _ in 0..repetition_factor {
                     for i in kv_head_start..kv_head_end {
-                        let val =
-                            *kv_tensor
-                                .get(&[t, i])
-                                .ok_or(fusion_core::FusionError::Generic(
-                                    "Index out of bounds".into(),
-                                ))?;
+                        let val = *kv_tensor.get(&[t, i] as &[usize]).ok_or(
+                            fusion_core::FusionError::Generic("Index out of bounds".into()),
+                        )?;
                         new_data.push(val);
                     }
                 }
             }
         }
 
-        Tensor::new(new_data, [seq_len, new_dim])
+        Matrix::new(new_data, [seq_len, new_dim])
     }
 }

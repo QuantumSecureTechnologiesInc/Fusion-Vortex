@@ -13,7 +13,7 @@ impl AttentionMaskGenerator {
         seq_len: usize,
         window_size: usize,
     ) -> FusionResult<Matrix<f64>> {
-        let mut mask = Matrix::new(vec![0.0; seq_len * seq_len], [seq_len, seq_len])?;
+        let mut mask = Matrix::from_vec(vec![0.0; seq_len * seq_len], [seq_len, seq_len])?;
 
         for r in 0..seq_len {
             for c in 0..seq_len {
@@ -30,4 +30,3 @@ impl AttentionMaskGenerator {
         Ok(mask)
     }
 }
-

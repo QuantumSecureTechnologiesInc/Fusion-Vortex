@@ -1,8 +1,7 @@
-use fusion_core::traits::Numeric;
 /// Production Reinforcement Learning Algorithms.
 ///
 /// Implements GAE (Generalized Advantage Estimation) for stable policy gradient updates.
-use fusion_core::types::tensor::{Tensor, Vector1D};
+use fusion_core::types::tensor::Vector1D;
 use fusion_core::FusionResult;
 
 pub struct GAECalculator {
@@ -28,7 +27,7 @@ impl GAECalculator {
         let len = rewards.shape()[0];
         if values.shape()[0] != len || dones.shape()[0] != len {
             return Err(fusion_core::FusionError::ShapeMismatch {
-                op: "GAE".into(),
+                op: "GAE".to_string(),
                 lhs: vec![len],
                 rhs: vec![values.shape()[0], dones.shape()[0]],
             });
@@ -40,20 +39,22 @@ impl GAECalculator {
         for t in (0..len).rev() {
             let r_t = *rewards
                 .get([t])
-                .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
+                .ok_or(fusion_core::FusionError::IndexOutOfBounds("rewards".into()))?;
             let v_t = *values
                 .get([t])
-                .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
+                .ok_or(fusion_core::FusionError::IndexOutOfBounds("values".into()))?;
             let done = *dones
                 .get([t])
-                .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
+                .ok_or(fusion_core::FusionError::IndexOutOfBounds("dones".into()))?;
 
             let next_v = if t == len - 1 {
                 next_val
             } else {
                 *values
                     .get([t + 1])
-                    .ok_or(fusion_core::FusionError::IndexOutOfBounds)?
+                    .ok_or(fusion_core::FusionError::IndexOutOfBounds(
+                        "values next".into(),
+                    ))?
             };
 
             // If done, next state value is 0 for the purpose of this trajectory
@@ -66,8 +67,7 @@ impl GAECalculator {
             advantages[t] = last_gae_lam;
         }
 
-        Vector1D::from_vec(advantages)
-            .map_err(|_| FusionError::CompilationError("Failed to create vector".into()))
+        Vector1D::from_vec(advantages, [len])
         // Basic workaround if map_err needed, or just Ok(Vector1D::from_vec(advantages))
     }
 }

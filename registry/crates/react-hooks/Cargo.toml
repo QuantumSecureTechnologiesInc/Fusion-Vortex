@@ -1,12 +1,17 @@
-[package]
+﻿[package]
 name = "fusion_ui_react"
 version = "0.2.0"
 edition = "2021"
-description = "Idiomatic React Hooks and component bindings for Fusion types"
 license = "MIT"
-
+description = "Integration: Fusion Integration crate: react-hooks."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "integration"]
+categories = ["network-programming", "external-ffi-bindings"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
 # In prod: react-sys, futures-signals (Rust reactive framework bindings)
+
 

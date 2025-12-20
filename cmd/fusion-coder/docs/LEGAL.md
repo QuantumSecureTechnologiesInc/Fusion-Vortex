@@ -10,133 +10,7 @@ Legal agreements, compliance certifications, and security information for Fusion
 
 Your use of Fusion VSC CLI Coder is subject to:
 
-- **MIT License** - for open-source usage and contributions
-- **Apache License 2.0** - alternative open-source license option
-- **Commercial Terms** - for Enterprise and commercial deployments
 
-The dual licensing (MIT OR Apache-2.0) provides maximum flexibility for both open-source and commercial use.
-
-### Open Source License
-
-Fusion VSC CLI Coder is distributed under dual licensing:
-
-**MIT License:**
-- Permission for commercial and private use
-- Modification and distribution rights
-- No warranty or liability
-- Attribution required
-
-**Apache License 2.0:**
-- Patent grant included
-- Trademark protection
-- Contribution guidelines
-- State changes documentation required
-
-### Commercial Agreements
-
-For enterprise deployments, custom licensing terms may apply:
-
-- **Enterprise Support Agreements** - for dedicated support and SLA guarantees
-- **Custom Deployment Terms** - for on-premise or air-gapped installations
-- **Training and Consulting** - for team onboarding and integration assistance
-
-Contact: [To be determined - your contact information]
-
----
-
-## Copyright and Attribution
-
-### Third-Party Notices
-
-Fusion VSC CLI Coder incorporates concepts, patterns, and inspiration from several open-source projects:
-
-#### VS Code Extension API
-```
-Copyright (c) Microsoft Corporation
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-[MIT License - Full text available at: https://github.com/microsoft/vscode/blob/main/LICENSE.txt]
-```
-
-**Attribution**: VS Code extension patterns and APIs referenced for integration design.
-
-#### Model Context Protocol (MCP)
-```
-Copyright (c) Anthropic PBC
-
-Licensed under the MIT License
-[Full license: https://github.com/anthropics/anthropic-sdk-typescript/blob/main/LICENSE]
-```
-
-**Attribution**: MCP server implementation patterns and protocol specifications used for agent communication architecture.
-
-#### Claude Code
-```
-Copyright (c) Anthropic PBC
-```
-
-**Inspiration**: Settings architecture, permission system, and hierarchical configuration patterns inspired by Claude Code's implementation. No source code was copied; design patterns and UX concepts were adapted.
-
-#### Antigravity IDE
-**Inspiration**: Agent modes (Planning/Fast), task group system, and continuous context features inspired by Antigravity IDE's agent architecture.
-
-#### Codex
-**Inspiration**: Interactive CLI patterns, resume functionality, and exec mode inspired by Codex's developer workflow.
-
-### Rust Ecosystem Dependencies
-
-This project uses numerous Rust crates, each with their own licenses:
-
-- `tokio` - MIT License (Copyright Tokio Contributors)
-- `clap` - MIT OR Apache-2.0 (Copyright clap Contributors)
-- `serde` - MIT OR Apache-2.0 (Copyright Serde Contributors)
-- `ratatui` - MIT License (Copyright ratatui Contributors)
-- `crossterm` - MIT License (Copyright crossterm Contributors)
-- `anyhow` - MIT OR Apache-2.0 (Copyright David Tolnay)
-- `thiserror` - MIT OR Apache-2.0 (Copyright David Tolnay)
-
-**Full list**: See `Cargo.lock` and individual crate licenses in the `crates/` directory.
-
-### Copyright Notice
-
-```
-Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-### Contributor License Agreement (CLA)
-
-Contributors to this project agree that:
-
-1. You grant copyright license for your contributions
-2. You grant patent license for your contributions  
-3. Your contributions are your original work or you have rights to submit them
-4. You understand contributions are public and recorded with your name
-
-**Note**: By submitting a pull request, you accept these terms.
 
 ### Process and Methodology Copyright
 
@@ -240,6 +114,78 @@ the MIT OR Apache-2.0 licenses for the source code itself.
 **Patent Notice:**
 These innovations may be subject to patent applications. Any implementation of 
 similar methodologies should verify no patent infringement.
+
+---
+
+## Copyright and Attribution
+
+### Third-Party Notices
+
+Fusion VSC CLI Coder incorporates concepts, patterns, and inspiration from several open-source projects:
+
+#### VS Code Extension API
+```
+Copyright (c) Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+[MIT License - Full text available at: https://github.com/microsoft/vscode/blob/main/LICENSE.txt]
+```
+
+**Attribution**: VS Code extension patterns and APIs referenced for integration design.
+
+#### Model Context Protocol (MCP)
+```
+Copyright (c) Anthropic PBC
+
+Licensed under the MIT License
+[Full license: https://github.com/anthropics/anthropic-sdk-typescript/blob/main/LICENSE]
+```
+
+**Attribution**: MCP server implementation patterns and protocol specifications used for agent communication architecture.
+
+#### Claude Code
+```
+Copyright (c) Anthropic PBC
+```
+
+**Inspiration**: Settings architecture, permission system, and hierarchical configuration patterns inspired by Claude Code's implementation. No source code was copied; design patterns and UX concepts were adapted.
+
+#### Antigravity IDE
+**Inspiration**: Agent modes (Planning/Fast), task group system, and continuous context features inspired by Antigravity IDE's agent architecture.
+
+#### Codex
+**Inspiration**: Interactive CLI patterns, resume functionality, and exec mode inspired by Codex's developer workflow.
+
+### Rust Ecosystem Dependencies
+
+This project uses numerous Rust crates, each with their own licenses:
+
+
+- `clap` - MIT OR Apache-2.0 (Copyright clap Contributors)
+- `serde` - MIT OR Apache-2.0 (Copyright Serde Contributors)
+- `ratatui` - MIT License (Copyright ratatui Contributors)
+- `crossterm` - MIT License (Copyright crossterm Contributors)
+- `anyhow` - MIT OR Apache-2.0 (Copyright David Tolnay)
+- `thiserror` - MIT OR Apache-2.0 (Copyright David Tolnay)
+
+**Full list**: See `flux-resolve` manifest and individual crate licenses in the `crates/` directory.
+
+### Commercial Agreements
+
+For enterprise deployments, custom licensing terms may apply:
+
+- **Enterprise Support Agreements** - for dedicated support and SLA guarantees
+- **Custom Deployment Terms** - for on-premise or air-gapped installations
+- **Training and Consulting** - for team onboarding and integration assistance
+
+Contact: [To be determined - your contact information]
+
 
 ---
 

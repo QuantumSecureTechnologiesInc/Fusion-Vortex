@@ -1,11 +1,19 @@
-[package]
+﻿[package]
 name = "fusion_llm_rotary_opt"
 version = "0.2.0"
 edition = "2021"
-description = "Optimized RoPE kernel using SIMD/Vectorization"
 license = "MIT"
-
+description = "Algorithm: Large Language Model component: llm-rotary-opt. Optimized for performance."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["algorithm", "fusion", "llm", "generative-ai"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion-ai-core = { workspace = true }
 
+
+
+[dev-dependencies]
+criterion = { workspace = true }

@@ -1,4 +1,3 @@
-use fusion_core::types::tensor::Tensor;
 /// Production Image Operations.
 ///
 /// Implements high-quality resizing using Bilinear Interpolation.
@@ -16,7 +15,7 @@ impl ImageOps {
         new_h: usize,
         new_w: usize,
     ) -> FusionResult<Tensor3D<f64>> {
-        let (c, h, w) = (input.shape[0], input.shape[1], input.shape[2]);
+        let (c, h, w) = (input.shape()[0], input.shape()[1], input.shape()[2]);
         let mut output_data = Vec::with_capacity(c * new_h * new_w);
 
         let x_ratio = if new_w > 1 {
@@ -41,10 +40,30 @@ impl ImageOps {
                     let x_weight = (x_ratio * j as f64) - x_l as f64;
                     let y_weight = (y_ratio * i as f64) - y_l as f64;
 
-                    let a = input.get(&[ch, y_l, x_l])?;
-                    let b = input.get(&[ch, y_l, x_h])?;
-                    let c_val = input.get(&[ch, y_h, x_l])?; // 'c' is var name
-                    let d = input.get(&[ch, y_h, x_h])?;
+                    let a = input.get([ch, y_l, x_l]).ok_or(
+                        fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}, {}] out of bounds",
+                            ch, y_l, x_l
+                        )),
+                    )?;
+                    let b = input.get([ch, y_l, x_h]).ok_or(
+                        fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}, {}] out of bounds",
+                            ch, y_l, x_h
+                        )),
+                    )?;
+                    let c_val = input.get([ch, y_h, x_l]).ok_or(
+                        fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}, {}] out of bounds",
+                            ch, y_h, x_l
+                        )),
+                    )?; // 'c' is var name
+                    let d = input.get([ch, y_h, x_h]).ok_or(
+                        fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}, {}] out of bounds",
+                            ch, y_h, x_h
+                        )),
+                    )?;
 
                     // Interpolate X
                     // top = A(1-w) + B(w)
@@ -59,6 +78,6 @@ impl ImageOps {
             }
         }
 
-        Tensor::new(output_data, [c, new_h, new_w])
+        Tensor3D::new(output_data, [c, new_h, new_w])
     }
 }

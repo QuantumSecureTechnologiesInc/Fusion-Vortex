@@ -1,32 +1,33 @@
-# llm-prompt-tuning
+# Fusion LLM Prompt Tuning
 
-Algorithms and utilities for soft prompt tuning and prefix tuning.
+**Version:** 0.2.0  
+**Type:** Fine-Tuning  
+**License:** MIT
+
+## Overview
+
+Fusion LLM Prompt Tuning (`llm-prompt-tuning`) implements Parameter-Efficient Fine-Tuning (PEFT) via prompt tuning. It learns "soft prompts" (trainable embedding vectors) prepended to the input, allowing task adaptation without modifying model weights.
 
 ## Features
 
-- Soft prompt embedding optimization
-- P-Tuning v2 support
-- Efficient parameter updates
-
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-llm-prompt-tuning = "0.1.0"
-```
+- **Soft Prompts**: Trainable continuous vectors
+- **Task Switching**: Switch tasks by swapping soft prompt embeddings
+- **Integrations**: Compatible with `fusion_llm_inference_engine`
 
 ## Usage
 
 ```rust
-use llm_prompt_tuning::Tuner;
+use llm_prompt_tuning::{Tuner, Config};
 
-fn main() {
-    Tuner::train();
-}
+let tuner = Tuner::new(model, Config::default());
+let soft_prompt = tuner.train(dataset).await?;
+soft_prompt.save("my_task.bin")?;
 ```
 
-## License
+## Dependencies
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `fusion_core`
+
+## Contributing
+
+See [CONTRIBUTING.md](../../../CONTRIBUTING.md)

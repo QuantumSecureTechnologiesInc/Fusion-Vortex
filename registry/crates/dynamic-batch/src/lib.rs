@@ -1,7 +1,7 @@
 /// Production Dynamic Batch Scheduler.
 ///
 /// Manages a dynamic list of sequences and groups them into batches for efficient GPU utilization.
-use fusion_core::FusionResult;
+// use fusion_core::FusionResult;
 use std::collections::VecDeque;
 
 #[derive(Debug, Clone)]

@@ -8,7 +8,7 @@
 //! Extensions to core task group types with management functionality
 
 use crate::{PendingStep, ProgressUpdate, Subtask, TaskGroup, TaskGroupStatus};
-use anyhow::Result;
+
 use std::path::PathBuf;
 
 impl TaskGroup {

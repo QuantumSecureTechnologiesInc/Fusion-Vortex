@@ -5,6 +5,7 @@ use std::sync::OnceLock;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::runtime::Runtime;
+#[allow(unused_imports)]
 use tracing::{debug, error, trace};
 
 // Global Tokio Runtime for IO driving

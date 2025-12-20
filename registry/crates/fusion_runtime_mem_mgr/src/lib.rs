@@ -188,6 +188,7 @@ impl MemoryManager {
 /// Buffer pool for a specific device
 pub struct BufferPool {
     device: DeviceType,
+    #[allow(dead_code)]
     total_size: usize,
     free_blocks: Mutex<Vec<MemoryBlock>>,
 }
@@ -239,6 +240,7 @@ struct MemoryBlock {
 /// Allocated memory region
 pub struct Allocation {
     ptr: usize,
+    #[allow(dead_code)]
     size: usize,
 }
 

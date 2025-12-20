@@ -1,6 +1,10 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
 pub mod adapter;
 pub mod autograd;
 pub mod cache;
+pub mod layers;
+pub mod ops;
 pub mod policy;
 pub mod preview;
 pub mod prompt;
@@ -8,6 +12,7 @@ pub mod safety;
 pub mod workspace;
 
 pub use autograd::{Variable, SGD};
+pub use layers::{Layer, Linear};
 
 // Re-export production adapters
 pub use adapter::{
@@ -24,6 +29,7 @@ pub use adapter::adapters::{
 
 // Re-export other core components
 pub use cache::Cache;
+pub use ops::RotaryEmbedding;
 pub use policy::PolicyManager;
 pub use preview::{ApplyMode, ApplyResult, Patch, PatchMetadata, PreviewEngine};
 pub use prompt::PromptManager;

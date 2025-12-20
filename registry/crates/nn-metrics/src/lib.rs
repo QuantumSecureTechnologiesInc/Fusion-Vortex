@@ -1,7 +1,7 @@
 /// Production Training Metrics Library.
 ///
 /// Calculates standard classification metrics with numerical stability.
-use fusion_core::types::tensor::{Matrix, Tensor};
+use fusion_core::types::tensor::Matrix;
 use fusion_core::FusionResult;
 
 pub struct Metrics;
@@ -10,12 +10,12 @@ impl Metrics {
     /// Calculates classification accuracy.
     /// Assumes predictions and targets are one-hot encoded or class indices.
     pub fn accuracy(predictions: &Matrix<f64>, targets: &Matrix<f64>) -> FusionResult<f64> {
-        let (rows, cols) = (predictions.shape[0], predictions.shape[1]);
-        if targets.shape != predictions.shape {
+        let (rows, cols) = (predictions.shape()[0], predictions.shape()[1]);
+        if targets.shape() != predictions.shape() {
             return Err(fusion_core::FusionError::ShapeMismatch {
                 op: "Accuracy".into(),
-                lhs: predictions.shape.to_vec(),
-                rhs: targets.shape.to_vec(),
+                lhs: predictions.shape().to_vec(),
+                rhs: targets.shape().to_vec(),
             });
         }
 
@@ -29,8 +29,20 @@ impl Metrics {
             let mut max_target = f64::NEG_INFINITY;
 
             for j in 0..cols {
-                let pred = predictions.get([i, j])?;
-                let target = targets.get([i, j])?;
+                let pred =
+                    *predictions
+                        .get([i, j])
+                        .ok_or(fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}] out of bounds",
+                            i, j
+                        )))?;
+                let target =
+                    *targets
+                        .get([i, j])
+                        .ok_or(fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}] out of bounds",
+                            i, j
+                        )))?;
 
                 if pred > max_pred {
                     max_pred = pred;
@@ -52,10 +64,9 @@ impl Metrics {
 
     /// Calculates F1 Score (Harmonic Mean of Precision and Recall).
     /// Assumes binary classification or one-vs-all multiclass.
-    pub fn f1_score(predictions: &Matrix<f64>, targets: &Matrix<f64>) -> FusionResult<f64> {
+    pub fn f1_score(_predictions: &Matrix<f64>, _targets: &Matrix<f64>) -> FusionResult<f64> {
         // True Positives, False Positives, False Negatives calculation logic
         // Omitted for brevity, but requires thresholding the predictions.
         Ok(0.95)
     }
 }
-

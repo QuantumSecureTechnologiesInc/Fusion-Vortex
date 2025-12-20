@@ -1,9 +1,27 @@
-[package]
+﻿[package]
 name = "fusion-cryptography"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: fusion-cryptography"
 license = "MIT"
+description = "Tool: Fusion tool: fusion-cryptography. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
+[features]
+default = []
+classical = ["blake3", "sha3"]
+post-quantum = ["pqcrypto-mlkem", "pqcrypto-mldsa"]
 
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+blake3 = { workspace = true, optional = true }
+sha3 = { workspace = true, optional = true }
+pqcrypto-mlkem = { workspace = true, optional = true }
+pqcrypto-mldsa = { workspace = true, optional = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+

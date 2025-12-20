@@ -35,6 +35,7 @@ static ACTION_PATTERNS: Lazy<Vec<(Regex, String)>> = Lazy::new(|| {
 
 /// Natural language processor for CLI commands
 pub struct NaturalLanguageProcessor {
+    #[allow(dead_code)]
     confidence_threshold: f64,
 }
 

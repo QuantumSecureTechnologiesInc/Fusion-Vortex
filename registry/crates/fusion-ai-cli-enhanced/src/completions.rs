@@ -1,6 +1,6 @@
 //! Tab completion engine
 
-use crate::{context::CliContext, CliError, Result};
+use crate::{context::CliContext, Result};
 use serde::{Deserialize, Serialize};
 
 /// A completion result

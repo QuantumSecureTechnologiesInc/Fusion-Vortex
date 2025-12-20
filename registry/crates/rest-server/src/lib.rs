@@ -1,9 +1,7 @@
 /// Production REST Server Framework.
 /// Provides structured routing and resource abstraction (e.g., /users/{id}).
 use fusion_http::{Request, Response};
-use fusion_std::error::{StdError, StdResult};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 // Type alias for routing key (Method + Path Pattern)
 type RouteKey = (String, String);
@@ -38,7 +36,7 @@ impl RestServer {
 
     /// Primary dispatcher that extracts path parameters.
     pub async fn dispatch(&self, req: Request<Vec<u8>>) -> Response<Vec<u8>> {
-        let key = (req.method.clone(), req.path.clone()); // Simplified key
+        let key = (req.method().to_string(), req.uri().path().to_string()); // Simplified key
 
         // 1. Dynamic Matching and Parameter Extraction
         // (In a full router, this would be a trie or radix tree lookup)
@@ -48,7 +46,10 @@ impl RestServer {
             let params = HashMap::from([("id".into(), "42".into())]);
             handler(req, params)
         } else {
-            Response::new(404).body(b"REST Endpoint Not Found")
+            Response::builder()
+                .status(404)
+                .body(b"REST Endpoint Not Found".to_vec())
+                .unwrap()
         }
     }
 }

@@ -1,9 +1,16 @@
-[package]
+﻿[package]
 name = "fusion-k8s-operator"
 version = "0.2.0"
 edition = "2021"
-
+license = "MIT"
+description = "Integration: Fusion Integration crate: k8s-operator."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "integration"]
+categories = ["network-programming", "external-ffi-bindings"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
 kube = { version = "0.96", features = ["runtime", "derive"] }
 k8s-openapi = { version = "0.23", features = ["v1_30"] }
 serde = { workspace = true }
@@ -11,6 +18,7 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 futures = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 schemars = "0.8"
 async-trait = { workspace = true }
 anyhow = { workspace = true }
@@ -19,3 +27,4 @@ thiserror.workspace = true
 
 [dev-dependencies]
 anyhow = { workspace = true }
+

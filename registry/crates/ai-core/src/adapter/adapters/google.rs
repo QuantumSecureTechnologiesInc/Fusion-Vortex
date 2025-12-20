@@ -1,6 +1,6 @@
 // Google Gemini adapter implementation for fusion-ai-core
 use anyhow::{Context, Result};
-use async_trait::async_trait;
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -108,13 +108,17 @@ struct GenerateContentResponse {
 #[derive(Debug, Deserialize)]
 struct Candidate {
     content: GoogleContent,
+    #[allow(dead_code)]
     finish_reason: Option<String>,
+    #[allow(dead_code)]
     safety_ratings: Option<Vec<SafetyRating>>, // ignored for now
 }
 
 #[derive(Debug, Deserialize)]
 struct SafetyRating {
+    #[allow(dead_code)]
     category: String,
+    #[allow(dead_code)]
     probability: String,
 }
 
@@ -126,6 +130,7 @@ pub struct UsageMetadata {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct StreamResponse {
     candidates: Option<Vec<Candidate>>, // streamed candidates
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -139,6 +144,7 @@ struct ErrorResponse {
 
 #[derive(Debug, Deserialize)]
 struct ErrorDetail {
+    #[allow(dead_code)]
     code: i32,
     message: String,
     status: String,

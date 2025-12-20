@@ -4,7 +4,18 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Fusion Model Context Protocol (MCP) integration"
+repository.workspace = true
+description = "Framework: Opinionated Model Context Protocol (MCP) framework for AI agent orchestration"
+keywords = ["mcp", "ai", "framework", "agent", "orchestration"]
+categories = ["development-tools", "web-programming"]
+readme = "README.md"
+
+[features]
+default = ["full"]
+full = ["server", "client", "policy"]
+server = []
+client = ["reqwest"]
+policy = ["fusion-policy"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -14,7 +25,12 @@ serde_json = { workspace = true }
 fusion_runtime_core = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, optional = true }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 fusion-vscode-runtime = { path = "../../../crates/vscode-runtime" }
-fusion-policy = { workspace = true }
+fusion-policy = { workspace = true, optional = true }
+tokio = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

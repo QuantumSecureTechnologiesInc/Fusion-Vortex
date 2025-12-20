@@ -1,9 +1,17 @@
-[package]
+﻿[package]
 name = "fusion-sbom-generator"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: fusion-sbom-generator"
 license = "MIT"
-
+description = "Tool: Development tool: fusion-sbom-generator. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion", "dev-tool"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+fusion_core = { workspace = true }
+
+

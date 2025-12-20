@@ -4,7 +4,7 @@
 /// - K-Means++ Initialization (Probabilistic).
 /// - Tolerance-based Convergence.
 /// - Thread-safe RNG.
-use fusion_core::types::tensor::{Matrix, Vector1D};
+use fusion_core::types::tensor::Matrix;
 use fusion_core::FusionError;
 use fusion_core::FusionResult;
 use rand::distributions::{Distribution, WeightedIndex};
@@ -12,7 +12,9 @@ use rand::Rng;
 
 pub struct KMeans {
     k: usize,
+    #[allow(dead_code)]
     max_iters: usize,
+    #[allow(dead_code)]
     tol: f64,
     pub centroids: Option<Matrix<f64>>,
 }
@@ -52,7 +54,7 @@ impl KMeans {
             centroids_vec.push(
                 *data
                     .get([first_idx, j])
-                    .ok_or(FusionError::IndexOutOfBounds)?,
+                    .ok_or(FusionError::IndexOutOfBounds("init".into()))?,
             );
         }
 
@@ -69,7 +71,9 @@ impl KMeans {
                     for j in 0..n_features {
                         // Logic to access existing centroids from the flat vec
                         let c_val = centroids_vec[c_idx * n_features + j];
-                        let x_val = *data.get([i, j]).ok_or(FusionError::IndexOutOfBounds)?;
+                        let x_val = *data
+                            .get([i, j])
+                            .ok_or(FusionError::IndexOutOfBounds("dist calc".into()))?;
                         let diff = x_val - c_val;
                         d_sq += diff * diff;
                     }
@@ -91,13 +95,13 @@ impl KMeans {
                 centroids_vec.push(
                     *data
                         .get([next_idx, j])
-                        .ok_or(FusionError::IndexOutOfBounds)?,
+                        .ok_or(FusionError::IndexOutOfBounds("centroids".into()))?,
                 );
             }
         }
 
-        Matrix::from_shape_vec((self.k, n_features), centroids_vec)
-            .map_err(|_| FusionError::InvalidDimension("Shape mismatch".into()))
+        // Result from from_vec is Self, not Result. Return Ok(Self).
+        Matrix::from_vec(centroids_vec, [self.k, n_features])
     }
 
     pub fn fit(&mut self, data: &Matrix<f64>) -> FusionResult<()> {

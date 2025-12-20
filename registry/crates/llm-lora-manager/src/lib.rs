@@ -63,33 +63,14 @@ impl LoRAManager {
 
     fn matmul(&self, a: &Matrix<f64>, b: &Matrix<f64>) -> FusionResult<Matrix<f64>> {
         // Validation (same matmul logic as inference engine, repeated for containment)
-        if a.shape.len() != 2 || b.shape.len() != 2 || a.shape[1] != b.shape[0] {
+        if a.shape().len() != 2 || b.shape().len() != 2 || a.shape()[1] != b.shape()[0] {
             return Err(FusionError::ShapeMismatch {
-                op: "LoRA matmul".into(),
-                lhs: a.shape.clone(),
-                rhs: b.shape.clone(),
+                op: "LoRA matmul".to_string(),
+                lhs: a.shape().to_vec(),
+                rhs: b.shape().to_vec(),
             });
         }
 
-        let m = a.shape[0];
-        let n = a.shape[1];
-        let p = b.shape[1];
-        let mut result_data = vec![0.0; m * p];
-
-        for i in 0..m {
-            for j in 0..p {
-                let mut sum = 0.0;
-                for k in 0..n {
-                    sum += a.data[i * n + k] * b.data[k * p + j];
-                }
-                result_data[i * p + j] = sum;
-            }
-        }
-
-        Ok(Matrix {
-            data: result_data,
-            shape: vec![m, p],
-        })
+        a.matmul(b)
     }
 }
-

@@ -2,7 +2,7 @@
 
 use crate::{AgenticError, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+// use std::collections::VecDeque;
 
 /// A node in the chain of thought
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,7 +118,8 @@ impl Default for ChainMetadata {
 /// Chain of thought processor
 pub struct ChainOfThought {
     /// Maximum chain depth
-    max_depth: usize,
+    #[allow(dead_code)]
+    _max_depth: usize,
 
     /// Minimum confidence threshold
     confidence_threshold: f64,
@@ -127,7 +128,7 @@ pub struct ChainOfThought {
 impl ChainOfThought {
     pub fn new() -> Self {
         Self {
-            max_depth: 20,
+            _max_depth: 20,
             confidence_threshold: 0.7,
         }
     }

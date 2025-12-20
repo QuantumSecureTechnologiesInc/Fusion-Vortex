@@ -23,8 +23,8 @@ impl KVCacheBlock {
         // Flattened dimension: num_heads * head_dim
         let dim = num_heads * head_dim;
         Self {
-            key_block: Tensor::zeros([dim, BLOCK_SIZE]).unwrap(),
-            value_block: Tensor::zeros([dim, BLOCK_SIZE]).unwrap(),
+            key_block: Tensor::zeros([dim, BLOCK_SIZE]),
+            value_block: Tensor::zeros([dim, BLOCK_SIZE]),
             num_filled: 0,
         }
     }
@@ -42,6 +42,7 @@ pub struct PagedAttentionManager {
 }
 
 impl PagedAttentionManager {
+    pub const BLOCK_SIZE: usize = BLOCK_SIZE;
     pub fn new(num_blocks: usize, num_heads: usize, head_dim: usize) -> Self {
         let mut physical_blocks = Vec::with_capacity(num_blocks);
         let mut free_blocks = Vec::with_capacity(num_blocks);
@@ -121,31 +122,38 @@ impl PagedAttentionManager {
         let pos = writer.num_filled;
 
         // Copy data into block at position 'pos'
-        // Since we are using Matrix<f64>, we copy column-wise or row-wise depending on layout.
-        // Assuming [features, block_size], we copy into column `pos`.
-
         let features = self.num_heads * self.head_dim;
-        if key.shape[0] * key.shape[1] != features {
+        let key_len = key.shape().iter().product::<usize>();
+        if key_len != features {
             return Err(fusion_core::FusionError::ShapeMismatch {
-                op: "KV Append".into(),
-                lhs: key.shape.to_vec(),
+                op: "KV Append".to_string(),
+                lhs: key.shape().to_vec(),
                 rhs: vec![features],
             });
         }
 
-        // Manual copy since tensor slice ops might not be fully exposed in Phase 2 core
         // Flattened copy
-        for i in 0..features {
-            let val = key.data[i];
-            // Index in block: row=i, col=pos -> index = i * BLOCK_SIZE + pos (assuming RowMajor)
-            // But we defined shape as [dim, BLOCK_SIZE], so strides[0] = BLOCK_SIZE
-            writer.key_block.set([i, pos], val)?;
-
-            let v_val = value.data[i];
-            writer.value_block.set([i, pos], v_val)?;
+        for (i, (k_val, v_val)) in key.data.iter().zip(value.data.iter()).enumerate() {
+            if i >= features {
+                break;
+            }
+            writer.key_block.set([i, pos], *k_val)?;
+            writer.value_block.set([i, pos], *v_val)?;
         }
 
         writer.num_filled += 1;
         Ok(())
+    }
+
+    /// Get the number of free blocks available
+    pub fn free_blocks_count(&self) -> usize {
+        self.free_blocks.len()
+    }
+
+    /// Release all blocks associated with a sequence
+    pub fn release_sequence(&mut self, seq_id: u64) {
+        if let Some(blocks) = self.block_tables.remove(&seq_id) {
+            self.free_blocks.extend(blocks);
+        }
     }
 }

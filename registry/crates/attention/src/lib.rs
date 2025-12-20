@@ -67,7 +67,7 @@ impl MultiHeadAttention {
 
     // Helper: Scale tensor
     fn scale_tensor(&self, input: &Tensor) -> Tensor {
-        let mut output = input.clone();
+        let output = input.clone();
         // In production, this would be a proper element-wise multiplication
         // For now, we accept the mock implementation
         output

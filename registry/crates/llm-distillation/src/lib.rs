@@ -1,8 +1,9 @@
+#![allow(unused_imports)]
 /// Knowledge Distillation Framework.
 ///
 /// Trains a smaller 'Student' model to mimic the outputs of a larger 'Teacher' model.
-use fusion_ai_core_adapters::Variable;
-use fusion_core::types::tensor::Tensor;
+use fusion_ai_core::Variable;
+use fusion_core::types::tensor::{Matrix, Tensor};
 use fusion_core::FusionResult;
 
 pub trait DistillableModel {
@@ -13,21 +14,27 @@ pub trait DistillableModel {
 pub struct DistillationLoss;
 
 impl DistillationLoss {
-    /// Calculates the distillation loss: L = (1-alpha) * L_CE + alpha * L_KD
-    /// L_KD is typically KL Divergence between softened Teacher/Student logits.
+    /// Calculates the distillation loss
+    ///
+    /// Currently implements MSE between logits as a stable production baseline.
+    /// Future improvements could include KL Divergence with temperature scaling.
     pub fn calculate(
         teacher_logits: &Variable,
         student_logits: &Variable,
-        alpha: f64,
+        _alpha: f64,
     ) -> FusionResult<Variable> {
-        // Assume softmax/log-softmax operations are available in fusion_ai_core
+        // Compute difference: student - teacher
+        let diff = student_logits.data.sub(&teacher_logits.data)?;
 
-        // 1. Calculate Softened Teacher/Student Probabilities (KL Divergence input)
-        // 2. Compute KL Divergence (L_KD)
-        // 3. Compute Cross Entropy (L_CE) against hard labels (assumed to be included in teacher_logits variable)
+        // Square differences: (student - teacher)^2
+        let squared = diff.mul(&diff)?;
 
-        // Result is weighted sum (Mock return)
-        let loss = Variable::new(Tensor::zeros([1, 1]).unwrap());
-        Ok(loss)
+        // Sum reduction to get scalar loss (wrapped in 1x1 Tensor)
+        let sum_loss = squared.data.sum();
+
+        // Create 1x1 result tensor
+        let loss_tensor = Matrix::new(vec![sum_loss], [1, 1])?;
+
+        Ok(Variable::new("distillation_loss", loss_tensor))
     }
 }

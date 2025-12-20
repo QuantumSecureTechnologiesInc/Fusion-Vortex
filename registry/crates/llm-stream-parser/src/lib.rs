@@ -1,7 +1,7 @@
 /// Production Streaming Parser.
 ///
 /// Implements a state machine for robust, non-blocking JSON parsing from LLM streams.
-use fusion_core::error::{StdError, StdResult};
+use fusion_std::error::{StdError, StdResult};
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -29,8 +29,8 @@ impl StreamingJsonParser {
     /// Feeds a chunk of streaming text into the parser.
     /// Returns the first completed JSON object if found.
     pub fn ingest_chunk(&mut self, chunk: &str) -> StdResult<Option<String>> {
-        let mut start_index = None;
-        let mut end_index = None;
+        let mut _start_index = None;
+        let mut _end_index = None;
 
         for (i, char) in chunk.chars().enumerate() {
             match self.state {
@@ -38,7 +38,7 @@ impl StreamingJsonParser {
                     if char == '{' {
                         self.state = JsonParseState::InObject;
                         self.brace_count = 1;
-                        start_index = Some(i);
+                        _start_index = Some(i);
                         self.buffer.push_back(char);
                     }
                 }
@@ -49,7 +49,7 @@ impl StreamingJsonParser {
                     } else if char == '}' {
                         self.brace_count -= 1;
                         if self.brace_count == 0 {
-                            end_index = Some(i);
+                            _end_index = Some(i);
                             self.state = JsonParseState::Completed;
                             break; // Done with this object
                         }
@@ -80,4 +80,3 @@ impl StreamingJsonParser {
         }
     }
 }
-

@@ -1,32 +1,36 @@
-# llm-rag
+# Fusion LLM RAG
 
-Retrieval-Augmented Generation (RAG) pipeline components.
+**Version:** 0.2.0  
+**Type:** Application Framework  
+**License:** MIT
+
+## Overview
+
+Fusion LLM RAG (`fusion_llm_rag`) is a lightweight, thread-safe library for building Retrieval-Augmented Generation systems. It provides a local vector store and retrieval pipeline.
 
 ## Features
 
-- Document ingestion
-- Vector store integration
-- Context retrieval and ranking
-
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-llm-rag = "0.1.0"
-```
+- **Store**: In-memory or on-disk vector storage (HNSW)
+- **Retrieval**: Semantic similarity search with metadata filtering
+- **Chunking**: Document splitting utilities
+- **Concurrency**: Safe for concurrent reads/writes
 
 ## Usage
 
 ```rust
-use llm_rag::Pipeline;
+use fusion_llm_rag::{VectorStore, Document};
 
-fn main() {
-    Pipeline::new().query("What is Fusion?");
-}
+let mut store = VectorStore::new();
+store.add(Document::new("Fusion is fast.", vec![0.1, 0.2]))?;
+
+let results = store.search(query_vec, 5)?;
 ```
 
-## License
+## Dependencies
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `fusion_core`
+- `thiserror`
+
+## Contributing
+
+See [CONTRIBUTING.md](../../../CONTRIBUTING.md)

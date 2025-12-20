@@ -1,13 +1,16 @@
-[package]
+﻿[package]
 name = "fusion-terminal-browser"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Terminal-based browser with Blink engine and WebGPU support for Fusion CLI (Chromiumoxide-powered)"
 license = "MIT"
+description = "Tool: Fusion tool: fusion-terminal-browser. Excellent error reporting."
+authors = ["Fusion Team"]
 repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
-
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
 # Fusion Runtime Core (replaces tokio)
 fusion_runtime_core = { path = "../fusion_runtime_core" }
 
@@ -78,3 +81,5 @@ path = "src/lib.rs"
 [[bin]]
 name = "fusion-browser"
 path = "src/bin/main.rs"
+
+

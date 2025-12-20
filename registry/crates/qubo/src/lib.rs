@@ -40,11 +40,10 @@ impl PortfolioProblem {
 
         // Generate Linear Terms (h_i Z_i)
         for i in 0..n {
-            let mu = *self
-                .expected_returns
-                .get([i])
-                .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
-            let mut h_i = -self.risk_factor * mu;
+            let mu = *self.expected_returns.get([i]).ok_or(
+                fusion_core::FusionError::IndexOutOfBounds(format!("Index {} out of bounds", i)),
+            )?;
+            let h_i = -self.risk_factor * mu;
 
             // Add penalty linear contribution
             // (1-s_i)/2 logic...
@@ -58,10 +57,12 @@ impl PortfolioProblem {
         // Generate Quadratic Terms (J_ij Z_i Z_j)
         for i in 0..n {
             for j in (i + 1)..n {
-                let cov = *self
-                    .covariance
-                    .get([i, j])
-                    .ok_or(fusion_core::FusionError::IndexOutOfBounds)?;
+                let cov = *self.covariance.get([i, j]).ok_or(
+                    fusion_core::FusionError::IndexOutOfBounds(format!(
+                        "Index [{}, {}] out of bounds",
+                        i, j
+                    )),
+                )?;
                 let j_ij = self.risk_factor * cov; // Risk part
 
                 // Add penalty quadratic contribution (2 * A * x_i * x_j)

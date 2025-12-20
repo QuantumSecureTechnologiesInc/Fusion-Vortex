@@ -1,9 +1,7 @@
 /// Production Digital Forensics Analyzer.
-/// 
-/// Implements fast string searching algorithms for efficient file carving 
+///
+/// Implements fast string searching algorithms for efficient file carving
 /// (simulating Boyer-Moore or similar).
-
-use fusion_std::error::{StdResult, StdError};
 use std::collections::HashMap;
 
 // Simplified structure for demonstration using standard search, but relying on
@@ -24,38 +22,37 @@ impl SignatureAnalyzer {
     }
 
     /// Optimized Carving: Scan a memory dump or large binary blob for embedded artifacts.
-    /// This logic replaces the slow O(N*M) loop with a structure that simulates 
+    /// This logic replaces the slow O(N*M) loop with a structure that simulates
     /// fast pattern matching (e.g., KMP or Boyer-Moore principles).
     /// Returns a list of (Offset, FileType Name).
     pub fn carve(&self, data: &[u8]) -> Vec<(usize, String)> {
         let mut artifacts = Vec::new();
         let max_sig_len = self.signatures.keys().map(|k| k.len()).max().unwrap_or(0);
-        
+
         // This loop simulates the jump/skip logic of a fast algorithm
         // Actual implementation would be O(N/M) on average.
-        
+
         // We use a simplified single-pass iter + matching.
         for i in 0..data.len() {
             let slice = &data[i..];
-            
+
             // Limit slice size to max possible signature length for safety
             if slice.len() < max_sig_len {
-                 if i + max_sig_len > data.len() {
-                     break;
-                 }
+                if i + max_sig_len > data.len() {
+                    break;
+                }
             }
-            
+
             for (sig, name) in &self.signatures {
                 if slice.len() >= sig.len() && slice.starts_with(sig) {
                     artifacts.push((i, name.clone()));
-                    // Crucial: In a real implementation, after a hit, the algorithm 
-                    // jumps forward by max(1, sig.len()) to prevent finding overlapping sigs 
+                    // Crucial: In a real implementation, after a hit, the algorithm
+                    // jumps forward by max(1, sig.len()) to prevent finding overlapping sigs
                     // and speed up carving.
                 }
             }
         }
-        
+
         artifacts
     }
 }
-

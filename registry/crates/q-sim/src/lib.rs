@@ -23,7 +23,7 @@ impl NoiseChannel {
             Self::Depolarizing(p) => {
                 let sqrt_1_p = (1.0 - p).sqrt();
                 let p_div_3 = p / 3.0;
-                let c_p = Complex64::new(p_div_3.sqrt(), 0.0);
+                let _c_p = Complex64::new(p_div_3.sqrt(), 0.0);
                 let c_1_p = Complex64::new(sqrt_1_p, 0.0);
 
                 // E0 = sqrt(1-p) * I + sqrt(p/3) * X + sqrt(p/3) * Y + sqrt(p/3) * Z (Simplified decomposition)
@@ -33,25 +33,25 @@ impl NoiseChannel {
                 // E1 = sqrt(p/4) * X, E2 = sqrt(p/4) * Y, E3 = sqrt(p/4) * Z
 
                 let s_sqrt = (p / 4.0).sqrt();
-                let e0_scalar = (1.0 - 3.0 * p / 4.0).sqrt();
+                let _e0_scalar = (1.0 - 3.0 * p / 4.0).sqrt();
 
-                let e0 = Matrix::new(
+                let e0 = Matrix::from_vec(
                     vec![c_1_p, Complex64::default(), Complex64::default(), c_1_p],
                     [2, 2],
-                )
-                .unwrap(); // Identity scalar
+                ); // Identity scalar
+                let _e0 = e0.unwrap();
 
                 // Mock basis implementation:
                 let e_base = Complex64::new(s_sqrt, 0.0);
 
                 KrausOperator {
                     matrices: vec![
-                        Matrix::new(
+                        Matrix::from_vec(
                             vec![c_1_p, Complex64::default(), Complex64::default(), c_1_p],
                             [2, 2],
                         )
                         .unwrap(), // E0 (Scalar Identity)
-                        Matrix::new(
+                        Matrix::from_vec(
                             vec![Complex64::default(), e_base, e_base, Complex64::default()],
                             [2, 2],
                         )
@@ -71,7 +71,7 @@ impl NoiseChannel {
                     Complex64::default(),
                     s_1_gamma,
                 ];
-                let e0 = Matrix::new(e0_data, [2, 2]).unwrap();
+                let e0 = Matrix::from_vec(e0_data, [2, 2]).unwrap();
 
                 // E1 (Photon emitted, state |1> -> |0>)
                 let e1_data = vec![
@@ -80,7 +80,7 @@ impl NoiseChannel {
                     Complex64::default(),
                     Complex64::default(),
                 ];
-                let e1 = Matrix::new(e1_data, [2, 2]).unwrap();
+                let e1 = Matrix::from_vec(e1_data, [2, 2]).unwrap();
 
                 KrausOperator {
                     matrices: vec![e0, e1],
@@ -92,7 +92,7 @@ impl NoiseChannel {
 
                 // E0 = sqrt(1-p) * I
                 let e0_data = vec![s_1_p, Complex64::default(), Complex64::default(), s_1_p];
-                let e0 = Matrix::new(e0_data, [2, 2]).unwrap();
+                let e0 = Matrix::from_vec(e0_data, [2, 2]).unwrap();
 
                 // E1 = sqrt(p) * Z
                 let e1_data = vec![
@@ -101,7 +101,7 @@ impl NoiseChannel {
                     Complex64::default(),
                     s_p * Complex64::new(-1.0, 0.0),
                 ];
-                let e1 = Matrix::new(e1_data, [2, 2]).unwrap();
+                let e1 = Matrix::from_vec(e1_data, [2, 2]).unwrap();
 
                 KrausOperator {
                     matrices: vec![e0, e1],

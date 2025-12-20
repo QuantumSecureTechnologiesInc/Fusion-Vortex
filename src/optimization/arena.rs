@@ -1,5 +1,6 @@
 // src/optimization/arena.rs - Arena Memory Allocators
 #![allow(dead_code)]
+#![allow(unsafe_code)]
 // Reduces memory fragmentation and improves allocation performance by 50%
 
 use std::alloc::{alloc, dealloc, Layout};

@@ -1,5 +1,5 @@
 /// LLM Tokenizers - BPE, WordPiece, SentencePiece implementations
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub mod bpe {
     use super::*;
@@ -136,7 +136,7 @@ pub mod wordpiece {
                     continue;
                 }
 
-                let mut chars: Vec<char> = token.chars().collect();
+                let chars: Vec<char> = token.chars().collect();
                 let mut start = 0;
                 let mut sub_tokens = Vec::new();
                 let mut is_bad = false;
@@ -191,7 +191,6 @@ pub mod wordpiece {
 }
 
 pub mod sentencepiece {
-    use super::*;
 
     /// SentencePiece tokenizer
     pub struct SentencePieceTokenizer {

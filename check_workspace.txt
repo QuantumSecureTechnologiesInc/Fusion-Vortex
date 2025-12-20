@@ -1,0 +1,104 @@
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\tensor-sparse\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+    Checking fusion-core v0.2.0 (C:\Projects\Fusion - Programming Language\registry\crates\fusion-core)
+   Compiling pyo3-build-config v0.20.3
+warning: unused import: `anyhow::Result`
+  --> crates\fusion-review-policy\src\enforcement.rs:15:5
+   |
+15 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `fusion-review-policy` (lib) generated 1 warning (run `cargo fix --lib -p fusion-review-policy` to apply 1 suggestion)
+    Checking kube-runtime v0.96.0
+    Checking fusion-settings v1.0.0 (C:\Projects\Fusion - Programming Language\crates\fusion-settings)
+warning: unused import: `anyhow::Result`
+  --> crates\fusion-task-groups\src\manager.rs:11:5
+   |
+11 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `PendingStep`
+  --> crates\fusion-task-groups\src\ui.rs:10:13
+   |
+10 | use crate::{PendingStep, Subtask, TaskGroup};
+   |             ^^^^^^^^^^^
+
+warning: `fusion-task-groups` (lib) generated 2 warnings (run `cargo fix --lib -p fusion-task-groups` to apply 2 suggestions)
+error[E0428]: the name `PermissionSettings` is defined multiple times
+   --> crates\fusion-settings\src\lib.rs:163:1
+    |
+153 | pub struct PermissionSettings {
+    | ----------------------------- previous definition of the type `PermissionSettings` here
+...
+163 | pub struct PermissionSettings {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PermissionSettings` redefined here
+    |
+    = note: `PermissionSettings` must be defined only once in the type namespace of this module
+
+warning: unused import: `Path`
+  --> crates\fusion-settings\src\lib.rs:17:17
+   |
+17 | use std::path::{Path, PathBuf};
+   |                 ^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+error[E0119]: conflicting implementations of trait `Debug` for type `PermissionSettings`
+   --> crates\fusion-settings\src\lib.rs:162:10
+    |
+152 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |          ----- first implementation here
+...
+162 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |          ^^^^^ conflicting implementation for `PermissionSettings`
+
+error[E0119]: conflicting implementations of trait `Clone` for type `PermissionSettings`
+   --> crates\fusion-settings\src\lib.rs:162:17
+    |
+152 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                 ----- first implementation here
+...
+162 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                 ^^^^^ conflicting implementation for `PermissionSettings`
+
+error[E0119]: conflicting implementations of trait `Serialize` for type `PermissionSettings`
+   --> crates\fusion-settings\src\lib.rs:162:24
+    |
+152 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                        --------- first implementation here
+...
+162 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                        ^^^^^^^^^ conflicting implementation for `PermissionSettings`
+    |
+    = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `Deserialize<'_>` for type `PermissionSettings`
+   --> crates\fusion-settings\src\lib.rs:162:35
+    |
+152 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                                   ----------- first implementation here
+...
+162 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                                   ^^^^^^^^^^^ conflicting implementation for `PermissionSettings`
+    |
+    = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `Default` for type `PermissionSettings`
+   --> crates\fusion-settings\src\lib.rs:162:48
+    |
+152 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                                                ------- first implementation here
+...
+162 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    |                                                ^^^^^^^ conflicting implementation for `PermissionSettings`
+
+Some errors have detailed explanations: E0119, E0428.
+For more information about an error, try `rustc --explain E0119`.
+warning: `fusion-settings` (lib) generated 1 warning
+error: could not compile `fusion-settings` (lib) due to 6 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...

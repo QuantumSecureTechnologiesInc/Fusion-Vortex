@@ -1,5 +1,10 @@
 use bytes::Bytes;
+#[cfg(feature = "persistence")]
 use dashmap::DashMap;
+#[cfg(not(feature = "persistence"))]
+use std::collections::HashMap;
+#[cfg(not(feature = "persistence"))]
+use std::sync::RwLock;
 use std::time::Instant;
 
 #[derive(Clone)]
@@ -23,7 +28,10 @@ impl Entry {
 }
 
 pub struct Store {
+    #[cfg(feature = "persistence")]
     data: DashMap<String, Entry>,
+    #[cfg(not(feature = "persistence"))]
+    data: RwLock<HashMap<String, Entry>>,
 }
 
 impl Default for Store {

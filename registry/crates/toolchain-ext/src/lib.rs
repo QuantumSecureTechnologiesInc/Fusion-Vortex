@@ -1,10 +1,8 @@
 /// Production Build Logic.
-/// 
+///
 /// Orchestrates the entire compiler pipeline using Fusion Core components.
-
 use anyhow::Result;
-use fusion_core::compiler::SemanticAnalyzer;
-use fusion_std::error::StdResult;
+use fusion_core::compiler::type_checker::TypeChecker as SemanticAnalyzer;
 use std::path::Path;
 
 pub async fn execute(release: bool) -> Result<()> {
@@ -25,29 +23,32 @@ pub async fn execute(release: bool) -> Result<()> {
     let tokens = tokenize(&source_code);
 
     // 2.2 Parsing (Simulated AST generation)
-    let ast = parse(&tokens);
+    let _ast = parse(&tokens);
 
     // 2.3 Semantic Analysis (Using the real structure we built in core)
     println!("    Running Semantic Analysis...");
-    let mut analyzer = SemanticAnalyzer::new();
-    
+    let _analyzer = SemanticAnalyzer::new();
+
     // The semantic analyzer needs to traverse the AST. Since we don't have the AST object here,
     // we simulate the call to ensure the component is wired.
     // analyzer.check_ast(&ast).map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
     // --- Phase 3: Code Generation (Future LLVM/WASM) ---
     println!("    Code Generation (LLVM/WASM)...");
-    
+
     // In final production: fusion_core::backend::codegen(ast, mode);
-    
+
     // Simulate work completion
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    
+
     println!("    Finished {} [optimized] target(s) in 0.1s", mode);
     Ok(())
 }
 
 // --- Simplified Pipeline Stubs ---
-fn tokenize(source: &str) -> Vec<String> { vec![source.to_string()] }
-fn parse(tokens: &[String]) -> String { tokens[0].clone() }
-
+fn tokenize(source: &str) -> Vec<String> {
+    vec![source.to_string()]
+}
+fn parse(tokens: &[String]) -> String {
+    tokens[0].clone()
+}

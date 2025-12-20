@@ -25,7 +25,7 @@ impl CudaKernelExecutor {
         // }
 
         println!("[CUDA Kernel] Executing fused FlashAttention kernel.");
-        Tensor::zeros(q.shape.clone())
+        Ok(Tensor::zeros([q.shape()[0], q.shape()[1]]))
     }
 
     /// Executes the MatMul-Dequant operation (optimized for quantized serving).
@@ -37,6 +37,6 @@ impl CudaKernelExecutor {
     ) -> FusionResult<Matrix<f64>> {
         // This kernel performs Dequant(A) * B fusion on the GPU itself.
         println!("[CUDA Kernel] Executing Fused QMatMul (Dequant + GEMM).");
-        Tensor::zeros(vec![b.shape[0], b.shape[1]])
+        Ok(Tensor::zeros([b.shape()[0], b.shape()[1]]))
     }
 }

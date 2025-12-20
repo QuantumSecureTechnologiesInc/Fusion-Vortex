@@ -1,0 +1,6 @@
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_core, since `default-features` was not specified for `workspace.dependencies.fusion_core`, this could become a hard error in the future
+warning: C:\Projects\Fusion - Programming Language\registry\crates\finite-fields\Cargo.toml: `default-features` is ignored for fusion_std, since `default-features` was not specified for `workspace.dependencies.fusion_std`, this could become a hard error in the future
+error: failed to parse manifest at `C:\Projects\Fusion - Programming Language\registry\crates\std\Cargo.toml`
+
+Caused by:
+  can't find `error_handling` bench at `benches\error_handling.rs` or `benches\error_handling\main.rs`. Please specify bench.path if you want to use a non-default path.

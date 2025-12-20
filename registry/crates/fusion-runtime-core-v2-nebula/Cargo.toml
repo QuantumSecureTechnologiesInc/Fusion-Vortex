@@ -1,11 +1,14 @@
-[package]
+﻿[package]
 name = "fusion-runtime-core-v2-nebula"
 version = "2.0.0"
 edition = "2021"
+license = "MIT"
+description = "Tool: Fusion tool: fusion-runtime-core-v2-nebula. Excellent error reporting."
 authors = ["Fusion Team"]
-description = "Fusion Runtime Core v2.0 (Nebula) - Hyperscale execution engine for distributed systems"
-license = "MIT OR Apache-2.0"
-
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 [package.metadata]
 # Allow this crate to be referenced as "nebula" for convenience
 aliases = ["nebula"]
@@ -19,6 +22,8 @@ name = "fusion-runtime-server"
 path = "src/main.rs"
 
 [dependencies]
+clap = { workspace = true }
+fusion_core = { workspace = true }
 tonic = "0.10"
 prost = "0.12"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
@@ -34,3 +39,5 @@ tonic-build = "0.10"
 
 [dev-dependencies]
 tokio-test = "0.4"
+
+

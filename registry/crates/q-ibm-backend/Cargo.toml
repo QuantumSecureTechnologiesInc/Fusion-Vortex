@@ -1,10 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_q_ibm_backend"
 version = "0.2.0"
 edition = "2021"
-description = "IBM Quantum (Qiskit) backend provider"
 license = "MIT"
-
+description = "Algorithm: Quantum algorithm/module: q-ibm-backend. Optimized for performance."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["algorithm", "fusion", "quantum", "quantum-computing"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { workspace = true }
@@ -13,3 +17,7 @@ reqwest = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+
+
+[dev-dependencies]
+criterion = { workspace = true }

@@ -1,10 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_model_server"
 version = "0.2.0"
 edition = "2021"
-description = "Reference implementation of a Fusion AI Model Server"
 license = "MIT"
-
+description = "Algorithm: Fusion Algorithm crate: model-server-core."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 # The Fusion Stack
 fusion_core = { workspace = true }
@@ -17,4 +21,7 @@ fusion_ai_core = { workspace = true }
 fusion_runtime_core = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio = { workspace = true, features = ["full"] }
+ndarray = { workspace = true }
+
 

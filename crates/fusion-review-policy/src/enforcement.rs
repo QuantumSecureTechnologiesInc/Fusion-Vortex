@@ -12,7 +12,6 @@ use crate::{
     ArtifactPolicy, BrowserPolicy, JavascriptPolicy, ReviewPolicy, TerminalExecutionMode,
     TerminalPolicy,
 };
-use anyhow::Result;
 
 impl ReviewPolicy {
     /// Create a default lenient policy

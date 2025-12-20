@@ -2,11 +2,15 @@
 ///
 /// Handles job submission, status polling, and result retrieval for QPU jobs.
 use fusion_core::types::quantum::QuantumCircuit;
-use fusion_quantum_sdk::QuantumBackend; // Trait reference
 use fusion_std::error::{StdError, StdResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
+
+/// Trait for quantum backend implementations
+pub trait QuantumBackend {
+    fn submit_job(&self, circuit: &QuantumCircuit) -> StdResult<String>;
+}
 
 pub struct QuantumJob {
     pub job_id: String,
@@ -28,9 +32,9 @@ impl CloudAgent {
     pub async fn submit(
         &self,
         backend_name: &str,
-        circuit: QuantumCircuit,
+        _circuit: QuantumCircuit,
     ) -> StdResult<QuantumJob> {
-        let backend = self
+        let _backend = self
             .backends
             .get(backend_name)
             .ok_or(StdError::Serialization(format!(
@@ -51,7 +55,7 @@ impl CloudAgent {
     }
 
     /// Poll for job status.
-    pub async fn poll_status(&self, job: &QuantumJob) -> StdResult<String> {
+    pub async fn poll_status(&self, _job: &QuantumJob) -> StdResult<String> {
         // Simulating exponential backoff polling
         sleep(Duration::from_secs(1)).await;
 

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use reqwest::{header, Client, Method, StatusCode};
+use reqwest::{header, Client, Method};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -25,6 +25,7 @@ impl Default for GitHubConfig {
 /// GitHub API client
 pub struct GitHubClient {
     client: Client,
+    #[allow(dead_code)]
     token: String,
 }
 
@@ -46,10 +47,7 @@ impl GitHubClient {
             header::ACCEPT,
             "application/vnd.github+json".parse().unwrap(),
         );
-        headers.insert(
-            "X-GitHub-Api-Version",
-            "2022-11-28".parse().unwrap(),
-        );
+        headers.insert("X-GitHub-Api-Version", "2022-11-28".parse().unwrap());
 
         let client = Client::builder()
             .default_headers(headers)
@@ -138,31 +136,58 @@ impl GitHubClient {
     }
 
     /// Create an issue
-    pub async fn create_issue(&self, owner: &str, repo: &str, request: CreateIssueRequest) -> Result<Issue> {
+    pub async fn create_issue(
+        &self,
+        owner: &str,
+        repo: &str,
+        request: CreateIssueRequest,
+    ) -> Result<Issue> {
         let path = format!("/repos/{}/{}/issues", owner, repo);
         self.request(Method::POST, &path, Some(&request)).await
     }
 
     /// Update an issue
-    pub async fn update_issue(&self, owner: &str, repo: &str, number: u64, request: UpdateIssueRequest) -> Result<Issue> {
+    pub async fn update_issue(
+        &self,
+        owner: &str,
+        repo: &str,
+        number: u64,
+        request: UpdateIssueRequest,
+    ) -> Result<Issue> {
         let path = format!("/repos/{}/{}/issues/{}", owner, repo, number);
         self.request(Method::PATCH, &path, Some(&request)).await
     }
 
     /// List pull requests
-    pub async fn list_pulls(&self, owner: &str, repo: &str, state: &str) -> Result<Vec<PullRequest>> {
+    pub async fn list_pulls(
+        &self,
+        owner: &str,
+        repo: &str,
+        state: &str,
+    ) -> Result<Vec<PullRequest>> {
         let path = format!("/repos/{}/{}/pulls?state={}", owner, repo, state);
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Create a pull request
-    pub async fn create_pull(&self, owner: &str, repo: &str, request: CreatePullRequest) -> Result<PullRequest> {
+    pub async fn create_pull(
+        &self,
+        owner: &str,
+        repo: &str,
+        request: CreatePullRequest,
+    ) -> Result<PullRequest> {
         let path = format!("/repos/{}/{}/pulls", owner, repo);
         self.request(Method::POST, &path, Some(&request)).await
     }
 
     /// Merge a pull request
-    pub async fn merge_pull(&self, owner: &str, repo: &str, number: u64, request: MergePullRequest) -> Result<MergeResult> {
+    pub async fn merge_pull(
+        &self,
+        owner: &str,
+        repo: &str,
+        number: u64,
+        request: MergePullRequest,
+    ) -> Result<MergeResult> {
         let path = format!("/repos/{}/{}/pulls/{}/merge", owner, repo, number);
         self.request(Method::PUT, &path, Some(&request)).await
     }

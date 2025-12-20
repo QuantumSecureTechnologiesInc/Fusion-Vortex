@@ -1,7 +1,6 @@
 /// OS-Level Sandbox Manager.
-/// 
+///
 /// Applies least-privilege profiles (Seccomp/AppArmor) before application startup.
-
 use fusion_std::error::StdResult;
 use thiserror::Error;
 
@@ -20,7 +19,7 @@ impl SandboxManager {
     pub fn generate_profile(&self, binary_path: &str) -> StdResult<String> {
         // In production: Requires static analysis of the binary to find used syscalls.
         println!("Analyzing binary: {} for minimal syscalls...", binary_path);
-        
+
         // Mock profile content
         let profile = r#"
             {"defaultAction": "SCMP_ACT_ERRNO", "syscalls": [{"names": ["read", "write", "exit"], "action": "SCMP_ACT_ALLOW"}]}
@@ -31,13 +30,19 @@ impl SandboxManager {
     /// Apply the generated sandbox profile.
     pub fn apply_profile(&self, profile_data: &str) -> StdResult<()> {
         // In production: This calls the OS kernel via seccomp(2) or AppArmor API.
-        
+
         if cfg!(unix) {
-            println!("[Sandbox] Applying Seccomp profile ({} bytes)...", profile_data.len());
+            println!(
+                "[Sandbox] Applying Seccomp profile ({} bytes)...",
+                profile_data.len()
+            );
             // Successful application simulation
             Ok(())
         } else {
-            Err(SandboxError::UnsupportedOS)?
+            Err(
+                std::io::Error::new(std::io::ErrorKind::Unsupported, SandboxError::UnsupportedOS)
+                    .into(),
+            )
         }
     }
 }

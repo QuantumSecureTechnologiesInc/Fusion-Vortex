@@ -34,7 +34,7 @@ impl SafetyEnforcer {
         anyhow::bail!("Agents are not permitted to install extensions")
     }
 
-    /// Agents cannot bypass compatibility levels
+    // Agents cannot bypass compatibility levels
     // TODO: Re-enable when vscode-runtime is properly integrated
     /*
     pub fn enforce_compatibility(

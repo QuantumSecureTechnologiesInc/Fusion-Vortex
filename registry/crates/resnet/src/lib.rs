@@ -2,7 +2,7 @@
 ///
 /// Simplified implementation for Fusion AI Core compatibility.
 use fusion_ai_core::{Layer, Tensor};
-use fusion_core::{FusionError, FusionResult};
+use fusion_core::FusionResult;
 
 #[derive(Debug, Clone)]
 pub struct Conv2d {

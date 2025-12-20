@@ -44,6 +44,7 @@ struct KnownCommand {
     description: String,
     examples: Vec<String>,
     aliases: Vec<String>,
+    #[allow(dead_code)]
     category: CommandCategory,
 }
 

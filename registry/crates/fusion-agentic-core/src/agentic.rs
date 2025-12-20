@@ -172,7 +172,7 @@ impl AgenticEngine {
             candidates.push(SolutionCandidate {
                 solution: format!("Solution for: {}", sub_problem),
                 confidence: 0.7 + (i as f64 * 0.05),
-                reasoning: vec![format!("Addressed sub-problem: {}", sub_problem)],
+                _reasoning: vec![format!("Addressed sub-problem: {}", sub_problem)],
             });
         }
 
@@ -218,7 +218,7 @@ impl Default for AgenticEngine {
 struct SolutionCandidate {
     solution: String,
     confidence: f64,
-    reasoning: Vec<String>,
+    _reasoning: Vec<String>,
 }
 
 #[derive(Debug, Clone)]

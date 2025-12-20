@@ -7,10 +7,9 @@
 //!
 //! Implements Claude Code-style hierarchical settings with precedence
 
-use crate::{AgentSettings, PermissionSettings, Settings};
+use crate::{Settings, SettingsLoader};
 use anyhow::Result;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 impl SettingsLoader {
     /// Load settings from all sources with precedence
@@ -150,6 +149,7 @@ fn glob_match(pattern: &str, value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::PermissionSettings;
 
     #[test]
     fn test_glob_matching() {
@@ -168,6 +168,12 @@ mod tests {
             }),
             agent: None,
             env: None,
+            ai: crate::AiSettings::default(),
+            github: crate::GithubSettings::default(),
+            editor: crate::EditorSettings::default(),
+            projects: crate::ProjectSettings::default(),
+            mcp: crate::McpSettings::default(),
+            custom: std::collections::HashMap::new(),
         };
 
         assert!(settings.is_command_allowed("git status"));

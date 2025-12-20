@@ -1,10 +1,8 @@
 /// Production Distributed Rate Limiter.
 /// Implements the Sliding Window Log algorithm (requires external Redis/DB).
-
-use fusion_std::error::{StdResult, StdError};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 const WINDOW_SECONDS: u64 = 60;
 const MAX_REQUESTS: u32 = 100;
@@ -16,7 +14,9 @@ pub struct RateLimiter {
 
 impl RateLimiter {
     pub fn new() -> Self {
-        Self { request_log: Arc::new(Mutex::new(HashMap::new())) }
+        Self {
+            request_log: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 
     /// Check if the request should be allowed based on a sliding window.
@@ -26,7 +26,7 @@ impl RateLimiter {
         let window_start = now - Duration::from_secs(WINDOW_SECONDS);
 
         let entry = log.entry(key.to_string()).or_insert_with(Vec::new);
-        
+
         // 1. Remove timestamps outside the window
         entry.retain(|t| *t > window_start);
 

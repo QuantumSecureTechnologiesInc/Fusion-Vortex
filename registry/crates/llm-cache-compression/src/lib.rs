@@ -15,11 +15,11 @@ impl KvCacheCompressor {
         value_block: &Matrix<f64>,
     ) -> FusionResult<(QuantizedMatrix, QuantizedMatrix)> {
         // Validation (Shapes must be compatible)
-        if key_block.shape != value_block.shape {
+        if key_block.shape() != value_block.shape() {
             return Err(FusionError::ShapeMismatch {
                 op: "KV Compress".into(),
-                lhs: key_block.shape.to_vec(),
-                rhs: value_block.shape.to_vec(),
+                lhs: key_block.shape().to_vec(),
+                rhs: value_block.shape().to_vec(),
             });
         }
 
@@ -38,4 +38,3 @@ impl KvCacheCompressor {
         Ok((k_comp.dequantize()?, v_comp.dequantize()?))
     }
 }
-

@@ -1,0 +1,15 @@
+[package]
+name = "fusion_security"
+version = "0.2.0"
+edition = "2021"
+description = "Security primitives for Fusion: PQC transport, policies, and encryption."
+license = "MIT"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_net = { path = "../fusion_net" }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }

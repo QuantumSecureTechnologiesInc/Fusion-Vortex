@@ -76,6 +76,7 @@ exclude = [
     "crates/fusion-monolith-core",
     "registry/crates/fusion-terminal-browser",
     "crates/settings",
+    "crates/ai-core",
 ]
 
 
@@ -160,8 +161,9 @@ pqcrypto-classicmceliece = "0.3.0"
 ring = "0.17.8"
 
 # Fusion Internals
-fusion_core = { path = "registry/crates/fusion_core", version = "0.2.0" }
-fusion-core = { path = "registry/crates/core", version = "0.2.0" }
+# Unified Core Crate (merged type system + compiler)
+fusion-core = { path = "registry/crates/fusion-core", version = "0.2.0" }
+fusion_core = { path = "registry/crates/fusion-core", version = "0.2.0", package = "fusion-core" }
 fusion-ai-core = { path = "registry/crates/ai-core", version = "0.2.0" }
 fusion_ai_core = { path = "registry/crates/fusion_ai_core", version = "0.2.0" }
 fusion-monolith-core = { path = "crates/fusion-monolith-core", version = "3.4.1" }
@@ -173,12 +175,12 @@ fusion_http = { path = "registry/crates/http", version = "0.2.0" }
 fusion_quantum_sdk = { path = "registry/crates/quantum-sdk", version = "0.2.0" }
 fusion_k8s_operator = { path = "registry/crates/k8s-operator", version = "0.2.0" }
 sentinael-tribrid = { path = "registry/crates/sentinel-tribrid", version = "1.0.0" }
-num_complex = "0.4"
+num_complex = { package = "num-complex", version = "0.4" }
 semver = "1.0"
 fusion_llm_inference_engine = { path = "registry/crates/llm-inference", version = "0.2.0" }
 fusion_llm_lora_manager = { path = "registry/crates/llm-lora-manager", version = "0.2.0" }
 fusion_tensor_sparse = { path = "registry/crates/tensor-sparse", version = "0.2.0" }
-fusion_sec_policy_engine = { path = "registry/crates/sec-policy-engine", version = "0.2.0" }
+fusion_sec_policy_engine = { path = "registry/crates/sec-policy-engine", version = "0.2.0", package = "sec-policy-engine" }
 fusion_audit = { path = "registry/crates/audit", version = "0.2.0" }
 fusion_sec_audit_log = { path = "registry/crates/audit", version = "0.2.0", package = "fusion-audit" }
 fusion_ai_core_adapters = { path = "registry/crates/ai-core", version = "0.2.0", package = "fusion-ai-core" }
@@ -189,13 +191,15 @@ crossbeam = "0.8"
 dashmap = "5.5"
 libc = "0.2"
 memmap2 = "0.9"
-ash = "0.38" 
+ash = "0.38"
 metal = "0.28"
 cuda-sys = "0.3"
 socket2 = "0.5"
 pin-project-lite = "0.2"
 metrics = "0.21"
 criterion = "0.5"
+num-traits = "0.2"
+ndarray = "0.15"
 
 # VS Code Runtime
 boa_engine = "0.19.0"

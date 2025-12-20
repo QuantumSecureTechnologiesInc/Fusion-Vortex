@@ -1,2 +1,2 @@
 /// metrics implementation
-pub struct metricsModule;
+pub struct MetricsModule;

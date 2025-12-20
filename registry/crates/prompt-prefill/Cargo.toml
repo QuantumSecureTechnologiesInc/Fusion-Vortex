@@ -1,10 +1,15 @@
-[package]
+﻿[package]
 name = "fusion_llm_prompt_prefill"
 version = "0.2.0"
 edition = "2021"
-description = "Optimized kernel for processing long input prompts (pre-filling KV Cache)"
 license = "MIT"
-
+description = "Algorithm: Fusion Algorithm crate: prompt-prefill."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
+
 

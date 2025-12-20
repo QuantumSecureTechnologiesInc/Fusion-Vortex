@@ -1,13 +1,12 @@
 /// Production Finite Field Arithmetic.
-/// 
+///
 /// Implements arithmetic over a prime field (Fr), essential for ZK-SNARKs.
 /// No mocks; actual modular arithmetic.
-
-use fusion_std::error::{StdResult, StdError};
+// use fusion_std::error::{StdResult, StdError};
 use std::ops::{Add, Mul, Sub};
 
 // Mersenne Prime 2^31 - 1 for demonstration (Real ZK uses BN254 Scalar Field)
-const MODULUS: u64 = 2147483647; 
+const MODULUS: u64 = 2147483647;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct FieldElement(u64);
@@ -28,9 +27,13 @@ impl FieldElement {
             (r, newr) = (newr, r - quotient * newr);
         }
 
-        if r > 1 { return None; } // Not invertible
-        if t < 0 { t += MODULUS as i64; }
-        
+        if r > 1 {
+            return None;
+        } // Not invertible
+        if t < 0 {
+            t += MODULUS as i64;
+        }
+
         Some(Self(t as u64))
     }
 }

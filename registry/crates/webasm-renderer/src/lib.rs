@@ -1,8 +1,8 @@
 /// Production WebAssembly Renderer.
 ///
 /// High-performance rendering logic executed in the browser sandbox.
-use fusion_core::types::tensor::{Matrix, Vector1D};
-use fusion_std::error::{StdError, StdResult};
+use fusion_core::types::tensor::Matrix;
+use fusion_std::error::StdResult;
 use fusion_ui_layout_builder::LayoutNode;
 
 // Mocking wasm_bindgen interface for the core graphics APIs
@@ -30,7 +30,7 @@ impl WasmRenderer {
 
         println!(
             "[Wasm Renderer] Rendering 2D tensor of shape {:?} via WebGL.",
-            tensor.shape
+            tensor.shape()
         );
         Ok(())
     }

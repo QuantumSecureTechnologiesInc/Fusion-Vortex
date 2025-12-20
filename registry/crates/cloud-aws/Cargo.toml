@@ -3,7 +3,23 @@ name = "cloud-aws"
 version = "0.2.0"
 edition = "2021"
 authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: cloud-aws"
 license = "MIT"
+description = "Integration: AWS cloud connector with S3, Lambda, and EC2 support"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["aws", "cloud", "integration", "s3", "lambda"]
+categories = ["network-programming", "web-programming"]
+readme = "README.md"
+
+[features]
+default = ["async"]
+async = ["tokio"]
+s3 = []
+lambda = []
+ec2 = []
 
 [dependencies]
+fusion_core = { workspace = true }
+fusion_http = { workspace = true }
+tokio = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

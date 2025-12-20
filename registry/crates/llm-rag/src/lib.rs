@@ -48,9 +48,9 @@ impl VectorStore {
     /// Add a document transactionally.
     /// Returns error if dimension doesn't match store config.
     pub fn add(&self, doc: Document) -> RagResult<()> {
-        if doc.embedding.shape[0] != self.embed_dim {
+        if doc.embedding.shape()[0] != self.embed_dim {
             return Err(RagError::DimensionMismatch(
-                doc.embedding.shape[0],
+                doc.embedding.shape()[0],
                 self.embed_dim,
             ));
         }
@@ -63,9 +63,9 @@ impl VectorStore {
     /// Search for top-k similar documents.
     /// Safe against concurrent writes.
     pub fn search(&self, query_vec: &Vector1D<f64>, k: usize) -> RagResult<Vec<(f64, Document)>> {
-        if query_vec.shape[0] != self.embed_dim {
+        if query_vec.shape()[0] != self.embed_dim {
             return Err(RagError::DimensionMismatch(
-                query_vec.shape[0],
+                query_vec.shape()[0],
                 self.embed_dim,
             ));
         }
@@ -97,13 +97,13 @@ fn cosine_similarity(a: &Vector1D<f64>, b: &Vector1D<f64>) -> RagResult<f64> {
     let mut norm_a_sq = 0.0;
     let mut norm_b_sq = 0.0;
 
-    for i in 0..a.shape[0] {
-        let va = a
+    for i in 0..a.shape()[0] {
+        let va = *a
             .get([i])
-            .map_err(|_| RagError::MathError("Index Error".into()))?;
-        let vb = b
+            .ok_or(RagError::MathError("Index Error".into()))?;
+        let vb = *b
             .get([i])
-            .map_err(|_| RagError::MathError("Index Error".into()))?;
+            .ok_or(RagError::MathError("Index Error".into()))?;
 
         dot += va * vb;
         norm_a_sq += va * va;
@@ -122,4 +122,3 @@ fn cosine_similarity(a: &Vector1D<f64>, b: &Vector1D<f64>) -> RagResult<f64> {
 
     Ok(dot / (norm_a * norm_b))
 }
-

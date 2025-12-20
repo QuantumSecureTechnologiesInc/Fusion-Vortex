@@ -2,9 +2,22 @@
 name = "fusion_llm_tokenizers"
 version = "0.2.0"
 edition = "2021"
-description = "Tokenizers for LLM models (BPE, WordPiece, etc.)"
 license = "MIT"
+description = "Algorithm: LLM tokenizers (BPE, WordPiece, SentencePiece). O(n·log(v)) complexity."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tokenizer", "bpe", "llm", "nlp", "algorithm"]
+categories = ["algorithms", "text-processing"]
+readme = "README.md"
 
 [dependencies]
 fusion_core = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "tokenizer_benchmark"
+# harness = false
 

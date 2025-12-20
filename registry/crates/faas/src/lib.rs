@@ -1,7 +1,7 @@
 /// Production FaaS Runner.
 /// Manages function isolation and cold-start time (simulated).
 use fusion_http::{Request, Response};
-use fusion_std::error::StdResult;
+// use fusion_std::error::StdResult;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -25,7 +25,7 @@ impl FaasRunner {
     }
 
     /// Invoke a serverless function by name. Handles cold start simulation.
-    pub async fn invoke(&self, function_name: &str, req: Request<Vec<u8>>) -> Response<Vec<u8>> {
+    pub async fn invoke(&self, function_name: &str, _req: Request<Vec<u8>>) -> Response<Vec<u8>> {
         let mut instances = self.instances.lock().await;
 
         let instance = instances

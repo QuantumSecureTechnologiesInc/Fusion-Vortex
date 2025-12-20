@@ -1,7 +1,7 @@
 /// Production Quantum Fourier Transform (QFT).
 ///
 /// Generates the QFT circuit for an arbitrary number of qubits.
-use fusion_core::types::quantum::{QuantumCircuit, QuantumGate};
+use fusion_core::types::quantum::QuantumCircuit;
 use fusion_core::FusionResult;
 
 pub struct QFTGenerator;

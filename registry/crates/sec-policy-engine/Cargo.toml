@@ -1,9 +1,15 @@
-[package]
+﻿[package]
 name = "sec-policy-engine"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: sec-policy-engine"
 license = "MIT"
-
+description = "Tool: Security tool: sec-policy-engine. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion", "security"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+

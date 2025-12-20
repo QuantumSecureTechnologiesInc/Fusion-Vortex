@@ -1,13 +1,13 @@
-use fusion_ai_core::{Layer, Linear, Variable};
+#![allow(dead_code)]
+use fusion_ai_core::{Layer, Linear, Tensor};
+use fusion_core::types::classical::ClassicalType;
 use fusion_core::types::hybrid::HybridValue;
-use fusion_core::types::tensor::{Matrix, Tensor};
+
 /// Fusion AI Model Server.
 ///
 /// This application demonstrates the "Interwoven" strategy in action.
 /// It uses the Tensor engine (Core) inside a Web Server (Ext) to serve AI predictions (Pillar).
 use fusion_http::{Request, Response, Server};
-use fusion_json;
-use fusion_std::error::StdResult;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -27,16 +27,18 @@ impl MyModel {
     }
 
     fn predict(&self, input: Vec<f64>) -> f64 {
+        use ndarray::IxDyn;
         // Convert Vec<f64> -> Tensor (Matrix 1x2)
-        let input_tensor = Matrix::from_vec(input, [1, 2]);
-        let input_var = Variable::new(input_tensor);
+        let mut input_tensor = Tensor::from_slice(&input);
+
+        // Reshape to [1, 2] using ndarray API exposed on .data
+        input_tensor.data = input_tensor.data.into_shape(IxDyn(&[1, 2])).unwrap();
 
         // Forward pass
-        let output_var = self.layer.forward(input_var);
+        let output_var = self.layer.forward(&input_tensor);
 
-        // Extract result (Tensor -> f64)
-        // Simplified: getting index [0,0]
-        output_var.data.get([0, 0])
+        // Extract result
+        output_var.item::<f64>()
     }
 }
 
@@ -50,7 +52,7 @@ struct InferenceRequest {
 // --- 3. Main Application Entry Point ---
 
 #[tokio::main]
-async fn main() -> StdResult<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Initializing Fusion Model Server...");
 
     // Load Model (Thread-safe reference)
@@ -58,41 +60,51 @@ async fn main() -> StdResult<()> {
 
     // Define Request Handler
     let handler = move |req: Request<Vec<u8>>| -> Response<Vec<u8>> {
-        match (req.method.as_str(), req.path.as_str()) {
+        match (req.method().as_str(), req.uri().path()) {
             ("POST", "/predict") => {
                 // Parse Body
                 let body_str = String::from_utf8_lossy(req.body());
 
                 // Use Serde directly for DTO parsing (Standard Rust pattern)
-                // In a pure Fusion app, we might use fusion_json::parse -> HybridValue -> Struct
                 let inference_req: InferenceRequest = match serde_json::from_str(&body_str) {
                     Ok(r) => r,
-                    Err(_) => return Response::new(400).body(b"Invalid JSON"),
+                    Err(_) => {
+                        return Response::builder()
+                            .status(400)
+                            .body(b"Invalid JSON".to_vec())
+                            .unwrap()
+                    }
                 };
 
                 if inference_req.features.len() != 2 {
-                    return Response::new(400).body(b"Model expects 2 features");
+                    return Response::builder()
+                        .status(400)
+                        .body(b"Model expects 2 features".to_vec())
+                        .unwrap();
                 }
 
-                // Run Inference (Locking model for thread safety if it had mutable state)
-                // Here MyModel is read-only logic effectively, but we lock to simulate shared access
+                // Run Inference
                 let prediction = {
-                    let m = model.blocking_lock(); // Use sync lock for demo math
+                    let m = model.blocking_lock();
                     m.predict(inference_req.features)
                 };
 
-                // Serialize Response using Fusion JSON
-                let response_val = HybridValue::Float(prediction);
-                let json_body = fusion_json::to_string(&response_val).unwrap_or_default();
+                // Serialize Response using Fusion JSON (Simulated with Serde)
+                let response_val = HybridValue::Classical(ClassicalType::Float(prediction));
+                let json_body = serde_json::to_string(&response_val).unwrap_or_default();
 
-                Response::ok().body(json_body)
+                Response::builder()
+                    .status(200)
+                    .body(json_body.into_bytes())
+                    .unwrap()
             }
 
-            ("GET", "/health") => {
-                Response::ok().body(b"{\"status\": \"healthy\", \"framework\": \"Fusion AI\"}")
-            }
+            ("GET", "/health") => Response::builder()
+                .status(200)
+                .body(b"{\"status\": \"healthy\", \"framework\": \"Fusion AI\"}".to_vec())
+                .unwrap(),
 
-            _ => Response::not_found(),
+            _ => Response::builder().status(404).body(Vec::new()).unwrap(),
         }
     };
 

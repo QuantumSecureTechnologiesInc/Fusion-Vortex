@@ -2,10 +2,9 @@
 //!
 //! Quantum computing primitives leveraging fusion_runtime_core for QPU scheduling.
 
-use fusion_core::{FusionType, QuantumState, QuantumType};
-use fusion_runtime_hal::{QuantumCircuit as HalQuantumCircuit, QuantumGate};
+use fusion_runtime_hal::QuantumGate;
 use num_complex::Complex64;
-use tracing::{debug, trace};
+use tracing::debug;
 
 /// Quantum state vector simulator
 pub struct Simulator;
@@ -116,6 +115,7 @@ impl Simulator {
 pub struct QuantumCircuit {
     num_qubits: usize,
     pub gates: Vec<QuantumGate>, // Made public for simulator access
+    #[allow(dead_code)]
     device: String,
 }
 
@@ -153,6 +153,7 @@ pub struct Observable;
 
 // Qubit struct kept for API compatibility but Simulator uses state vector
 pub struct Qubit {
+    #[allow(dead_code)]
     id: usize,
 }
 

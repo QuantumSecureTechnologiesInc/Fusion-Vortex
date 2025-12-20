@@ -8,33 +8,39 @@ use hyper_util::server::conn::auto::Builder as ServerBuilder;
 use std::convert::Infallible;
 use std::future::Future;
 /// Lightweight HTTP Server and Client wrapper around Hyper
-use std::net::SocketAddr;
 use std::pin::Pin;
 use tokio::net::TcpListener;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 /// Simple HTTP Server
-pub struct Server {
-    addr: SocketAddr,
+pub struct Server<H> {
+    handler: H,
 }
 
-impl Server {
-    pub fn new(addr: &str) -> Result<Self> {
-        let socket_addr: SocketAddr = addr.parse()?;
-        Ok(Self { addr: socket_addr })
+impl<H> Server<H>
+where
+    H: Fn(Request<Vec<u8>>) -> Response<Vec<u8>> + Clone + Send + Sync + 'static,
+{
+    pub fn new(handler: H) -> Self {
+        Self { handler }
     }
 
-    pub async fn serve(&self) -> Result<()> {
-        let listener = TcpListener::bind(self.addr).await?;
-        println!("Listening on http://{}", self.addr);
+    pub async fn listen(&self, addr: &str) -> Result<()> {
+        let listener = TcpListener::bind(addr).await?;
+        println!("Listening on http://{}", addr);
+
+        let handler = self.handler.clone();
 
         loop {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
+            let handler_clone = handler.clone();
 
             tokio::task::spawn(async move {
-                let service = RequestHandler;
+                let service = RequestHandler {
+                    handler: handler_clone,
+                };
                 if let Err(err) = ServerBuilder::new(hyper_util::rt::TokioExecutor::new())
                     .serve_connection(io, service)
                     .await
@@ -47,53 +53,60 @@ impl Server {
 }
 
 #[derive(Clone)]
-struct RequestHandler;
+struct RequestHandler<H> {
+    handler: H,
+}
 
-impl Service<Request<Incoming>> for RequestHandler {
+impl<H> Service<Request<Incoming>> for RequestHandler<H>
+where
+    H: Fn(Request<Vec<u8>>) -> Response<Vec<u8>> + Clone + Send + Sync + 'static,
+{
     type Response = Response<Full<Bytes>>;
     type Error = Infallible;
     type Future =
         Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
+        let handler = self.handler.clone();
         Box::pin(async move {
-            let body = format!("Hello from Fusion! You requested: {}", req.uri());
-            Ok(Response::new(Full::new(Bytes::from(body))))
+            // Collect body
+            let (parts, body) = req.into_parts();
+            let bytes = match body.collect().await {
+                Ok(c) => c.to_bytes().to_vec(),
+                Err(_) => Vec::new(), // Should handle error properly
+            };
+            let req_vec = Request::from_parts(parts, bytes);
+
+            // Call handler
+            let resp = handler(req_vec);
+
+            // Convert Response<Vec<u8>> to Response<Full<Bytes>>
+            let (parts, body) = resp.into_parts();
+            let body_full = Full::new(Bytes::from(body));
+            Ok(Response::from_parts(parts, body_full))
         })
     }
 }
 
 /// Simple HTTP Client
 pub struct Client {
-    client: hyper_util::client::legacy::Client<
-        hyper_util::client::legacy::connect::HttpConnector,
-        Full<Bytes>,
-    >,
+    client: reqwest::Client,
 }
 
 impl Client {
     pub fn new() -> Self {
-        let client =
-            hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
-                .build_http();
-        Self { client }
+        Self {
+            client: reqwest::Client::new(),
+        }
     }
 
     pub async fn get(&self, uri: &str) -> Result<String> {
-        let uri = uri.parse()?;
-        let resp = self.client.get(uri).await?;
-        let body = resp.into_body().collect().await?.to_bytes();
-        Ok(String::from_utf8(body.to_vec())?)
+        let resp = self.client.get(uri).send().await?;
+        Ok(resp.text().await?)
     }
 
     pub async fn post(&self, uri: &str, body: String) -> Result<String> {
-        let req = Request::builder()
-            .method("POST")
-            .uri(uri)
-            .body(Full::new(Bytes::from(body)))?;
-
-        let resp = self.client.request(req).await?;
-        let body = resp.into_body().collect().await?.to_bytes();
-        Ok(String::from_utf8(body.to_vec())?)
+        let resp = self.client.post(uri).body(body).send().await?;
+        Ok(resp.text().await?)
     }
 }

@@ -2,6 +2,9 @@ use crate::Tensor;
 
 pub trait Module {
     fn forward(&self, input: &Tensor) -> Tensor;
+    fn parameters(&self) -> Vec<Tensor> {
+        Vec::new()
+    }
 }
 
 pub struct Linear {
@@ -30,6 +33,10 @@ impl Module for Linear {
         let result = futures::executor::block_on(input.matmul(&self.weights));
         // Add bias (broadcast) - omitted for simplicity in this step, but Linear layer is functional
         result
+    }
+
+    fn parameters(&self) -> Vec<Tensor> {
+        vec![self.weights.clone(), self.bias.clone()]
     }
 }
 

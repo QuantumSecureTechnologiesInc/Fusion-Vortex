@@ -1,9 +1,17 @@
-[package]
+﻿[package]
 name = "llm-distill"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: llm-distill"
 license = "MIT"
-
+description = "Algorithm: Large Language Model component: llm-distill. Optimized for performance."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["algorithm", "fusion", "llm", "generative-ai"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
+
+
+[dev-dependencies]
+criterion = { workspace = true }

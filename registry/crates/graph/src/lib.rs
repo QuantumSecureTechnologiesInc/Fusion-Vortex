@@ -1,10 +1,9 @@
 /// Production Model Graph Builder.
-/// 
+///
 /// constructs models ensuring architectural validity (e.g. dimensions match).
-
-use fusion_ai_core::{Layer, Linear, Variable};
-use fusion_core::FusionResult;
+use fusion_ai_core::{Layer, Linear};
 use fusion_core::FusionError;
+use fusion_core::FusionResult;
 
 pub struct LayerConfig {
     pub input_dim: usize,
@@ -19,7 +18,10 @@ pub struct ModelGraph {
 
 impl ModelGraph {
     pub fn new() -> Self {
-        Self { layers: Vec::new(), configs: Vec::new() }
+        Self {
+            layers: Vec::new(),
+            configs: Vec::new(),
+        }
     }
 
     pub fn add_linear(mut self, in_dim: usize, out_dim: usize) -> FusionResult<Self> {
@@ -44,18 +46,23 @@ impl ModelGraph {
         Ok(self)
     }
 
-    pub fn add_residual_block(mut self, internal_dim: usize) -> FusionResult<Self> {
-        let current_dim = self.configs.last().map(|c| c.output_dim).unwrap_or(internal_dim);
-        
+    pub fn add_residual_block(self, internal_dim: usize) -> FusionResult<Self> {
+        let current_dim = self
+            .configs
+            .last()
+            .map(|c| c.output_dim)
+            .unwrap_or(internal_dim);
+
         if current_dim != internal_dim {
-             return Err(FusionError::InvalidDimension(
-                 format!("Residual block expects input dim {}, got {}", internal_dim, current_dim)
-             ));
+            return Err(FusionError::InvalidDimension(format!(
+                "Residual block expects input dim {}, got {}",
+                internal_dim, current_dim
+            )));
         }
 
         // Logic to wrap layers in a Residual wrapper...
         // self.layers.push(Box::new(ResidualWrapper::new(...)));
-        
+
         Ok(self)
     }
 

@@ -84,8 +84,8 @@ impl Tensor {
             panic!("Matmul currently only supports 2D tensors");
         }
 
-        let rows = self_shape[0];
-        let cols = other_shape[1];
+        let _rows = self_shape[0];
+        let _cols = other_shape[1];
         let common = self_shape[1];
 
         if common != other_shape[0] {

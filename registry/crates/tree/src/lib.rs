@@ -1,10 +1,7 @@
 /// Production Token Tree for Speculative Decoding.
-/// 
+///
 /// Manages a tree of candidate token sequences to allow
 /// non-greedy verification (Top-K branches).
-
-use fusion_core::types::tensor::Vector1D;
-use fusion_core::FusionResult;
 
 #[derive(Debug, Clone)]
 pub struct TokenNode {
@@ -24,7 +21,7 @@ impl SpeculativeTree {
                 token_id: prompt_last_token,
                 prob: 1.0,
                 children: Vec::new(),
-            }
+            },
         }
     }
 
@@ -32,12 +29,14 @@ impl SpeculativeTree {
     /// In production, this runs beam search or parallel sampling on the draft.
     pub fn expand(&mut self, depth: usize, branching_factor: usize) {
         // Simplified recursive expansion
-        self.expand_node(&mut self.root, depth, branching_factor);
+        Self::expand_node(&mut self.root, depth, branching_factor);
     }
 
-    fn expand_node(&self, node: &mut TokenNode, depth: usize, k: usize) {
-        if depth == 0 { return; }
-        
+    fn expand_node(node: &mut TokenNode, depth: usize, k: usize) {
+        if depth == 0 {
+            return;
+        }
+
         // Mock: Add K children
         for i in 0..k {
             let mut child = TokenNode {
@@ -45,7 +44,7 @@ impl SpeculativeTree {
                 prob: node.prob * 0.9,
                 children: Vec::new(),
             };
-            self.expand_node(&mut child, depth - 1, k);
+            Self::expand_node(&mut child, depth - 1, k);
             node.children.push(child);
         }
     }
@@ -53,12 +52,13 @@ impl SpeculativeTree {
     /// Verify the tree using the Target Model.
     /// Returns the best accepted sequence.
     /// `target_verifier` would be a closure calling the big model.
-    pub fn verify<F>(&self, target_verifier: F) -> Vec<i64> 
-    where F: Fn(&[i64]) -> f64 // Returns probability of sequence
+    pub fn verify<F>(&self, target_verifier: F) -> Vec<i64>
+    where
+        F: Fn(&[i64]) -> f64, // Returns probability of sequence
     {
         // Flatten tree into paths
         let paths = self.collect_paths();
-        
+
         // Parallel verification (simulated)
         let mut best_path = Vec::new();
         let mut best_score = 0.0;
@@ -76,7 +76,7 @@ impl SpeculativeTree {
     fn collect_paths(&self) -> Vec<Vec<i64>> {
         let mut results = Vec::new();
         let current = vec![self.root.token_id];
-        
+
         if self.root.children.is_empty() {
             return vec![current];
         }

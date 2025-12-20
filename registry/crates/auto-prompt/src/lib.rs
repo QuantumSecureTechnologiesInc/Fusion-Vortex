@@ -1,10 +1,6 @@
-/// Production Prompt Optimization (AutoPrompt).
-///
-/// Uses gradient descent or evolutionary algorithms to find the optimal prompt string/vector.
 use fusion_ai_core::optim::{Optimizer, SGD};
 use fusion_ai_core::Tensor;
-use fusion_core::types::tensor::Matrix;
-use fusion_std::error::{StdError, StdResult};
+use fusion_std::error::StdResult;
 
 pub struct PromptOptimizer {
     optimizer: SGD,

@@ -4,10 +4,9 @@ use std::path::PathBuf;
 pub mod commands;
 pub mod interactive;
 
-use fusion_ai_core_adapters::{
-    AdapterConfig, AnthropicConfig, GoogleConfig, LocalConfig, ModelSession,
-    OpenAIConfig, PatchMetadata, PreviewEngine, PromptManager, SafetyEngine, UnifiedAdapter,
-    WorkspaceLoader,
+use fusion_ai_core::{
+    AdapterConfig, AnthropicConfig, GoogleConfig, LocalConfig, ModelSession, OpenAIConfig,
+    PatchMetadata, PreviewEngine, PromptManager, SafetyEngine, UnifiedAdapter, WorkspaceLoader,
 };
 
 fn get_adapter(offline: bool) -> Result<Box<dyn ModelSession>> {

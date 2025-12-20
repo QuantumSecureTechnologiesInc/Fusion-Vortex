@@ -30,8 +30,8 @@ impl AttentionBlock {
     pub fn forward(&self, x: &Tensor) -> FusionResult<Tensor> {
         // Simple scaled dot-product attention logic stub
         // 1. Q, K, V projections
-        let q = self.query.forward(x);
-        let k = self.key.forward(x);
+        let _q = self.query.forward(x);
+        let _k = self.key.forward(x);
         let v = self.value.forward(x);
 
         // 2. Attention scores (simplified mock implementation)

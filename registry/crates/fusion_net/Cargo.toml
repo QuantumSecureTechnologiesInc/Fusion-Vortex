@@ -1,12 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_net"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-description = "High-performance networking leveraging fusion_runtime_core"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Integration: Fusion Integration crate: fusion_net."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "integration"]
+categories = ["network-programming", "external-ffi-bindings"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_runtime_hal = { path = "../fusion_runtime_hal/" }
@@ -14,6 +16,8 @@ socket2 = { workspace = true }
 futures = { workspace = true }
 tracing = { workspace = true }
 fusion_runtime_core = { workspace = true }
+tokio = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+

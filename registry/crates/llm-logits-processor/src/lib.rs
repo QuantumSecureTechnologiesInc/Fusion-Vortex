@@ -13,14 +13,14 @@ impl LogitsProcessor {
     pub fn new() -> Self {
         Self {
             repetition_penalty: 1.0,
-            token_bias: Vector1D::zeros([0]).unwrap(),
+            token_bias: Vector1D::zeros([0]),
         }
     }
 
     /// Apply all processing steps to the raw logits.
-    pub fn process(&self, logits: &mut Vector1D<f64>, history: &[i64]) -> FusionResult<()> {
+    pub fn process(&self, _logits: &mut Vector1D<f64>, history: &[i64]) -> FusionResult<()> {
         // 1. Apply Repetition Penalty
-        for &token_id in history {
+        for &_token_id in history {
             // Adjust logit for repeated token
             // logits[token_id] = logits[token_id] * penalty
         }

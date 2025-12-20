@@ -12,6 +12,7 @@ use tracing::{debug, trace};
 
 /// Order book for a trading pair
 pub struct OrderBook {
+    #[allow(dead_code)]
     symbol: String,
     bids: Arc<RwLock<BTreeMap<OrderedFloat, Vec<Order>>>>,
     asks: Arc<RwLock<BTreeMap<OrderedFloat, Vec<Order>>>>,

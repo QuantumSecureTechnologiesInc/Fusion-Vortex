@@ -8,8 +8,8 @@
 //! Handles session lifecycle, state persistence, and execution context
 
 use crate::conversation::ConversationContext;
-use crate::modes::{AgentMode, AgentModeType};
-use anyhow::Result;
+use crate::modes::AgentModeType;
+use crate::secure_mode::SecureMode;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -19,6 +19,7 @@ use uuid::Uuid;
 pub struct AgentSession {
     pub id: String,
     pub mode: AgentModeType,
+    pub secure_mode: SecureMode,
     pub created_at: DateTime<Utc>,
     pub last_active: DateTime<Utc>,
     pub workspace_dir: PathBuf,
@@ -35,11 +36,12 @@ pub struct SessionMetadata {
 }
 
 impl AgentSession {
-    pub fn new(mode: AgentModeType, workspace_dir: PathBuf) -> Self {
+    pub fn new(mode: AgentModeType, workspace_dir: PathBuf, secure_mode: SecureMode) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4().to_string(),
             mode,
+            secure_mode,
             created_at: now,
             last_active: now,
             workspace_dir,
@@ -51,6 +53,10 @@ impl AgentSession {
                 total_tasks: 0,
             },
         }
+    }
+
+    pub fn is_secure(&self) -> bool {
+        self.secure_mode.enabled
     }
 
     pub fn update_activity(&mut self) {
@@ -86,7 +92,11 @@ mod tests {
 
     #[test]
     fn test_session_creation() {
-        let session = AgentSession::new(AgentModeType::Planning, PathBuf::from("/test/workspace"));
+        let session = AgentSession::new(
+            AgentModeType::Planning,
+            PathBuf::from("/test/workspace"),
+            SecureMode::default(),
+        );
 
         assert_eq!(session.mode, AgentModeType::Planning);
         assert_eq!(session.metadata.total_messages, 0);
@@ -95,7 +105,11 @@ mod tests {
 
     #[test]
     fn test_add_message() {
-        let mut session = AgentSession::new(AgentModeType::Fast, PathBuf::from("/test"));
+        let mut session = AgentSession::new(
+            AgentModeType::Fast,
+            PathBuf::from("/test"),
+            SecureMode::default(),
+        );
 
         session.add_message("user", "Hello".to_string());
         assert_eq!(session.metadata.total_messages, 1);
@@ -103,7 +117,11 @@ mod tests {
 
     #[test]
     fn test_mode_switching() {
-        let mut session = AgentSession::new(AgentModeType::Planning, PathBuf::from("/test"));
+        let mut session = AgentSession::new(
+            AgentModeType::Planning,
+            PathBuf::from("/test"),
+            SecureMode::default(),
+        );
 
         session.switch_mode(AgentModeType::Fast);
         assert_eq!(session.mode, AgentModeType::Fast);

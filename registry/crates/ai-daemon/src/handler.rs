@@ -1,5 +1,7 @@
 use anyhow::Result;
 
+#[allow(dead_code)]
+#[allow(dead_code)]
 pub async fn handle_request(_request: serde_json::Value) -> Result<serde_json::Value> {
     // Placeholder request handler
     Ok(serde_json::json!({

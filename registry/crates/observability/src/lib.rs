@@ -1,3 +1,3 @@
 /// observability implementation
 
-pub struct observabilityModule;
+pub struct ObservabilityModule;

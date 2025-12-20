@@ -3,7 +3,7 @@
 //! Distributed dependency resolution engine with GPU acceleration.
 //! Leverages fusion-redis for distributed caching and fusion_runtime_core for async execution.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Instant;
@@ -38,7 +38,9 @@ unsafe impl cudarc::driver::DeviceRepr for Node {}
 
 pub struct FluxEngine {
     cache: Arc<cache::CacheLayer>,
+    #[allow(dead_code)]
     gpu_enabled: bool,
+    #[allow(dead_code)]
     gpu_threshold: usize,
     #[cfg(feature = "gpu")]
     cuda_dev: Option<Arc<cudarc::driver::CudaDevice>>,

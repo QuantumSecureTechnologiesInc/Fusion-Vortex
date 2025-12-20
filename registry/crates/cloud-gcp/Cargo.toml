@@ -1,9 +1,14 @@
-[package]
+﻿[package]
 name = "cloud-gcp"
 version = "0.2.0"
 edition = "2021"
-authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: cloud-gcp"
 license = "MIT"
-
+description = "Integration: Cloud provider connector for GCP."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["integration", "fusion", "cloud", "gcp"]
+categories = ["network-programming", "web-programming"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
+

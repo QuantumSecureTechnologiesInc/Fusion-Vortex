@@ -223,13 +223,13 @@ mod tests {
 
     #[test]
     fn test_ai_cli_creation() {
-        let cli = AiCli::new();
+        let _cli = AiCli::new();
         assert!(true); // CLI created successfully
     }
 
     #[test]
     fn test_builder_pattern() {
-        let cli = AiCliBuilder::new()
+        let _cli = AiCliBuilder::new()
             .with_suggestions(true)
             .with_natural_language(true)
             .build();

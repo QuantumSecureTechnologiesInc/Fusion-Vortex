@@ -1,10 +1,9 @@
 /// Production Telemetry Ingestor.
-/// 
+///
 /// Accepts Prometheus metrics and OpenTelemetry traces via HTTP/gRPC endpoints.
-
-use fusion_net::tcp::FusionTcpListener;
+use fusion_net::FusionTcpListener;
 use fusion_std::error::StdResult;
-use prometheus::{TextEncoder, Encoder, IntCounter};
+use prometheus::{Encoder, IntCounter, TextEncoder};
 use std::sync::Arc;
 
 pub struct TelemetryIngestor {
@@ -16,27 +15,39 @@ pub struct TelemetryIngestor {
 impl TelemetryIngestor {
     pub fn new() -> Self {
         let registry = Arc::new(prometheus::Registry::new());
-        let request_counter = IntCounter::new("http_requests_total", "Total number of HTTP requests").unwrap();
-        
-        registry.register(Box::new(request_counter.clone())).unwrap();
+        let request_counter =
+            IntCounter::new("http_requests_total", "Total number of HTTP requests").unwrap();
 
-        Self { registry, request_counter }
+        registry
+            .register(Box::new(request_counter.clone()))
+            .unwrap();
+
+        Self {
+            registry,
+            request_counter,
+        }
     }
 
     /// Start a simple metrics scraping endpoint (Prometheus format).
     pub async fn run_metrics_server(&self, addr: &str) -> StdResult<()> {
-        let listener = FusionTcpListener::bind(addr).await?;
+        let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+            fusion_std::error::StdError::Core(fusion_core::FusionError::Generic(format!(
+                "Invalid address {}: {}",
+                addr, e
+            )))
+        })?;
+        let _listener = FusionTcpListener::bind(socket_addr).await?;
         let registry = self.registry.clone();
-        
+
         // This simulates a simple HTTP server responding to Prometheus scrapes
         println!("Metrics server running on {}", addr);
-        
+
         // Mock scraping response logic
         let encoder = TextEncoder::new();
         let metric_families = registry.gather();
         let mut buffer = Vec::new();
         encoder.encode(&metric_families, &mut buffer).unwrap();
-        
+
         Ok(())
     }
 

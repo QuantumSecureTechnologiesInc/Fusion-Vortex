@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
-use async_trait::async_trait;
-use bytes::Bytes;
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -99,12 +98,17 @@ pub struct Tool {
 
 #[derive(Debug, Deserialize)]
 struct MessagesResponse {
+    #[allow(dead_code)]
     id: String,
+    #[allow(dead_code)]
     #[serde(rename = "type")]
     response_type: String,
+    #[allow(dead_code)]
     role: String,
     content: Vec<ContentBlock>,
+    #[allow(dead_code)]
     model: String,
+    #[allow(dead_code)]
     stop_reason: Option<String>,
     usage: AnthropicUsage,
 }
@@ -125,6 +129,7 @@ struct StreamEvent {
 
 #[derive(Debug, Deserialize)]
 struct ErrorResponse {
+    #[allow(dead_code)]
     #[serde(rename = "type")]
     error_type: String,
     error: ErrorDetail,

@@ -50,12 +50,12 @@ impl QualityMetrics {
     }
 
     pub fn calculate_overall(&mut self) {
-        self.overall_score = (self.readability * 0.2
+        self.overall_score = self.readability * 0.2
             + self.maintainability * 0.25
             + self.performance * 0.15
             + self.security * 0.25
             + self.test_coverage * 0.1
-            + self.documentation * 0.05);
+            + self.documentation * 0.05;
     }
 
     pub fn is_excellent(&self) -> bool {
@@ -345,7 +345,7 @@ impl ExcellenceEnforcer {
         // Check for unwrap()
         let unwrap_count = code.matches("unwrap()").count();
         if unwrap_count > 0 {
-            score -= (unwrap_count as f64 * 5.0);
+            score -= unwrap_count as f64 * 5.0;
             _issues.push("Uses unwrap() which can panic");
         }
 

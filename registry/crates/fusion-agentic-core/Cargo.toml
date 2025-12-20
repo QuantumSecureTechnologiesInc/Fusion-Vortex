@@ -1,19 +1,22 @@
-[package]
+﻿[package]
 name = "fusion-agentic-core"
 version = "0.1.0"
 edition = "2021"
-authors = ["Quantum Secure Technologies Inc."]
-license = "MIT OR Apache-2.0"
-description = "AI-enhanced agentic reasoning and vibe coding for the Fusion ecosystem"
+license = "MIT"
+description = "Framework: Core agentic capabilities for Fusion (Chain-of-Thought, Vibe Coding)."
+authors = ["Fusion Team"]
 repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
-keywords = ["ai", "agentic", "reasoning", "vibe-coding", "code-excellence"]
-categories = ["development-tools", "ai", "code-generation"]
-
+keywords = ["framework", "agent", "ai", "fusion"]
+categories = ["science", "simulation"]
+readme = "README.md"
 [lib]
 name = "fusion_agentic_core"
 path = "src/lib.rs"
 
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+fusion_core = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rayon = "1.8"
@@ -31,3 +34,5 @@ chain-of-thought = []
 vibe-coding = []
 code-excellence = []
 advanced-reasoning = []
+
+

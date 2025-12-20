@@ -16,7 +16,9 @@ impl ReactHookApi {
         // Mock retrieval:
         if key == "tensor_data" {
             // Mock return value
-            return Ok(FusionType::float(0.0));
+            return Ok(FusionType::Classical(
+                fusion_core::types::classical::ClassicalType::Float(0.0),
+            ));
         }
         Err(fusion_std::error::StdError::Core(
             fusion_core::FusionError::UnknownVariable(key.to_string()),

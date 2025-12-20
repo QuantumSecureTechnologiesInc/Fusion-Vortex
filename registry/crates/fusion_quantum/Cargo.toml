@@ -1,12 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_quantum"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-description = "Quantum computing primitives with QPU integration"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Fusion Algorithm crate: fusion_quantum."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_runtime_core = { path = "../fusion_runtime_core/" }
@@ -16,4 +18,5 @@ tracing = { workspace = true }
 num-complex = "0.4"
 [dev-dependencies]
 criterion = { workspace = true }
+
 

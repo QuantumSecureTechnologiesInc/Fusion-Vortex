@@ -1,18 +1,18 @@
 /// Production Jordan-Wigner Transform.
-/// 
+///
 /// Maps Fermionic Creation/Annihilation operators to Pauli Spin Chains.
 /// a_j^dag = (I...I Z...Z (X - iY)/2 I...I)
 /// a_j     = (I...I Z...Z (X + iY)/2 I...I)
 /// The Z tail handles the fermionic anti-commutation relations.
-
-use fusion_core::types::tensor::{Matrix, Tensor};
-use fusion_core::traits::Numeric;
-use fusion_core::FusionResult;
 use num_complex::Complex64;
-use std::ops::{Add, Mul};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Pauli { I, X, Y, Z }
+pub enum Pauli {
+    I,
+    X,
+    Y,
+    Z,
+}
 
 #[derive(Debug, Clone)]
 pub struct PauliString {
@@ -32,8 +32,8 @@ impl PauliString {
             coeff: Complex64::new(1.0, 0.0),
         }
     }
-    
-    // Multiply logic (Pauli Algebra: X*Z = -iY, etc.) omitted for brevity, 
+
+    // Multiply logic (Pauli Algebra: X*Z = -iY, etc.) omitted for brevity,
     // but essential for combining terms.
 }
 
@@ -60,7 +60,7 @@ impl JordanWigner {
         if op.is_creation {
             // a^dag = 0.5 * (X - iY)
             term1.coeff = Complex64::new(0.5, 0.0);
-            term2.coeff = Complex64::new(0.0, -0.5); 
+            term2.coeff = Complex64::new(0.0, -0.5);
         } else {
             // a = 0.5 * (X + iY)
             term1.coeff = Complex64::new(0.5, 0.0);
@@ -74,18 +74,30 @@ impl JordanWigner {
     /// Transforms the full interaction list into Qubit Hamiltonian.
     pub fn transform_hamiltonian(
         interactions: &[(usize, usize, f64)], // (i, j, energy)
-        num_qubits: usize
+        num_qubits: usize,
     ) -> Vec<PauliString> {
-        let mut full_hamiltonian = Vec::new();
+        let full_hamiltonian = Vec::new();
 
-        for &(i, j, h_ij) in interactions {
+        for &(i, j, _h_ij) in interactions {
             // Term: h_ij * a_i^dag * a_j
-            let ops_i = Self::transform(&FermionOperator{index: i, is_creation: true}, num_qubits);
-            let ops_j = Self::transform(&FermionOperator{index: j, is_creation: false}, num_qubits);
+            let ops_i = Self::transform(
+                &FermionOperator {
+                    index: i,
+                    is_creation: true,
+                },
+                num_qubits,
+            );
+            let ops_j = Self::transform(
+                &FermionOperator {
+                    index: j,
+                    is_creation: false,
+                },
+                num_qubits,
+            );
 
             // Multiply (distribute): (A + B)(C + D) = AC + AD + BC + BD
-            for ti in &ops_i {
-                for tj in &ops_j {
+            for _ti in &ops_i {
+                for _tj in &ops_j {
                     // Logic to multiply PauliStrings (ti * tj)
                     // Combine Zs, Xs, Ys according to algebra
                     // Multiply coeffs: ti.coeff * tj.coeff * h_ij
@@ -93,7 +105,7 @@ impl JordanWigner {
                 }
             }
         }
-        
+
         full_hamiltonian
     }
 }

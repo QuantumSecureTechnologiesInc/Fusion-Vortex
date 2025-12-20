@@ -4,6 +4,7 @@ pub trait Optimizer {
     fn step(&mut self);
 }
 
+#[allow(dead_code)]
 pub struct Adam {
     lr: f64,
     params: Vec<Tensor>,
@@ -21,6 +22,7 @@ impl Optimizer for Adam {
     }
 }
 
+#[allow(dead_code)]
 pub struct SGD {
     lr: f64,
     params: Vec<Tensor>,

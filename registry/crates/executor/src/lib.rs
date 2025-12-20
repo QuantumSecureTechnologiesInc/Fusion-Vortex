@@ -1,13 +1,17 @@
+#![allow(unused_imports)]
 /// Production Chain Executor.
-/// 
+///
 /// Supports Directed Acyclic Graphs (DAGs) for complex AI workflows.
 /// Features parallel execution of independent nodes and conditional branching.
-
-use crate::ChainLink; // Assumed existing trait
-use fusion_std::error::{StdResult, StdError};
+use fusion_std::error::{StdError, StdResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+
+/// Trait for chain operations
+pub trait ChainLink {
+    fn execute(&self, context: &mut HashMap<String, String>) -> StdResult<()>;
+}
 
 pub struct ChainContext {
     pub memory: HashMap<String, String>,
@@ -25,7 +29,9 @@ pub struct GraphExecutor {
 
 impl GraphExecutor {
     pub fn new() -> Self {
-        Self { nodes: HashMap::new() }
+        Self {
+            nodes: HashMap::new(),
+        }
     }
 
     pub fn add_node(&mut self, node: ChainNode) {
@@ -35,8 +41,10 @@ impl GraphExecutor {
     /// Execute the graph respecting dependencies.
     pub async fn execute(&self, initial_input: HashMap<String, String>) -> StdResult<ChainContext> {
         // Validate DAG (Cycle detection omitted for brevity, but critical in prod)
-        
-        let context = Arc::new(RwLock::new(ChainContext { memory: initial_input }));
+
+        let context = Arc::new(RwLock::new(ChainContext {
+            memory: initial_input,
+        }));
         let mut executed = HashMap::new(); // Track completion
         let mut pending: Vec<&ChainNode> = self.nodes.values().collect();
 
@@ -47,7 +55,10 @@ impl GraphExecutor {
             let mut remaining = Vec::new();
 
             for node in pending {
-                let deps_met = node.dependencies.iter().all(|dep| executed.contains_key(dep));
+                let deps_met = node
+                    .dependencies
+                    .iter()
+                    .all(|dep| executed.contains_key(dep));
                 if deps_met {
                     next_batch.push(node);
                 } else {
@@ -56,14 +67,16 @@ impl GraphExecutor {
             }
 
             if next_batch.is_empty() {
-                return Err(StdError::Core(fusion_core::FusionError::CompilationError("Graph Cycle or missing dependency".into())));
+                return Err(StdError::Core(fusion_core::FusionError::CompilationError(
+                    "Graph Cycle or missing dependency".into(),
+                )));
             }
 
             // Execute batch in parallel
             let mut handles = Vec::new();
             for node in next_batch {
-                let ctx_ref = context.clone();
-                // We need to clone the operation or structure it to be shared. 
+                let _ctx_ref = context.clone();
+                // We need to clone the operation or structure it to be shared.
                 // For this pattern, we assume operation is Arc-able or cloneable.
                 // Simulating execution:
                 handles.push(async move {
@@ -74,15 +87,19 @@ impl GraphExecutor {
                 executed.insert(node.id.clone(), true);
                 progress = true;
             }
-            
+
             // Await all
             futures::future::join_all(handles).await;
 
             pending = remaining;
-            if !progress { break; }
+            if !progress {
+                break;
+            }
         }
 
         let final_ctx = context.read().await;
-        Ok(ChainContext { memory: final_ctx.memory.clone() })
+        Ok(ChainContext {
+            memory: final_ctx.memory.clone(),
+        })
     }
 }

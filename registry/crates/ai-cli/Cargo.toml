@@ -1,12 +1,16 @@
-[package]
+﻿[package]
 name = "fusion-ai-cli"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "Fusion AI CLI - AI subcommands and workspace loader"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: AI-powered CLI with subcommands and workspace management."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "tool", "cli", "ai", "tool"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
 [dependencies]
+fusion_core = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
@@ -20,4 +24,5 @@ fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 blake3 = { workspace = true }
 chrono = "0.4"
+
 

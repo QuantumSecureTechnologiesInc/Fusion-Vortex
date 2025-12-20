@@ -1,4 +1,3 @@
-use fusion_core::traits::Numeric;
 /// Production-Grade Density Matrix Simulator.
 ///
 /// Handles mixed states and decoherence using full matrix mechanics.
@@ -15,13 +14,13 @@ pub struct DensityMatrix {
 
 impl DensityMatrix {
     /// Initialize |0...0><0...0|
-    pub fn new(num_qubits: usize) -> Self {
+    pub fn new(num_qubits: usize) -> FusionResult<Self> {
         let dim = 1 << num_qubits;
-        let mut data = Tensor::zeros((dim, dim));
+        let mut data = Tensor::zeros([dim, dim]);
         // Set element [0,0] to 1.0 (pure state |0>)
-        data[[0, 0]] = Complex64::new(1.0, 0.0);
+        data.set([0, 0], Complex64::new(1.0, 0.0))?;
 
-        Self { data, num_qubits }
+        Ok(Self { data, num_qubits })
     }
 
     /// Apply a Unitary Gate: rho' = U * rho * U_dagger
@@ -37,20 +36,25 @@ impl DensityMatrix {
         }
 
         // 1. Compute U * rho
-        let u_rho = u.dot(&self.data);
+        let u_rho = u.dot(&self.data)?;
 
         // 2. Compute U_dagger (Conjugate Transpose)
         let dim = u.shape()[0];
-        let mut u_dagger = Tensor::zeros((dim, dim));
+        let mut u_dagger = Tensor::zeros([dim, dim]);
         for r in 0..dim {
             for c in 0..dim {
-                let val = u.get([r, c]).ok_or(FusionError::IndexOutOfBounds)?;
-                u_dagger[[c, r]] = val.conj();
+                let val = u
+                    .get([r, c])
+                    .ok_or(fusion_core::FusionError::IndexOutOfBounds(format!(
+                        "Index [{}, {}] out of bounds",
+                        r, c
+                    )))?;
+                u_dagger.set([c, r], val.conj())?;
             }
         }
 
         // 3. Compute (U * rho) * U_dagger
-        self.data = u_rho.dot(&u_dagger);
+        self.data = u_rho.dot(&u_dagger)?;
 
         Ok(())
     }
@@ -59,7 +63,7 @@ impl DensityMatrix {
     /// rho' = sum(E_k * rho * E_k_dagger)
     pub fn apply_channel(&mut self, kraus_ops: &[Matrix<Complex64>]) -> FusionResult<()> {
         let dim = self.data.shape()[0];
-        let mut new_rho = Tensor::zeros((dim, dim));
+        let mut new_rho = Tensor::zeros([dim, dim]);
 
         for ek in kraus_ops {
             // Check dimensions
@@ -72,21 +76,28 @@ impl DensityMatrix {
             }
 
             // E_k * rho
-            let temp = ek.dot(&self.data);
+            let temp = ek.dot(&self.data)?;
 
             // E_k_dagger
-            let mut ek_dagger = Tensor::zeros((dim, dim));
+            let mut ek_dagger = Tensor::zeros([dim, dim]);
             for r in 0..dim {
                 for c in 0..dim {
-                    ek_dagger[[c, r]] = ek.get([r, c]).ok_or(FusionError::IndexOutOfBounds)?.conj();
+                    let val = ek
+                        .get([r, c])
+                        .ok_or(fusion_core::FusionError::IndexOutOfBounds(format!(
+                            "Index [{}, {}] out of bounds",
+                            r, c
+                        )))?
+                        .conj();
+                    ek_dagger.set([c, r], val)?;
                 }
             }
 
             // term = (E_k * rho) * E_k_dagger
-            let term = temp.dot(&ek_dagger);
+            let term = temp.dot(&ek_dagger)?;
 
             // Accumulate: new_rho = new_rho + term
-            new_rho = new_rho + term;
+            new_rho.data = new_rho.data + term.data;
         }
 
         self.data = new_rho;

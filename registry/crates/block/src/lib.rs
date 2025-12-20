@@ -2,9 +2,8 @@
 ///
 /// Quantizes weights in small blocks (e.g., 32 or 128) to maintain higher fidelity
 /// than per-tensor scaling. This is the foundation for formats like GGUF/GPTQ.
-use fusion_core::types::tensor::{Matrix, Tensor};
+use fusion_core::types::tensor::Matrix;
 use fusion_core::{FusionError, FusionResult};
-use std::sync::Arc;
 
 pub const BLOCK_SIZE: usize = 32;
 
@@ -23,6 +22,7 @@ impl BlockQuantizedMatrix {
         Err(FusionError::Generic("Not implemented".to_string()))
     }
 
+    #[allow(dead_code)]
     fn quantize_block(block: &[f64]) -> (Vec<i8>, f64, f64) {
         let max_val = block.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let min_val = block.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -66,6 +66,6 @@ impl BlockQuantizedMatrix {
             }
         }
 
-        Tensor::new(data, self.original_shape)
+        Matrix::from_vec(data, self.original_shape)
     }
 }

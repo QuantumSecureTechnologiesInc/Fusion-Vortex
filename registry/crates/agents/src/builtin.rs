@@ -1,6 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use fusion_ai_core_adapters::{
+use fusion_ai_core::{
     AdapterConfig, AnthropicConfig, GoogleConfig, ModelSession, OpenAIConfig, UnifiedAdapter,
 };
 use uuid::Uuid;

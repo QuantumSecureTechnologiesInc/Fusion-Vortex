@@ -3,7 +3,20 @@ name = "llm-beam-search"
 version = "0.2.0"
 edition = "2021"
 authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: llm-beam-search"
 license = "MIT"
+description = "Algorithm: Beam search decoding for LLMs. O(k·n·v) where k=beam width."
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["beam-search", "decoding", "llm", "generation", "algorithm"]
+categories = ["algorithms"]
+readme = "README.md"
 
 [dependencies]
+fusion_core = { workspace = true }
+fusion_ai_core = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "beam_search_benchmark"
+# harness = false

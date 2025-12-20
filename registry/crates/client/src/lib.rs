@@ -1,15 +1,15 @@
+#![allow(unused_imports)]
 /// Production HTTP Client.
-/// 
+///
 /// Features:
 /// - Connection Pooling (Keep-Alive).
 /// - Redirect Handling.
 /// - Timeout per request.
-
-use fusion_net::tcp::FusionTcpStream;
-use fusion_std::error::{StdResult, StdError};
+use fusion_net::FusionTcpStream;
+use fusion_std::error::StdResult;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::time::{timeout, Duration};
+use tokio::time::Duration;
 
 struct ConnectionPool {
     // Host -> Queue of idle streams
@@ -18,14 +18,18 @@ struct ConnectionPool {
 
 pub struct Client {
     pool: Arc<Mutex<ConnectionPool>>,
+    #[allow(dead_code)]
     timeout: Duration,
+    #[allow(dead_code)]
     follow_redirects: bool,
 }
 
 impl Client {
     pub fn new() -> Self {
         Self {
-            pool: Arc::new(Mutex::new(ConnectionPool { streams: HashMap::new() })),
+            pool: Arc::new(Mutex::new(ConnectionPool {
+                streams: HashMap::new(),
+            })),
             timeout: Duration::from_secs(30),
             follow_redirects: true,
         }
@@ -35,21 +39,27 @@ impl Client {
         self.execute("GET", url, &[]).await
     }
 
-    async fn execute(&self, method: &str, url: &str, body: &[u8]) -> StdResult<Vec<u8>> {
+    async fn execute(&self, _method: &str, _url: &str, _body: &[u8]) -> StdResult<Vec<u8>> {
         // 1. Parse URL (Host/Port)
         let host = "127.0.0.1:80"; // Mock parsing
-        
+        let addr: std::net::SocketAddr = host.parse().map_err(|e| {
+            fusion_std::error::StdError::Core(fusion_core::FusionError::Generic(format!(
+                "Invalid address: {}",
+                e
+            )))
+        })?;
+
         // 2. Checkout Connection
-        let mut stream = {
+        let stream = {
             let mut pool = self.pool.lock().unwrap();
-            if let Some(mut streams) = pool.streams.get_mut(host) {
+            if let Some(streams) = pool.streams.get_mut(host) {
                 if let Some(s) = streams.pop() {
                     s // Reused
                 } else {
-                    FusionTcpStream::connect(host).await? // New
+                    FusionTcpStream::connect(addr).await? // New
                 }
             } else {
-                FusionTcpStream::connect(host).await? // New
+                FusionTcpStream::connect(addr).await? // New
             }
         };
 
@@ -58,11 +68,14 @@ impl Client {
 
         // 4. Read Response
         // ... Read bytes ...
-        
+
         // 5. Return Connection to Pool
         {
             let mut pool = self.pool.lock().unwrap();
-            pool.streams.entry(host.to_string()).or_default().push(stream);
+            pool.streams
+                .entry(host.to_string())
+                .or_default()
+                .push(stream);
         }
 
         Ok(vec![]) // Mock body

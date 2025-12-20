@@ -1,10 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_api_sdk_generator"
 version = "0.2.0"
 edition = "2021"
-description = "Automated SDK generation tool from OpenAPI/GraphQL schemas"
 license = "MIT"
-
+description = "Tool: Fusion Tool crate: sdk-generator."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "tool"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
 [dependencies]
 fusion_std = { path = "../std", version = "0.2.0" }
 fusion_core = { workspace = true }

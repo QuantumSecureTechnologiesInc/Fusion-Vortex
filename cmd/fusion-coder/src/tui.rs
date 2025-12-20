@@ -7,7 +7,7 @@
 //!
 //! Full-screen interactive UI using Ratatui
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
@@ -44,7 +44,12 @@ impl Tui {
         Ok(())
     }
 
-    pub fn draw(&mut self, session: &AgentSession, settings: &Settings) -> Result<()> {
+    pub fn draw(
+        &mut self,
+        session: &AgentSession,
+        _settings: &Settings,
+        input_buffer: &str,
+    ) -> Result<()> {
         self.terminal.draw(|frame| {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
@@ -58,7 +63,7 @@ impl Tui {
             // HEADER
             let header_text = format!(
                 " Fusion VSC CLI Coder | Mode: {} | ID: {} ",
-                session.mode.mode_type,
+                session.mode,
                 &session.id[..8]
             );
 
@@ -90,7 +95,23 @@ impl Tui {
             let output_block = Block::default()
                 .title(" Activity Log ")
                 .borders(Borders::ALL);
-            let output = Paragraph::new("Agent initialized. Waiting for task...")
+
+            // Get last few messages
+            let messages = session.conversation.last_messages(10);
+            let mut log_text = String::new();
+            if messages.is_empty() {
+                log_text.push_str("Agent initialized. Waiting for task...");
+            } else {
+                for msg in messages {
+                    log_text.push_str(&format!(
+                        "[{}]: {}\n\n",
+                        msg.role.to_uppercase(),
+                        msg.content
+                    ));
+                }
+            }
+
+            let output = Paragraph::new(log_text)
                 .block(output_block)
                 .wrap(Wrap { trim: true });
 
@@ -99,8 +120,9 @@ impl Tui {
             // Status/Details Area
             let status_block = Block::default().title(" Status ").borders(Borders::ALL);
             let status_text = format!(
-                "Secure Mode: {}\nSettings Checked: true\n\nTask Group: None",
-                session.is_secure()
+                "Secure Mode: {}\nSettings Checked: true\n\nTask Group: None\n\nMessages: {}",
+                session.is_secure(),
+                session.conversation.message_count()
             );
             let status = Paragraph::new(status_text).block(status_block);
 
@@ -112,8 +134,13 @@ impl Tui {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Yellow));
 
-            let input = Paragraph::new("Type your instruction here... (Press 'Esc' to quit)")
-                .block(input_block);
+            let input_text = if input_buffer.is_empty() {
+                "Type your instruction here... (Press 'Esc' to quit)".to_string()
+            } else {
+                input_buffer.to_string()
+            };
+
+            let input = Paragraph::new(input_text).block(input_block);
 
             frame.render_widget(input, chunks[2]);
         })?;
@@ -126,9 +153,11 @@ pub async fn run_interactive(mut session: AgentSession, settings: Settings) -> R
     let mut tui = Tui::new()?;
     tui.enter()?;
 
+    let mut input_buffer = String::new();
+
     // Main Loop
     loop {
-        tui.draw(&session, &settings)?;
+        tui.draw(&session, &settings, &input_buffer)?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
@@ -137,7 +166,19 @@ pub async fn run_interactive(mut session: AgentSession, settings: Settings) -> R
                         KeyCode::Esc => {
                             break;
                         }
-                        // TODO: Handle input
+                        KeyCode::Char(c) => {
+                            input_buffer.push(c);
+                        }
+                        KeyCode::Backspace => {
+                            input_buffer.pop();
+                        }
+                        KeyCode::Enter => {
+                            if !input_buffer.trim().is_empty() {
+                                session.add_message("user", input_buffer.clone());
+                                input_buffer.clear();
+                                // TODO: Trigger agent action here
+                            }
+                        }
                         _ => {}
                     }
                 }

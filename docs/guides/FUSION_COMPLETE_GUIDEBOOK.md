@@ -7363,6 +7363,47 @@ A: Fusion is maintained by QuantumSecure Technologies LTD with open governance v
 
 ---
 
+## 13. Packages Reference {#packages}
+
+This chapter documents all 242 packages in the Fusion ecosystem.
+
+### 13.1 Core Infrastructure (20 packages)
+agents, ai-cli, ai-core, ai-daemon, ai-models, attention, audit, auth, auto-prompt, block, bridge_c, cargo-converter, carver, client, cloud-agent, cloud-aws, cloud-azure, cloud-gcp, clustering, compiler-passes
+
+### 13.2 LLM Infrastructure (60+ packages)
+llm-inference, llm-quantization, llm-rag, llm-lora-manager, llm-model-server, llm-distributed-training, llm-gqa-kernel, llm-prompt-tuning, llm-beam-search, llm-cache-compression, llm-distillation, llm-llama, llm-mixtral-routing, llm-offload, llm-rotary-opt, llm-rlhf, llm-rerope, llm-tensor-parallel, llm-tokenizers, llm-vision-adapter
+
+### 13.3 Neural Networks (20 packages)
+nn-attention-block, nn-lstm, nn-resnet, nn-gcn, nn-gnn, nn-layer-norm, nn-embed, nn-pooling, nn-3d-conv, nn-rbf, nn-rnn, nn-maxpool, nn-norm, nn-gan-layers, nn-metrics
+
+### 13.4 Quantum Computing (20 packages)  
+q-algo, q-sim, qaoa, quantum-sdk, q-error-correction, q-ibm-backend, q-aws-backend, jordan-wigner, gate-decomposition, q-gate-decomposition, q-measurement-opt, q-optimizer-hybrid, q-pqc-proxy, q-pulse-seq, q-visualization, qubo, density-matrix, error-correction
+
+### 13.5 Security (20 packages)
+sec-forensics, sec-penetration, sec-policy-engine, sec-threat-intel, sec-trusted-anchor, sec-incident-response, sec-network-segmentation, sec-os-hardener, sec-policy-compiler, sec-runtime-policy, sec-secrets-auditor, audit, vault, supply-chain, sbom-generator, safety-monitor, sandbox-manager, pqc-proxy, trusted-anchor
+
+### 13.6 System & Utilities (40+ packages)
+solver, std, std-ext, tokenizers, training, transform, tree, tester, version, vram-scheduler, telemetry-ingestor, tensor-optim, tensor-parallel, tensor-sparse, stream-monitor, trie-search, formatter, docgen, diagnostics, debugger, profiler, metrics, observability, retry, rate-limiter
+
+### 13.7 Interop & Cloud (15 packages)
+interop-python, interop-java, interop-js, interop-python-pkgmgr, python-converter, python-pkg, fusion-database, fusion-graphql, k8s-operator, grpc, http, github, wasm-server, webasm-renderer
+
+### 13.8 Data Science (15 packages)
+data-vis, fusion-charts, fusion-data-vis, embeddings, clustering, fusion-clustering, resnet, training, fusion-optimization, fusion-math, fusion-finance, rl-algorithms
+
+### 13.9 Specialized (32+ packages)
+fusion-audio, fusion-blockchain, fusion-calendar, fusion-compression, fusion-geo, fusion-image, fusion-iot, fusion-mail, fusion-physics, fusion-regex, fusion-ui, fusion-video, fusion-vision, react-hooks, react-bridge, component-lib, layout-builder, event-bus, executor, faas, router-mesh, rest-server, graphql, webasm-renderer, xml, yaml, safetensors, ops, offload, deploy, crate-analyzer, model-server-core
+
+**Installation:**
+```bash
+fusion add <package>@latest
+```
+
+**Total**: 242 packages | **License**: MIT/Apache 2.0
+
+---
+
+
 **Fusion Programming Language v4.0 (Quantum-Secure Nebula Era) - Comprehensive Edition**  
 **Updated**: December 13, 2025  
 **Pages**:  200+ (estimated ~4,550 lines)  

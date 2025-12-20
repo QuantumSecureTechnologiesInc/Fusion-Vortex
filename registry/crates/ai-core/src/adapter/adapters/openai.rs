@@ -1,6 +1,6 @@
 // OpenAI adapter implementation for fusion-ai-core
 use anyhow::{Context, Result};
-use async_trait::async_trait;
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -77,9 +77,13 @@ pub struct Function {
 
 #[derive(Debug, Deserialize)]
 struct ChatCompletionResponse {
+    #[allow(dead_code)]
     id: String,
+    #[allow(dead_code)]
     object: String,
+    #[allow(dead_code)]
     created: i64,
+    #[allow(dead_code)]
     model: String,
     choices: Vec<Choice>,
     usage: Usage,
@@ -87,8 +91,10 @@ struct ChatCompletionResponse {
 
 #[derive(Debug, Deserialize)]
 struct Choice {
+    #[allow(dead_code)]
     index: usize,
     message: OpenAIMessage,
+    #[allow(dead_code)]
     finish_reason: String,
 }
 
@@ -109,7 +115,9 @@ struct ErrorDetail {
     message: String,
     #[serde(rename = "type")]
     error_type: String,
+    #[allow(dead_code)]
     param: Option<String>,
+    #[allow(dead_code)]
     code: Option<String>,
 }
 
@@ -168,7 +176,10 @@ impl OpenAIAdapter {
         Ok((response.choices[0].message.clone(), response.usage))
     }
 
-    // Simple streaming implementation returning the first message content via a channel
+    /// Returns a single, buffered response via a channel.
+    /// This method currently returns only a single, buffered response and does not implement
+    /// true streaming behavior. For true streaming support, proper server-sent event parsing
+    /// would be required to handle incremental deltas.
     pub async fn chat_completion_stream(
         &self,
         messages: Vec<OpenAIMessage>,
@@ -180,7 +191,7 @@ impl OpenAIAdapter {
             max_tokens: self.config.max_tokens,
             temperature: self.config.temperature,
             top_p: self.config.top_p,
-            stream: Some(true),
+            stream: Some(false),
             functions: None,
         };
         let client = self.client.clone();

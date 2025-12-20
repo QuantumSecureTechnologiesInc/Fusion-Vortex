@@ -1,12 +1,14 @@
-[package]
+﻿[package]
 name = "fusion_runtime_scheduler"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-description = "Heterogeneous QoS-aware scheduler for Quantum/AI/Classical tasks"
-
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Preemptive Task Scheduler for Fusion Runtime."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["framework", "runtime", "fusion", "scheduler", "async"]
+categories = ["development-tools", "os::kernel-apis"]
+readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 parking_lot = { workspace = true }
@@ -16,4 +18,5 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+
 

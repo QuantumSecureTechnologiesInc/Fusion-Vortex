@@ -7,7 +7,10 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "Fusion VSC CLI - The bridges between Fusion, VS Code, and MCP."
+description = "Tool: Fusion CLI with excellent error messages, VS Code integration, and MCP support"
+keywords = ["fusion", "cli", "vscode", "mcp", "development"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 
 [[bin]]
 name = "fusion"
@@ -30,7 +33,7 @@ dirs = { workspace = true }
 urlencoding = "2.1"
 
 # Internal crates
-fusion-core = { path = "../../registry/crates/core" }
+fusion-core = { workspace = true }
 fusion-toolchain = { path = "../../crates/toolchain" }
 fusion-tester = { path = "../../registry/crates/tester" }
 fusion-formatter = { path = "../../registry/crates/formatter" }
@@ -42,7 +45,7 @@ fusion-profiler = { path = "../../registry/crates/profiler" }
 fusion-audit = { path = "../../registry/crates/audit" }
 fusion-deploy = { path = "../../registry/crates/deploy" }
 fusion-ai-cli = { path = "../../registry/crates/ai-cli" }
-fusion-settings = { path = "../../crates/settings" }
+fusion-settings = { path = "../../crates/fusion-settings" }
 fusion-projects = { path = "../../crates/projects" }
 fusion-github = { path = "../../registry/crates/github" }
 fusion-agents = { path = "../../registry/crates/agents" }

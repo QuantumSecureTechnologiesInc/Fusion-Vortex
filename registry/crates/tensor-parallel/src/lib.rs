@@ -1,10 +1,8 @@
 /// Tensor Parallelism Implementation.
-/// 
+///
 /// Shards large weight matrices (W) across multiple devices (GPUs) and synchronizes results.
-
-use fusion_core::types::tensor::Matrix;
+use fusion_core::types::tensor::{Matrix, Tensor};
 use fusion_core::FusionResult;
-use fusion_net::tcp::FusionTcpStream; // Used for inter-GPU sync
 
 pub struct ParallelLinear {
     pub rank: usize, // Current GPU index
@@ -21,13 +19,15 @@ impl ParallelLinear {
 
         // 2. All-Gather (Synchronization): Collect all Y_i from all GPUs
         // Requires inter-GPU communication using fusion_net/security
-        
+
         // Mock All-Gather call
         let global_y_data = local_y.data.clone();
-        
+
         // 3. Reconstruct Global Output Tensor
-        let (r, c) = (x.shape[0], self.shard_w.shape[1] * self.world_size);
-        
-        Tensor::new(global_y_data, [r, c])
+        let (_r, _c) = (x.shape()[0], self.shard_w.shape()[1] * self.world_size);
+
+        Ok(Tensor {
+            data: global_y_data,
+        })
     }
 }

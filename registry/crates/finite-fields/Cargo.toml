@@ -3,7 +3,21 @@ name = "fusion_finite_fields"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
+description = "Foundation: Panic-free finite field arithmetic primitives for cryptography and quantum computing"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["finite-fields", "algebra", "cryptography", "primitives"]
+categories = ["algorithms", "cryptography", "no-std"]
+readme = "README.md"
+
+[features]
+default = []
+# No default features - explicit opt-in
 
 [dependencies]
-fusion_core = { workspace = true }
+fusion_core = { workspace = true, default-features = false }
+fusion_std = { workspace = true, default-features = false }
+
+[dev-dependencies]
+criterion = { workspace = true }
 

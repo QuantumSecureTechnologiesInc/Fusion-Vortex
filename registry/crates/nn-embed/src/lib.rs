@@ -1,8 +1,7 @@
 /// Production Embedding Layers.
 /// Converts discrete indices (tokens) into dense, continuous vectors.
-use fusion_ai_core_adapters::{Layer, Linear, Variable};
-use fusion_core::types::tensor::{Matrix, Tensor};
-use fusion_core::FusionResult;
+use fusion_ai_core::{Layer, Tensor, Variable};
+// use fusion_core::types::tensor::Tensor; // Removed
 
 pub struct Embedding {
     pub weight: Variable, // [VocabSize, EmbedDim] lookup table
@@ -12,28 +11,27 @@ impl Embedding {
     pub fn new(vocab_size: usize, embed_dim: usize) -> Self {
         // Xavier initialization is standard for embeddings
         Self {
-            weight: Variable::new(Tensor::zeros([vocab_size, embed_dim])),
+            weight: Tensor::zeros(vec![vocab_size, embed_dim]),
         }
     }
 }
 
 impl Layer for Embedding {
     /// Forward Pass: Input [Batch, SequenceLength] (indices) -> Output [Batch, SequenceLength, EmbedDim]
-    fn forward(&self, indices: Variable) -> Variable {
+    fn forward(&self, _indices: &Variable) -> Variable {
         // Production logic involves:
         // 1. Reading indices (i64 type usually) from the input Variable (which should be an index tensor).
         // 2. Performing a Gather operation: Output[i, j, :] = Weight[Input[i, j], :]
 
         // This relies on the Tensor Sampler crate, fusion_tensor_sampling, for performance.
         // Mock output size:
-        let embed_dim = self.weight.data.shape[1];
+        let embed_dim = self.weight.data.shape()[1];
 
-        let output_tensor = Tensor::zeros([1, 1, embed_dim]).unwrap();
-        Variable::new(output_tensor)
+        let output_tensor = Tensor::zeros(vec![1, 1, embed_dim]);
+        output_tensor
     }
 
     fn parameters(&self) -> Vec<Variable> {
         vec![self.weight.clone()]
     }
 }
-

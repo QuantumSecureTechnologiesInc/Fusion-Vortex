@@ -10,4 +10,4 @@ description = "Fusion static analyzer - Security lints and code analysis"
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
-fusion-core = { path = "../../registry/crates/core" }
+fusion-core = { path = "../../registry/crates/fusion-core" }

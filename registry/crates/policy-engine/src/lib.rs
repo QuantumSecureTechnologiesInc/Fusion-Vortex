@@ -1,8 +1,7 @@
 /// Runtime Security Policy Engine.
-/// 
+///
 /// Evaluates declarative policies (e.g., "Only admins can modify user data").
-
-use fusion_std::error::{StdResult, StdError};
+use fusion_std::error::StdResult;
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -14,7 +13,8 @@ pub struct PolicyContext {
 
 pub struct PolicyEngine {
     // Compiled policy rules (OPA/Rego graph structure simulation)
-    rules: Value, 
+    #[allow(dead_code)]
+    rules: Value,
 }
 
 impl PolicyEngine {
@@ -27,9 +27,11 @@ impl PolicyEngine {
     pub fn evaluate(&self, context: &PolicyContext, action: &str) -> StdResult<bool> {
         // In a real implementation: traverse the policy rule AST/graph.
         // Rule example: "allow if context.role == 'admin' and action == 'write'"
-        
+
         // Mock evaluation based on input for structural integrity:
-        if context.role == "admin" || (action == "read" && context.resource_path.starts_with("/public")) {
+        if context.role == "admin"
+            || (action == "read" && context.resource_path.starts_with("/public"))
+        {
             Ok(true)
         } else {
             Ok(false)
