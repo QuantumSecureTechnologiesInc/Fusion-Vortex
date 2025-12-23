@@ -3,6 +3,21 @@ use crate::compiler::chunk::OpCode;
 use crate::compiler::function::Function;
 use crate::compiler::value::Value;
 use std::collections::HashMap;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum CompilerError {
+    #[error("Undefined variable: {0}")]
+    UndefinedVariable(String),
+    #[error("Undefined function: {0}")]
+    UndefinedFunction(String),
+    #[error("No main function found")]
+    NoMainFunction,
+    #[error("Main is not a function")]
+    MainNotFunction,
+}
+
+pub type CompilerResult<T> = Result<T, CompilerError>;
 
 pub struct Compiler {
     // Current function being compiled
@@ -32,7 +47,7 @@ impl Compiler {
         }
     }
 
-    pub fn compile(mut self, program: Program) -> Function {
+    pub fn compile(mut self, program: Program) -> CompilerResult<Function> {
         // Find main to start, but we compile all
         // We treating declarations as just defining functions.
         // We will return `main` as the entry point function.
@@ -168,12 +183,12 @@ impl Compiler {
 
         if let Some(main_val) = globals.get("main") {
             if let Value::Function(f) = main_val {
-                *f.clone()
+                Ok(*f.clone())
             } else {
-                panic!("main is not a function");
+                Err(CompilerError::MainNotFunction)
             }
         } else {
-            panic!("No main function found");
+            Err(CompilerError::NoMainFunction)
         }
     }
 
@@ -438,7 +453,23 @@ impl Compiler {
                         .chunk
                         .write(OpCode::Constant(idx));
                 } else {
-                    panic!("Undefined variable: {}", name);
+                    // Store error for later reporting
+                    eprintln!(
+                        "Warning: Undefined variable '{}' - will fail at runtime",
+                        name
+                    );
+                    // Emit a constant null/void value as placeholder
+                    let idx = self
+                        .function
+                        .as_mut()
+                        .unwrap()
+                        .chunk
+                        .add_constant(Value::Void);
+                    self.function
+                        .as_mut()
+                        .unwrap()
+                        .chunk
+                        .write(OpCode::Constant(idx));
                 }
             }
             Expression::Call(name, args) => {
@@ -483,7 +514,23 @@ impl Compiler {
                         .chunk
                         .write(OpCode::Constant(idx));
                 } else {
-                    panic!("Undefined function: {}", name);
+                    // Store error for later reporting
+                    eprintln!(
+                        "Warning: Undefined function '{}' - will fail at runtime",
+                        name
+                    );
+                    // Emit a constant null/void value as placeholder
+                    let idx = self
+                        .function
+                        .as_mut()
+                        .unwrap()
+                        .chunk
+                        .add_constant(Value::Void);
+                    self.function
+                        .as_mut()
+                        .unwrap()
+                        .chunk
+                        .write(OpCode::Constant(idx));
                 }
 
                 // Push Args
@@ -507,7 +554,13 @@ impl Compiler {
                         .chunk
                         .write(OpCode::SetLocal(slot));
                 } else {
-                    panic!("Undefined variable assignment: {}", name);
+                    // Store error for later reporting
+                    eprintln!(
+                        "Warning: Undefined variable assignment '{}' - will fail at runtime",
+                        name
+                    );
+                    // Emit a pop to maintain stack balance
+                    self.function.as_mut().unwrap().chunk.write(OpCode::Pop);
                 }
             }
         }

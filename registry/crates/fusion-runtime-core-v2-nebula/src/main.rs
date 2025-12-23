@@ -34,7 +34,7 @@ impl Runtime for FusionCoreService {
         info!("HealthCheck from client: {}", request.get_ref().client_id);
         Ok(Response::new(HealthCheckResponse {
             status: "OPERATIONAL".into(),
-            version: "2.0.0-Nebula".into(),
+            version: "2.1.0-Nebula-Enhanced".into(),
             load_index: 0.12,
         }))
     }
@@ -44,16 +44,18 @@ impl Runtime for FusionCoreService {
         request: Request<PluginRequest>,
     ) -> Result<Response<PluginResponse>, Status> {
         let req = request.get_ref();
-        info!("Executing Plugin: {}", req.plugin_name);
+        info!("Executing Plugin (v2.1): {}", req.plugin_name);
 
         let engine = self.wasm_engine.clone();
         let wasm_data = req.wasm_binary.clone();
         let input = req.input_data.clone();
+        let plugin_name = req.plugin_name.clone();
 
         // Offload CPU intensive WASM task to blocking thread
-        let result = tokio::task::spawn_blocking(move || engine.execute(&wasm_data, &input))
-            .await
-            .map_err(|e| Status::internal(format!("Thread join error: {}", e)))?;
+        let result =
+            tokio::task::spawn_blocking(move || engine.execute(&plugin_name, &wasm_data, &input))
+                .await
+                .map_err(|e| Status::internal(format!("Thread join error: {}", e)))?;
 
         match result {
             Ok((code, out, time)) => Ok(Response::new(PluginResponse {

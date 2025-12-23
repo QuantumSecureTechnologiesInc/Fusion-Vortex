@@ -28,7 +28,7 @@ impl WasmRunner {
 
         // Instantiate the module
         let instance = linker.instantiate(&mut store, &self.module).map_err(|e| {
-            StdError::Core(fusion_core::FusionError::RuntimeError(format!(
+            StdError::Core(fusion_core::FusionError::CompilationError(format!(
                 "Failed to instantiate Wasm module: {}",
                 e
             )))
@@ -47,14 +47,14 @@ impl WasmRunner {
         // For demonstration, call a no-arg function that returns i32
         // In production, you'd handle typed parameters and results
         let typed_func = func.typed::<(), i32>(&store).map_err(|e| {
-            StdError::Core(fusion_core::FusionError::RuntimeError(format!(
+            StdError::Core(fusion_core::FusionError::CompilationError(format!(
                 "Function signature mismatch: {}",
                 e
             )))
         })?;
 
         let result = typed_func.call(&mut store, ()).map_err(|e| {
-            StdError::Core(fusion_core::FusionError::RuntimeError(format!(
+            StdError::Core(fusion_core::FusionError::CompilationError(format!(
                 "Wasm execution error: {}",
                 e
             )))

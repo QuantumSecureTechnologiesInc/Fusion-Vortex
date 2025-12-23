@@ -1,0 +1,155 @@
+// src/metrics.rs
+// Runtime metrics and observability
+
+use std::sync::atomic::{AtomicU64, Ordering};
+
+#[derive(Debug, Default)]
+pub struct RuntimeMetrics {
+    // Native execution
+    pub native_tasks_spawned: AtomicU64,
+    pub native_tasks_completed: AtomicU64,
+    pub gpu_kernel_launches: AtomicU64,
+    pub qpu_submissions: AtomicU64,
+
+    // Plugin execution
+    pub plugins_loaded: AtomicU64,
+    pub plugins_executed: AtomicU64,
+    pub plugin_execution_time_ms: AtomicU64,
+
+    // Distributed
+    pub remote_tasks_spawned: AtomicU64,
+    pub task_migrations: AtomicU64,
+
+    // Memory
+    pub zero_copy_transfers: AtomicU64,
+    pub shared_memory_allocations: AtomicU64,
+
+    // I/O
+    pub file_operations: AtomicU64,
+    pub network_operations: AtomicU64,
+}
+
+impl RuntimeMetrics {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn increment_native_tasks_spawned(&self) {
+        self.native_tasks_spawned.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_native_tasks_completed(&self) {
+        self.native_tasks_completed.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_gpu_kernel_launches(&self) {
+        self.gpu_kernel_launches.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_qpu_submissions(&self) {
+        self.qpu_submissions.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_plugins_loaded(&self) {
+        self.plugins_loaded.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_plugins_executed(&self) {
+        self.plugins_executed.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn add_plugin_execution_time(&self, ms: u64) {
+        self.plugin_execution_time_ms
+            .fetch_add(ms, Ordering::Relaxed);
+    }
+
+    pub fn increment_remote_tasks_spawned(&self) {
+        self.remote_tasks_spawned.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_task_migrations(&self) {
+        self.task_migrations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_zero_copy_transfers(&self) {
+        self.zero_copy_transfers.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_shared_memory_allocations(&self) {
+        self.shared_memory_allocations
+            .fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_file_operations(&self) {
+        self.file_operations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn increment_network_operations(&self) {
+        self.network_operations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Get a snapshot of current metrics
+    pub fn snapshot(&self) -> MetricsSnapshot {
+        MetricsSnapshot {
+            native_tasks_spawned: self.native_tasks_spawned.load(Ordering::Relaxed),
+            native_tasks_completed: self.native_tasks_completed.load(Ordering::Relaxed),
+            gpu_kernel_launches: self.gpu_kernel_launches.load(Ordering::Relaxed),
+            qpu_submissions: self.qpu_submissions.load(Ordering::Relaxed),
+            plugins_loaded: self.plugins_loaded.load(Ordering::Relaxed),
+            plugins_executed: self.plugins_executed.load(Ordering::Relaxed),
+            plugin_execution_time_ms: self.plugin_execution_time_ms.load(Ordering::Relaxed),
+            remote_tasks_spawned: self.remote_tasks_spawned.load(Ordering::Relaxed),
+            task_migrations: self.task_migrations.load(Ordering::Relaxed),
+            zero_copy_transfers: self.zero_copy_transfers.load(Ordering::Relaxed),
+            shared_memory_allocations: self.shared_memory_allocations.load(Ordering::Relaxed),
+            file_operations: self.file_operations.load(Ordering::Relaxed),
+            network_operations: self.network_operations.load(Ordering::Relaxed),
+        }
+    }
+
+    /// Print metrics summary
+    pub fn print_summary(&self) {
+        let snapshot = self.snapshot();
+        println!("\n=== Fusion Supernova Runtime Metrics ===");
+        println!(
+            "Native Tasks: {} spawned, {} completed",
+            snapshot.native_tasks_spawned, snapshot.native_tasks_completed
+        );
+        println!("GPU Kernels: {}", snapshot.gpu_kernel_launches);
+        println!("QPU Submissions: {}", snapshot.qpu_submissions);
+        println!(
+            "Plugins: {} loaded, {} executed ({}ms total)",
+            snapshot.plugins_loaded, snapshot.plugins_executed, snapshot.plugin_execution_time_ms
+        );
+        println!(
+            "Distributed: {} remote tasks, {} migrations",
+            snapshot.remote_tasks_spawned, snapshot.task_migrations
+        );
+        println!(
+            "Memory: {} zero-copy transfers, {} shared allocations",
+            snapshot.zero_copy_transfers, snapshot.shared_memory_allocations
+        );
+        println!(
+            "I/O: {} file ops, {} network ops",
+            snapshot.file_operations, snapshot.network_operations
+        );
+        println!("========================================\n");
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MetricsSnapshot {
+    pub native_tasks_spawned: u64,
+    pub native_tasks_completed: u64,
+    pub gpu_kernel_launches: u64,
+    pub qpu_submissions: u64,
+    pub plugins_loaded: u64,
+    pub plugins_executed: u64,
+    pub plugin_execution_time_ms: u64,
+    pub remote_tasks_spawned: u64,
+    pub task_migrations: u64,
+    pub zero_copy_transfers: u64,
+    pub shared_memory_allocations: u64,
+    pub file_operations: u64,
+    pub network_operations: u64,
+}

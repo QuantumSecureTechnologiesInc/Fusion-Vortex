@@ -7,7 +7,20 @@
 
 use fusion_core::{FusionType, TensorDType, TensorType};
 use ndarray::{ArrayD, IxDyn};
+use thiserror::Error;
 use tracing::{debug, trace};
+
+#[derive(Error, Debug)]
+pub enum TensorError {
+    #[error("Dimension mismatch: {lhs:?} @ {rhs:?}")]
+    DimensionMismatch { lhs: Vec<usize>, rhs: Vec<usize> },
+    #[error("Unsupported operation: {0}")]
+    UnsupportedOperation(String),
+    #[error("Invalid tensor shape: {0:?}")]
+    InvalidShape(Vec<usize>),
+}
+
+pub type TensorResult<T> = Result<T, TensorError>;
 
 pub use nn::Linear;
 pub use nn::Module as Layer;
@@ -67,21 +80,22 @@ impl Tensor {
     }
 
     /// Matrix multiplication (zero-copy when on GPU)
-    pub async fn matmul(&self, other: &Tensor) -> Tensor {
+    pub async fn matmul(&self, other: &Tensor) -> TensorResult<Tensor> {
         trace!(
             "Matrix multiplication: {:?} @ {:?}",
             self.shape(),
             other.shape()
         );
 
-        // Naive implementation for CPU (since we are boosting mocks to 'real' impls)
-        // Only supporting 2D for now for simplicity in this bridge step
-
         let self_shape = self.shape();
         let other_shape = other.shape();
 
+        // Validate dimensions
         if self_shape.len() != 2 || other_shape.len() != 2 {
-            panic!("Matmul currently only supports 2D tensors");
+            return Err(TensorError::UnsupportedOperation(format!(
+                "Matmul only supports 2D tensors, got {:?} and {:?}",
+                self_shape, other_shape
+            )));
         }
 
         let _rows = self_shape[0];
@@ -89,29 +103,31 @@ impl Tensor {
         let common = self_shape[1];
 
         if common != other_shape[0] {
-            panic!("Dimension mismatch: {:?} @ {:?}", self_shape, other_shape);
+            return Err(TensorError::DimensionMismatch {
+                lhs: self_shape.to_vec(),
+                rhs: other_shape.to_vec(),
+            });
         }
 
         // Convert to 2D view for ndarray dot
-        // Note: In a real system we would use fusion_runtime_core dispatch
         let a = self
             .data
             .view()
             .into_dimensionality::<ndarray::Ix2>()
-            .unwrap();
+            .map_err(|_| TensorError::InvalidShape(self_shape.to_vec()))?;
         let b = other
             .data
             .view()
             .into_dimensionality::<ndarray::Ix2>()
-            .unwrap();
+            .map_err(|_| TensorError::InvalidShape(other_shape.to_vec()))?;
 
         let result = a.dot(&b);
 
-        Tensor {
+        Ok(Tensor {
             data: result.into_dyn(),
             device: self.device.clone(),
             requires_grad: self.requires_grad || other.requires_grad,
-        }
+        })
     }
 
     /// Get tensor shape

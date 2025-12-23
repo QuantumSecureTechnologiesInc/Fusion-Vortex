@@ -67,7 +67,7 @@ tempfile = "3.8"
 resolver = "2"
 members = [
     "cmd/fusion",
-    "cmd/fusion-coder",
+    "cmd/fusion-coder", "cmd/reactor-cli",
     "crates/*",
     "registry/crates/*",
 ]
@@ -77,6 +77,7 @@ exclude = [
     "registry/crates/fusion-terminal-browser",
     "crates/settings",
     "crates/ai-core",
+    "tools/forge",
 ]
 
 

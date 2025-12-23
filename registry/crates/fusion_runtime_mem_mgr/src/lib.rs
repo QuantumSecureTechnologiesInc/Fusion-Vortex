@@ -108,16 +108,16 @@ impl MemoryManager {
     }
 
     /// Allocate memory for a specific device
-    pub fn allocate(&self, size: usize, device: DeviceType) -> DeviceMemory {
+    pub fn allocate(&self, size: usize, device: DeviceType) -> Result<DeviceMemory, String> {
         trace!("Allocating {} bytes on {:?}", size, device);
 
         let pools = self.pools.read();
         let pool = pools
             .get(&device)
             .or_else(|| pools.get(&DeviceType::Shared))
-            .expect("No suitable memory pool found");
+            .ok_or_else(|| format!("No suitable memory pool found for {:?}", device))?;
 
-        let allocation = pool.allocate(size);
+        let allocation = pool.allocate(size)?;
 
         // Update stats
         let mut stats = self.stats.lock();
@@ -126,12 +126,12 @@ impl MemoryManager {
             .peak_usage
             .max(stats.total_allocated - stats.total_freed);
 
-        DeviceMemory {
+        Ok(DeviceMemory {
             ptr: allocation.ptr,
             size,
             device,
             _allocation: allocation,
-        }
+        })
     }
 
     /// Register a GPU device
@@ -205,7 +205,7 @@ impl BufferPool {
         }
     }
 
-    fn allocate(&self, size: usize) -> Allocation {
+    fn allocate(&self, size: usize) -> Result<Allocation, String> {
         let mut blocks = self.free_blocks.lock();
 
         // Find first-fit block
@@ -221,12 +221,17 @@ impl BufferPool {
                 blocks.push(remaining);
             }
 
-            Allocation {
+            Ok(Allocation {
                 ptr: block.offset,
                 size,
-            }
+            })
         } else {
-            panic!("Out of memory in buffer pool for {:?}", self.device);
+            Err(format!(
+                "Out of memory in buffer pool for {:?}: requested {} bytes, largest free block: {} bytes",
+                self.device,
+                size,
+                blocks.iter().map(|b| b.size).max().unwrap_or(0)
+            ))
         }
     }
 }

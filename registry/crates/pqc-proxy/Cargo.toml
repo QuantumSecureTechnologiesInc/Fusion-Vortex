@@ -9,13 +9,13 @@ repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming
 keywords = ["fusion", "algorithm"]
 categories = ["algorithms", "science"]
 readme = "README.md"
+
 [dependencies]
 fusion_core = { workspace = true }
 fusion_runtime_core = { workspace = true }
 fusion_std = { workspace = true }
 fusion_net = { workspace = true }
-tokio = { workspace = true }
 fusion_security = { path = "../fusion-security", version = "0.2.0" }
-
-
-
+tokio = { workspace = true, features = ["net", "io-util", "rt-multi-thread", "macros", "sync"] }
+sha2 = { workspace = true }
+rand = { workspace = true }

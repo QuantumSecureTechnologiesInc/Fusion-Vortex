@@ -363,14 +363,44 @@ impl LanguageServer for FusionLanguageServer {
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
-        let _uri = params
+        let uri = params
             .text_document_position_params
             .text_document
             .uri
             .to_string();
+        let position = params.text_document_position_params.position;
 
-        // TODO: Implement go-to-definition using symbol index
-        // For now, return None (not found)
+        // Get document content
+        let documents = self.open_documents.read().await;
+        if let Some(code) = documents.get(&uri) {
+            let lines: Vec<&str> = code.lines().collect();
+            if let Some(line) = lines.get(position.line as usize) {
+                let word = extract_word_at_position(line, position.character as usize);
+
+                // Search for function/class definition
+                for (line_num, line_text) in lines.iter().enumerate() {
+                    // Look for "fn word(" or "class word" or "trait word"
+                    if line_text.contains(&format!("fn {}(", word))
+                        || line_text.contains(&format!("class {}", word))
+                        || line_text.contains(&format!("trait {}", word))
+                    {
+                        return Ok(Some(GotoDefinitionResponse::Scalar(Location {
+                            uri: Url::parse(&uri).unwrap(),
+                            range: Range {
+                                start: Position {
+                                    line: line_num as u32,
+                                    character: 0,
+                                },
+                                end: Position {
+                                    line: line_num as u32,
+                                    character: line_text.len() as u32,
+                                },
+                            },
+                        })));
+                    }
+                }
+            }
+        }
 
         Ok(None)
     }
@@ -380,9 +410,27 @@ impl LanguageServer for FusionLanguageServer {
 
         // Get document content
         let documents = self.open_documents.read().await;
-        if let Some(_code) = documents.get(&uri) {
-            // TODO: Implement code formatting
-            // For now, return no edits
+        if let Some(code) = documents.get(&uri) {
+            // Basic formatting: normalize indentation and spacing
+            let formatted = format_fusion_code(code);
+
+            if formatted != *code {
+                // Return a single edit replacing entire document
+                let lines: Vec<&str> = code.lines().collect();
+                return Ok(Some(vec![TextEdit {
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: lines.len() as u32,
+                            character: lines.last().map(|l| l.len()).unwrap_or(0) as u32,
+                        },
+                    },
+                    new_text: formatted,
+                }]));
+            }
             Ok(Some(vec![]))
         } else {
             Ok(None)

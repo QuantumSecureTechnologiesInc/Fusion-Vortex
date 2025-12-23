@@ -12,7 +12,8 @@
 //! - Full-screen TUI with live notifications
 
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use reactor_cli::prelude::*;
+use serde::Serialize;
 use std::path::PathBuf;
 
 mod commands;
@@ -24,7 +25,7 @@ mod tui;
 use fusion_agent_core::{AgentModeType, AgentSession, SecureMode};
 use fusion_settings::Settings;
 
-#[derive(Parser)]
+#[derive(Parser, Serialize)]
 #[command(name = "fusion-coder")]
 #[command(about = "Fusion VSC CLI Coder - Advanced agent orchestration")]
 #[command(long_about = help::LONG_ABOUT)]
@@ -99,7 +100,7 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let cli = Cli::parse();
+    let cli = Cli::parse_enhanced();
 
     // Parse agent mode
     let mode_type: AgentModeType = cli.mode.parse()?;

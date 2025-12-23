@@ -1,0 +1,79 @@
+// Helper functions for LSP server
+
+/// Extract word at cursor position
+fn extract_word_at_position(line: &str, character: usize) -> String {
+    let chars: Vec<char> = line.chars().collect();
+
+    if character >= chars.len() {
+        return String::new();
+    }
+
+    // Find word boundaries
+    let mut start = character;
+    let mut end = character;
+
+    // Move start backwards
+    while start > 0 && (chars[start - 1].is_alphanumeric() || chars[start - 1] == '_') {
+        start -= 1;
+    }
+
+    // Move end forwards
+    while end < chars.len() && (chars[end].is_alphanumeric() || chars[end] == '_') {
+        end += 1;
+    }
+
+    chars[start..end].iter().collect()
+}
+
+/// Basic code formatter for Fusion
+fn format_fusion_code(code: &str) -> String {
+    let mut formatted = String::new();
+    let mut indent_level = 0;
+
+    for line in code.lines() {
+        let trimmed = line.trim();
+
+        // Decrease indent for closing braces
+        if trimmed.starts_with('}') {
+            indent_level = indent_level.saturating_sub(1);
+        }
+
+        // Add indentation
+        if !trimmed.is_empty() {
+            formatted.push_str(&"    ".repeat(indent_level));
+            formatted.push_str(trimmed);
+            formatted.push('\n');
+        } else {
+            formatted.push('\n');
+        }
+
+        // Increase indent for opening braces
+        if trimmed.ends_with('{') {
+            indent_level += 1;
+        }
+    }
+
+    formatted
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_word() {
+        assert_eq!(extract_word_at_position("let foo = 42;", 4), "foo");
+        assert_eq!(
+            extract_word_at_position("HashMap<int, string>", 0),
+            "HashMap"
+        );
+        assert_eq!(extract_word_at_position("my_variable", 5), "my_variable");
+    }
+
+    #[test]
+    fn test_format_code() {
+        let input = "fn main() {\nlet x = 42;\n}";
+        let output = format_fusion_code(input);
+        assert!(output.contains("    let x = 42;"));
+    }
+}

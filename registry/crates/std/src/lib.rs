@@ -9,6 +9,8 @@ pub mod error {
     pub enum StdError {
         #[error("IO error: {0}")]
         Io(#[from] std::io::Error),
+        #[error("IO error: {0}")]
+        IoError(String),
         #[error("Parse error: {0}")]
         Parse(String),
         #[error("Configuration error: {0}")]
@@ -21,6 +23,10 @@ pub mod error {
         Serialization(String),
         #[error("Permission denied: {0}")]
         PermissionDenied(String),
+        #[error("Invalid input: {0}")]
+        InvalidInput(String),
+        #[error("Not found: {0}")]
+        NotFound(String),
     }
 
     pub type StdResult<T> = Result<T, StdError>;

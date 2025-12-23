@@ -1,0 +1,89 @@
+// reactor_cli/src/lib.rs
+// The Enhanced Fusion CLI Parser with Multi-Version Support
+
+use clap::Parser;
+use colored::*;
+use serde::Serialize;
+
+pub mod context;
+pub mod interactive;
+pub mod ipc;
+pub mod prelude;
+pub mod schema;
+
+/// Defines the target runtime capabilities
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuntimeVersion {
+    V1,        // Native
+    Nebula20,  // Strict WASM
+    Nebula21,  // WASM + Host Calls
+    Supernova, // Distributed
+}
+
+/// The main trait for ReactorCLI structs.
+pub trait ReactorClap: Parser + Serialize + Sized {
+    /// Define the runtime version this CLI is built for.
+    /// Can be overridden by impl or feature flags.
+    fn runtime_version() -> RuntimeVersion {
+        if cfg!(feature = "supernova") {
+            RuntimeVersion::Supernova
+        } else if cfg!(feature = "nebula_2_1") {
+            RuntimeVersion::Nebula21
+        } else if cfg!(target_arch = "wasm32") {
+            RuntimeVersion::Nebula20
+        } else {
+            RuntimeVersion::V1
+        }
+    }
+
+    /// Parse from args, env, config, OR prompt user interactively.
+    fn parse_enhanced() -> Self {
+        match Self::try_parse() {
+            Ok(s) => s,
+            Err(e) => {
+                // Check if we allow interactive mode
+                let version = Self::runtime_version();
+
+                // Nebula 2.0 (Strict) cannot use TUI
+                if version == RuntimeVersion::Nebula20 {
+                    eprintln!(
+                        "{} missing args in strict sandbox (v2.0). Interactive mode disabled.",
+                        "Error:".red()
+                    );
+                    e.exit();
+                }
+
+                // Attempt Interactive Wizard
+                println!("{}", "MISSING ARGUMENTS DETECTED".yellow().bold());
+
+                let result = if version == RuntimeVersion::Nebula21 {
+                    println!("Requesting input via Host Bridge (v2.1)...");
+                    interactive::wizard::<Self>(true)
+                } else {
+                    println!("Entering Reactor Interactive Mode (v1/v3)...\n");
+                    interactive::wizard::<Self>(false)
+                };
+
+                match result {
+                    Ok(s) => s,
+                    Err(err_msg) => {
+                        eprintln!("{} {}", "Interactive wizard failed:".red(), err_msg);
+                        e.exit();
+                    }
+                }
+            }
+        }
+    }
+
+    fn export_schema() -> String {
+        let cmd = Self::command();
+        let schema = schema::CliSchema::from_command(&cmd);
+        serde_json::to_string_pretty(&schema).unwrap()
+    }
+}
+
+impl<T> ReactorClap for T where T: Parser + Serialize {}
+
+pub fn resolve_context(key: &str) -> Option<String> {
+    context::resolve_key(key)
+}

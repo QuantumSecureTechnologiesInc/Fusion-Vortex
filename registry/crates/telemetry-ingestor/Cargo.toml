@@ -9,10 +9,10 @@ repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming
 keywords = ["fusion", "framework"]
 categories = ["development-tools", "framework"]
 readme = "README.md"
+
 [dependencies]
 fusion_core = { workspace = true }
-fusion_net.workspace = true
-fusion_std.workspace = true
-prometheus = "0.14.0"
-
-
+fusion_std = { workspace = true }
+tokio = { workspace = true, features = ["net", "io-util", "rt-multi-thread", "macros"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

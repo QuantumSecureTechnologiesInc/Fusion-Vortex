@@ -2,6 +2,7 @@
 #![allow(unused_variables)]
 
 use super::{Package, Version, VersionRequirement};
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -85,13 +86,21 @@ impl PackageUtils {
         Ok(())
     }
 
-    /// Compute checksum of file
+    /// Compute SHA256 checksum of file
     pub fn compute_checksum(path: &Path) -> Result<String, String> {
         let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
 
-        // TODO: Implement actual SHA256
-        // For now, return placeholder
-        Ok(format!("sha256:{:x}", data.len()))
+        let mut hasher = Sha256::new();
+        hasher.update(&data);
+        let result = hasher.finalize();
+
+        Ok(format!("sha256:{:x}", result))
+    }
+
+    /// Verify file checksum
+    pub fn verify_checksum(path: &Path, expected: &str) -> Result<bool, String> {
+        let actual = Self::compute_checksum(path)?;
+        Ok(actual == expected)
     }
 
     /// Pretty print package tree
@@ -213,7 +222,7 @@ impl VersionReqParser {
     }
 }
 
-#[cfg(test)]
+#[cfg(test)]]
 mod tests {
     use super::*;
 
@@ -227,6 +236,26 @@ mod tests {
         assert!(PackageUtils::validate_package_name("My-Package").is_err());
         assert!(PackageUtils::validate_package_name("-invalid").is_err());
         assert!(PackageUtils::validate_package_name("invalid-").is_err());
+    }
+
+    #[test]
+    fn test_sha256_checksum() {
+        use std::io::Write;
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_checksum.txt");
+
+        let mut file = fs::File::create(&test_file).unwrap();
+        file.write_all(b"Hello, Fusion!").unwrap();
+        drop(file);
+
+        let checksum = PackageUtils::compute_checksum(&test_file).unwrap();
+        assert!(checksum.starts_with("sha256:"));
+        assert!(checksum.len() > 7); // "sha256:" + hex
+
+        // Verify checksum
+        assert!(PackageUtils::verify_checksum(&test_file, &checksum).unwrap());
+
+        fs::remove_file(test_file).ok();
     }
 
     #[test]

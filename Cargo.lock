@@ -1492,6 +1492,22 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "crossterm"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e64e6c0fbe2c17357405f7c758c1ef960fce08bdfb2c03d88d2a18d7e09c4b67"
+dependencies = [
+ "bitflags 1.3.2",
+ "crossterm_winapi",
+ "libc",
+ "mio 0.8.11",
+ "parking_lot",
+ "signal-hook",
+ "signal-hook-mio",
+ "winapi",
+]
+
+[[package]]
+name = "crossterm"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f476fe445d41c9e991fd07515a6f463074b782242ccf4a5b7b1d1012e70824df"
@@ -2097,6 +2113,7 @@ dependencies = [
  "fusion-vscode-runtime",
  "git2",
  "lazy_static",
+ "reactor-cli",
  "serde",
  "serde_json",
  "tokio",
@@ -2386,7 +2403,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "clap",
- "crossterm",
+ "crossterm 0.27.0",
  "dirs",
  "fusion-agent-core",
  "fusion-browser-agent",
@@ -2394,6 +2411,7 @@ dependencies = [
  "fusion-settings",
  "fusion-task-groups",
  "ratatui",
+ "reactor-cli",
  "serde",
  "serde_json",
  "tempfile",
@@ -2459,6 +2477,15 @@ dependencies = [
  "pqcrypto-mldsa",
  "pqcrypto-mlkem",
  "sha3",
+]
+
+[[package]]
+name = "fusion-cuda-driver"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "log",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2869,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "fusion-runtime-core-v2-nebula"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2880,6 +2907,28 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tokio-test",
+ "tonic",
+ "tonic-build",
+ "wasmtime 16.0.0",
+]
+
+[[package]]
+name = "fusion-runtime-core-v3-supernova"
+version = "3.0.0"
+dependencies = [
+ "anyhow",
+ "criterion",
+ "crossbeam-queue",
+ "env_logger",
+ "fusion-cuda-driver",
+ "futures",
+ "io-uring",
+ "log",
+ "num_cpus",
+ "parking_lot",
+ "prost",
+ "thiserror 1.0.69",
  "tokio-test",
  "tonic",
  "tonic-build",
@@ -3856,6 +3905,8 @@ dependencies = [
  "fusion_runtime_core",
  "fusion_security",
  "fusion_std",
+ "rand 0.8.5",
+ "sha2",
  "tokio",
 ]
 
@@ -3883,11 +3934,10 @@ version = "0.2.0"
 dependencies = [
  "criterion",
  "fusion-core",
- "fusion_q_sim",
  "fusion_std",
- "reqwest 0.12.25",
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -3928,11 +3978,11 @@ version = "0.2.0"
 dependencies = [
  "criterion",
  "fusion-core",
- "fusion_q_sim",
  "fusion_std",
- "reqwest 0.12.25",
  "serde",
  "serde_json",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -4086,17 +4136,23 @@ dependencies = [
  "fusion-core",
  "fusion_runtime_core",
  "fusion_std",
+ "regex",
  "sec-policy-engine",
+ "tokio",
 ]
 
 [[package]]
 name = "fusion_sbom_generator"
 version = "0.2.0"
 dependencies = [
+ "chrono",
  "fusion-core",
  "fusion_std",
  "serde",
+ "serde_json",
  "sha2",
+ "tempfile",
+ "walkdir",
 ]
 
 [[package]]
@@ -4219,7 +4275,7 @@ dependencies = [
  "fusion_runtime_core",
  "fusion_std",
  "opentelemetry",
- "prometheus 0.13.4",
+ "prometheus",
 ]
 
 [[package]]
@@ -4277,9 +4333,10 @@ name = "fusion_telemetry_ingestor"
 version = "0.2.0"
 dependencies = [
  "fusion-core",
- "fusion_net",
  "fusion_std",
- "prometheus 0.14.0",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -5380,6 +5437,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "inquire"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c33e7c1ddeb15c9abcbfef6029d8e29f69b52b6d6c891031b88ed91b5065803b"
+dependencies = [
+ "bitflags 1.3.2",
+ "crossterm 0.25.0",
+ "dyn-clone",
+ "lazy_static",
+ "newline-converter",
+ "thiserror 1.0.69",
+ "unicode-segmentation",
+ "unicode-width 0.1.14",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5423,6 +5496,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "189d0897e4cbe8c75efedf3502c18c887b05046e59d28404d4d8e46cbc4d1e86"
 dependencies = [
  "memoffset",
+]
+
+[[package]]
+name = "io-uring"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "595a0399f411a508feb2ec1e970a4a30c249351e30208960d58298de8660b0e5"
+dependencies = [
+ "bitflags 1.3.2",
+ "libc",
 ]
 
 [[package]]
@@ -6288,6 +6371,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "newline-converter"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f71d09d5c87634207f894c6b31b6a2b2c64ea3bdcf71bd5599fdbbe1600c00f"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "nn-gcn"
 version = "0.2.0"
 dependencies = [
@@ -7096,23 +7188,8 @@ dependencies = [
  "lazy_static",
  "memchr",
  "parking_lot",
- "protobuf 2.28.0",
+ "protobuf",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "prometheus"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ca5326d8d0b950a9acd87e6a3f94745394f62e4dae1b1ee22b2bc0c394af43a"
-dependencies = [
- "cfg-if",
- "fnv",
- "lazy_static",
- "memchr",
- "parking_lot",
- "protobuf 3.7.2",
- "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -7192,26 +7269,6 @@ name = "protobuf"
 version = "2.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
-
-[[package]]
-name = "protobuf"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d65a1d4ddae7d8b5de68153b48f6aa3bba8cb002b243dbdbc55a5afbc98f99f4"
-dependencies = [
- "once_cell",
- "protobuf-support",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "protobuf-support"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e36c2f31e0a47f9280fb347ef5e461ffcd2c52dd520d8e216b52f93b0b0d7d6"
-dependencies = [
- "thiserror 1.0.69",
-]
 
 [[package]]
 name = "psm"
@@ -7439,7 +7496,7 @@ dependencies = [
  "bitflags 2.10.0",
  "cassowary",
  "compact_str",
- "crossterm",
+ "crossterm 0.27.0",
  "itertools 0.12.1",
  "lru",
  "paste",
@@ -7474,6 +7531,19 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "reactor-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "colored",
+ "inquire",
+ "lazy_static",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

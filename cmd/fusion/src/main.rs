@@ -1,16 +1,13 @@
-use anyhow::Result;
-use clap::{Parser, Subcommand};
-use tracing::{info, Level};
-use tracing_subscriber::FmtSubscriber;
+use reactor_cli::prelude::*;
 
-mod commands;
-mod welcome;
+use clap::Subcommand;
+use serde::Serialize;
 
 /// Fusion Programming Language CLI
 ///
 /// A next-generation programming language with built-in AI assistance,
 /// post-quantum cryptography, and enterprise-grade tooling.
-#[derive(Parser)]
+#[derive(Parser, Serialize)]
 #[command(
     name = "fusion-vsc",
     version,
@@ -530,7 +527,7 @@ pub enum PolicyCommands {
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
+    let cli = Cli::parse_enhanced();
 
     // First-run welcome experience
     if welcome::WelcomeScreen::is_first_run() {
