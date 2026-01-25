@@ -97,7 +97,7 @@ fusion update             # Update dependencies
 fusion build              # Build project
 fusion run                # Run project
 fusion publish            # Publish to registry
-```
+```text
 
 #### 2. ML Library (80% Complete) - 2,000+ lines
 
@@ -278,7 +278,7 @@ fusion-lang/
 ├── QuickStartGuide.md
 ├── ChangeLog.md
 └── FINAL_PROJECT_SUMMARY.md
-```
+```text
 
 **Total**: **70 files**
 

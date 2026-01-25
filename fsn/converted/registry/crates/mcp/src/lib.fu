@@ -1,0 +1,27 @@
+// SOURCE: registry/crates/mcp/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod client;
+mod protocol;
+mod protocol_v1;
+mod registry;
+mod resource;
+mod servers;
+mod stream;
+mod tool;
+
+pub use client::McpClient;
+pub use protocol::*;
+pub use servers::{FilesystemServer, GitHubServer, WebServer};
+
+mod extension_bridge;
+
+pub use extension_bridge::ExtensionMcpBridge;
+
+mod host;
+pub use host::FusionMcpHost;
+
+mod lsp_bridge;
+pub use lsp_bridge::LspAdapter;
+
+/// MCP library version
+pub const MCP_LIB_VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -1,5 +1,7 @@
 # Fusion AI Training Datasets - Master Index
 
+**Status**: Full coverage complete (all planned datasets now populated)
+
 ## Quick Reference
 
 | Group | Stage   | Dataset File                 | Records | Purpose              | Epochs   |
@@ -30,16 +32,18 @@
 
 ```bash
 pip install transformers datasets torch trl peft bitsandbytes accelerate wandb tensorboard pyyaml
-```
+```text
 
 ## Hardware Requirements
 
 ### GROUP 1 (Full Model Training)
+
 - **Minimum**: 1x NVIDIA A100 (40GB)
 - **Recommended**: 2x NVIDIA A100 (80GB)
 - **Alternative**: 1x H100 (80GB)
 
 ### GROUP 2 (LoRA Training)
+
 - **Minimum**: 1x NVIDIA RTX 4090 (24GB)
 - **Recommended**: 1x NVIDIA A100 (40GB)
 - **4-bit quantization**: Fits on RTX 3090/4090
@@ -47,20 +51,28 @@ pip install transformers datasets torch trl peft bitsandbytes accelerate wandb t
 ## Quick Start
 
 ### GROUP 1: Train The Architect
+
 ```bash
 cd "GROUP 1 - The Architect"
 python train_architect.py --config training_config.yaml --full
-```
+```text
 
 ### GROUP 2: Train The Oracle
+
 ```bash
 cd "GROUP 2 - The Oracle"
 python train_oracle.py --config training_config.yaml
-```
+```text
+
+## AI Serving Providers
+
+Training context and CLI examples now cover these providers:
+Ollama, Qwen, DeepSeek, GPT-OSS, Mistral, Phi, Gemma, and OpenAI-compatible endpoints.
 
 ## Dataset Statistics
 
 ### Total Coverage
+
 - **Syntax examples**: 20
 - **LLVM IR mappings**: 7
 - **Security examples**: 20 (violations + fixes)
@@ -87,6 +99,7 @@ python train_oracle.py --config training_config.yaml
 ## Expected Training Time
 
 ### GROUP 1 (Sequential 4 stages)
+
 - Stage 1: ~2 hours (2 epochs, 20 samples)
 - Stage 2: ~2 hours (3 epochs, 7 samples)
 - Stage 3: ~1.5 hours (2 epochs, 20 samples)
@@ -94,6 +107,7 @@ python train_oracle.py --config training_config.yaml
 - **Total**: ~6 hours on A100
 
 ### GROUP 2 (LoRA)
+
 - Stage 1: ~3 hours (3 epochs, 15 samples)
 - **Total**: ~3 hours on A100 or ~6 hours on RTX 4090
 
@@ -104,33 +118,37 @@ python train_oracle.py --config training_config.yaml
 
 ```bash
 tensorboard --logdir ./models/fusion-architect/runs
-```
+```text
 
 ## Post-Training
 
 ### Merge LoRA Adapters (GROUP 2)
+
 Automatically performed if `merge_adapters: true` in config
 
 ### Export for Inference
+
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model = AutoModelForCausalLM.from_pretrained("./models/fusion-architect-final")
 tokenizer = AutoTokenizer.from_pretrained("./models/fusion-architect-final")
-```
+```text
 
 ## Validation
 
 Test models on held-out Fusion code:
+
 ```python
 prompt = "Write a Fusion function to calculate factorial"
 inputs = tokenizer(prompt, return_tensors="pt")
 outputs = model.generate(**inputs, max_length=200)
 print(tokenizer.decode(outputs[0]))
-```
+```text
 
 ## Directory Structure
-```
+
+```text
 AI Training/
 ├── README.md (from previous conversation)
 ├── TRAINING_INDEX.md (this file)
@@ -150,7 +168,7 @@ AI Training/
     ├── train_oracle.py
     └── Stage 1 - Instruction Fine-Tuning/
         └── instruction_dataset.jsonl
-```
+```text
 
 ## Notes
 

@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-runtime-policy = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_runtime_policy::Hooks;
 fn main() {
     Hooks::install();
 }
-```
+```text
 
 ## License
 

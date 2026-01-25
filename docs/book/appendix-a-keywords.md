@@ -263,7 +263,7 @@ T: 'a                // Lifetime bound
 // Trait objects
 dyn Trait            // Dynamic dispatch
 Box<dyn Trait>       // Boxed trait object
-```
+```text
 
 ---
 

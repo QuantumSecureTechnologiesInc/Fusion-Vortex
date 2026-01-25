@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/fusion-video/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn hello() {
+    println!("Hello from fusion-video!");
+}

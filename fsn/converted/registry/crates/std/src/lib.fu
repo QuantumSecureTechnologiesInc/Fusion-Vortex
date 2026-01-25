@@ -1,0 +1,39 @@
+// SOURCE: registry/crates/std/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Fusion Standard Library Extensions
+//!
+//! Provides common error types and utilities for the Fusion ecosystem.
+
+mod error {
+    use thiserror::Error;
+
+    #[derive(Error, Debug)]
+    enum StdError {
+        #[error("IO error: {0}")]
+        Io(#[from] std::io::Error),
+        #[error("IO error: {0}")]
+        IoError(FString),
+        #[error("Parse error: {0}")]
+        Parse(FString),
+        #[error("Configuration error: {0}")]
+        Config(FString),
+        #[error("Runtime error: {0}")]
+        Runtime(FString),
+        #[error("Core error: {0}")]
+        Core(#[from] fusion_core::FusionError),
+        #[error("Serialization error: {0}")]
+        Serialization(FString),
+        #[error("Permission denied: {0}")]
+        PermissionDenied(FString),
+        #[error("Invalid input: {0}")]
+        InvalidInput(FString),
+        #[error("Not found: {0}")]
+        NotFound(FString),
+    }
+
+    pub type StdResult<T> = Result<T, StdError>;
+}
+
+pub use error::{StdError, StdResult};
+
+mod io;

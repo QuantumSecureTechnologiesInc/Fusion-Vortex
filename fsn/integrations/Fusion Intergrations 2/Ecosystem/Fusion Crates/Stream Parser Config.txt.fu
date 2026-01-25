@@ -1,0 +1,15 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Stream Parser Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_stream_parser"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Parsers for real-time structured streaming output (JSON, tool calls)"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_std = { path = "../std", version = "0.1.0" }
+// fusion_http = { path = "../http", version = "0.1.0" } # Streaming interface
+// serde = { workspace = true }
+// serde_json = { workspace = true }

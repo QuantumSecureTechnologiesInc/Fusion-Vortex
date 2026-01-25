@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/fusion-distributed-training/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing fusion-distributed-training...");
+}

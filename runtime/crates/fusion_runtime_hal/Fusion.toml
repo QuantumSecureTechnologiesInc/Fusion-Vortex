@@ -1,0 +1,36 @@
+[package]
+name = "fusion_runtime_hal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Hardware Abstraction Layer for direct GPU/QPU/Network device access"
+
+[dependencies]
+fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_q_aws_backend = { path = "../../../registry/crates/q-aws-backend/" }
+fusion_q_ibm_backend = { path = "../../../registry/crates/q-ibm-backend/" }
+parking_lot = { workspace = true }
+tracing = { workspace = true }
+socket2 = { workspace = true }
+serde = { workspace = true }
+fusion_std = "1.0.0"
+
+# GPU backends (optional features)
+[dependencies.ash]
+workspace = true
+optional = true
+
+[dependencies.metal]
+workspace = true
+optional = true
+
+[features]
+default = []
+vulkan = ["dep:ash"]
+metal = ["dep:metal"]
+cuda = []
+
+[dev-dependencies]
+criterion = { workspace = true }

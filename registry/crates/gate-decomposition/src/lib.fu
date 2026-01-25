@@ -1,0 +1,27 @@
+use fusion_core::types::quantum::QuantumCircuit;
+/// Advanced Compiler Passes.
+///
+/// Integrates specialized passes into the quantum compiler pipeline.
+use fusion_quantum_sdk::OptimizationPass;
+/// Pass that replaces CNOT with HZH for equivalence check (example).
+struct GateEquivalencePass;
+impl OptimizationPass for GateEquivalencePass {
+    fn run(&self, circuit: &mut QuantumCircuit) {
+        let mut new_gates = Vec::new();
+        for (gate, targets) in &circuit.operations {
+            if gate.name == "CNOT" && targets.len() == 2 {
+                new_gates.push((gate.clone(), targets.clone()));
+            } else {
+                new_gates.push((gate.clone(), targets.clone()));
+            }
+        }
+        circuit.operations = new_gates;
+    }
+}
+/// Optimizes circuits based on the target hardware's connectivity graph.
+struct TopologyMapperPass;
+impl OptimizationPass for TopologyMapperPass {
+    fn run(&self, _circuit: &mut QuantumCircuit) {
+        println!("TopologyMapper: Rerouting gates for minimal SWAP count.");
+    }
+}

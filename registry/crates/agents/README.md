@@ -1,7 +1,7 @@
 # Fusion Agents Framework
 
-**Version:** Workspace  
-**Type:** Agentic AI Framework  
+**Version:** Workspace
+**Type:** Agentic AI Framework
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -31,23 +31,24 @@ use fusion_agents::{Agent, AgentRuntime, CodeReviewerAgent};
 use fusion_ai_core::ModelConfig;
 
 #[tokio::main]
+
 async fn main() -> Result<(), anyhow::Error> {
     // Initialize runtime
     let mut runtime = AgentRuntime::new();
-    
+
     // Create an agent
     let reviewer = CodeReviewerAgent::new(ModelConfig::default());
-    
+
     // spawning agent task
     let task_id = runtime.spawn(reviewer, "src/lib.rs").await?;
-    
+
     // Await result
     let report = runtime.await_result(task_id).await?;
     println!("Review complete: {:?}", report);
-    
+
     Ok(())
 }
-```
+```text
 
 ## Features
 

@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/compiler-passes/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// compiler-passes implementation
+
+struct CompilerPassesModule;

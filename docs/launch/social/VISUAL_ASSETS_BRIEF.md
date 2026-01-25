@@ -9,6 +9,7 @@
 ### Colour Palette
 
 #### Primary Colours
+
 | Name              | Hex       | RGB          | Use           |
 | :---------------- | :-------- | :----------- | :------------ |
 | **Deep Purple**   | `#6B21A8` | 107, 33, 168 | Primary brand |
@@ -16,6 +17,7 @@
 | **Cyber Cyan**    | `#06B6D4` | 6, 182, 212  | Accent        |
 
 #### Background Colours
+
 | Name           | Hex       | Use               |
 | :------------- | :-------- | :---------------- |
 | **Dark Space** | `#0F172A` | Dark mode primary |
@@ -23,6 +25,7 @@
 | **Light**      | `#F8FAFC` | Light mode        |
 
 #### Status Colours
+
 | Name        | Hex       | Use     |
 | :---------- | :-------- | :------ |
 | **Success** | `#22C55E` | Quantum |
@@ -42,7 +45,8 @@
 ## 🖼️ LOGO
 
 ### Primary Logo Description
-```
+
+```text
 A modern, geometric fusion symbol combining:
 
 1. ATOMIC ORBITAL
@@ -70,9 +74,10 @@ AVOID:
 - Overly complex details
 - 3D effects that don't scale
 - Trendy effects that will date
-```
+```text
 
 ### Logo Variations Needed
+
 1. **Full Logo**: Icon + "Fusion" wordmark
 2. **Icon Only**: Square format for avatars
 3. **Favicon**: 16x16, 32x32, 48x48
@@ -80,6 +85,7 @@ AVOID:
 5. **Animated**: Subtle rotation for video intros
 
 ### Logo Sizes
+
 | Use           | Size                | Format                |
 | :------------ | :------------------ | :-------------------- |
 | Favicon       | 16x16, 32x32, 48x48 | ICO, PNG              |
@@ -96,15 +102,17 @@ AVOID:
 ### Twitter/X
 
 #### Avatar (400x400)
-```
+
+```text
 Content: Fusion logo icon (no text)
 Background: Deep purple (#6B21A8) or transparent
 Style: Clean, centered, adequate padding
 Format: PNG, 400x400px
-```
+```text
 
 #### Banner (1500x500)
-```
+
+```text
 Layout (left to right):
 1. Fusion logo (large, left side)
 2. Tagline: "One language. All of computing."
@@ -122,36 +130,40 @@ Accent:
 Text:
 - White/light gray (#F8FAFC)
 - Inter Bold for tagline
-```
+```text
 
 ### LinkedIn
 
 #### Logo (300x300)
-```
+
+```text
 Content: Same as Twitter avatar but optimised for LinkedIn's circle crop
 Background: Solid purple (#6B21A8)
-```
+```text
 
 #### Cover (1128x191)
-```
+
+```text
 Similar to Twitter but:
 - More professional/corporate feel
 - Less playful, more sophisticated
 - "The Quantum-Native Programming Language" text
 - Enterprise imagery subtle in background
-```
+```text
 
 ### YouTube
 
 #### Channel Icon (800x800)
-```
+
+```text
 Content: Fusion logo icon
 Background: Purple gradient
 Border: None (YouTube adds circle)
-```
+```text
 
 #### Channel Banner (2560x1440)
-```
+
+```text
 Safe area: Center 1546x423px
 
 Layout:
@@ -164,10 +176,11 @@ Layout:
 Background:
 - Dark gradient with tech patterns
 - Subtle animated-look elements (circuit traces)
-```
+```text
 
 #### Video Thumbnail Template (1280x720)
-```
+
+```text
 Layout:
 - Bold text (topic) - left or center
 - Relevant icon (⚛️ or 🧠 or 🏢)
@@ -178,42 +191,47 @@ Text style:
 - White or bright text
 - Drop shadow for readability
 - Maximum 4-5 words
-```
+```text
 
 ### Discord
 
 #### Server Icon (512x512)
-```
+
+```text
 Content: Fusion logo icon
 Background: Purple (#6B21A8)
 Format: PNG or GIF
-```
+```text
 
 #### Server Banner (960x540)
-```
+
+```text
 Similar style to YouTube banner
 Visible area is smaller - keep key elements centered
-```
+```text
 
 ### Mastodon
 
 #### Avatar (400x400)
-```
+
+```text
 Same as Twitter avatar
-```
+```text
 
 #### Header (1500x500)
-```
+
+```text
 Same as Twitter banner
 Consider Mastodon's mobile crop
-```
+```text
 
 ---
 
 ## 📊 INFOGRAPHICS
 
 ### "By the Numbers" Infographic
-```
+
+```text
 Dimensions: 1080x1920 (Instagram story) or 1200x628 (Twitter)
 
 Content:
@@ -231,10 +249,11 @@ Style:
 - Each stat in glowing card/block
 - Gradient accents
 - Consistent iconography
-```
+```text
 
 ### "Feature Comparison" Infographic
-```
+
+```text
 Dimensions: 1200x1600 or similar
 
 Content:
@@ -248,10 +267,11 @@ Style:
 - Fusion column in brand purple
 - Other columns in neutral gray
 - Clear typography
-```
+```text
 
 ### "Architecture Overview" Diagram
-```
+
+```text
 Dimensions: 1600x900 or 16:9
 
 Content:
@@ -267,14 +287,15 @@ Style:
 - Diagram style (boxes and arrows)
 - Purple/blue colour scheme
 - Clean, technical look
-```
+```text
 
 ---
 
 ## 🎬 VIDEO ASSETS
 
 ### Intro Animation (5 seconds)
-```
+
+```text
 Animation sequence:
 1. [0-1s] Black screen, stars appear
 2. [1-2s] Atom orbital paths draw in (purple)
@@ -286,10 +307,11 @@ Audio: Subtle synth whoosh + subtle bass hit on fusion
 
 Resolution: 1920x1080 minimum, 4K preferred
 Format: MP4, MOV (with alpha for overlay)
-```
+```text
 
 ### Lower Third Template
-```
+
+```text
 Content:
 - Fusion logo (small, left)
 - Title/Name text
@@ -300,10 +322,11 @@ Style:
 - Purple accent bar on left
 - White text
 - Subtle animation on appear/disappear
-```
+```text
 
 ### End Card Template (20 seconds)
-```
+
+```text
 Layout:
 - Fusion logo (center)
 - "Subscribe" button placeholder (left)
@@ -313,14 +336,15 @@ Layout:
 Style:
 - Animated background (subtle particle movement)
 - Brand colours
-```
+```text
 
 ---
 
 ## 📄 DOCUMENT TEMPLATES
 
 ### Presentation Template (Google Slides/PowerPoint)
-```
+
+```text
 Slide Master:
 - Title slide: Large logo, title, subtitle
 - Content slide: Header, body area, subtle branding
@@ -333,10 +357,11 @@ Style:
 - Dark theme primary (matches brand)
 - Light theme variant option
 - Consistent fonts (Inter family)
-```
+```text
 
 ### Documentation Template
-```
+
+```text
 Header:
 - Fusion logo (small, top left)
 - Page title
@@ -350,7 +375,7 @@ Style:
 - Clean, readable
 - Tables styled with brand colours
 - Code blocks with syntax highlighting
-```
+```text
 
 ---
 
@@ -380,42 +405,45 @@ Style:
 ## ✍️ AI IMAGE GENERATION PROMPTS
 
 ### Logo Generation Prompt
-```
-A minimalist logo for "Fusion Programming Language" tech company. 
-Geometric design combining atomic orbital paths and neural network nodes. 
-Deep purple (#6B21A8) to electric blue (#3B82F6) gradient. 
-Clean lines, scalable design. No text in image. 
-White background for visibility. 
+
+```text
+A minimalist logo for "Fusion Programming Language" tech company.
+Geometric design combining atomic orbital paths and neural network nodes.
+Deep purple (#6B21A8) to electric blue (#3B82F6) gradient.
+Clean lines, scalable design. No text in image.
+White background for visibility.
 Modern, futuristic, professional tech aesthetic.
-```
+```text
 
 ### Social Banner Prompt
-```
-A wide technology banner (1500x500) for a quantum computing programming language called Fusion. 
-Left side: geometric logo representing atomic orbitals fused with neural network. 
-Center: subtle text area for tagline. 
-Right side: three abstract icons representing an atom, brain, and building. 
-Background: deep blue-purple dark gradient with subtle circuit board pattern. 
-Modern, sleek, tech aesthetic. 
+
+```text
+A wide technology banner (1500x500) for a quantum computing programming language called Fusion.
+Left side: geometric logo representing atomic orbitals fused with neural network.
+Center: subtle text area for tagline.
+Right side: three abstract icons representing an atom, brain, and building.
+Background: deep blue-purple dark gradient with subtle circuit board pattern.
+Modern, sleek, tech aesthetic.
 No placeholder text needed.
-```
+```text
 
 ### Infographic Background Prompt
-```
-Abstract technology background for social media infographic. 
-Dark navy blue (#0F172A) base colour. 
-Subtle glowing circuit traces and quantum wave patterns. 
-Faint grid lines suggesting precision and technology. 
-Space for overlay text and stats. 
-Modern data visualisation aesthetic. 
+
+```text
+Abstract technology background for social media infographic.
+Dark navy blue (#0F172A) base colour.
+Subtle glowing circuit traces and quantum wave patterns.
+Faint grid lines suggesting precision and technology.
+Space for overlay text and stats.
+Modern data visualisation aesthetic.
 Safe for text overlay (not too busy).
-```
+```text
 
 ---
 
 ## 📁 FILE NAMING CONVENTION
 
-```
+```text
 fusion-[asset]-[variant]-[size].[format]
 
 Examples:
@@ -425,14 +453,15 @@ fusion-twitter-avatar-400x400.png
 fusion-twitter-banner-v1-1500x500.png
 fusion-youtube-thumbnail-quantum-1280x720.png
 fusion-infographic-stats-1200x628.png
-```
+```text
 
 ---
 
 ## 📦 DELIVERY FORMAT
 
 ### Required Files
-```
+
+```text
 /brand-assets/
 ├── /logos/
 │   ├── fusion-logo-icon-512.svg
@@ -454,9 +483,9 @@ fusion-infographic-stats-1200x628.png
 └── /templates/
     ├── presentation.pptx
     └── document.docx
-```
+```text
 
 ---
 
-*Document Version: 1.0.0*  
+*Document Version: 1.0.0*
 *Last Updated: December 11, 2025*

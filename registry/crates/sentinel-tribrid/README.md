@@ -9,25 +9,29 @@ Sentinael Tri-Brid is a military-grade autonomous agent that protects software s
 ## Features
 
 ### 🔮 Chaos Math Engine
+
 - Deterministic entropy source using logistic maps (r=3.999)
 - High-entropy key material generation
 - Unpredictable cryptographic operations
 
 ### 🌀 Oscillating Security Mesh
+
 - Moving Target Defence (MTD) with dynamic access vectors
 - Time-based security oscillation (default: 5-second intervals)
 - Three security states: Secure, Shifting, Locked
 
 ### 🔐 Chaos-Enhanced Cryptography
+
 - HMAC-SHA512 with chaos-seeded keys
 - State-evolving signatures
 - Prevents AI-driven pattern analysis
 
 ### 🛡️ Tri-Brid Red undancy
+
 Three-tier fallback system ensures operational resilience:
 
 1. **Apex** (Speed): Fast heuristic update engine
-2. **Audit** (Safety): Double-blind verification protocol  
+2. **Audit** (Safety): Double-blind verification protocol
 3. **Golden** (Resilience): Immutable rollback mechanism
 
 ## Quick Start
@@ -41,7 +45,7 @@ agent.initialize()?;
 
 // Monitor a crate
 agent.monitor_and_optimize("my_crate", false)?;
-```
+```text
 
 ## CLI Usage
 
@@ -49,7 +53,7 @@ agent.monitor_and_optimize("my_crate", false)?;
 
 ```bash
 fusion sentinel init
-```
+```text
 
 Creates `sentinel_vault.json` and registers core components.
 
@@ -57,7 +61,7 @@ Creates `sentinel_vault.json` and registers core components.
 
 ```bash
 fusion sentinel monitor
-```
+```text
 
 Launches the autonomous agent in monitoring mode.
 
@@ -65,7 +69,7 @@ Launches the autonomous agent in monitoring mode.
 
 ```bash
 fusion sentinel monitor --test-fail
-```
+```text
 
 Simulates Apex algorithm failure to test the Audit → Golden fallback chain.
 
@@ -83,7 +87,7 @@ graph TB
     F -->|Fail| H[Audit Protocol]
     H -->|Pass| G
     H -->|Fail| I[Golden Rollback]
-```
+```text
 
 ## Security Model
 
@@ -91,11 +95,11 @@ graph TB
 
 The Oscillating Mesh shifts entry vectors every 5 seconds based on chaotic attractors. This makes the attack surface unpredictable:
 
-```
+```text
 Vector Range: 8000-9000 (dynamically generated)
 Shift Interval: 5 seconds (configurable)
 Validation: Exact match required
-```
+```text
 
 ### Chaos-Enhanced HMAC
 
@@ -106,7 +110,7 @@ Traditional HMAC uses static keys. Sentinael uses chaos-seeded keys that evolve 
 let sig1 = crypto.sign(data)?;  // State: x₁
 let sig2 = crypto.sign(data)?;  // State: x₂
 assert_ne!(sig1, sig2);          // Signatures differ!
-```
+```text
 
 ## Integration
 
@@ -121,7 +125,7 @@ let runtime = Runtime::new();
 runtime.block_on(async {
     agent.monitor_and_optimize("crate", false).await?;
 });
-```
+```text
 
 ### With Policy Enforcement
 

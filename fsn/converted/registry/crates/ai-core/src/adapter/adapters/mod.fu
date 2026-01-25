@@ -1,0 +1,13 @@
+// SOURCE: registry/crates/ai-core/src/adapter/adapters/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod anthropic;
+mod google;
+mod local;
+mod openai;
+
+pub use anthropic::{
+    AnthropicAdapter, AnthropicConfig, AnthropicMessage, ContentBlock, ImageSource, Tool,
+};
+pub use google::{GoogleAdapter, GoogleConfig, GoogleContent, GooglePart};
+pub use local::{LocalAdapter, LocalConfig};
+pub use openai::{OpenAIAdapter, OpenAIConfig, OpenAIMessage};

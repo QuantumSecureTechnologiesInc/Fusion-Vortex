@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-wasm-server = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_wasm_server::Server;
 fn main() {
     Server::new().run();
 }
-```
+```text
 
 ## License
 

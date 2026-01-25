@@ -1,0 +1,19 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 2 - The Connectivity Layer/fusion_net/Networking Crate Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_net"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Secure-by-default networking stack for Fusion"
+// license = "MIT"
+// 
+// [dependencies]
+// # Fusion Ecosystem
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_std = { path = "../std", version = "0.1.0" }
+// 
+// # Async Runtime
+// tokio = { version = "1.0", features = ["net", "time", "io-util"] }
+// thiserror = "1.0"
+// async-trait = "0.1"

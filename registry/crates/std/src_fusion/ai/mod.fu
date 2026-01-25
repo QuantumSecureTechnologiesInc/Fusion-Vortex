@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: ai (stub)
+fn _ai_stub() -> void { }

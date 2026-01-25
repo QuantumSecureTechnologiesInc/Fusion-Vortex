@@ -35,14 +35,14 @@ use fusion_security::rand::SecureRng
 
 fn main() {
     let mut rng = SecureRng::new()
-    
+
     // Alice generates a keypair
     let (pk, sk) = kyber::keypair_1024(&mut rng).expect("Keygen failed")
-    
+
     // pk: Public Key (send to Bob)
     // sk: Secret Key (keep safe!)
 }
-```
+```text
 
 ### 19.2.2 Encapsulation and Decapsulation
 
@@ -51,17 +51,17 @@ fn main() {
     // He encapsulates a shared secret
     let (ciphertext, shared_secret_bob) = kyber::encapsulate_1024(&pk, &mut rng)
         .expect("Encap failed")
-    
+
     // Bob sends `ciphertext` to Alice
-    
+
     // Alice uses her Secret Key (sk) to decapsulate
     let shared_secret_alice = kyber::decapsulate_1024(&ciphertext, &sk)
         .expect("Decap failed")
-        
+
     assert_eq!(shared_secret_bob, shared_secret_alice)
     println("Secure channel established!")
 }
-```
+```text
 
 This shared secret can now be used as a key for symmetric encryption (like AES-256 or ChaCha20), which are quantum-resistant.
 
@@ -78,18 +78,18 @@ use fusion_security::pqc::dilithium
 
 fn main() {
     let (pk, sk) = dilithium::keypair_5(&mut SecureRng::new()).unwrap()
-    
+
     let message = b"Authorize transaction #9921"
-    
+
     // Sign the message
     let signature = dilithium::sign_5(message, &sk)
-    
+
     // Verify the signature
     let valid = dilithium::verify_5(message, &signature, &pk)
-    
+
     assert!(valid)
 }
-```
+```text
 
 ---
 
@@ -109,7 +109,7 @@ fn configure_server() -> TlsConfig {
         .build()
         .unwrap()
 }
-```
+```text
 
 ---
 
@@ -118,6 +118,7 @@ fn configure_server() -> TlsConfig {
 Beyond algorithms, Fusion's language features promote security.
 
 ### 19.5.1 Memory Safety
+
 As discussed in Chapter 4, Fusion eliminates buffer overflows, use-after-free, and double-free errors. This kills an entire class of exploits (like Heartbleed).
 
 ### 19.5.2 Type State Pattern for Security
@@ -137,7 +138,7 @@ impl User<Unauthenticated> {
     fn new(name: String) -> Self {
         User { username: name, state: Unauthenticated }
     }
-    
+
     fn login(self, password: &str) -> Option<User<Authenticated>> {
         if check_password(&self.username, password) {
             Some(User { username: self.username, state: Authenticated })
@@ -156,12 +157,12 @@ impl User<Authenticated> {
 fn main() {
     let u = User::new("admin".into())
     // u.view_sensitive_data() // Compile Error! Unauthenticated users have no such method.
-    
+
     if let Some(auth_u) = u.login("password123") {
         auth_u.view_sensitive_data() // OK
     }
 }
-```
+```text
 
 ### 19.5.3 Zeroizing Memory
 
@@ -171,11 +172,14 @@ Sensitive data (keys, passwords) should be wiped from memory when dropped.
 use fusion_security::Zeroize
 
 #[derive(Zeroize)]
+
+
 #[zeroize(drop)] // Automatically wipe on drop
+
 struct SecretKey {
     key_bytes: [u8; 32],
 }
-```
+```text
 
 ---
 
@@ -192,9 +196,9 @@ By using Fusion, you are essentially "future-proofing" your application against 
 
 ## 19.7 Exercises
 
-1.  **Secure Chat**: Build a simple chat client that performs a Kyber handshake to establish a shared key, then encrypts messages with ChaCha20Poly1305.
-2.  **Signature Verifier**: Create a CLI tool that takes a file, a signature, and a public key, and verifies if the file was signed by the key owner.
-3.  **Type-State**: Implement a `File` wrapper that requires a `scan_for_virus()` method to be called before `read()` becomes available (using the type state pattern).
+1. **Secure Chat**: Build a simple chat client that performs a Kyber handshake to establish a shared key, then encrypts messages with ChaCha20Poly1305.
+2. **Signature Verifier**: Create a CLI tool that takes a file, a signature, and a public key, and verifies if the file was signed by the key owner.
+3. **Type-State**: Implement a `File` wrapper that requires a `scan_for_virus()` method to be called before `read()` becomes available (using the type state pattern).
 
 ---
 

@@ -1,0 +1,14 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Fusion Runtime Core Upgrade/CUDA Build Script.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// fn main() {
+//     #[cfg(feature = "gpu")]
+//     {
+//         cc::Build::new()
+//             .cuda(true)
+//             .flag("-gencode").flag("arch=compute_75,code=sm_75")
+//             .file("kernels/fusion_ops.cu")
+//             .compile("fusion_cuda");
+//         println!("cargo:rustc-link-lib=dylib=cudart");
+//     }
+// }

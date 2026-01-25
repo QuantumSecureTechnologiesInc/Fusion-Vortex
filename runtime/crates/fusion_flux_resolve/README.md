@@ -1,7 +1,7 @@
 # Flux-Resolve Engine
 
-**Location:** `runtime/crates/fusion_flux_resolve`  
-**Status:** ✅ Migrated to Fusion Runtime  
+**Location:** `runtime/crates/fusion_flux_resolve`
+**Status:** ✅ Migrated to Fusion Runtime
 **Version:** 0.3.0
 
 ## Overview
@@ -18,13 +18,13 @@ The Flux-Resolve Engine is a Fusion-native dependency resolution module that has
 
 This module follows the Fusion architecture pattern:
 
-```
+```text
 Fusion Module (stdlib/flux_resolve.fu) - Core logic in Fusion
     ↓ FFI
 Rust Bridge (runtime/crates/fusion_flux_resolve) - System operations
     ↓
 OS (File I/O, GPU, Network)
-```
+```text
 
 ## Components
 
@@ -42,7 +42,7 @@ extern "C" fn flux_resolve_bridge_create() -> *mut FluxResolveBridge
 extern "C" fn flux_resolve_bridge_destroy(bridge: *mut FluxResolveBridge)
 extern "C" fn flux_resolve_cache_get(...) -> *mut u8
 extern "C" fn flux_resolve_cache_put(...)
-```
+```text
 
 ## Building
 
@@ -50,7 +50,7 @@ extern "C" fn flux_resolve_cache_put(...)
 cd runtime
 cargo build -p fusion_flux_resolve
 cargo test -p fusion_flux_resolve
-```
+```text
 
 ## Integration
 

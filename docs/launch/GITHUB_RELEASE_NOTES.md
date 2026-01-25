@@ -2,7 +2,7 @@
 
 ## The World's First Quantum-Native Programming Language
 
-**Release Date**: December 11, 2025  
+**Release Date**: December 11, 2025
 **Codename**: "Event Horizon"
 
 ---
@@ -35,7 +35,7 @@ This is a **historic release** - the first programming language to unify Classic
 ### Package Categories
 
 - **Foundation (11)**: Runtime, scheduler, memory management
-- **Connectivity (10)**: HTTP, gRPC, WebSocket, cryptography  
+- **Connectivity (10)**: HTTP, gRPC, WebSocket, cryptography
 - **AI/ML (50)**: Models, training, inference, CUDA
 - **Quantum (15)**: Simulators, algorithms, hardware backends
 - **Enterprise (40)**: K8s, FaaS, security, observability
@@ -46,12 +46,15 @@ This is a **historic release** - the first programming language to unify Classic
 ## 🚀 Installation
 
 ```bash
+
 # Via Cargo
+
 cargo install fusion-lang --version 1.0.0
 
 # Verify
+
 fusion --version
-```
+```text
 
 ---
 
@@ -66,7 +69,7 @@ fn main():
     let q = Qubit::new()
     h(q)  // Superposition
     print(measure(q))
-```
+```text
 
 ### AI Model Loading
 
@@ -76,7 +79,7 @@ import ai.models.llama
 fn main():
     let model = Llama3::load("7b-chat")
     print(model.generate("Hello!"))
-```
+```text
 
 ---
 

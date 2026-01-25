@@ -1,7 +1,7 @@
 # Fusion Jordan-Wigner
 
-**Version:** 0.2.0  
-**Type:** Quantum Transform  
+**Version:** 0.2.0
+**Type:** Quantum Transform
 **License:** MIT
 
 ## Overview
@@ -21,12 +21,12 @@ use fusion_jordan_wigner::transform;
 use fusion_quantum_sdk::Hamiltonian;
 
 // Define Fermionic Hamiltonian
-let fermi_ham = Hamiltonian::new(); 
+let fermi_ham = Hamiltonian::new();
 // ... add terms ...
 
 // Transform to Qubit Hamiltonian
 let qubit_ham = transform(&fermi_ham)?;
-```
+```text
 
 ## Dependencies
 

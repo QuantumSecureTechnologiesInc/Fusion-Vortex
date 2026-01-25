@@ -1,0 +1,879 @@
+//! IR lowering and definitions.
+#![allow(missing_docs)]
+use crate::ast;
+use crate::sema::{self, TypedExpressionKind};
+use generational_arena::{Arena, Index};
+/// IR module with functions, string constants, and externs.
+#[derive(Debug)]
+struct Module {
+    /// IR functions.
+    pub functions: FVec<Function>,
+    /// Global string literals.
+    pub strings: FVec<FString>,
+    /// External function declarations.
+    pub externs: FVec<sema::TypedExternFunction>,
+    /// Struct definitions.
+    pub structs: FVec<sema::TypedStructDefinition>,
+}
+/// IR function definition.
+#[derive(Debug)]
+struct Function {
+    /// Name of the function.
+    pub name: FString,
+    /// Parameters and types.
+    pub params: FVec<(FString, ast::Type)>,
+    /// Return type.
+    pub return_type: ast::Type,
+    /// Basic blocks.
+    pub blocks: Arena<BasicBlock>,
+    /// Entry block index.
+    pub entry_block: Index,
+}
+/// Basic block of IR instructions.
+#[derive(Debug)]
+struct BasicBlock {
+    /// Block label.
+    pub label: FString,
+    /// Instructions.
+    pub instrs: FVec<Instruction>,
+    /// Block terminator.
+    pub terminator: Terminator,
+}
+/// Value with type information.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TypedValue {
+    /// Raw value.
+    pub val: Value,
+    /// Value type.
+    pub ty: ast::Type,
+}
+/// IR values.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum Value {
+    /// Integer constant.
+    IntConst(FI64),
+    /// Boolean constant.
+    BoolConst(FBool),
+    /// String constant index.
+    StringConst(FSize),
+    /// Variable value.
+    Variable(FString),
+    /// Temporary value.
+    Temporary(FSize),
+}
+/// Address forms for loads/stores.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum Address {
+    /// Variable address with declared type.
+    Variable { name: FString, ty: ast::Type },
+    /// Pointer value to a specific type.
+    Pointer { val: TypedValue, pointed_to_ty: ast::Type },
+    /// Array element address.
+    Element { base: Box<Address>, index: TypedValue, element_ty: ast::Type },
+    /// Struct field address.
+    Field {
+        base: Box<Address>,
+        field_index: FSize,
+        field_ty: ast::Type,
+        struct_name: FString,
+    },
+}
+/// IR instructions.
+#[derive(Debug)]
+enum Instruction {
+    /// Stack allocation for a local.
+    Alloca { name: FString, ty: ast::Type },
+    /// Binary operation.
+    BinaryOperation {
+        dest: TypedValue,
+        op: ast::BinaryOp,
+        op1: TypedValue,
+        op2: TypedValue,
+    },
+    /// Function call.
+    Call { dest: Option<TypedValue>, func_name: FString, args: FVec<TypedValue> },
+    /// Load from address.
+    Load { dest: TypedValue, src: Address },
+    /// Store to address.
+    Store { dest: Address, val: TypedValue },
+    /// Get address of a variable.
+    GetAddress { dest: TypedValue, var_name: FString },
+    /// Compute element pointer.
+    GetElementPtr {
+        dest: TypedValue,
+        base_ptr: TypedValue,
+        index: TypedValue,
+        element_ty: ast::Type,
+    },
+    /// Compute struct field pointer.
+    GetFieldPtr {
+        dest: TypedValue,
+        base_ptr: TypedValue,
+        field_index: FSize,
+        field_ty: ast::Type,
+        struct_name: FString,
+    },
+    /// Emit a runtime bounds failure.
+    BoundsFail { message: FString },
+}
+/// Terminator instructions.
+#[derive(Debug)]
+enum Terminator {
+    /// Return from function.
+    Return(Option<TypedValue>),
+    /// Unconditional jump.
+    Jump(Index),
+    /// Conditional jump.
+    ConditionalJump { cond: TypedValue, then_block: Index, else_block: Index },
+}
+/// Lowers typed AST into IR.
+struct Lowerer {
+    blocks: Arena<BasicBlock>,
+    current_block: Index,
+    tmp_counter: FSize,
+    strings: FVec<FString>,
+    uses_panic: FBool,
+}
+impl Lowerer {
+    /// Creates a new lowerer.
+    pub fn new() -> Self {
+        let mut blocks = Arena::new();
+        let current_block = blocks
+            .insert(BasicBlock {
+                label: "dummy".into(),
+                instrs: vec![],
+                terminator: Terminator::Return(None),
+            });
+        Self {
+            blocks,
+            current_block,
+            tmp_counter: 0,
+            strings: Vec::new(),
+            uses_panic: false,
+        }
+    }
+    /// Lowers a typed program into IR.
+    pub fn lower_program(mut self, prog: sema::TypedProgram) -> Module {
+        let sema::TypedProgram { functions: typed_functions, externs, structs } = prog;
+        let mut functions = Vec::new();
+        for func in typed_functions {
+            functions.push(self.lower_function(func));
+        }
+        let mut externs = externs;
+        if self.uses_panic && !externs.iter().any(|e| e.name == "panic") {
+            externs
+                .push(sema::TypedExternFunction {
+                    name: "panic".to_string(),
+                    params: vec![("msg".to_string(), ast::Type::String)],
+                    return_type: ast::Type::Void,
+                    is_variadic: false,
+                });
+        }
+        Module {
+            functions,
+            strings: self.strings,
+            externs,
+            structs,
+        }
+    }
+    fn typed_val(&self, val: Value, ty: ast::Type) -> TypedValue {
+        TypedValue { val, ty }
+    }
+    fn new_tmp(&mut self) -> Value {
+        let v = Value::Temporary(self.tmp_counter);
+        self.tmp_counter += 1;
+        v
+    }
+    fn new_tmp_typed(&mut self, ty: ast::Type) -> TypedValue {
+        let val = self.new_tmp();
+        self.typed_val(val, ty)
+    }
+    fn new_ptr_tmp(&mut self, pointee: ast::Type) -> TypedValue {
+        self.new_tmp_typed(ast::Type::Pointer(Box::new(pointee)))
+    }
+    fn lower_function(&mut self, func: sema::TypedFunction) -> Function {
+        self.blocks = Arena::new();
+        self.tmp_counter = 0;
+        self.current_block = self.new_block("entry");
+        let entry_block = self.current_block;
+        self.lower_block(func.body);
+        if matches!(self.blocks[self.current_block].terminator, Terminator::Return(None))
+            && func.return_type == ast::Type::Void
+            && self.blocks[self.current_block].instrs.is_empty()
+        {} else if !self.is_terminated(self.current_block) {
+            if func.return_type == ast::Type::Void {
+                self.set_terminator(Terminator::Return(None));
+            }
+        }
+        Function {
+            name: func.name,
+            params: func.params,
+            return_type: func.return_type,
+            blocks: std::mem::replace(&mut self.blocks, Arena::new()),
+            entry_block,
+        }
+    }
+    fn new_block(&mut self, label: &str) -> Index {
+        self.blocks
+            .insert(BasicBlock {
+                label: label.to_string(),
+                instrs: Vec::new(),
+                terminator: Terminator::Jump(Index::from_raw_parts(0, 0)),
+            })
+    }
+    fn switch_to_block(&mut self, block: Index) {
+        self.current_block = block;
+    }
+    fn emit(&mut self, instr: Instruction) {
+        self.blocks[self.current_block].instrs.push(instr);
+    }
+    fn set_terminator(&mut self, term: Terminator) {
+        self.blocks[self.current_block].terminator = term;
+    }
+    fn is_terminated(&self, block: Index) -> FBool {
+        !matches!(
+            self.blocks[block].terminator, Terminator::Jump(idx) if idx.into_raw_parts()
+            .0 == 0
+        )
+    }
+    fn lower_block(&mut self, block: sema::TypedBlock) {
+        for stmt in block {
+            self.lower_statement(stmt);
+        }
+    }
+    fn lower_statement(&mut self, stmt: sema::TypedStatement) {
+        match stmt {
+            sema::TypedStatement::Let { name, ty, value } => {
+                self.emit(Instruction::Alloca {
+                    name: name.clone(),
+                    ty: ty.clone(),
+                });
+                match value.node {
+                    TypedExpressionKind::ArrayLiteral(elements) => {
+                        let element_ty = match ty.clone() {
+                            ast::Type::Array(elem, _) => *elem,
+                            _ => ty.clone(),
+                        };
+                        for (idx, elem) in elements.into_iter().enumerate() {
+                            let index_val = self
+                                .typed_val(Value::IntConst(idx as FI64), ast::Type::Int);
+                            let addr = Address::Element {
+                                base: Box::new(Address::Variable {
+                                    name: name.clone(),
+                                    ty: ty.clone(),
+                                }),
+                                index: index_val,
+                                element_ty: element_ty.clone(),
+                            };
+                            let val = self.lower_expression(elem);
+                            self.emit(Instruction::Store {
+                                dest: addr,
+                                val,
+                            });
+                        }
+                    }
+                    TypedExpressionKind::ArrayRepeat { value, size } => {
+                        let element_ty = match ty.clone() {
+                            ast::Type::Array(elem, _) => *elem,
+                            _ => ty.clone(),
+                        };
+                        let base = Address::Variable {
+                            name: name.clone(),
+                            ty: ty.clone(),
+                        };
+                        self.emit_array_repeat_into(base, element_ty, size, *value);
+                    }
+                    TypedExpressionKind::StructLiteral { name: struct_name, fields } => {
+                        let base = Address::Variable { name, ty };
+                        self.emit_struct_literal_into(base, &struct_name, fields);
+                    }
+                    _ => {
+                        let val = self.lower_expression(value);
+                        let dest = Address::Variable { name, ty };
+                        self.emit(Instruction::Store { dest, val });
+                    }
+                }
+            }
+            sema::TypedStatement::Assignment { target, value } => {
+                let dest_addr = self.lower_to_address(target);
+                match value.node {
+                    TypedExpressionKind::ArrayRepeat { value, size } => {
+                        let element_ty = match &value.ty {
+                            ast::Type::Array(elem, _) => *elem.clone(),
+                            _ => value.ty.clone(),
+                        };
+                        self.emit_array_repeat_into(dest_addr, element_ty, size, *value);
+                    }
+                    TypedExpressionKind::StructLiteral { name: struct_name, fields } => {
+                        self.emit_struct_literal_into(dest_addr, &struct_name, fields);
+                    }
+                    _ => {
+                        let val = self.lower_expression(value);
+                        self.emit(Instruction::Store {
+                            dest: dest_addr,
+                            val,
+                        });
+                    }
+                }
+            }
+            sema::TypedStatement::Return(expr_opt) => {
+                let val = expr_opt.map(|e| self.lower_expression(e));
+                self.set_terminator(Terminator::Return(val));
+                let dead_block = self.new_block("dead");
+                self.switch_to_block(dead_block);
+                self.set_terminator(Terminator::Return(None));
+            }
+            sema::TypedStatement::Expression(expr) => {
+                self.lower_expression(expr);
+            }
+            sema::TypedStatement::If { cond, then_block, else_block } => {
+                let cond_val = self.lower_expression(cond);
+                let then_bb = self.new_block("if_then");
+                let merge_bb = self.new_block("if_merge");
+                if let Some(else_block_stmts) = else_block {
+                    let else_bb = self.new_block("if_else");
+                    self.set_terminator(Terminator::ConditionalJump {
+                        cond: cond_val,
+                        then_block: then_bb,
+                        else_block: else_bb,
+                    });
+                    self.switch_to_block(then_bb);
+                    self.lower_block(then_block);
+                    if !self.is_terminated(self.current_block) {
+                        self.set_terminator(Terminator::Jump(merge_bb));
+                    }
+                    self.switch_to_block(else_bb);
+                    self.lower_block(else_block_stmts);
+                    if !self.is_terminated(self.current_block) {
+                        self.set_terminator(Terminator::Jump(merge_bb));
+                    }
+                } else {
+                    self.set_terminator(Terminator::ConditionalJump {
+                        cond: cond_val,
+                        then_block: then_bb,
+                        else_block: merge_bb,
+                    });
+                    self.switch_to_block(then_bb);
+                    self.lower_block(then_block);
+                    if !self.is_terminated(self.current_block) {
+                        self.set_terminator(Terminator::Jump(merge_bb));
+                    }
+                }
+                self.switch_to_block(merge_bb);
+            }
+            sema::TypedStatement::While { cond, body } => {
+                let header_bb = self.new_block("while_header");
+                let body_bb = self.new_block("while_body");
+                let exit_bb = self.new_block("while_exit");
+                self.set_terminator(Terminator::Jump(header_bb));
+                self.switch_to_block(header_bb);
+                let cond_val = self.lower_expression(cond);
+                self.set_terminator(Terminator::ConditionalJump {
+                    cond: cond_val,
+                    then_block: body_bb,
+                    else_block: exit_bb,
+                });
+                self.switch_to_block(body_bb);
+                self.lower_block(body);
+                if !self.is_terminated(self.current_block) {
+                    self.set_terminator(Terminator::Jump(header_bb));
+                }
+                self.switch_to_block(exit_bb);
+            }
+        }
+    }
+    fn lower_expression(&mut self, expr: sema::TypedExpression) -> TypedValue {
+        let expr_ty = expr.ty.clone();
+        let val = match expr.node {
+            TypedExpressionKind::IntLiteral(i) => Value::IntConst(i),
+            TypedExpressionKind::BoolLiteral(b) => Value::BoolConst(b),
+            TypedExpressionKind::StringLiteral(s) => {
+                let idx = self.strings.len();
+                self.strings.push(s);
+                Value::StringConst(idx)
+            }
+            TypedExpressionKind::Variable(name) => {
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                let src = Address::Variable {
+                    name,
+                    ty: expr_ty.clone(),
+                };
+                self.emit(Instruction::Load {
+                    dest: dest_tv.clone(),
+                    src,
+                });
+                dest_tv.val
+            }
+            TypedExpressionKind::BinaryOperation { op, left, right } => {
+                let op1 = self.lower_expression(*left);
+                let op2 = self.lower_expression(*right);
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                self.emit(Instruction::BinaryOperation {
+                    dest: dest_tv.clone(),
+                    op,
+                    op1,
+                    op2,
+                });
+                dest_tv.val
+            }
+            TypedExpressionKind::FunctionCall { name, args } => {
+                let arg_vals = args
+                    .into_iter()
+                    .map(|a| self.lower_expression(a))
+                    .collect();
+                if expr_ty == ast::Type::Void {
+                    self.emit(Instruction::Call {
+                        dest: None,
+                        func_name: name,
+                        args: arg_vals,
+                    });
+                    Value::IntConst(0)
+                } else {
+                    let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                    self.emit(Instruction::Call {
+                        dest: Some(dest_tv.clone()),
+                        func_name: name,
+                        args: arg_vals,
+                    });
+                    dest_tv.val
+                }
+            }
+            TypedExpressionKind::ArrayLiteral(elements) => {
+                let tmp_id = self.tmp_counter;
+                self.tmp_counter += 1;
+                let tmp_name = format!("tmp_arr{}", tmp_id);
+                self.emit(Instruction::Alloca {
+                    name: tmp_name.clone(),
+                    ty: expr_ty.clone(),
+                });
+                let array_ptr = self.new_ptr_tmp(expr_ty.clone());
+                self.emit(Instruction::GetAddress {
+                    dest: array_ptr.clone(),
+                    var_name: tmp_name.clone(),
+                });
+                let element_ty = match &expr_ty {
+                    ast::Type::Array(elem, _) => *elem.clone(),
+                    _ => expr_ty.clone(),
+                };
+                for (idx, elem) in elements.into_iter().enumerate() {
+                    let element_val = self.lower_expression(elem);
+                    let index_val = self
+                        .typed_val(Value::IntConst(idx as FI64), ast::Type::Int);
+                    let slot_ptr = self.new_ptr_tmp(element_ty.clone());
+                    self.emit(Instruction::GetElementPtr {
+                        dest: slot_ptr.clone(),
+                        base_ptr: array_ptr.clone(),
+                        index: index_val,
+                        element_ty: element_ty.clone(),
+                    });
+                    self.emit(Instruction::Store {
+                        dest: Address::Pointer {
+                            val: slot_ptr,
+                            pointed_to_ty: element_ty.clone(),
+                        },
+                        val: element_val,
+                    });
+                }
+                return array_ptr;
+            }
+            TypedExpressionKind::ArrayRepeat { value, size } => {
+                let tmp_id = self.tmp_counter;
+                self.tmp_counter += 1;
+                let tmp_name = format!("tmp_arr{}", tmp_id);
+                self.emit(Instruction::Alloca {
+                    name: tmp_name.clone(),
+                    ty: expr_ty.clone(),
+                });
+                let array_ptr = self.new_ptr_tmp(expr_ty.clone());
+                self.emit(Instruction::GetAddress {
+                    dest: array_ptr.clone(),
+                    var_name: tmp_name.clone(),
+                });
+                let element_ty = match &expr_ty {
+                    ast::Type::Array(elem, _) => *elem.clone(),
+                    _ => expr_ty.clone(),
+                };
+                let repeated_val = self.lower_expression(*value);
+                let counter_name = format!("loop_counter_{}", self.tmp_counter);
+                self.tmp_counter += 1;
+                self.emit(Instruction::Alloca {
+                    name: counter_name.clone(),
+                    ty: ast::Type::Int,
+                });
+                let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+                self.emit(Instruction::Store {
+                    dest: Address::Variable {
+                        name: counter_name.clone(),
+                        ty: ast::Type::Int,
+                    },
+                    val: zero,
+                });
+                let header_bb = self.new_block("repeat_header");
+                let body_bb = self.new_block("repeat_body");
+                let exit_bb = self.new_block("repeat_exit");
+                self.set_terminator(Terminator::Jump(header_bb));
+                self.switch_to_block(header_bb);
+                let current_i = self.new_tmp_typed(ast::Type::Int);
+                self.emit(Instruction::Load {
+                    dest: current_i.clone(),
+                    src: Address::Variable {
+                        name: counter_name.clone(),
+                        ty: ast::Type::Int,
+                    },
+                });
+                let size_val = self
+                    .typed_val(Value::IntConst(size as FI64), ast::Type::Int);
+                let cond_val = self.new_tmp_typed(ast::Type::Bool);
+                self.emit(Instruction::BinaryOperation {
+                    dest: cond_val.clone(),
+                    op: ast::BinaryOp::Lt,
+                    op1: current_i.clone(),
+                    op2: size_val,
+                });
+                self.set_terminator(Terminator::ConditionalJump {
+                    cond: cond_val,
+                    then_block: body_bb,
+                    else_block: exit_bb,
+                });
+                self.switch_to_block(body_bb);
+                let slot_ptr = self.new_ptr_tmp(element_ty.clone());
+                self.emit(Instruction::GetElementPtr {
+                    dest: slot_ptr.clone(),
+                    base_ptr: array_ptr.clone(),
+                    index: current_i.clone(),
+                    element_ty: element_ty.clone(),
+                });
+                self.emit(Instruction::Store {
+                    dest: Address::Pointer {
+                        val: slot_ptr,
+                        pointed_to_ty: element_ty.clone(),
+                    },
+                    val: repeated_val.clone(),
+                });
+                let one = self.typed_val(Value::IntConst(1), ast::Type::Int);
+                let next_i = self.new_tmp_typed(ast::Type::Int);
+                self.emit(Instruction::BinaryOperation {
+                    dest: next_i.clone(),
+                    op: ast::BinaryOp::Add,
+                    op1: current_i,
+                    op2: one,
+                });
+                self.emit(Instruction::Store {
+                    dest: Address::Variable {
+                        name: counter_name,
+                        ty: ast::Type::Int,
+                    },
+                    val: next_i,
+                });
+                self.set_terminator(Terminator::Jump(header_bb));
+                self.switch_to_block(exit_bb);
+                return array_ptr;
+            }
+            TypedExpressionKind::StructLiteral { name, fields } => {
+                let tmp_id = self.tmp_counter;
+                self.tmp_counter += 1;
+                let tmp_name = format!("tmp_struct{}", tmp_id);
+                self.emit(Instruction::Alloca {
+                    name: tmp_name.clone(),
+                    ty: expr_ty.clone(),
+                });
+                let base_addr = Address::Variable {
+                    name: tmp_name.clone(),
+                    ty: expr_ty.clone(),
+                };
+                self.emit_struct_literal_into(base_addr, &name, fields);
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                self.emit(Instruction::Load {
+                    dest: dest_tv.clone(),
+                    src: Address::Variable {
+                        name: tmp_name,
+                        ty: expr_ty.clone(),
+                    },
+                });
+                dest_tv.val
+            }
+            TypedExpressionKind::Index { array, index } => {
+                let addr = self.lower_index_address(*array, *index, expr_ty.clone());
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                self.emit(Instruction::Load {
+                    dest: dest_tv.clone(),
+                    src: addr,
+                });
+                dest_tv.val
+            }
+            TypedExpressionKind::MemberAccess { base, field_name: _, field_index } => {
+                let addr = self
+                    .lower_member_address(*base, field_index, expr_ty.clone());
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                self.emit(Instruction::Load {
+                    dest: dest_tv.clone(),
+                    src: addr,
+                });
+                dest_tv.val
+            }
+            TypedExpressionKind::AddressOf(inner) => {
+                let addr = self.lower_to_address(*inner);
+                return self.resolve_address_to_value(addr);
+            }
+            TypedExpressionKind::Dereference(inner) => {
+                let ptr_val = self.lower_expression(*inner);
+                let dest_tv = self.new_tmp_typed(expr_ty.clone());
+                let src = Address::Pointer {
+                    val: ptr_val,
+                    pointed_to_ty: expr_ty.clone(),
+                };
+                self.emit(Instruction::Load {
+                    dest: dest_tv.clone(),
+                    src,
+                });
+                dest_tv.val
+            }
+        };
+        self.typed_val(val, expr_ty)
+    }
+    fn lower_index_address(
+        &mut self,
+        array: sema::TypedExpression,
+        index: sema::TypedExpression,
+        element_ty: ast::Type,
+    ) -> Address {
+        let array_ty = array.ty.clone();
+        let base_addr = self.lower_to_address(array);
+        let index_val = self.lower_expression(index);
+        let array_size = match array_ty {
+            ast::Type::Array(_, size) => size as FI64,
+            _ => 0,
+        };
+        if array_size > 0 {
+            let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+            let max_index = self
+                .typed_val(Value::IntConst(array_size - 1), ast::Type::Int);
+            let lt_zero = self.new_tmp_typed(ast::Type::Bool);
+            self.emit(Instruction::BinaryOperation {
+                dest: lt_zero.clone(),
+                op: ast::BinaryOp::Lt,
+                op1: index_val.clone(),
+                op2: zero,
+            });
+            let gt_max = self.new_tmp_typed(ast::Type::Bool);
+            self.emit(Instruction::BinaryOperation {
+                dest: gt_max.clone(),
+                op: ast::BinaryOp::Gt,
+                op1: index_val.clone(),
+                op2: max_index,
+            });
+            let out_of_bounds = self.new_tmp_typed(ast::Type::Bool);
+            self.emit(Instruction::BinaryOperation {
+                dest: out_of_bounds.clone(),
+                op: ast::BinaryOp::Or,
+                op1: lt_zero,
+                op2: gt_max,
+            });
+            let error_bb = self.new_block("bounds_error");
+            let continue_bb = self.new_block("bounds_ok");
+            self.set_terminator(Terminator::ConditionalJump {
+                cond: out_of_bounds,
+                then_block: error_bb,
+                else_block: continue_bb,
+            });
+            self.switch_to_block(error_bb);
+            self.uses_panic = true;
+            self.emit(Instruction::BoundsFail {
+                message: "Array index out of bounds!".to_string(),
+            });
+            self.set_terminator(Terminator::Return(None));
+            self.switch_to_block(continue_bb);
+        }
+        Address::Element {
+            base: Box::new(base_addr),
+            index: index_val,
+            element_ty,
+        }
+    }
+    fn emit_struct_literal_into(
+        &mut self,
+        base: Address,
+        struct_name: &str,
+        fields: FVec<(FString, FSize, sema::TypedExpression)>,
+    ) {
+        for (_field_name, field_index, field_expr) in fields {
+            let field_val = self.lower_expression(field_expr);
+            let field_addr = Address::Field {
+                base: Box::new(base.clone()),
+                field_index,
+                field_ty: field_val.ty.clone(),
+                struct_name: struct_name.to_string(),
+            };
+            self.emit(Instruction::Store {
+                dest: field_addr,
+                val: field_val,
+            });
+        }
+    }
+    fn emit_array_repeat_into(
+        &mut self,
+        base: Address,
+        element_ty: ast::Type,
+        size: FSize,
+        value: sema::TypedExpression,
+    ) {
+        let base_ptr = self.resolve_address_to_value(base);
+        let repeated_val = self.lower_expression(value);
+        let counter_name = format!("loop_counter_{}", self.tmp_counter);
+        self.tmp_counter += 1;
+        self.emit(Instruction::Alloca {
+            name: counter_name.clone(),
+            ty: ast::Type::Int,
+        });
+        let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+        self.emit(Instruction::Store {
+            dest: Address::Variable {
+                name: counter_name.clone(),
+                ty: ast::Type::Int,
+            },
+            val: zero,
+        });
+        let header_bb = self.new_block("repeat_header");
+        let body_bb = self.new_block("repeat_body");
+        let exit_bb = self.new_block("repeat_exit");
+        self.set_terminator(Terminator::Jump(header_bb));
+        self.switch_to_block(header_bb);
+        let current_i = self.new_tmp_typed(ast::Type::Int);
+        self.emit(Instruction::Load {
+            dest: current_i.clone(),
+            src: Address::Variable {
+                name: counter_name.clone(),
+                ty: ast::Type::Int,
+            },
+        });
+        let size_val = self.typed_val(Value::IntConst(size as FI64), ast::Type::Int);
+        let cond_val = self.new_tmp_typed(ast::Type::Bool);
+        self.emit(Instruction::BinaryOperation {
+            dest: cond_val.clone(),
+            op: ast::BinaryOp::Lt,
+            op1: current_i.clone(),
+            op2: size_val,
+        });
+        self.set_terminator(Terminator::ConditionalJump {
+            cond: cond_val,
+            then_block: body_bb,
+            else_block: exit_bb,
+        });
+        self.switch_to_block(body_bb);
+        let slot_ptr = self.new_ptr_tmp(element_ty.clone());
+        self.emit(Instruction::GetElementPtr {
+            dest: slot_ptr.clone(),
+            base_ptr: base_ptr.clone(),
+            index: current_i.clone(),
+            element_ty: element_ty.clone(),
+        });
+        self.emit(Instruction::Store {
+            dest: Address::Pointer {
+                val: slot_ptr,
+                pointed_to_ty: element_ty.clone(),
+            },
+            val: repeated_val.clone(),
+        });
+        let one = self.typed_val(Value::IntConst(1), ast::Type::Int);
+        let next_i = self.new_tmp_typed(ast::Type::Int);
+        self.emit(Instruction::BinaryOperation {
+            dest: next_i.clone(),
+            op: ast::BinaryOp::Add,
+            op1: current_i,
+            op2: one,
+        });
+        self.emit(Instruction::Store {
+            dest: Address::Variable {
+                name: counter_name,
+                ty: ast::Type::Int,
+            },
+            val: next_i,
+        });
+        self.set_terminator(Terminator::Jump(header_bb));
+        self.switch_to_block(exit_bb);
+    }
+    fn lower_member_address(
+        &mut self,
+        base: sema::TypedExpression,
+        field_index: FSize,
+        field_ty: ast::Type,
+    ) -> Address {
+        let struct_name = match &base.ty {
+            ast::Type::Struct(name) => name.clone(),
+            _ => "unknown".to_string(),
+        };
+        let base_addr = self.lower_to_address(base);
+        Address::Field {
+            base: Box::new(base_addr),
+            field_index,
+            field_ty,
+            struct_name,
+        }
+    }
+    fn lower_to_address(&mut self, expr: sema::TypedExpression) -> Address {
+        match expr.node {
+            TypedExpressionKind::Variable(name) => {
+                Address::Variable {
+                    name,
+                    ty: expr.ty,
+                }
+            }
+            TypedExpressionKind::Dereference(inner) => {
+                let ptr_val = self.lower_expression(*inner);
+                let pointed_to_ty = match &ptr_val.ty {
+                    ast::Type::Pointer(inner_ty) => *inner_ty.clone(),
+                    _ => ast::Type::Void,
+                };
+                Address::Pointer {
+                    val: ptr_val,
+                    pointed_to_ty,
+                }
+            }
+            TypedExpressionKind::Index { array, index } => {
+                self.lower_index_address(*array, *index, expr.ty)
+            }
+            TypedExpressionKind::MemberAccess { base, field_index, .. } => {
+                self.lower_member_address(*base, field_index, expr.ty)
+            }
+            _ => panic!("Expression is not an L-value"),
+        }
+    }
+    fn resolve_address_to_value(&mut self, addr: Address) -> TypedValue {
+        match addr {
+            Address::Variable { name, ty } => {
+                let dest = self.new_tmp_typed(ast::Type::Pointer(Box::new(ty.clone())));
+                self.emit(Instruction::GetAddress {
+                    dest: dest.clone(),
+                    var_name: name,
+                });
+                dest
+            }
+            Address::Pointer { val, .. } => val,
+            Address::Element { base, index, element_ty } => {
+                let base_ptr = self.resolve_address_to_value(*base);
+                let dest = self
+                    .new_tmp_typed(ast::Type::Pointer(Box::new(element_ty.clone())));
+                self.emit(Instruction::GetElementPtr {
+                    dest: dest.clone(),
+                    base_ptr,
+                    index,
+                    element_ty,
+                });
+                dest
+            }
+            Address::Field { base, field_index, field_ty, struct_name } => {
+                let base_ptr = self.resolve_address_to_value(*base);
+                let dest = self
+                    .new_tmp_typed(ast::Type::Pointer(Box::new(field_ty.clone())));
+                self.emit(Instruction::GetFieldPtr {
+                    dest: dest.clone(),
+                    base_ptr,
+                    field_index,
+                    field_ty,
+                    struct_name,
+                });
+                dest
+            }
+        }
+    }
+}

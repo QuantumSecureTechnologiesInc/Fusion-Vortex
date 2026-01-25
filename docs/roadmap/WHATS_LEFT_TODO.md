@@ -1,7 +1,7 @@
 # Fusion Roadmap: What's Left To Do
 
-**Generated**: 2025-12-10  
-**Current Status**: 🟡 **Epoch 1-2** in progress  
+**Generated**: 2025-12-10
+**Current Status**: 🟡 **Epoch 1-2** in progress
 **Overall Progress**: ~15-20% complete
 
 ---
@@ -39,12 +39,12 @@ Based on the comprehensive v1.0 roadmap and current crate structure, here's what
    - **Lines**: 6,000+
    - **Priority**: CRITICAL
    - **Dependencies**: None
-   
+
 2. ❌ **fusion_cli** - CLI with `new`, `build`, `run`, `test`
    - **Lines**: 2,000+
    - **Priority**: CRITICAL
    - **Dependencies**: toolchain, pkgmgr
-   
+
 3. ❌ **fusion_bridge_c** - C FFI for Python/JS interop
    - **Lines**: 2,500+
    - **Priority**: HIGH
@@ -74,19 +74,19 @@ Based on the comprehensive v1.0 roadmap and current crate structure, here's what
 1. ❌ **fusion_http** - HTTP/1.1 server
    - **Lines**: 3,000+
    - **Priority**: HIGH
-   
+
 2. ❌ **fusion_json** - JSON parser/serializer
    - **Lines**: 2,000+
    - **Priority**: HIGH
-   
+
 3. ❌ **fusion_websocket** - WebSocket server
    - **Lines**: 2,000+
    - **Priority**: MEDIUM
-   
+
 4. ❌ **fusion_grpc** - gRPC implementation
    - **Lines**: 3,000+
    - **Priority**: MEDIUM
-   
+
 5. ❌ **fusion_pkg_registry** - Live package registry
    - **Lines**: 10,000+ (backend) + 5,000+ (frontend)
    - **Priority**: CRITICAL
@@ -330,22 +330,27 @@ Based on the comprehensive v1.0 roadmap and current crate structure, here's what
 Based on current progress:
 
 ### Q1 2026 (Months 1-3): Complete Epoch 1
+
 - **Target**: Finish 3 remaining core crates
 - **Milestone**: Tri-brid demo working
 
 ### Q2 2026 (Months 4-6): Complete Epoch 2
+
 - **Target**: Finish 5 networking/interop crates
 - **Milestone**: Package registry alpha
 
 ### Q3 2026 (Months 7-9): Epoch 3 (50% target)
+
 - **Target**: Build 40/80 AI/Quantum/Finance crates
 - **Milestone**: LLM inference + VQE working
 
 ### Q4 2026 (Months 10-12): Epoch 3 completion + Epoch 4 (50%)
+
 - **Target**: Finish Epoch 3, build 20/40 enterprise crates
 - **Milestone**: Beta launch with 100+ crates
 
 ### Q1 2027: Epoch 4 completion
+
 - **Target**: Finish remaining 20 enterprise crates
 - **Milestone**: Public v0.2.0 launch
 
@@ -392,7 +397,7 @@ Based on current progress:
 | **Epoch 4 (Enterprise)** | 30               | 45,000      | 16 weeks     |
 | **TOTAL**                | **93**           | **163,500** | **52 weeks** |
 
-**With 2 full-time engineers**: ~26 weeks (6 months)  
+**With 2 full-time engineers**: ~26 weeks (6 months)
 **With 5 full-time engineers**: ~10 weeks (2.5 months)
 
 ---
@@ -423,7 +428,7 @@ Focus on **30 critical crates** first:
 - 10 Epoch 2 (Connectivity)
 - 9 Core AI/ML/Quantum crates
 
-**Timeline**: 4-5 months  
+**Timeline**: 4-5 months
 **Result**: Working language with basic ecosystem
 
 ### Option 3: Community-Driven
@@ -446,6 +451,6 @@ Open-source the roadmap:
 
 ---
 
-**Document Status**: 🟢 CURRENT  
-**Last Updated**: 2025-12-10  
+**Document Status**: 🟢 CURRENT
+**Last Updated**: 2025-12-10
 **Next Review**: Weekly during implementation

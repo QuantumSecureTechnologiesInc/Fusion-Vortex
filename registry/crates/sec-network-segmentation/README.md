@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-network-segmentation = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_network_segmentation::Policy;
 fn main() {
     Policy::apply();
 }
-```
+```text
 
 ## License
 

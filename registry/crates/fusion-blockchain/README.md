@@ -7,9 +7,10 @@ Blockchain primitives and consensus algorithms for Fusion.
 ```toml
 [dependencies]
 fusion-blockchain = "0.1.0"
-```
+```text
 
 ## Features
+
 - Cryptographic hashing
 - Block structure definitions
 - Ledger management

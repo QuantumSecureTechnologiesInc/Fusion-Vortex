@@ -1,0 +1,28 @@
+// SOURCE: src/registry/packages.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/registry/packages.rs - Package management
+#![allow(dead_code)]
+
+use super::{PackageMetadata, RegistryError};
+
+struct PackageManager;
+
+impl PackageManager {
+    fn new() -> Self {
+        Self
+    }
+
+    fn validate_package(&self, _metadata: &PackageMetadata) -> Result<(), RegistryError> {
+        Ok(())
+    }
+
+    fn publish(&self, _metadata: PackageMetadata) -> Result<(), RegistryError> {
+        Ok(())
+    }
+}
+
+impl Default for PackageManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

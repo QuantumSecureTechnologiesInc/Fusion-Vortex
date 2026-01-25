@@ -1,7 +1,7 @@
 # Fusion Cloud GCP
 
-**Version:** 0.2.0  
-**Type:** Cloud Adapter  
+**Version:** 0.2.0
+**Type:** Cloud Adapter
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use cloud_gcp::{GcpClient, StorageBucket};
 let client = GcpClient::from_env().await?;
 let bucket = client.bucket("data-lake");
 bucket.upload("dataset.csv", data).await?;
-```
+```text
 
 ## Dependencies
 

@@ -20,7 +20,7 @@ First, create a new project:
 ```bash
 fusion new minigrep
 cd minigrep
-```
+```text
 
 We need to read the arguments passed to the program (e.g., `minigrep searchstring filename.txt`). We'll use `std::env::args`.
 
@@ -29,7 +29,7 @@ use std::env
 
 fn main() {
     let args: Vec<String> = env::args().collect()
-    
+
     // args[0] is the program name itself
     let query = &args[1]
     let filename = &args[2]
@@ -37,15 +37,18 @@ fn main() {
     println("Searching for {}", query)
     println("In file {}", filename)
 }
-```
+```text
 
 Try running it:
+
 ```bash
 fusion run -- test sample.txt
-```
+```text
+
 The `--` separates arguments for fusion from arguments for your program.
 
 ### Problem: Variable Scope and Error Handling
+
 If the user provides no arguments, this program will panic (index out of bounds). We should fix this.
 
 ---
@@ -72,7 +75,7 @@ fn main() {
 
     println!("With text:\n{}", contents)
 }
-```
+```text
 
 Create a file `poem.txt` with some text to test it.
 
@@ -106,7 +109,7 @@ impl Config {
         Ok(Config { query, filename })
     }
 }
-```
+```text
 
 ### 12.3.2 Updating main.fu
 
@@ -127,13 +130,14 @@ fn main() {
 
     // ...
 }
-```
+```text
 
 ### 12.3.3 Extracting the Logic to `lib.fu`
 
 Move the `Config` struct and the `run` logic to `src/lib.fu`.
 
 `src/lib.fu`:
+
 ```fusion
 use std::error::Error
 use std::fs
@@ -156,7 +160,7 @@ impl Config {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(&config.filename)?
-    
+
     for line in search(&config.query, &contents) {
         println!("{}", line)
     }
@@ -175,9 +179,10 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 
     results
 }
-```
+```text
 
 `src/main.fu`:
+
 ```fusion
 use std::env
 use std::process
@@ -196,7 +201,7 @@ fn main() {
         process::exit(1)
     }
 }
-```
+```text
 
 ---
 
@@ -209,7 +214,9 @@ Let's focus on the `search` function. We'll use Test Driven Development (TDD).
 In `src/lib.fu`:
 
 ```fusion
+
 #[cfg(test)]
+
 mod tests {
     use super::*
 
@@ -224,7 +231,7 @@ Pick three."
         assert_eq!(vec!["safe, fast, productive."], search(query, contents))
     }
 }
-```
+```text
 
 Run `fusion test`. It should fail (because `search` isn't fully implemented or returns empty).
 
@@ -242,7 +249,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     }
     results
 }
-```
+```text
 
 Run `fusion test`. It passes!
 
@@ -272,7 +279,7 @@ impl Config {
     pub fn new(args: &[String]) -> Result<Config, &'static str> {
         // ...
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err()
-        
+
         Ok(Config { query, filename, case_sensitive })
     }
 }
@@ -304,12 +311,13 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-```
+```text
 
 Now run:
+
 ```bash
 CASE_INSENSITIVE=1 fusion run -- to poem.txt
-```
+```text
 
 ---
 
@@ -320,9 +328,11 @@ We used `eprintln!` instead of `println!` for errors.
 - `stderr` (standard error) is for error messages.
 
 This allows users to pipe output to a file but still see errors on screen:
+
 ```bash
 fusion run > output.txt
-```
+```text
+
 Errors will still appear in the terminal, while the grep results go to `output.txt`.
 
 ---
@@ -343,9 +353,9 @@ This chapter represents a major milestone. You have moved from learning language
 
 ## 12.8 Exercises
 
-1.  **Line Numbers**: Modify `search` to return line numbers along with the text.
-2.  **Highlighting**: colorize the matched query string in the output (using ANSI escape codes).
-3.  **Stdin**: Modify the program so that if no filename is given, it reads from standard input (pipe).
+1. **Line Numbers**: Modify `search` to return line numbers along with the text.
+2. **Highlighting**: colorize the matched query string in the output (using ANSI escape codes).
+3. **Stdin**: Modify the program so that if no filename is given, it reads from standard input (pipe).
 
 ---
 

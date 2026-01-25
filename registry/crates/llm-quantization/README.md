@@ -1,7 +1,7 @@
 # Fusion LLM Quantization
 
-**Version:** 0.2.0  
-**Type:** Optimization  
+**Version:** 0.2.0
+**Type:** Optimization
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_llm_quantization::{Quantizer, Method};
 
 let quantizer = Quantizer::new(Method::Int4Sym);
 let quantized_tensor = quantizer.quantize(fp16_tensor)?;
-```
+```text
 
 ## Dependencies
 

@@ -1,0 +1,2 @@
+/// compiler-passes implementation
+struct CompilerPassesModule;

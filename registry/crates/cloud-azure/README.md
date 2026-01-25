@@ -1,7 +1,7 @@
 # Fusion Cloud Azure
 
-**Version:** 0.2.0  
-**Type:** Cloud Adapter  
+**Version:** 0.2.0
+**Type:** Cloud Adapter
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use cloud_azure::{AzureClient, QuantumJob};
 let client = AzureClient::from_env().await?;
 // Submit quantum circuit to IonQ via Azure
 client.submit_job(QuantumJob::new(circuit)).await?;
-```
+```text
 
 ## Dependencies
 

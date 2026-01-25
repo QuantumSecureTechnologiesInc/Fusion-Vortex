@@ -1,0 +1,25 @@
+extern fn puts(msg: string) -> int;
+extern fn arc_alloc_point(x: int, y: int) -> *Point;
+extern fn arc_retain_point(p: *Point) -> void;
+extern fn arc_release_point(p: *Point) -> void;
+
+struct Point {
+    x: int,
+    y: int,
+}
+
+fn main() -> int {
+    let p1: *Point = arc_alloc_point(10, 20);
+
+    arc_retain_point(p1);
+    let p2: *Point = p1;
+
+    (*p2).x = 999;
+
+    puts("ARC shared mutation done");
+
+    arc_release_point(p2);
+    arc_release_point(p1);
+
+    return 0;
+}

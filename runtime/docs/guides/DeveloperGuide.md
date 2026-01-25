@@ -56,7 +56,7 @@
 │  │          │  │ AMD/Apple)│  │          │  │ Rigetti) │       │
 │  └──────────┘  └───────────┘  └──────────┘  └──────────┘       │
 └──────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Scheduler Design
 
@@ -99,7 +99,7 @@ fn scheduler_loop() {
         }
     }
 }
-```
+```text
 
 ### Memory Management
 
@@ -124,7 +124,7 @@ fn scheduler_loop() {
 │  └──────┘ └──────┘ └──────┘ └──────┘                  │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
-```
+```text
 
 **Key Features**:
 - **Buddy Allocator**: O(log n) allocation/deallocation
@@ -157,7 +157,7 @@ let runtime = Runtime::builder()
 runtime.spawn(async {
     // Your workload here
 });
-```
+```text
 
 ### 2. fusion_runtime_scheduler
 
@@ -174,7 +174,7 @@ runtime.spawn(async {
 let stats = runtime.scheduler.stats();
 println!("High priority queue: {} tasks", stats.high_priority_len);
 println!("Normal priority queue: {} tasks", stats.normal_priority_len);
-```
+```text
 
 ### 3. fusion_runtime_mem_mgr
 
@@ -193,7 +193,7 @@ let gpu_mem = mem_mgr.zero_copy_transfer(&cpu_mem, DeviceType::Gpu(0));
 
 // Same physical memory, different device view
 assert_eq!(cpu_mem.ptr, gpu_mem.ptr);
-```
+```text
 
 ### 4. fusion_runtime_hal
 
@@ -216,71 +216,94 @@ let kernel = GpuKernel {
 };
 
 hal.gpu().unwrap().launch_kernel(kernel)?;
-```
+```text
 
 ## Building from Source
 
 ### Prerequisites
 
 ```bash
+
 # Install Rust
+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Install LLVM (version 17+)
+
+
 # Ubuntu/Debian:
+
 sudo apt install llvm-17-dev
 
 # macOS:
+
 brew install llvm@17
 
 # Windows:
+
+
 # Download from https://releases.llvm.org/
-```
+
+```text
 
 ### Build Commands
 
 ```bash
+
 # Clone the repository
+
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion.git
 cd Fusion
 
 # Build all crates
+
 cargo build --workspace --release
 
 # Build with specific features
+
 cargo build --workspace --release --features vulkan,metal
 
 # Run tests
+
 cargo test --workspace
 
 # Run benchmarks
+
 cargo bench --workspace
-```
+```text
 
 ### Optional Dependencies
 
 #### CUDA Support
 
 ```bash
+
 # Install CUDA Toolkit 12.0+
+
+
 # Download from: https://developer.nvidia.com/cuda-downloads
 
 # Verify installation
+
 nvcc --version
 
 # Build with CUDA
+
 cargo build --features cuda
-```
+```text
 
 #### DPDK Support (Ultra-Low Latency Networking)
 
 ```bash
+
 # Install DPDK (requires root)
+
 sudo apt install dpdk dpdk-dev
 
 # Build with DPDK
+
 cargo build --features dpdk
-```
+```text
 
 ## Integration Guide
 
@@ -294,10 +317,11 @@ fusion_runtime_core = "0.2.0"
 fusion_core = "0.2.0"
 
 # Optional: Add specific workload crates
+
 fusion_ai_core = "0.2.0"
 fusion_finance = "0.2.0"
 fusion_quantum = "0.2.0"
-```
+```text
 
 ### Replacing Tokio
 
@@ -306,22 +330,26 @@ If you have an existing Tokio-based application:
 **Before (Tokio)**:
 
 ```rust
+
 #[tokio::main]
+
 async fn main() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await.unwrap();
     // ...
 }
-```
+```text
 
 **After (Fusion)**:
 
 ```rust
+
 #[fusion_runtime_core::main]
+
 async fn main() {
     let listener = fusion_net::TcpListener::bind("127.0.0.1:8080").await.unwrap();
     // ...
 }
-```
+```text
 
 ### Hybrid Workload Example
 
@@ -332,36 +360,41 @@ use fusion_quantum::Qubit;
 use fusion_finance::OrderBook;
 
 #[fusion_runtime_core::main]
+
 async fn main() {
     // AI/ML workload
     let tensor = Tensor::zeros([1024, 1024]).device("cuda:0");
     let result = tensor.matmul(&tensor).await;
-    
+
     // Quantum workload
     let mut qubit = Qubit::new();
     qubit.hadamard();
     let measurement = qubit.measure().await;
-    
+
     // Financial workload
     let book = OrderBook::new("BTC/USD");
     book.place_order(Order::limit_buy(50000.0, 1.0)).await;
 }
-```
+```text
 
 ## Performance Benchmarking
 
 ### Running Benchmarks
 
 ```bash
+
 # Run all benchmarks
+
 cargo bench --workspace
 
 # Run specific benchmark
+
 cargo bench --package fusion_runtime_core --bench runtime_benchmarks
 
 # With detailed output
+
 cargo bench --workspace -- --verbose
-```
+```text
 
 ### Benchmark Results
 
@@ -378,15 +411,19 @@ cargo bench --workspace -- --verbose
 ### Profiling
 
 ```bash
+
 # CPU profiling
+
 cargo flamegraph --bench runtime_benchmarks
 
 # Memory profiling
+
 cargo valgrind --bench runtime_benchmarks
 
 # GPU profiling (NVIDIA)
+
 nvprof --profile-from-start off cargo run --release
-```
+```text
 
 ## Contributing
 
@@ -395,15 +432,19 @@ nvprof --profile-from-start off cargo run --release
 We follow standard Rust conventions:
 
 ```bash
+
 # Format code
+
 cargo fmt --all
 
 # Lint code
+
 cargo clippy --workspace -- -D warnings
 
 # Check documentation
+
 cargo doc --workspace --no-deps
-```
+```text
 
 ### Testing Guidelines
 
@@ -412,22 +453,24 @@ cargo doc --workspace --no-deps
 3. **Benchmark Tests**: Verify performance doesn't regress
 
 ```rust
+
 #[cfg(test)]
+
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_scheduler_creation() {
         let scheduler = Scheduler::new(&config);
         assert!(scheduler.stats().high_priority_len == 0);
     }
-    
+
     #[tokio::test]
     async fn test_async_operation() {
         // Async test logic
     }
 }
-```
+```text
 
 ### Pull Request Process
 

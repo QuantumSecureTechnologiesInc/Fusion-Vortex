@@ -1,0 +1,1396 @@
+// SOURCE: src/codegen/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/codegen/mod.rs - LLVM Code Generation (Textual Output)
+
+use crate::ast::*;
+
+struct CodeGenerator {
+    output: FString,
+    globals: FString,
+    temp_counter: usize,
+    // Map<ClassName, Map<FieldName, (Index, Type)>>
+    struct_info: FMap<FString, FMap<FString, (usize, Type)>>,
+    // Map<VarName, Type>
+    symbol_table: FMap<FString, Type>,
+    // Map<FuncName, ReturnType>
+    function_signatures: FMap<FString, Type>,
+
+    // Generic Structs AST
+    generic_structs: FMap<FString, Declaration>,
+
+    // Generic Functions AST
+    generic_functions: FMap<FString, Declaration>,
+
+    // Current Generic Context for Monomorphization
+    current_generic_context: FMap<FString, Type>,
+}
+
+impl CodeGenerator {
+    fn new() -> Self {
+        CodeGenerator {
+            output: FString::new(),
+            globals: FString::new(),
+            temp_counter: 0,
+            struct_info: HashMap::new(),
+            symbol_table: HashMap::new(),
+            function_signatures: HashMap::new(),
+            generic_functions: HashMap::new(),
+            generic_structs: HashMap::new(),
+            current_generic_context: HashMap::new(),
+        }
+    }
+
+    fn generate(&mut self, declarations: &[Declaration]) -> Result<FString, FString> {
+        // Pre-scan for structs and functions
+        for decl in declarations {
+            match decl {
+                Declaration::Class {
+                    name,
+                    fields,
+                    methods,
+                    generic_params,
+                    ..
+                } => {
+                    if !generic_params.is_empty() {
+                        // Skip adding to struct_info (resolved later)
+                        // But we MUST scan for nested methods if they are non-generic?
+                        // Fusion: Generic Class methods are implicitly generic.
+                        // So we probably don't scan them either.
+                        continue;
+                    }
+                    let mut field_map = HashMap::new();
+                    for (i, field) in fields.iter().enumerate() {
+                        field_map.insert(field.name.clone(), (i, field.field_type.clone()));
+                    }
+                    self.struct_info.insert(name.clone(), field_map);
+
+                    // Pre-scan methods
+                    for method in methods {
+                        if let Declaration::Function {
+                            name: method_name,
+                            return_type,
+                            ..
+                        } = method
+                        {
+                            let mangled_name = format!("{}_{}", name, method_name);
+                            self.function_signatures
+                                .insert(mangled_name, return_type.clone());
+                        }
+                    }
+                }
+                Declaration::Function {
+                    name, return_type, ..
+                } => {
+                    self.function_signatures
+                        .insert(name.clone(), return_type.clone());
+                }
+                _ => {}
+            }
+        }
+
+        self.output.push_str("; ModuleID = 'fusion_module'\n");
+        self.output
+            .push_str("source_filename = \"fusion_module\"\n\n");
+
+        // Forward declare printf for testing
+        self.output.push_str("declare FInt @printf(i8*, ...)\n\n");
+
+        for decl in declarations {
+            self.generate_declaration(decl)?;
+        }
+
+        let mut final_ir = self.output.clone();
+        if !self.globals.is_empty() {
+            final_ir.insert_str(0, &self.globals);
+        }
+
+        Ok(final_ir)
+    }
+
+    fn generate_declaration(&mut self, decl: &Declaration) -> Result<(), FString> {
+        match decl {
+            Declaration::Function {
+                name,
+                body,
+                return_type,
+                params,
+                generic_params,
+                ..
+            } => {
+                if !generic_params.is_empty() {
+                    self.generic_functions.insert(name.clone(), decl.clone());
+                    return Ok(());
+                }
+                self.generate_function(name, body, return_type, params)?;
+                Ok(())
+            }
+            Declaration::ExternFunction {
+                name,
+                params,
+                return_type,
+            } => {
+                let ret_type_str = self.type_to_llvm(return_type);
+                let mut params_str = FString::new();
+                for (i, param) in params.iter().enumerate() {
+                    if i > 0 {
+                        params_str.push_str(", ");
+                    }
+                    if i == params.len() - 1 && param.name == "varargs" {
+                        params_str.push_str("...");
+                    } else {
+                        params_str.push_str(&self.type_to_llvm(&param.param_type));
+                    }
+                }
+
+                // Add to function signatures so we can call it
+                self.function_signatures
+                    .insert(name.clone(), return_type.clone());
+
+                self.globals.push_str(&format!(
+                    "declare {} @{}({})\n",
+                    ret_type_str, name, params_str
+                ));
+                Ok(())
+            }
+            Declaration::Class {
+                name,
+                fields,
+                methods,
+                generic_params,
+                ..
+            } => {
+                if !generic_params.is_empty() {
+                    self.generic_structs.insert(name.clone(), decl.clone());
+                    return Ok(());
+                }
+                // Define LLVM struct
+                // %MyClass = type { i64, i64 }
+
+                let mut field_types = FString::new();
+                for (i, field) in fields.iter().enumerate() {
+                    let type_str = match field.field_type {
+                        Type::Integer => "i64",
+                        Type::FString => "i8*", // basic pointer for now
+                        _ => "i64",            // default generic
+                    };
+                    if i > 0 {
+                        field_types.push_str(", ");
+                    }
+                    field_types.push_str(type_str);
+                }
+
+                self.output
+                    .push_str(&format!("%{} = type {{ {} }}\n\n", name, field_types));
+
+                // Generate methods
+                for method in methods {
+                    if let Declaration::Function {
+                        name: method_name,
+                        body,
+                        return_type,
+                        params,
+                        ..
+                    } = method
+                    {
+                        // Create mangled name
+                        let mangled_name = format!("{}_{}", name, method_name);
+
+                        // Create new params list with self, UNLESS it looks like a static constructor
+                        let mut new_params = params.clone();
+                        let is_static = method_name == "new" || method_name.starts_with("from_");
+
+                        if !is_static && (new_params.is_empty() || new_params[0].name != "self") {
+                            new_params.insert(
+                                0,
+                                Parameter {
+                                    name: "self".to_string(),
+                                    param_type: Type::Custom(name.clone()),
+                                },
+                            );
+                        }
+
+                        self.generate_function(&mangled_name, body, return_type, &new_params)?;
+                    }
+                }
+                Ok(())
+            }
+            Declaration::GlobalVariable { .. } => Ok(()), // Skip for now
+            _ => Ok(()),
+        }
+    }
+
+    fn generate_block(&mut self, block: &Block) -> Result<(), FString> {
+        for stmt in &block.statements {
+            self.generate_statement(stmt)?;
+        }
+        Ok(())
+    }
+
+    fn generate_statement(&mut self, stmt: &Statement) -> Result<(), FString> {
+        match stmt {
+            Statement::VariableDeclaration {
+                name,
+                mutable: _, // Ignored: LLVM uses alloca for all variables
+                initializer,
+                var_type,
+            } => {
+                let (init_val, init_type) = self.generate_expression(initializer)?;
+                // Infer type if not provided
+                let final_type = var_type.clone().unwrap_or(init_type);
+
+                // If GenericInstance, ensure it is generated
+                if let Type::GenericInstance { base_name, args } = &final_type {
+                    self.ensure_generic_struct(base_name, args)?;
+                }
+
+                self.symbol_table.insert(name.clone(), final_type.clone());
+
+                let llvm_type = self.type_to_llvm(&final_type);
+                self.output
+                    .push_str(&format!("  %{} = alloca {}\n", name, llvm_type));
+                self.output.push_str(&format!(
+                    "  store {} {}, {}* %{}\n",
+                    llvm_type, init_val, llvm_type, name
+                ));
+                Ok(())
+            }
+            Statement::If {
+                condition,
+                then_block,
+                else_block,
+            } => {
+                let (cond_val, _) = self.generate_expression(condition)?;
+
+                let then_label = format!("then_{}", self.temp_counter);
+                let else_label = format!("else_{}", self.temp_counter);
+                let merge_label = format!("merge_{}", self.temp_counter);
+                self.temp_counter += 1;
+
+                // Compare condition != 0
+                let cmp_res = format!("cmp_res_{}", self.temp_counter);
+                self.output
+                    .push_str(&format!("  %{} = icmp ne i64 {}, 0\n", cmp_res, cond_val));
+
+                if else_block.is_some() {
+                    self.output.push_str(&format!(
+                        "  br i1 %{}, label %{}, label %{}\n",
+                        cmp_res, then_label, else_label
+                    ));
+                } else {
+                    self.output.push_str(&format!(
+                        "  br i1 %{}, label %{}, label %{}\n",
+                        cmp_res, then_label, merge_label
+                    ));
+                }
+
+                // Then Block
+                self.output.push_str(&format!("\n{}:\n", then_label));
+                self.generate_block(then_block)?;
+                if !self.output.trim_end().ends_with("ret void")
+                    && !self.output.trim_end().ends_with("ret i64 0")
+                {
+                    self.output
+                        .push_str(&format!("  br label %{}\n", merge_label));
+                }
+
+                // Else Block
+                if let Some(block) = else_block {
+                    self.output.push_str(&format!("\n{}:\n", else_label));
+                    self.generate_block(block)?;
+                    if !self.output.trim_end().ends_with("ret void")
+                        && !self.output.trim_end().ends_with("ret i64 0")
+                    {
+                        self.output
+                            .push_str(&format!("  br label %{}\n", merge_label));
+                    }
+                }
+
+                self.output.push_str(&format!("\n{}:\n", merge_label));
+                Ok(())
+            }
+            Statement::While { condition, body } => {
+                let loop_cond_label = format!("loop_cond_{}", self.temp_counter);
+                let loop_body_label = format!("loop_body_{}", self.temp_counter);
+                let loop_end_label = format!("loop_end_{}", self.temp_counter);
+                self.temp_counter += 1;
+
+                // Jump to condition
+                self.output
+                    .push_str(&format!("  br label %{}\n", loop_cond_label));
+
+                // Condition Check
+                self.output.push_str(&format!("\n{}:\n", loop_cond_label));
+                let (cond_val, _) = self.generate_expression(condition)?;
+                let cmp_res = format!("cmp_res_{}", self.temp_counter);
+                self.output
+                    .push_str(&format!("  %{} = icmp ne i64 {}, 0\n", cmp_res, cond_val));
+                self.output.push_str(&format!(
+                    "  br i1 %{}, label %{}, label %{}\n",
+                    cmp_res, loop_body_label, loop_end_label
+                ));
+
+                // Body
+                self.output.push_str(&format!("\n{}:\n", loop_body_label));
+                self.generate_block(body)?;
+                if !self.output.trim_end().ends_with("ret void")
+                    && !self.output.trim_end().ends_with("ret i64 0")
+                {
+                    self.output
+                        .push_str(&format!("  br label %{}\n", loop_cond_label));
+                }
+
+                // End
+                self.output.push_str(&format!("\n{}:\n", loop_end_label));
+                Ok(())
+            }
+            Statement::Assignment { target, value } => {
+                let (val, _val_type) = self.generate_expression(value)?;
+
+                let (ptr, ptr_type) = self.generate_lvalue_address(target)?;
+                let llvm_type = self.type_to_llvm(&ptr_type);
+
+                self.output.push_str(&format!(
+                    "  store {} {}, {}* {}\n",
+                    llvm_type, val, llvm_type, ptr
+                ));
+                Ok(())
+            }
+            Statement::Expression(expr) => {
+                self.generate_expression(expr)?;
+                Ok(())
+            }
+            Statement::Return(Some(expr)) => {
+                let (val, ty) = self.generate_expression(expr)?;
+                let ret_type_str = self.type_to_llvm(&ty);
+                self.output
+                    .push_str(&format!("  ret {} {}\n", ret_type_str, val));
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+
+    fn generate_expression(&mut self, expr: &Expression) -> Result<(FString, Type), FString> {
+        match expr {
+            Expression::Literal(Literal::Integer(i)) => Ok((format!("{}", i), Type::Integer)),
+            Expression::Literal(Literal::Boolean(b)) => {
+                // Represent FBoolean as i64: true = 1, false = 0
+                let val = if *b { "1" } else { "0" };
+                Ok((val.to_string(), Type::Integer))
+            }
+            Expression::Variable(name) => {
+                let id = self.temp_counter;
+                self.temp_counter += 1;
+                let var_type = self
+                    .symbol_table
+                    .get(name)
+                    .cloned()
+                    .unwrap_or(Type::Integer);
+                let llvm_type = self.type_to_llvm(&var_type);
+                self.output.push_str(&format!(
+                    "  %TMP{} = load {}, {}* %{}\n",
+                    id, llvm_type, llvm_type, name
+                ));
+                Ok((format!("%TMP{}", id), var_type))
+            }
+            Expression::Literal(Literal::FString(s)) => {
+                let id = self.temp_counter;
+                self.temp_counter += 1;
+                let str_len = s.len() + 1;
+
+                self.globals.push_str(&format!(
+                    "@.str.{} = private unnamed_addr constant [{} x i8] c\"{}\\00\", align 1\n",
+                    id, str_len, s
+                ));
+
+                Ok((
+                    format!(
+                        "getelementptr inbounds ([{} x i8], [{} x i8]* @.str.{}, i64 0, i64 0)",
+                        str_len, str_len, id
+                    ),
+                    Type::FString,
+                ))
+            }
+            Expression::UnaryOp { op, operand } => {
+                let (val, ty) = self.generate_expression(operand)?;
+                let id = self.temp_counter;
+                self.temp_counter += 1;
+
+                match op {
+                    UnaryOp::Negate => {
+                        // Generate: %TMP = sub i64 0, <operand>
+                        self.output
+                            .push_str(&format!("  %TMP{} = sub nsw i64 0, {}\n", id, val));
+                        Ok((format!("%TMP{}", id), ty))
+                    }
+                    UnaryOp::Not => {
+                        // Logical not: compare with 0, then zext
+                        let cmp_id = id;
+                        self.temp_counter += 1;
+                        self.output
+                            .push_str(&format!(" %TMP{} = icmp eq i64 {}, 0\n", cmp_id, val));
+                        self.output
+                            .push_str(&format!("  %TMP{} = zext i1 %TMP{} to i64\n", id, cmp_id));
+                        Ok((format!("%TMP{}", id), ty))
+                    }
+                }
+            }
+            Expression::BinaryOp { left, op, right } => {
+                // Special handling for logical operators (short-circuit evaluation)
+                if matches!(op, BinaryOp::LogicalAnd | BinaryOp::LogicalOr) {
+                    let (l, _) = self.generate_expression(left)?;
+                    let (r, _) = self.generate_expression(right)?;
+
+                    let id = self.temp_counter;
+                    self.temp_counter += 1;
+
+                    // Convert both to FBoolean (compare with 0)
+                    let l_FBool_id = self.temp_counter;
+                    self.temp_counter += 1;
+                    self.output.push_str(&format!(
+                        "  %TMP{}_FBool = icmp ne i64 {}, 0\n",
+                        l_FBool_id, l
+                    ));
+
+                    let r_FBool_id = self.temp_counter;
+                    self.temp_counter += 1;
+                    self.output.push_str(&format!(
+                        "  %TMP{}_FBool = icmp ne i64 {}, 0\n",
+                        r_FBool_id, r
+                    ));
+
+                    // Perform logical operation
+                    match op {
+                        BinaryOp::LogicalAnd => {
+                            self.output.push_str(&format!(
+                                "  %TMP{} = and i1 %TMP{}_FBool, %TMP{}_FBool\n",
+                                id, l_FBool_id, r_FBool_id
+                            ));
+                        }
+                        BinaryOp::LogicalOr => {
+                            self.output.push_str(&format!(
+                                "  %TMP{} = or i1 %TMP{}_FBool, %TMP{}_FBool\n",
+                                id, l_FBool_id, r_FBool_id
+                            ));
+                        }
+                        _ => unreachable!(),
+                    }
+
+                    // Convert result back to i64
+                    let zext_id = self.temp_counter;
+                    self.temp_counter += 1;
+                    self.output
+                        .push_str(&format!("  %TMP{} = zext i1 %TMP{} to i64\n", zext_id, id));
+
+                    return Ok((format!("%TMP{}", zext_id), Type::Integer));
+                }
+
+                let (l, _) = self.generate_expression(left)?;
+                let (r, _) = self.generate_expression(right)?;
+                let id = self.temp_counter;
+                self.temp_counter += 1;
+
+                let instr = match op {
+                    BinaryOp::Add => "add nsw",
+                    BinaryOp::Subtract => "sub nsw",
+                    BinaryOp::Multiply => "mul nsw",
+                    BinaryOp::Divide => "sdiv",
+                    BinaryOp::Equal => "icmp eq",
+                    BinaryOp::NotEqual => "icmp ne",
+                    BinaryOp::LessThan => "icmp slt",
+                    BinaryOp::GreaterThan => "icmp sgt",
+                    _ => return Err(format!("Op {:?} not implemented yet", op)),
+                };
+
+                let type_prefix = "i64";
+                self.output.push_str(&format!(
+                    "  %TMP{} = {} {} {}, {}\n",
+                    id, instr, type_prefix, l, r
+                ));
+
+                if instr.starts_with("icmp") {
+                    let zext_id = self.temp_counter;
+                    self.temp_counter += 1;
+                    self.output
+                        .push_str(&format!("  %TMP{} = zext i1 %TMP{} to i64\n", zext_id, id));
+                    Ok((format!("%TMP{}", zext_id), Type::Integer))
+                } else {
+                    Ok((format!("%TMP{}", id), Type::Integer))
+                }
+            }
+            Expression::FunctionCall {
+                name,
+                generic_args,
+                args,
+            } => {
+                // Intrinsics
+                if name == "sizeof" && !generic_args.is_empty() {
+                    let size = self.get_type_size(&generic_args[0]);
+                    return Ok((size.to_string(), Type::Integer));
+                }
+
+                if name == "ptr_add" {
+                    if args.len() < 2 {
+                        return Err("ptr_add requires 2 args".to_string());
+                    }
+                    let (base_val, _) = self.generate_expression(&args[0])?;
+                    let (offset_val, _) = self.generate_expression(&args[1])?;
+
+                    let id = self.temp_counter;
+                    self.temp_counter += 1;
+                    // Assuming simple byte offset or int add if they are plain integers in LLVM
+                    self.output.push_str(&format!(
+                        "  %TMP{} = add i64 {}, {}\n",
+                        id, base_val, offset_val
+                    ));
+                    return Ok((format!("%TMP{}", id), Type::Integer));
+                }
+
+                if name == "cast_to_int" && !generic_args.is_empty() {
+                    if args.len() != 1 {
+                        return Err("cast_to_int requires 1 arg".to_string());
+                    }
+                    let (val, ty) = self.generate_expression(&args[0])?;
+
+                    if let Type::FString = ty {
+                        let id = self.temp_counter;
+                        self.temp_counter += 1;
+                        self.output
+                            .push_str(&format!("  %TMP{} = ptrtoint i8* {} to i64\n", id, val));
+                        return Ok((format!("%TMP{}", id), Type::Integer));
+                    }
+                    // If already int, just return
+                    if let Type::Integer = ty {
+                        return Ok((val, Type::Integer));
+                    }
+
+                    return Err(format!("Cannot cast {:?} to int yet", ty));
+                }
+
+                if name == "ptr_read" && !generic_args.is_empty() {
+                    // ptr_read<T>(base, index)
+                    if args.len() < 2 {
+                        return Err("ptr_read requires 2 args".to_string());
+                    }
+                    let (base_val, _) = self.generate_expression(&args[0])?;
+                    let (idx_val, _) = self.generate_expression(&args[1])?;
+                    let elem_type = generic_args[0].clone();
+                    let size = self.get_type_size(&elem_type);
+
+                    let id = self.temp_counter;
+                    self.temp_counter += 1;
+
+                    self.output.push_str(&format!(
+                        "  %TMP{}_mul = mul i64 {}, {}\n",
+                        id, idx_val, size
+                    ));
+                    self.output.push_str(&format!(
+                        "  %TMP{}_add = add i64 {}, %TMP{}_mul\n",
+                        id, base_val, id
+                    ));
+
+                    let llvm_ty = self.type_to_llvm(&elem_type);
+                    self.output.push_str(&format!(
+                        "  %TMP{}_ptr = inttoptr i64 %TMP{}_add to {}*\n",
+                        id, id, llvm_ty
+                    ));
+                    self.output.push_str(&format!(
+                        "  %TMP{} = load {}, {}* %TMP{}_ptr\n",
+                        id, llvm_ty, llvm_ty, id
+                    ));
+
+                    return Ok((format!("%TMP{}", id), elem_type));
+                }
+
+                if name == "ptr_write" && !generic_args.is_empty() {
+                    // ptr_write<T>(base, index, val)
+                    if args.len() < 3 {
+                        return Err("ptr_write requires 3 args".to_string());
+                    }
+                    let (base_val, _) = self.generate_expression(&args[0])?;
+                    let (idx_val, _) = self.generate_expression(&args[1])?;
+                    let (val_val, _val_ty) = self.generate_expression(&args[2])?;
+
+                    let elem_type = generic_args[0].clone();
+                    // Type check? val_ty vs elem_type?
+                    // Fusion doesn't have strict type EQ check helper yet, assume correct for now.
+
+                    let size = self.get_type_size(&elem_type);
+                    let id = self.temp_counter;
+                    self.temp_counter += 1;
+
+                    self.output.push_str(&format!(
+                        "  %TMP{}_mul = mul i64 {}, {}\n",
+                        id, idx_val, size
+                    ));
+                    self.output.push_str(&format!(
+                        "  %TMP{}_add = add i64 {}, %TMP{}_mul\n",
+                        id, base_val, id
+                    ));
+
+                    let llvm_ty = self.type_to_llvm(&elem_type);
+                    self.output.push_str(&format!(
+                        "  %TMP{}_ptr = inttoptr i64 %TMP{}_add to {}*\n",
+                        id, id, llvm_ty
+                    ));
+                    self.output.push_str(&format!(
+                        "  store {} {}, {}* %TMP{}_ptr\n",
+                        llvm_ty, val_val, llvm_ty, id
+                    ));
+
+                    return Ok(("0".to_string(), Type::Void));
+                }
+
+                if self.generic_functions.contains_key(name) {
+                    return self.monomorphize_and_call(name, args);
+                }
+                let call_name = if name == "print" { "printf" } else { name };
+
+                let mut arg_vals = Vec::new();
+
+                if name == "print" && args.len() == 1 {
+                    let (val, ty) = self.generate_expression(&args[0])?;
+                    if let Type::Integer = ty {
+                        let id = self.temp_counter;
+                        self.temp_counter += 1;
+                        self.globals.push_str(&format!(
+                            "@.fmt.{} = private unnamed_addr constant [5 x i8] c\"%lld\\0A\\00\", align 1\n", 
+                            id
+                         ));
+                        arg_vals.push(format!("i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.fmt.{}, i64 0, i64 0)", id));
+                        arg_vals.push(format!("i64 {}", val));
+                    } else if let Type::FString = ty {
+                        arg_vals.push(format!("i8* {}", val));
+                    } else {
+                        arg_vals.push(format!("{} {}", self.type_to_llvm(&ty), val));
+                    }
+                } else {
+                    for arg in args {
+                        let (val, ty) = self.generate_expression(arg)?;
+                        arg_vals.push(format!("{} {}", self.type_to_llvm(&ty), val));
+                    }
+                }
+
+                let args_str = arg_vals.join(", ");
+
+                let ret_type = self
+                    .function_signatures
+                    .get(name)
+                    .cloned()
+                    .unwrap_or(Type::Integer);
+                let ret_type_str = self.type_to_llvm(&ret_type);
+
+                if name == "print" {
+                    self.output.push_str(&format!(
+                        "  call FInt (i8*, ...) @{}({})\n",
+                        call_name, args_str
+                    ));
+                    Ok(("0".to_string(), ret_type))
+                } else {
+                    if let Type::Void = ret_type {
+                        self.output.push_str(&format!(
+                            "  call {} @{}({})\n",
+                            ret_type_str, call_name, args_str
+                        ));
+                        Ok(("0".to_string(), ret_type))
+                    } else {
+                        let id = self.temp_counter;
+                        self.temp_counter += 1;
+                        self.output.push_str(&format!(
+                            "  %TMP{} = call {} @{}({})\n",
+                            id, ret_type_str, call_name, args_str
+                        ));
+                        Ok((format!("%TMP{}", id), ret_type))
+                    }
+                }
+            }
+            Expression::FieldAccess { object, field } => {
+                let (obj_val, obj_type) = self.generate_expression(object)?;
+
+                let resolved_name = match &obj_type {
+                    Type::Custom(name) => Some(name.clone()),
+                    Type::GenericInstance { base_name, args } => {
+                        let mut suffix = FString::new();
+                        for arg in args {
+                            suffix.push_str(&format!("_{}", self.type_name_to_string(arg)));
+                        }
+                        Some(format!("{}{}", base_name, suffix))
+                    }
+                    _ => None,
+                };
+
+                if let Some(class_name) = resolved_name {
+                    if let Some(fields) = self.struct_info.get(&class_name) {
+                        if let Some((idx, field_type)) = fields.get(field) {
+                            let id = self.temp_counter;
+                            self.temp_counter += 1;
+                            // Extractvalue for struct values
+                            self.output.push_str(&format!(
+                                "  %TMP{} = extractvalue %{} {}, {}\n",
+                                id, class_name, obj_val, idx
+                            ));
+                            Ok((format!("%TMP{}", id), field_type.clone()))
+                        } else {
+                            Err(format!("Field {} not found in class {}", field, class_name))
+                        }
+                    } else {
+                        Err(format!("Class {} not defined", class_name))
+                    }
+                } else {
+                    Err("Field access on non-class type".to_string())
+                }
+            }
+            Expression::StructInit {
+                name,
+                generic_args,
+                fields,
+            } => {
+                let mut resolved_name = name.clone();
+                let mut resolved_type = Type::Custom(name.clone());
+
+                // Unified Field Processing
+                let mut final_fields = Vec::new();
+
+                // 1. Generate All Fields
+                // Then infer if needed.
+                // Then insertvalue.
+
+                // 1. Generate All Fields
+                for (fname, fexpr) in fields {
+                    let (val, ty) = self.generate_expression(fexpr)?;
+                    final_fields.push((fname.clone(), val, ty));
+                }
+
+                // 2. Resolve Struct Def (Standard or Generic Inference)
+                // 2. Resolve Struct Def (Standard or Generic Inference)
+                let struct_def = if let Some(def) = self.struct_info.get(name) {
+                    def.clone()
+                } else if let Some(decl) = self.generic_structs.get(name).cloned() {
+                    if !generic_args.is_empty() {
+                        // Explicit Generics
+                        resolved_name = self.ensure_generic_struct(name, generic_args)?;
+                        resolved_type = Type::GenericInstance {
+                            base_name: name.clone(),
+                            args: generic_args.clone(),
+                        };
+                        self.struct_info.get(&resolved_name).unwrap().clone()
+                    } else {
+                        // Generic Inference
+                        if let Declaration::Class {
+                            generic_params,
+                            fields: decl_fields,
+                            ..
+                        } = decl
+                        {
+                            let mut type_map = HashMap::new();
+
+                            // Infer types from generated fields
+                            for (fname, _, ty) in &final_fields {
+                                if let Some(f_decl) = decl_fields.iter().find(|f| f.name == *fname)
+                                {
+                                    if let Type::Custom(t_name) = &f_decl.field_type {
+                                        if generic_params.contains(t_name) {
+                                            type_map.insert(t_name.clone(), ty.clone());
+                                        }
+                                    }
+                                }
+                            }
+
+                            let mut args = Vec::new();
+                            for p in &generic_params {
+                                if let Some(t) = type_map.get(p) {
+                                    args.push(t.clone());
+                                } else {
+                                    return Err(format!("Could not infer generic param {}", p));
+                                }
+                            }
+
+                            resolved_name = self.ensure_generic_struct(name, &args)?;
+                            resolved_type = Type::GenericInstance {
+                                base_name: name.clone(),
+                                args,
+                            };
+
+                            self.struct_info.get(&resolved_name).unwrap().clone()
+                        } else {
+                            return Err(format!("{} is not a class", name));
+                        } // End Declaration match
+                    } // End else (generic inference)
+                } else {
+                    return Err(format!("Unknown struct {}", name));
+                };
+
+                // 3. Construct
+                let mut running_val = "undef".to_string();
+                for (field_name, val, ty) in final_fields {
+                    if let Some((idx, _)) = struct_def.get(&field_name) {
+                        let id = self.temp_counter;
+                        self.temp_counter += 1;
+                        self.output.push_str(&format!(
+                            "  %TMP{} = insertvalue %{} {}, {} {}, {}\n",
+                            id,
+                            resolved_name,
+                            running_val,
+                            self.type_to_llvm(&ty),
+                            val,
+                            idx
+                        ));
+                        running_val = format!("%TMP{}", id);
+                    } else {
+                        return Err(format!(
+                            "Field {} not found in {}",
+                            field_name, resolved_name
+                        ));
+                    }
+                }
+
+                Ok((running_val, resolved_type))
+            }
+            Expression::MethodCall {
+                object,
+                method,
+                args,
+            } => {
+                let (obj_val, obj_type) = self.generate_expression(object)?;
+
+                let resolved_name = match &obj_type {
+                    Type::Custom(name) => Some(name.clone()),
+                    Type::GenericInstance { base_name, args } => {
+                        let mut suffix = FString::new();
+                        for arg in args {
+                            suffix.push_str(&format!("_{}", self.type_name_to_string(arg)));
+                        }
+                        Some(format!("{}{}", base_name, suffix))
+                    }
+                    _ => None,
+                };
+
+                if let Some(class_name) = resolved_name {
+                    let function_name = format!("{}_{}", class_name, method);
+
+                    let mut arg_vals = Vec::new();
+
+                    // Add implicit 'self' argument
+                    arg_vals.push(format!(
+                        "{} {}",
+                        self.type_to_llvm(&Type::Custom(class_name.clone())),
+                        obj_val
+                    ));
+
+                    for arg in args {
+                        let (val, ty) = self.generate_expression(arg)?;
+                        arg_vals.push(format!("{} {}", self.type_to_llvm(&ty), val));
+                    }
+
+                    let args_str = arg_vals.join(", ");
+
+                    let ret_type = self
+                        .function_signatures
+                        .get(&function_name)
+                        .cloned()
+                        .unwrap_or(Type::Integer);
+                    let ret_type_str = self.type_to_llvm(&ret_type);
+
+                    if let Type::Void = ret_type {
+                        self.output.push_str(&format!(
+                            "  call {} @{}({})\n",
+                            ret_type_str, function_name, args_str
+                        ));
+                        Ok(("0".to_string(), ret_type))
+                    } else {
+                        let id = self.temp_counter;
+                        self.temp_counter += 1;
+                        self.output.push_str(&format!(
+                            "  %TMP{} = call {} @{}({})\n",
+                            id, ret_type_str, function_name, args_str
+                        ));
+                        Ok((format!("%TMP{}", id), ret_type))
+                    }
+                } else {
+                    Err("Method call on non-class type".to_string())
+                }
+            }
+            _ => Ok(("0".to_string(), Type::Integer)),
+        }
+    }
+
+    fn generate_function(
+        &mut self,
+        name: &str,
+        body: &Block,
+        return_type: &Type,
+        params: &FVec<Parameter>,
+    ) -> Result<(), FString> {
+        let ret_type_str = self.type_to_llvm(return_type);
+
+        let mut params_str = FString::new();
+        for (i, param) in params.iter().enumerate() {
+            if i > 0 {
+                params_str.push_str(", ");
+            }
+            params_str.push_str(&format!(
+                "{} %arg{}",
+                self.type_to_llvm(&param.param_type),
+                i
+            ));
+        }
+
+        self.output.push_str(&format!(
+            "define {} @{}({}) {{\n",
+            ret_type_str, name, params_str
+        ));
+        self.output.push_str("entry:\n");
+
+        // Clear local scope
+        self.symbol_table.clear();
+
+        // Copy args to stack vars
+        for (i, param) in params.iter().enumerate() {
+            let ty = self.type_to_llvm(&param.param_type);
+            let arg_val = format!("%arg{}", i);
+
+            self.output
+                .push_str(&format!("  %{} = alloca {}\n", param.name, ty));
+            self.output.push_str(&format!(
+                "  store {} {}, {}* %{}\n",
+                ty, arg_val, ty, param.name
+            ));
+
+            self.symbol_table
+                .insert(param.name.clone(), param.param_type.clone());
+        }
+
+        self.generate_block(body)?;
+
+        if let Type::Void = return_type {
+            self.output.push_str("  ret void\n");
+        } else if let Type::Integer = return_type {
+            self.output.push_str("  ret i64 0\n");
+        } else {
+            // Return safe default (undef) or 0 for now
+            let ret_ty_str = self.type_to_llvm(return_type);
+            if ret_ty_str == "void" {
+                self.output.push_str("  ret void\n");
+            } else {
+                self.output.push_str(&format!("  ret {} 0\n", ret_ty_str));
+            }
+        }
+
+        self.output.push_str("}\n\n");
+        Ok(())
+    }
+
+    fn resolve_type(&self, t: &Type) -> Type {
+        match t {
+            Type::Custom(name) => {
+                if let Some(concrete) = self.current_generic_context.get(name) {
+                    concrete.clone()
+                } else {
+                    t.clone()
+                }
+            }
+            Type::GenericInstance { base_name, args } => {
+                let new_args = args.iter().map(|a| self.resolve_type(a)).collect();
+                Type::GenericInstance {
+                    base_name: base_name.clone(),
+                    args: new_args,
+                }
+            }
+            // If parser used TypeParameter
+            Type::TypeParameter(name) => {
+                if let Some(concrete) = self.current_generic_context.get(name) {
+                    concrete.clone()
+                } else {
+                    t.clone()
+                }
+            }
+            _ => t.clone(),
+        }
+    }
+
+    fn get_type_size(&self, t: &Type) -> FU64 {
+        let t = self.resolve_type(t);
+        match &t {
+            Type::Integer => 8,
+            Type::FString => 8, // ptr
+            Type::Boolean => 1,
+            Type::Custom(name) => {
+                if let Some(map) = self.struct_info.get(name) {
+                    // Sum fields
+                    let mut size = 0;
+                    for (_, (_, fty)) in map {
+                        size += self.get_type_size(fty);
+                    }
+                    size
+                } else {
+                    0
+                }
+            }
+            Type::GenericInstance { base_name, args } => {
+                // Determine mangled name
+                let mut suffix = FString::new();
+                for arg in args {
+                    suffix.push_str(&format!("_{}", self.type_name_to_string(arg)));
+                }
+                let mangled = format!("{}{}", base_name, suffix);
+                if let Some(map) = self.struct_info.get(&mangled) {
+                    let mut size = 0;
+                    for (_, (_, fty)) in map {
+                        size += self.get_type_size(fty);
+                    }
+                    size
+                } else {
+                    0
+                }
+            }
+            _ => 8, // Default
+        }
+    }
+
+    fn type_name_to_string(&self, t: &Type) -> FString {
+        match t {
+            Type::Integer => "int".to_string(),
+            Type::Void => "void".to_string(),
+            Type::Custom(s) => s.clone(),
+            _ => "unknown".to_string(),
+        }
+    }
+
+    fn monomorphize_and_call(
+        &mut self,
+        name: &str,
+        args: &FVec<Expression>,
+    ) -> Result<(FString, Type), FString> {
+        let decl = self.generic_functions.get(name).cloned().unwrap();
+        if let Declaration::Function {
+            generic_params,
+            params,
+            body,
+            return_type,
+            ..
+        } = decl
+        {
+            // 1. Generate args to get types
+            let mut arg_vals = Vec::new();
+            let mut arg_types = Vec::new();
+            for arg in args {
+                let (val, ty) = self.generate_expression(arg)?;
+                arg_vals.push(val);
+                arg_types.push(ty);
+            }
+
+            // 2. Resolve T
+            let mut type_map = HashMap::new();
+            for (i, param) in params.iter().enumerate() {
+                // If param is T, match with arg_types[i]
+                if let Type::Custom(t_name) = &param.param_type {
+                    if generic_params.contains(t_name) {
+                        type_map.insert(t_name.clone(), arg_types[i].clone());
+                    }
+                }
+            }
+            // Check if all generic params resolved
+            for t_name in &generic_params {
+                if !type_map.contains_key(t_name) {
+                    return Err(format!(
+                        "Could not infer generic type '{}' for function '{}'",
+                        t_name, name
+                    ));
+                }
+            }
+
+            // 3. Mangle name
+            let mut mangle_suffix = FString::new();
+            for t_name in &generic_params {
+                let resolved = type_map.get(t_name).unwrap();
+                mangle_suffix.push_str(&format!("_{}", self.type_name_to_string(resolved)));
+            }
+            let mangled_name = format!("{}{}", name, mangle_suffix);
+
+            // 4. Check if generated
+            if !self.function_signatures.contains_key(&mangled_name) {
+                // Set context
+                let old_context = self.current_generic_context.clone();
+                self.current_generic_context = type_map.clone();
+
+                // We need to resolve return type properly for signature
+                let new_return_type = if let Type::Custom(ref s) = return_type {
+                    type_map.get(s).cloned().unwrap_or(return_type.clone())
+                } else {
+                    return_type.clone()
+                };
+
+                // Also resolve params logic is handled by generate_function using type_to_llvm which uses current_generic_context
+                // BUT generate_function takes `params` AST which has `Type::Custom("T")`.
+                // generate_function calls type_to_llvm("T") -> resolves to i64.
+
+                self.function_signatures
+                    .insert(mangled_name.clone(), new_return_type.clone());
+
+                // Capture output for the new function
+                let mut new_func_ir = FString::new();
+                std::mem::swap(&mut self.output, &mut new_func_ir);
+
+                let res = self.generate_function(&mangled_name, &body, &return_type, &params);
+
+                std::mem::swap(&mut self.output, &mut new_func_ir);
+                // Append to globals (which are emitted at the top)
+                self.globals.push_str(&new_func_ir);
+
+                // Restore context
+                self.current_generic_context = old_context;
+                res?;
+            }
+
+            // 5. Call
+            let ret_ty = self.function_signatures.get(&mangled_name).unwrap();
+            let llvm_ret_type = self.type_to_llvm(ret_ty);
+
+            let call_args_str = arg_vals
+                .iter()
+                .zip(arg_types.iter())
+                .map(|(val, ty)| format!("{} {}", self.type_to_llvm(ty), val))
+                .collect::<FVec<_>>()
+                .join(", ");
+
+            let res_id = self.temp_counter;
+            self.temp_counter += 1;
+
+            let call_instr = if llvm_ret_type == "void" {
+                format!("  call void @{}({})\n", mangled_name, call_args_str)
+            } else {
+                format!(
+                    "  %TMP{} = call {} @{}({})\n",
+                    res_id, llvm_ret_type, mangled_name, call_args_str
+                )
+            };
+            self.output.push_str(&call_instr);
+
+            if llvm_ret_type == "void" {
+                Ok(("".to_string(), Type::Void))
+            } else {
+                Ok((format!("%TMP{}", res_id), ret_ty.clone()))
+            }
+        } else {
+            Err("Not a function".to_string())
+        }
+    }
+
+    fn ensure_generic_struct(
+        &mut self,
+        base_name: &str,
+        args: &FVec<Type>,
+    ) -> Result<FString, FString> {
+        let decl = self
+            .generic_structs
+            .get(base_name)
+            .cloned()
+            .ok_or("Unknown generic struct")?;
+
+        if let Declaration::Class {
+            generic_params,
+            fields,
+            methods,
+            name: _,
+            implements: _,
+        } = decl
+        {
+            // 1. Map Types
+            let mut type_map = HashMap::new();
+            if generic_params.len() != args.len() {
+                return Err("Generic arg mismatch".to_string());
+            }
+            for (i, p) in generic_params.iter().enumerate() {
+                type_map.insert(p.clone(), args[i].clone());
+            }
+
+            // 2. Mangle Name
+            let mut suffix = FString::new();
+            for arg in args {
+                suffix.push_str(&format!("_{}", self.type_name_to_string(arg)));
+            }
+            let mangled_name = format!("{}{}", base_name, suffix);
+
+            // 3. Check if exists
+            if self.struct_info.contains_key(&mangled_name) {
+                return Ok(mangled_name);
+            }
+
+            // 4. Instantiate
+            let old_context = self.current_generic_context.clone();
+            self.current_generic_context = type_map;
+
+            // Generate Field Types
+            let mut field_map = HashMap::new();
+            let mut field_types_llvm = FString::new();
+            for (i, field) in fields.iter().enumerate() {
+                // Resolve field type using current_generic_context
+                // We rely on type_to_llvm to look it up, OR we manually resolve AST Type.
+                // type_to_llvm works for llvm string.
+                // But we need to store the resolved Type in struct_info for FieldAccess to work later!
+
+                let resolved_type = match &field.field_type {
+                    Type::Custom(s) => self
+                        .current_generic_context
+                        .get(s)
+                        .cloned()
+                        .unwrap_or(field.field_type.clone()),
+                    // Handles simple T. Nested `Box<T>` needs recursive resolution.
+                    // For now, simple substitution.
+                    _ => field.field_type.clone(),
+                };
+
+                field_map.insert(field.name.clone(), (i, resolved_type.clone()));
+
+                if i > 0 {
+                    field_types_llvm.push_str(", ");
+                }
+                field_types_llvm.push_str(&self.type_to_llvm(&resolved_type));
+            }
+
+            self.globals.push_str(&format!(
+                "%{} = type {{ {} }}\n\n",
+                mangled_name, field_types_llvm
+            ));
+            self.struct_info.insert(mangled_name.clone(), field_map);
+
+            // 5. Generate Methods
+            for method in methods {
+                if let Declaration::Function {
+                    name: method_name,
+                    body,
+                    return_type,
+                    params,
+                    ..
+                } = method
+                {
+                    let mangled_func_name = format!("{}_{}", mangled_name, method_name);
+
+                    // Helper: Resolve Type
+                    let resolve_type = |t: &Type, ctx: &FMap<FString, Type>| -> Type {
+                        match t {
+                            Type::Custom(s) => ctx.get(s).cloned().unwrap_or(t.clone()),
+                            _ => t.clone(), // Should recurse for full support
+                        }
+                    };
+
+                    let new_ret_type = resolve_type(&return_type, &self.current_generic_context);
+                    let mut new_params = Vec::new();
+
+                    // Add self with CONCRETE type
+                    new_params.push(Parameter {
+                        name: "self".to_string(),
+                        param_type: Type::Custom(mangled_name.clone()),
+                    });
+
+                    for p in params {
+                        if p.name == "self" {
+                            continue;
+                        } // Generic AST usually doesn't have self?
+                          // Parser adds self in `parse_class`.
+                          // `parse_function` inside `parse_class` doesn't know about self.
+                          // `CodeGenerator` adds it.
+                          // But stored AST in `Declaration::Class` `methods` field:
+                          // Parser line 125: `methods.push(self.parse_function()?)`.
+                          // `parse_function` parses normal args.
+                          // So AST stored has NO self.
+
+                        new_params.push(Parameter {
+                            name: p.name.clone(),
+                            param_type: resolve_type(&p.param_type, &self.current_generic_context),
+                        });
+                    }
+
+                    self.function_signatures
+                        .insert(mangled_func_name.clone(), new_ret_type.clone());
+
+                    // Capture output
+                    let mut new_func_ir = FString::new();
+                    std::mem::swap(&mut self.output, &mut new_func_ir);
+
+                    self.generate_function(&mangled_func_name, &body, &new_ret_type, &new_params)?;
+
+                    std::mem::swap(&mut self.output, &mut new_func_ir);
+                    self.globals.push_str(&new_func_ir);
+                }
+            }
+
+            // Restore
+            self.current_generic_context = old_context;
+            Ok(mangled_name)
+        } else {
+            Err("Not a class".to_string())
+        }
+    }
+
+    fn generate_lvalue_address(&mut self, expr: &Expression) -> Result<(FString, Type), FString> {
+        match expr {
+            Expression::Variable(name) => {
+                if let Some(ty) = self.symbol_table.get(name) {
+                    // %name is the alloca pointer
+                    Ok((format!("%{}", name), ty.clone()))
+                } else {
+                    Err(format!("Unknown variable {}", name))
+                }
+            }
+            Expression::FieldAccess { object, field } => {
+                let (base_ptr, base_type) = self.generate_lvalue_address(object)?;
+                if let Type::Custom(class_name) = base_type {
+                    if let Some(fields) = self.struct_info.get(&class_name) {
+                        if let Some((idx, field_type)) = fields.get(field) {
+                            let id = self.temp_counter;
+                            self.temp_counter += 1;
+                            self.output.push_str(&format!(
+                                "  %TMP{} = getelementptr inbounds %{}, %{}* {}, FInt 0, FInt {}\n",
+                                id, class_name, class_name, base_ptr, idx
+                            ));
+                            Ok((format!("%TMP{}", id), field_type.clone()))
+                        } else {
+                            Err(format!("Field {} not found", field))
+                        }
+                    } else {
+                        Err(format!("Unknown struct {}", class_name))
+                    }
+                } else {
+                    Err("Field access on non-struct".to_string())
+                }
+            }
+            _ => Err("Not an lvalue".to_string()),
+        }
+    }
+
+    fn type_to_llvm(&self, t: &Type) -> FString {
+        match t {
+            Type::Integer => "i64".to_string(),
+            Type::Void => "void".to_string(),
+            Type::FString => "i8*".to_string(),
+            Type::Boolean => "i1".to_string(),
+            Type::Custom(name) => {
+                if let Some(concrete) = self.current_generic_context.get(name) {
+                    self.type_to_llvm(concrete)
+                } else {
+                    format!("%{}", name)
+                }
+            }
+            Type::GenericInstance { base_name, args } => {
+                // Determine mangled name
+                let mut suffix = FString::new();
+                for arg in args {
+                    suffix.push_str(&format!("_{}", self.type_name_to_string(arg)));
+                }
+                let mangled = format!("{}{}", base_name, suffix);
+                format!("%{}", mangled)
+
+                // Note: We cannot mutable call monomorphize_struct here
+                // because type_to_llvm takes &self.
+                // We assume monomorphize_struct is called separately or we need Cell/RefCell
+                // OR we perform a pre-pass or lazy generation that is architecturally different.
+                // For now, assume it's generated?
+                // Or better: Don't generate lazily inside type_to_llvm.
+                // But where to trigger generation?
+                // When parsing VariableDeclaration or FunctionSignature.
+            }
+            _ => "i64".to_string(),
+        }
+    }
+}

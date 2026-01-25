@@ -1,0 +1,11 @@
+// SOURCE: registry/crates/github/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod auth;
+mod client;
+
+pub use auth::{AuthMethod, GitHubAuth};
+pub use client::{
+    CreateGistRequest, CreateIssueRequest, CreatePullRequest, CreateRepoRequest, Gist, GistFile,
+    GitHubClient, GitHubConfig, Issue, MergePullRequest, MergeResult, PullRequest, Repository,
+    UpdateIssueRequest, User,
+};

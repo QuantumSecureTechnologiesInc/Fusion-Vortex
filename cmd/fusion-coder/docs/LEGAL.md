@@ -21,15 +21,16 @@ Your use of Fusion VSC CLI Coder is subject to:
 The Fusion VSCode CLI represents a groundbreaking approach with **zero existing implementations**:
 
 **Core Innovation - Running VS Code Extensions Headlessly:**
-```
+
+```text
 Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
 
-The methodology, architecture, and implementation for executing Visual Studio Code 
-extensions outside of VS Code as standalone MCP (Model Context Protocol) tools is 
+The methodology, architecture, and implementation for executing Visual Studio Code
+extensions outside of VS Code as standalone MCP (Model Context Protocol) tools is
 proprietary intellectual property.
 
 NO ONE ELSE IS DOING THIS. This is a first-of-its-kind implementation.
-```
+```text
 
 **Protected Elements - Fusion VSCode CLI:**
 
@@ -86,16 +87,17 @@ NO ONE ELSE IS DOING THIS. This is a first-of-its-kind implementation.
 - ✅ **Development Process** - 11-phase implementation methodology
 
 **Copyright Notice for All Processes:**
-```
+
+```text
 The architectural designs, implementation patterns, development methodologies,
 and innovative approaches embodied in both Fusion VSCode CLI and Fusion VSC CLI Coder are:
 
 Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
 
-These processes, architectures, and methodologies may not be copied, reproduced, 
-or implemented without explicit written permission, except as permitted under 
+These processes, architectures, and methodologies may not be copied, reproduced,
+or implemented without explicit written permission, except as permitted under
 the MIT OR Apache-2.0 licenses for the source code itself.
-```
+```text
 
 **What This Protects:**
 - The revolutionary VS Code extension → MCP tool conversion methodology
@@ -112,7 +114,7 @@ the MIT OR Apache-2.0 licenses for the source code itself.
 - Independent development of other CLI tools
 
 **Patent Notice:**
-These innovations may be subject to patent applications. Any implementation of 
+These innovations may be subject to patent applications. Any implementation of
 similar methodologies should verify no patent infringement.
 
 ---
@@ -124,7 +126,8 @@ similar methodologies should verify no patent infringement.
 Fusion VSC CLI Coder incorporates concepts, patterns, and inspiration from several open-source projects:
 
 #### VS Code Extension API
-```
+
+```text
 Copyright (c) Microsoft Corporation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -135,31 +138,35 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 [MIT License - Full text available at: https://github.com/microsoft/vscode/blob/main/LICENSE.txt]
-```
+```text
 
 **Attribution**: VS Code extension patterns and APIs referenced for integration design.
 
 #### Model Context Protocol (MCP)
-```
+
+```text
 Copyright (c) Anthropic PBC
 
 Licensed under the MIT License
 [Full license: https://github.com/anthropics/anthropic-sdk-typescript/blob/main/LICENSE]
-```
+```text
 
 **Attribution**: MCP server implementation patterns and protocol specifications used for agent communication architecture.
 
 #### Claude Code
-```
+
+```text
 Copyright (c) Anthropic PBC
-```
+```text
 
 **Inspiration**: Settings architecture, permission system, and hierarchical configuration patterns inspired by Claude Code's implementation. No source code was copied; design patterns and UX concepts were adapted.
 
 #### Antigravity IDE
+
 **Inspiration**: Agent modes (Planning/Fast), task group system, and continuous context features inspired by Antigravity IDE's agent architecture.
 
 #### Codex
+
 **Inspiration**: Interactive CLI patterns, resume functionality, and exec mode inspired by Codex's developer workflow.
 
 ### Rust Ecosystem Dependencies

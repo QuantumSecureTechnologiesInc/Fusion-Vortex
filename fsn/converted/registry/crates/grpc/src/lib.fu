@@ -1,0 +1,10 @@
+// SOURCE: registry/crates/grpc/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Production gRPC Server.
+/// Provides high-speed, structured communication based on HTTP/2 and Protobuf.
+
+struct FusionGrpcServer;
+
+pub async fn run_grpc_server() {
+    println!("gRPC server not implemented yet (proto missing)");
+}

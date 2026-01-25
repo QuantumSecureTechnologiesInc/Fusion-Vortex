@@ -1,7 +1,7 @@
 # Fusion VRAM Scheduler
 
-**Version:** 0.2.0  
-**Type:** System Service  
+**Version:** 0.2.0
+**Type:** System Service
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_vram_scheduler::{VramManager, Device};
 
 let manager = VramManager::new(Device::Cuda(0));
 let ptr = manager.alloc(1024)?;
-```
+```text
 
 ## Dependencies
 

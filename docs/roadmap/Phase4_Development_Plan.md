@@ -81,7 +81,7 @@ implT TensorT {
     fn transpose(self) -> TensorT;
     fn slice(self, ranges: Vector<(int, int)>) -> TensorT;
 }
-```
+```text
 
 #### 2. Matrix Operations (2 hours)
 
@@ -95,7 +95,7 @@ fn matmulT(a: TensorT, b: TensorT) -> TensorT {
 fn dotT(a: TensorT, b: TensorT) -> T {
     // GPU-accelerated dot product
 }
-```
+```text
 
 #### 3. Neural Network Primitives (3 hours)
 
@@ -116,7 +116,7 @@ class Linear {
 
     fn forward(x: Tensor<float>) -> Tensor<float>;
 }
-```
+```text
 
 ---
 
@@ -142,7 +142,7 @@ fn pauli_y() -> QuantumGate;
 fn pauli_z() -> QuantumGate;
 fn cnot() -> QuantumGate;
 fn toffoli() -> QuantumGate;
-```
+```text
 
 #### 2. Circuit Composition (2 hours)
 
@@ -155,7 +155,7 @@ class QuantumCircuit {
     fn measure(self, qubit: int) -> int;
     fn simulate(self) -> Tensor<Complex>;
 }
-```
+```text
 
 #### 3. Algorithms (2-4 hours)
 
@@ -163,7 +163,7 @@ class QuantumCircuit {
 fn grover_search(oracle: fn(int) -> bool, n: int) -> int;
 fn quantum_fourier_transform(n: int) -> QuantumCircuit;
 fn vqe_optimizer(hamiltonian: Tensor<Complex>) -> float;
-```
+```text
 
 ---
 
@@ -192,7 +192,7 @@ ml-toolkit = "0.5"
 
 [dev-dependencies]
 test-framework = "1.2"
-```
+```text
 
 #### 2. Dependency Resolution (4 hours)
 
@@ -218,7 +218,7 @@ fusion build                    # Build with dependencies
 fusion run                      # Build and run
 fusion test                     # Run tests
 fusion publish                  # Publish to registry
-```
+```text
 
 ---
 

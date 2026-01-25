@@ -1,0 +1,240 @@
+// SOURCE: src/package_manager/cli.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+use super::{manifest::Manifest, Version, VersionRequirement};
+
+/// Package manager CLI commands
+#[derive(Debug, Clone)]
+enum PackageCommand {
+    New {
+        name: FString,
+        path: PathBuf,
+    },
+    Init {
+        path: PathBuf,
+    },
+    Add {
+        name: FString,
+        version: Option<FString>,
+    },
+    Remove {
+        name: FString,
+    },
+    Update {
+        specific: Option<FString>,
+    },
+    Build,
+    Test,
+    Run,
+    Publish,
+    Search {
+        query: FString,
+    },
+    Info {
+        name: FString,
+    },
+}
+
+/// Execute package manager command
+fn execute_command(cmd: PackageCommand) -> Result<(), FString> {
+    match cmd {
+        PackageCommand::New { name, path } => {
+            create_new_project(&name, &path)?;
+            println!("✅ Created new project: {}", name);
+            Ok(())
+        }
+
+        PackageCommand::Init { path } => {
+            init_project(&path)?;
+            println!("✅ Initialized Fusion project");
+            Ok(())
+        }
+
+        PackageCommand::Add { name, version } => {
+            let version_req = if let Some(v) = version {
+                let ver = Version::parse(&v)?;
+                VersionRequirement::Caret(ver)
+            } else {
+                VersionRequirement::Any
+            };
+
+            add_dependency(&name, version_req)?;
+            println!("✅ Added dependency: {}", name);
+            Ok(())
+        }
+
+        PackageCommand::Remove { name } => {
+            remove_dependency(&name)?;
+            println!("✅ Removed dependency: {}", name);
+            Ok(())
+        }
+
+        PackageCommand::Update { specific } => {
+            update_dependencies(specific.as_deref())?;
+            println!("✅ Updated dependencies");
+            Ok(())
+        }
+
+        PackageCommand::Build => {
+            build_project()?;
+            println!("✅ Build successful");
+            Ok(())
+        }
+
+        PackageCommand::Test => {
+            run_tests()?;
+            println!("✅ Tests passed");
+            Ok(())
+        }
+
+        PackageCommand::Run => {
+            run_project()?;
+            Ok(())
+        }
+
+        PackageCommand::Publish => {
+            publish_package()?;
+            println!("✅ Package published");
+            Ok(())
+        }
+
+        PackageCommand::Search { query } => {
+            search_packages(&query)?;
+            Ok(())
+        }
+
+        PackageCommand::Info { name } => {
+            show_package_info(&name)?;
+            Ok(())
+        }
+    }
+}
+
+/// Create a new project
+fn create_new_project(name: &str, path: &Path) -> Result<(), FString> {
+    // Create project directory
+    std::fs::create_dir_all(path).map_err(|e| format!("Failed to create directory: {}", e))?;
+
+    // Create fusion.toml
+    let manifest = Manifest::generate(name, "0.1.0")?;
+    std::fs::write(path.join("fusion.toml"), manifest)
+        .map_err(|e| format!("Failed to write manifest: {}", e))?;
+
+    // Create src directory
+    std::fs::create_dir_all(path.join("src"))
+        .map_err(|e| format!("Failed to create src directory: {}", e))?;
+
+    // Create main.fu
+    let main_template = r#"fn main() -> int {
+    println("Hello from Fusion!");
+    return 0;
+}
+"#;
+    std::fs::write(path.join("src/main.fu"), main_template)
+        .map_err(|e| format!("Failed to write main.fu: {}", e))?;
+
+    // Create README.md
+    let readme = format!("# {}\n\nA Fusion project.\n", name);
+    std::fs::write(path.join("README.md"), readme)
+        .map_err(|e| format!("Failed to write README: {}", e))?;
+
+    Ok(())
+}
+
+/// Initialize project in current directory
+fn init_project(path: &Path) -> Result<(), FString> {
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("fusion-project");
+
+    create_new_project(name, path)
+}
+
+/// Add a dependency
+fn add_dependency(name: &str, version_req: VersionRequirement) -> Result<(), FString> {
+    // TODO: Read fusion.toml, add dependency, write back
+    println!("Adding dependency: {} {:?}", name, version_req);
+    Ok(())
+}
+
+/// Remove a dependency
+fn remove_dependency(name: &str) -> Result<(), FString> {
+    // TODO: Read fusion.toml, remove dependency, write back
+    println!("Removing dependency: {}", name);
+    Ok(())
+}
+
+/// Update dependencies
+fn update_dependencies(specific: Option<&str>) -> Result<(), FString> {
+    // TODO: Update all or specific dependency
+    if let Some(name) = specific {
+        println!("Updating dependency: {}", name);
+    } else {
+        println!("Updating all dependencies");
+    }
+    Ok(())
+}
+
+/// Build the project
+fn build_project() -> Result<(), FString> {
+    // TODO: Run fusion compiler on project
+    println!("Building project...");
+    Ok(())
+}
+
+/// Run tests
+fn run_tests() -> Result<(), FString> {
+    // TODO: Run test suite
+    println!("Running tests...");
+    Ok(())
+}
+
+/// Run the project
+fn run_project() -> Result<(), FString> {
+    // TODO: Build and execute
+    println!("Running project...");
+    Ok(())
+}
+
+/// Publish package
+fn publish_package() -> Result<(), FString> {
+    // TODO: Package and upload to registry
+    println!("Publishing package...");
+    Ok(())
+}
+
+/// Search packages
+fn search_packages(query: &str) -> Result<(), FString> {
+    // TODO: Search registry
+    println!("Searching for: {}", query);
+    println!("No packages found (registry not yet available)");
+    Ok(())
+}
+
+/// Show package information
+fn show_package_info(name: &str) -> Result<(), FString> {
+    // TODO: Fetch and display package info
+    println!("Package: {}", name);
+    println!("(Registry not yet available)");
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_project() {
+        let temp_dir = env::temp_dir().join("fusion-test-project");
+        create_new_project("test-project", &temp_dir).unwrap();
+
+        assert!(temp_dir.join("fusion.toml").exists());
+        assert!(temp_dir.join("src/main.fu").exists());
+
+        // Cleanup
+        std::fs::remove_dir_all(temp_dir).ok();
+    }
+}

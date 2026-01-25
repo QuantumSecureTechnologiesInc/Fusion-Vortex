@@ -1,0 +1,13 @@
+// SOURCE: antigravity/playground/Fusion Substrate/crates/core/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod ast;
+mod chunk;
+mod compiler;
+mod function;
+mod lexer;
+mod parser;
+mod semantic;
+mod token;
+mod type_checker;
+mod value;
+mod vm;

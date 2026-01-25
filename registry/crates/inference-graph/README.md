@@ -1,7 +1,7 @@
 # Fusion Inference Graph
 
-**Version:** 0.2.0  
-**Type:** AI Orchestration  
+**Version:** 0.2.0
+**Type:** AI Orchestration
 **License:** MIT
 
 ## Overview
@@ -29,7 +29,7 @@ graph.add_edge(input, preprocess);
 graph.add_edge(preprocess, model);
 
 let result = graph.execute(data).await?;
-```
+```text
 
 ## Dependencies
 

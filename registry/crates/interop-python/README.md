@@ -1,7 +1,7 @@
 # Fusion Python Interop
 
-**Version:** 0.2.0  
-**Type:** Language Bridge  
+**Version:** 0.2.0
+**Type:** Language Bridge
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let numpy = PyModule::import(py, "numpy")?;
 let result = numpy.call1("sqrt", (2.0,))?;
 
 println!("Sqrt(2) = {}", result);
-```
+```text
 
 ## Dependencies
 

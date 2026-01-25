@@ -7,7 +7,7 @@ Advanced agent orchestration CLI combining the best of:
 
 ## Project Structure
 
-```
+```text
 cmd/fusion-coder/          # Main CLI binary
 crates/
   ├── fusion-agent-core/    # Agent orchestration engine
@@ -15,20 +15,23 @@ crates/
   ├── fusion-review-policy/ # Review policy enforcement
   ├── fusion-browser-agent/ # Browser subagent
   └── fusion-settings/      # Hierarchical settings management
-```
+```text
 
 ## Features
 
 ### Agent Modes
+
 - **Planning Mode**: Deep research, task groups, artifacts
 - **Fast Mode**: Direct execution for simple tasks
 
 ### Review Policies
+
 - Artifact review (AlwaysProceed / RequestReview)
 - Terminal command approval with allow/deny lists
 - Browser navigation & JavaScript execution control
 
 ### Interactive Features
+
 - Full-screen TUI with live notifications
 - Resume previous sessions
 - Code review presets
@@ -37,21 +40,27 @@ crates/
 ## Quick Start
 
 ```bash
+
 # Build
+
 cargo build --release -p fusion-coder
 
 # Run interactive mode (planning)
+
 ./target/release/fusion-coder
 
 # Run in fast mode
+
 ./target/release/fusion-coder --mode fast
 
 # Enable secure mode
+
 ./target/release/fusion-coder --secure
 
 # Execute task non-interactively
+
 ./target/release/fusion-coder exec "analyze codebase"
-```
+```text
 
 ## Development
 

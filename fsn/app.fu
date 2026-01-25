@@ -1,0 +1,16 @@
+// app.fsn
+// No imports needed. Types and macros are implicit in Fusion.
+
+fn main() {
+    let status = FInt::new(200);
+    let message = FString::from("System Nominal");
+
+    fusion_if!(status.val() == 200, {
+        println!("Fusion Kernel: {}", message.as_str());
+
+        let next_val = status + FInt::new(1);
+        println!("Next Sequence: {}", next_val.val());
+    } else {
+        println!("Security Alert: State Invalid");
+    });
+}

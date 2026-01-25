@@ -33,13 +33,13 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-agentic-core = "0.1.0"
-```
+```text
 
 Then run:
 
 ```bash
 cargo build
-```
+```text
 
 ## Getting Started
 
@@ -51,14 +51,14 @@ use fusion_agentic_core::{AgenticCore, Result};
 fn main() -> Result<()> {
     // Create the core
     let core = AgenticCore::new();
-    
+
     // Solve a problem
     let solution = core.process_problem("Your problem here")?;
     println!("{}", solution);
-    
+
     Ok(())
 }
-```
+```text
 
 ### Quick Examples
 
@@ -69,7 +69,7 @@ let core = AgenticCore::new();
 let solution = core.process_problem(
     "Design a caching system for a distributed application"
 )?;
-```
+```text
 
 #### Code Generation
 
@@ -78,7 +78,7 @@ let core = AgenticCore::new();
 let code = core.vibe_code(
     "filter even numbers and double them"
 )?;
-```
+```text
 
 #### Quality Analysis
 
@@ -89,7 +89,7 @@ let metrics = core.check_excellence(source_code)?;
 if metrics.is_excellent() {
     println!("Excellent code quality!");
 }
-```
+```text
 
 ## Core Concepts
 
@@ -104,7 +104,7 @@ pub struct AgenticCore {
     vibe_engine: Arc<VibeEngine>,
     excellence_enforcer: Arc<ExcellenceEnforcer>,
 }
-```
+```text
 
 ### Agentic Context
 
@@ -118,7 +118,7 @@ pub struct AgenticContext {
     pub metadata: HashMap<String, String>,
     pub history: Vec<ReasoningStep>,
 }
-```
+```text
 
 ### Thought Nodes
 
@@ -133,7 +133,7 @@ pub struct ThoughtNode {
     pub confidence: f64,
     pub tags: Vec<String>,
 }
-```
+```text
 
 ### Code Patterns
 
@@ -148,7 +148,7 @@ pub struct CodePattern {
     pub confidence: f64,
     pub examples: Vec<String>,
 }
-```
+```text
 
 ## Feature Guide
 
@@ -164,7 +164,7 @@ let context = AgenticContext::new("Problem description".to_string());
 
 // This will iterate up to 10 times or until confidence >= 0.8
 let solution = engine.reason(&context, &chain)?;
-```
+```text
 
 **Key Features:**
 - Self-reflection loop
@@ -189,7 +189,7 @@ println!("{}", cot.visualise(&chain));
 
 // Extract insights
 let insights = cot.extract_insights(&chain);
-```
+```text
 
 **Reasoning Steps:**
 1. Understanding
@@ -216,7 +216,7 @@ let code = vibe.generate_from_patterns(&patterns)?;
 
 // Add custom patterns
 vibe.add_pattern(my_custom_pattern);
-```
+```text
 
 **Pattern Categories:**
 - Functional (map, filter, reduce)
@@ -251,7 +251,7 @@ enforcer.validate(code)?; // Returns error if below threshold
 // Configure
 enforcer.set_min_score(85.0);
 enforcer.set_strict_mode(true);
-```
+```text
 
 **Quality Dimensions:**
 - Readability (20% weight)
@@ -275,7 +275,7 @@ let solution = core.process_problem(
 
 // Less effective
 let solution = core.process_problem("Make caching")?;
-```
+```text
 
 ### 2. Iterative Refinement
 
@@ -285,7 +285,7 @@ Use the iteration feature for complex problems:
 let initial = core.process_problem(problem)?;
 let refined = core.iterate_solution(&initial, "Add error handling")?;
 let finalised = core.iterate_solution(&refined, "Optimise performance")?;
-```
+```text
 
 ### 3. Pattern Reuse
 
@@ -298,7 +298,7 @@ let mut vibe = VibeEngine::new();
 vibe.add_pattern(auth_pattern);
 vibe.add_pattern(database_pattern);
 vibe.add_pattern(api_pattern);
-```
+```text
 
 ### 4. Quality Gates
 
@@ -312,7 +312,7 @@ if !metrics.is_good() {
     eprintln!("Quality issues: {:#?}", metrics.recommendations);
     return Err(QualityError);
 }
-```
+```text
 
 ### 5. Confidence Monitoring
 
@@ -330,7 +330,7 @@ if context.understanding < 0.5 {
 if context.confidence < 0.7 {
     // Consider alternative approaches
 }
-```
+```text
 
 ## Troubleshooting
 
@@ -401,6 +401,6 @@ For issues, questions, or contributions:
 
 ---
 
-**Version**: 0.1.0  
-**Last Updated**: 2025-12-12  
+**Version**: 0.1.0
+**Last Updated**: 2025-12-12
 **Licence**: MIT OR Apache-2.0

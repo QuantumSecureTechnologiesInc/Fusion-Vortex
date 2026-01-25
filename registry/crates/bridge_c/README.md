@@ -1,7 +1,7 @@
 # Fusion Bridge C
 
-**Version:** 0.2.0  
-**Type:** FFI Utility  
+**Version:** 0.2.0
+**Type:** FFI Utility
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ unsafe fn call_c_lib(ptr: *const c_char) {
     let rs_string = c_str_to_string(ptr).unwrap_or_default();
     println!("Received from C: {}", rs_string);
 }
-```
+```text
 
 ## Dependencies
 

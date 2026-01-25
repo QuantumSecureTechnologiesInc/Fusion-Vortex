@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 nn-3d-conv = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use nn_3d_conv::Conv3d;
 fn main() {
     let layer = Conv3d::new();
 }
-```
+```text
 
 ## License
 

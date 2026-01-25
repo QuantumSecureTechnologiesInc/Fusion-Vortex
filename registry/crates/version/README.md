@@ -1,7 +1,7 @@
 # Fusion Version
 
-**Version:** 0.2.0  
-**Type:** Utility  
+**Version:** 0.2.0
+**Type:** Utility
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_version::{Version, Requirement};
 let v = Version::parse("1.2.3")?;
 let req = Requirement::parse("^1.0")?;
 assert!(req.matches(&v));
-```
+```text
 
 ## Dependencies
 

@@ -24,7 +24,7 @@ fn main() {
     let b = Box::new(5)
     println!("b = {}", b)
 }
-```
+```text
 
 When `b` goes out of scope, the box is deallocated (both the pointer on the stack and the data on the heap).
 
@@ -40,7 +40,7 @@ enum List {
     Nil,
 }
 // Error: recursive type `List` has infinite size
-```
+```text
 
 To fix this, we insert a `Box` (which has a known, fixed size: the size of a pointer).
 
@@ -55,7 +55,7 @@ use List::{Cons, Nil}
 fn main() {
     let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))))
 }
-```
+```text
 
 ---
 
@@ -89,7 +89,7 @@ fn main() {
     assert_eq!(5, x)
     assert_eq!(5, *y) // Calls *(y.deref())
 }
-```
+```text
 
 ### 14.2.1 Deref Coercion
 
@@ -102,11 +102,11 @@ fn hello(name: &str) {
 
 fn main() {
     let m = MyBox::new(String::from("Fusion"))
-    
+
     // MyBox<String> -> String -> &str
     hello(&m)
 }
-```
+```text
 
 This makes smart pointers ergonomic to use.
 
@@ -132,14 +132,15 @@ fn main() {
     let d = CustomSmartPointer { data: String::from("other stuff") }
     println!("CustomSmartPointers created.")
 }
-```
+```text
 
 Output:
+
 ```text
 CustomSmartPointers created.
 Dropping CustomSmartPointer with data `other stuff`!
 Dropping CustomSmartPointer with data `my stuff`!
-```
+```text
 
 Note variables are dropped in reverse order of creation.
 
@@ -163,15 +164,15 @@ use List::{Cons, Nil}
 
 fn main() {
     let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))))
-    
+
     // b shares ownership of a
     // clone() here increases reference count, doesn't deep copy data
-    let b = Cons(3, Rc::clone(&a)) 
-    
+    let b = Cons(3, Rc::clone(&a))
+
     // c also shares ownership of a
     let c = Cons(4, Rc::clone(&a))
 }
-```
+```text
 
 The underlying data won't be dropped until the last `Rc` pointing to it is dropped.
 
@@ -205,7 +206,7 @@ impl Messenger for MockMessenger {
         self.sent_messages.borrow_mut().push(String::from(msg))
     }
 }
-```
+```text
 
 ### 14.5.2 Runtime Borrow Checking
 
@@ -231,7 +232,7 @@ struct Node {
     parent: RefCell<Weak<Node>>,
     children: RefCell<Vec<Rc<Node>>>,
 }
-```
+```text
 
 ---
 
@@ -249,9 +250,9 @@ This chapter completes the "core" Fusion language education. The next chapters w
 
 ## 14.8 Exercises
 
-1.  **Deref**: Implement a `MyBox` pointer and verify `*` works.
-2.  **Tree**: Build a tree structure where nodes have children (Vec of Rc) and pointers back to parents (Weak).
-3.  **Mocking**: Use `RefCell` to create a mock object for testing a logger that counts how many times it was called.
+1. **Deref**: Implement a `MyBox` pointer and verify `*` works.
+2. **Tree**: Build a tree structure where nodes have children (Vec of Rc) and pointers back to parents (Weak).
+3. **Mocking**: Use `RefCell` to create a mock object for testing a logger that counts how many times it was called.
 
 ---
 

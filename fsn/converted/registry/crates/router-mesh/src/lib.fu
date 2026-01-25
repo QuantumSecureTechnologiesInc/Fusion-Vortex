@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/router-mesh/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// router-mesh implementation
+
+struct RouterMeshModule;

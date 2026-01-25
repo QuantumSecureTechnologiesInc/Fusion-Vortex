@@ -1,0 +1,41 @@
+#[derive(Debug)]
+struct TrieNode {
+    children: FMap<FU32, TrieNode>,
+    is_terminal: FBool,
+}
+impl TrieNode {
+    pub fn new() -> Self {
+        Self {
+            children: HashMap::new(),
+            is_terminal: false,
+        }
+    }
+}
+struct DecodingTrie {
+    root: TrieNode,
+}
+impl DecodingTrie {
+    pub fn new() -> Self {
+        Self { root: TrieNode::new() }
+    }
+    /// Adds a constraint sequence to the trie.
+    pub fn insert_sequence(&mut self, sequence: &[FU32]) {
+        let mut current = &mut self.root;
+        for &token in sequence {
+            current = current.children.entry(token).or_insert_with(TrieNode::new);
+        }
+        current.is_terminal = true;
+    }
+    /// Returns a mask (Vec<bool>) that filters logits to only valid next tokens.
+    pub fn get_valid_tokens(&self, current_prefix: &[FU32]) -> FVec<FU32> {
+        let mut node = &self.root;
+        for &token in current_prefix {
+            if let Some(child) = node.children.get(&token) {
+                node = child;
+            } else {
+                return Vec::new();
+            }
+        }
+        node.children.keys().cloned().collect()
+    }
+}

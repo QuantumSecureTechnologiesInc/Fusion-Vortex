@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 llm-tensor-optim = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use llm_tensor_optim::optimize;
 fn main() {
     optimize();
 }
-```
+```text
 
 ## License
 

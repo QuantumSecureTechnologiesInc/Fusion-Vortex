@@ -1,8 +1,8 @@
 # Fusion Crate Registry - Complete Reference
 
-**Dataset Category**: API Reference  
-**Training Level**: Intermediate to Advanced  
-**Last Updated**: December 2025 (v0.2.0-beta.1)
+**Dataset Category**: API Reference
+**Training Level**: Intermediate to Advanced
+**Last Updated**: December 2025 (v1.0.0) (v1.0.0)
 
 ---
 
@@ -14,22 +14,25 @@ Fusion's ecosystem consists of 250+ crates organized into functional categories.
 
 ### Core Language Crates
 
-#### `fusion_core` (v0.2.0)
-**Description**: Core compiler and language implementation  
+#### `fusion_core` (v1.0.0)
+
+**Description**: Core compiler and language implementation
 **Key Modules**:
 - `compiler` - Main compiler pipeline
 - `lexer` - Tokenization
-- `parser` - AST generation  
+- `parser` - AST generation
 - `typechecker` - Type inference and checking
 - `vm` - Virtual machine execution
 
 **Common Imports**:
+
 ```fusion
 use fusion_core::{Compiler, CompilerOptions, Error}
-```
+```text
 
-#### `fusion_std` (v0.2.0)
-**Description**: Standard library  
+#### `fusion_std` (v1.0.0)
+
+**Description**: Standard library
 **Key Modules**:
 - `collections` - HashMap, HashSet, Vec, LinkedList
 - `io` - Input/output operations
@@ -39,16 +42,18 @@ use fusion_core::{Compiler, CompilerOptions, Error}
 - `time` - Time and date utilities
 
 **Common Imports**:
+
 ```fusion
 use std::collections::HashMap
 use std::io::{Read, Write}
 use std::fs::File
-```
+```text
 
 ### Runtime and Execution
 
-#### `fusion_runtime_core` (v0.2.0)
-**Description**: Core runtime system  
+#### `fusion_runtime_core` (v1.0.0)
+
+**Description**: Core runtime system
 **Key Features**:
 - Async executor
 - Task scheduling
@@ -56,24 +61,28 @@ use std::fs::File
 - Thread pool
 
 **Common Imports**:
+
 ```fusion
 use fusion::runtime::{Runtime, spawn}
-```
+```text
 
 #### `fusion_runtime_core_v2_0_nebula` (v2.0)
-**Description**: Next-generation runtime with AI scheduling  
+
+**Description**: Next-generation runtime with AI scheduling
 **Key Features**:
 - **Cortex**: AI-driven task scheduler
 - **HAL**: Hardware Abstraction Layer
 - **QEM**: Quantum Error Mitigation for memory management
 
 **Common Imports**:
+
 ```fusion
 use fusion::runtime::nebula::{Cortex, HAL, QEM}
-```
+```text
 
-#### `fusion_runtime_scheduler` (v0.2.0)
-**Description**: Advanced task scheduling  
+#### `fusion_runtime_scheduler` (v1.0.0)
+
+**Description**: Advanced task scheduling
 **Key Features**:
 - Work-stealing scheduler
 - Priority queues
@@ -82,8 +91,9 @@ use fusion::runtime::nebula::{Cortex, HAL, QEM}
 
 ### AI and Machine Learning
 
-#### `fusion_ai_core` / `fusion-ai-core` (v0.2.0)
-**Description**: Core AI/ML functionality  
+#### `fusion_ai_core` / `fusion-ai-core` (v1.0.0)
+
+**Description**: Core AI/ML functionality
 **Key Modules**:
 - `nn` - Neural network layers
 - `tensor` - Tensor operations
@@ -91,17 +101,20 @@ use fusion::runtime::nebula::{Cortex, HAL, QEM}
 - `loss` - Loss functions
 
 **Common Imports**:
+
 ```fusion
 use fusion::ai_core::nn::{Linear, ReLU, Sequential}
 use fusion::ai_core::tensor::Tensor
-```
+```text
 
-#### `fusion_ai_core_adapters` (v0.2.0)
-**Description**: Adapters for external AI frameworks  
+#### `fusion_ai_core_adapters` (v1.0.0)
+
+**Description**: Adapters for external AI frameworks
 **Supports**: PyTorch, TensorFlow, ONNX
 
 #### `haft-fusion` / HAFT Crates
-**Description**: Hyper-Adaptive Flux Tensors  
+
+**Description**: Hyper-Adaptive Flux Tensors
 **Related Crates**:
 - `fusion-haft` - Core HAFT implementation
 - `haft-researcher` - Access pattern analysis agent
@@ -129,6 +142,7 @@ use fusion::ai_core::tensor::Tensor
 - `llm-tensor-parallel` - Tensor parallelism
 
 **Example Usage**:
+
 ```fusion
 use llm_inference::{LLM, GenerationConfig}
 use llm_llama::LlamaModel
@@ -141,7 +155,7 @@ let config = GenerationConfig {
 }
 
 let output = model.generate("Once upon a time", config)?
-```
+```text
 
 ### Neural Network Layers (15 crates)
 
@@ -173,13 +187,14 @@ let output = model.generate("Once upon a time", config)?
 - `q-pulse-seq` - Pulse sequence generation
 - `q-visualization` - Circuit visualization
 - `q-aws-backend` - AWS Braket integration
-- `q-ibm-backend` - IBM Quantum integration  
+- `q-ibm-backend` - IBM Quantum integration
 - `q-pqc-proxy` - Post-quantum cryptography proxy
 - `qaoa` - QAOA implementation
 - `qubo` - QUBO problem solver
 - `jordan-wigner` - Jordan-Wigner transformation
 
 **Example**:
+
 ```fusion
 use fusion_quantum::{QuantumCircuit, Simulator}
 
@@ -189,7 +204,7 @@ circuit.cnot(0, 1)
 
 let simulator = Simulator::new()
 let result = simulator.run(&circuit, shots=1000)?
-```
+```text
 
 ### Security (12 crates)
 
@@ -258,7 +273,7 @@ let result = simulator.run(&circuit, shots=1000)?
 
 - `flux-resolve-v2-hive-mind` - v2.0 dependency resolution with GPU and Redis
 - `fusion-flux-resolve` - Original Flux-Resolve
-- `cargo-converter` - Cargo.toml converter
+- `cargo-converter` - Cargo.toml converter (legacy import to Fusion.toml)
 - `python-converter` - Python code converter
 - `fusion-crate-analyzer` / `crate-analyzer` - Crate analysis
 - `fusion-sbom-generator` / `sbom-generator` - SBOM generation
@@ -311,7 +326,7 @@ let result = simulator.run(&circuit, shots=1000)?
 - `fusion-blockchain` - Blockchain primitives
 - `fusion_finance` - Financial calculations
 - `fusion-event-bus` - Event bus
-- `fusion-ui` - UI framework  
+- `fusion-ui` - UI framework
 - `retry` / `fusion_retry` - Retry logic
 - `vault` - Secrets management
 - `version` - Version management
@@ -350,30 +365,34 @@ let result = simulator.run(&circuit, shots=1000)?
 ### Common Dependency Patterns
 
 **Most projects import**:
+
 ```toml
 [dependencies]
 fusion_core = "0.2.0"
 fusion_std = "0.2.0"
 fusion_runtime_core = "0.2.0"
-```
+```text
 
 **AI/ML projects add**:
+
 ```toml
 fusion_ai_core = "0.2.0"
 haft-fusion = "0.2.0"
-```
+```text
 
 **Web projects add**:
+
 ```toml
 fusion-web-server = "0.2.0"
 fusion_database = "0.2.0"
-```
+```text
 
 **Quantum projects add**:
+
 ```toml
 fusion_quantum = "0.2.0"
 q-sim = "0.2.0"
-```
+```text
 
 ---
 

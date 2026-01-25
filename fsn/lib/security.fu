@@ -1,0 +1,28 @@
+// lib/security.fsn
+// The 50/50 consensus kernel.
+
+struct FusionContext {
+    classical_sig: Vec<u8>,
+    pq_sig: Vec<u8>,
+}
+
+impl FusionContext {
+    fn verify(self) -> bool {
+        !self.classical_sig.is_empty() && !self.pq_sig.is_empty()
+    }
+
+    fn mock() -> Self {
+        FusionContext {
+            classical_sig: vec![0xCA, 0xFE],
+            pq_sig: vec![0xBA, 0xBE],
+        }
+    }
+}
+
+fn set_context(ctx: FusionContext) {
+    fusion_if!(ctx.verify(), {
+        Kernel::inject(ctx);
+    } else {
+        panic!("FUSION KERNEL PANIC: Invalid Security Context rejected.");
+    });
+}

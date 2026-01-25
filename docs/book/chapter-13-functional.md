@@ -19,11 +19,11 @@ Closures are functions that are saved in a variable or passed as arguments to ot
 ```fusion
 fn main() {
     let add_one = |x: i32| -> i32 { x + 1 }
-    
+
     let result = add_one(5)
     println!("Result: {}", result)
 }
-```
+```text
 
 Syntax:
 - Pair of pipes `| |` for parameters (instead of `( )`).
@@ -31,9 +31,10 @@ Syntax:
 - Braces `{ }` for the body (optional if a single expression).
 
 A more concise version:
+
 ```fusion
 let add_one = |x| x + 1
-```
+```text
 
 ### 13.1.2 Capturing the Environment
 
@@ -49,7 +50,7 @@ fn main() {
 
     assert!(equal_to_x(y))
 }
-```
+```text
 
 If you tried to do this with `fn`, it would fail because `x` is not in the scope of the function.
 
@@ -57,9 +58,9 @@ If you tried to do this with `fn`, it would fail because `x` is not in the scope
 
 Closures capture values in three ways, which map directly to the three ways a function can take a parameter: owning, borrowing mutably, and borrowing immutably.
 
-1.  **`FnOnce`**: Consumes the variables it captures (moves them). Can be called only once.
-2.  **`FnMut`**: Borrows values mutably. Can be called multiple times and can change the environment.
-3.  **`Fn`**: Borrows values immutably. Can be called multiple times without side effects.
+1. **`FnOnce`**: Consumes the variables it captures (moves them). Can be called only once.
+2. **`FnMut`**: Borrows values mutably. Can be called multiple times and can change the environment.
+3. **`Fn`**: Borrows values immutably. Can be called multiple times without side effects.
 
 Fusion infers which trait to implement based on how the closure uses the captured values.
 
@@ -70,7 +71,7 @@ If you want to force the closure to take ownership of the values it uses, you ca
 let x = vec![1, 2, 3]
 let equal_to_x = move |z| z == x
 // println!("{:?}", x) // Error! x has been moved into the closure
-```
+```text
 
 ---
 
@@ -88,7 +89,7 @@ pub trait Iterator {
     fn next(&mut self) -> Option<Self::Item>
     // ... many default methods
 }
-```
+```text
 
 The heart of an iterator is the `next` method, which returns `Some(item)` or `None` (when finished).
 
@@ -101,33 +102,36 @@ let v1_iter = v1.iter()
 for val in v1_iter {
     println("Got: {}", val)
 }
-```
+```text
 
 ### 13.2.3 Iterator Adaptors
 
 **Adaptors** are methods defined on the `Iterator` trait that produce a *new* iterator. They are lazy: they don't do anything until you consume the iterator.
 
 **`map`**: Transforms each item.
+
 ```fusion
 let v1: Vec<i32> = vec![1, 2, 3]
 let v2: Vec<_> = v1.iter().map(|x| x + 1).collect()
 // v2 is [2, 3, 4]
-```
+```text
 
 **`filter`**: Filters items based on a predicate.
+
 ```fusion
 let v1 = vec![1, 2, 3, 4]
 let v2: Vec<_> = v1.into_iter().filter(|x| x % 2 == 0).collect()
 // v2 is [2, 4]
-```
+```text
 
 **`zip`**: Zips two iterators into pairs.
+
 ```fusion
 let a = [1, 2]
 let b = [3, 4]
 let c: Vec<_> = a.iter().zip(b.iter()).collect()
 // c is [(1, 3), (2, 4)]
-```
+```text
 
 ### 13.2.4 Consuming Adaptors
 
@@ -140,7 +144,7 @@ These methods call `next` and use up the iterator to produce a final value.
 ```fusion
 let v1 = vec![1, 2, 3]
 let total: i32 = v1.iter().sum() // 6
-```
+```text
 
 ---
 
@@ -170,13 +174,14 @@ impl Config {
         // ...
     }
 }
-```
+```text
 
 ### 13.3.2 Making Code Clearer with Iterator Adaptors
 
 Let's rewrite `search`:
 
 **Old**:
+
 ```fusion
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new()
@@ -187,9 +192,10 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     }
     results
 }
-```
+```text
 
 **New (Functional)**:
+
 ```fusion
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents
@@ -197,7 +203,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
         .filter(|line| line.contains(query))
         .collect()
 }
-```
+```text
 
 To many Fusion developers, this functional style is clearer. It focuses on the *what* (filter by query) rather than the *how* (loop, check, push).
 
@@ -225,9 +231,9 @@ In the next chapter, we'll look at **Smart Pointers**, which unlock even more ca
 
 ## 13.6 Exercises
 
-1.  **Custom Iterator**: implementing `Iterator` for a custom struct `Counter` that counts from 1 to 5.
-2.  **Filter/Map**: Use filter and map to find the sum of all squares of even numbers in a vector.
-3.  **Closures**: Write a `Cacher` struct that holds a closure and a generic result value. It should execute the closure only once and then return the cached value on subsequent calls (memoization).
+1. **Custom Iterator**: implementing `Iterator` for a custom struct `Counter` that counts from 1 to 5.
+2. **Filter/Map**: Use filter and map to find the sum of all squares of even numbers in a vector.
+3. **Closures**: Write a `Cacher` struct that holds a closure and a generic result value. It should execute the closure only once and then return the cached value on subsequent calls (memoization).
 
 ---
 

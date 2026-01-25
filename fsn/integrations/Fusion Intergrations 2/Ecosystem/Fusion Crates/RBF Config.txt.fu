@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/RBF Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_nn_rbf"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Radial Basis Function (RBF) networks for specialized non-linearity"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_ai_core = { path = "../ai-core", version = "0.1.0" }

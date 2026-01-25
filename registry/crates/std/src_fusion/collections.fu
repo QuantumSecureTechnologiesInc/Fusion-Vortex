@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: collections (stub)
+fn _collections_stub() -> void { }

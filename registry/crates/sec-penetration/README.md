@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-penetration = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_penetration::Scanner;
 fn main() {
     Scanner::scan();
 }
-```
+```text
 
 ## License
 

@@ -1,0 +1,29 @@
+/// Production Inference Graph.
+///
+/// Dynamically routes tokens/requests to different specialized models or model components.
+use fusion_ai_core::{Layer, Variable};
+use fusion_std::error::{StdError, StdResult};
+struct InferenceGraph {
+    pub nodes: FMap<FString, Box<dyn Layer>>,
+    pub routing_logic: FString,
+}
+impl InferenceGraph {
+    pub fn new() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            routing_logic: "".into(),
+        }
+    }
+    /// Executes the forward pass through the dynamic graph.
+    pub fn forward(&self, input: Variable) -> StdResult<Variable> {
+        if self.nodes.is_empty() {
+            return Err(
+                StdError::Core(
+                    fusion_core::FusionError::CompilationError("Graph is empty".into()),
+                ),
+            );
+        }
+        let output = self.nodes.values().next().unwrap().forward(&input);
+        Ok(output)
+    }
+}

@@ -1,34 +1,38 @@
-/// LLM Tokenizers - BPE, WordPiece, SentencePiece implementations
+// __FU_COMPAT_START__
+#![allow(missing_docs)]
 use std::collections::HashMap;
-
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FSize = usize;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
+// __FU_COMPAT_END__
 pub mod bpe {
     use super::*;
-
     /// Byte-Pair Encoding tokenizer
     pub struct BPETokenizer {
         /// Map from token string to ID
-        vocab: HashMap<String, usize>,
+        vocab: FMap<FString, FSize>,
         /// Map from ID to token string
-        id_to_token: HashMap<usize, String>,
+        id_to_token: FMap<FSize, FString>,
         /// Merge rules: pair of tokens -> merged token
-        merges: HashMap<(String, String), String>,
+        merges: FMap<(FString, FString), FString>,
         /// Cache for encoded words
-        cache: HashMap<String, Vec<usize>>,
+        cache: FMap<FString, FVec<FSize>>,
     }
-
     impl BPETokenizer {
-        pub fn new(vocab_data: HashMap<String, usize>, merges_list: Vec<(String, String)>) -> Self {
+        pub fn new(
+            vocab_data: FMap<FString, FSize>,
+            merges_list: FVec<(FString, FString)>,
+        ) -> Self {
             let mut id_to_token = HashMap::new();
             for (k, v) in &vocab_data {
                 id_to_token.insert(*v, k.clone());
             }
-
             let mut merges = HashMap::new();
             for (p1, p2) in merges_list {
                 let combined = format!("{}{}", p1, p2);
                 merges.insert((p1, p2), combined);
             }
-
             Self {
                 vocab: vocab_data,
                 id_to_token,
@@ -36,55 +40,42 @@ pub mod bpe {
                 cache: HashMap::new(),
             }
         }
-
-        pub fn encode(&self, text: &str) -> Vec<usize> {
-            let words: Vec<&str> = text.split_whitespace().collect();
+        pub fn encode(&self, text: &str) -> FVec<FSize> {
+            let words: FVec<&str> = text.split_whitespace().collect();
             let mut tokens = Vec::new();
-
             for word in words {
                 if let Some(cached) = self.cache.get(word) {
                     tokens.extend(cached);
                     continue;
                 }
-
-                // Initial split into characters (bytes for BPE usually, but chars here for simplicity)
-                let mut word_tokens: Vec<String> = word.chars().map(|c| c.to_string()).collect();
-
-                // Iteratively merge
+                let mut word_tokens: FVec<FString> = word
+                    .chars()
+                    .map(|c| c.to_string())
+                    .collect();
                 loop {
                     let mut min_pair_idx = None;
                     let mut best_pair = None;
-
-                    // Find all pairs
                     for i in 0..word_tokens.len().saturating_sub(1) {
                         let pair = (word_tokens[i].clone(), word_tokens[i + 1].clone());
                         if self.merges.contains_key(&pair) {
-                            // In real BPE, we'd look up rank. Here we just take the first merge found or iterate.
-                            // For simplicity, we merge immediately if found in rule set (greedy).
                             min_pair_idx = Some(i);
                             best_pair = Some(pair);
                             break;
                         }
                     }
-
                     if let Some(idx) = min_pair_idx {
                         let pair = best_pair.unwrap();
                         let merged = self.merges.get(&pair).unwrap().clone();
-
-                        // Replace pair with merged token
                         word_tokens[idx] = merged;
                         word_tokens.remove(idx + 1);
                     } else {
                         break;
                     }
                 }
-
-                // Convert to IDs
                 for t in word_tokens {
                     if let Some(id) = self.vocab.get(&t) {
                         tokens.push(*id);
                     } else {
-                        // Unknown token handling
                         if let Some(unk) = self.vocab.get("<unk>") {
                             tokens.push(*unk);
                         }
@@ -93,71 +84,61 @@ pub mod bpe {
             }
             tokens
         }
-
-        pub fn decode(&self, tokens: &[usize]) -> String {
+        pub fn decode(&self, tokens: &[FSize]) -> FString {
             let mut text = String::new();
             for (i, &id) in tokens.iter().enumerate() {
                 if let Some(token) = self.id_to_token.get(&id) {
                     text.push_str(token);
                     if i < tokens.len() - 1 {
-                        text.push(' '); // Naive spacing
+                        text.push(' ');
                     }
                 }
             }
-            text.replace("</w>", "") // Remove end-of-word markers if present
+            text.replace("</w>", "")
         }
     }
 }
-
 pub mod wordpiece {
     use super::*;
-
     /// WordPiece tokenizer (BERT-style)
     pub struct WordPieceTokenizer {
-        vocab: HashMap<String, usize>,
-        unk_token: String,
-        max_input_chars_per_word: usize,
+        vocab: FMap<FString, FSize>,
+        unk_token: FString,
+        max_input_chars_per_word: FSize,
     }
-
     impl WordPieceTokenizer {
-        pub fn new(vocab: HashMap<String, usize>) -> Self {
+        pub fn new(vocab: FMap<FString, FSize>) -> Self {
             Self {
                 vocab,
                 unk_token: "[UNK]".to_string(),
                 max_input_chars_per_word: 100,
             }
         }
-
-        pub fn tokenize(&self, text: &str) -> Vec<String> {
+        pub fn tokenize(&self, text: &str) -> FVec<FString> {
             let mut output_tokens = Vec::new();
             for token in text.split_whitespace() {
                 if token.chars().count() > self.max_input_chars_per_word {
                     output_tokens.push(self.unk_token.clone());
                     continue;
                 }
-
-                let chars: Vec<char> = token.chars().collect();
+                let chars: FVec<char> = token.chars().collect();
                 let mut start = 0;
                 let mut sub_tokens = Vec::new();
                 let mut is_bad = false;
-
                 while start < chars.len() {
                     let mut end = chars.len();
                     let mut cur_substr = None;
-
                     while end > start {
-                        let mut substr: String = chars[start..end].iter().collect();
+                        let mut substr: FString = chars[start..end].iter().collect();
                         if start > 0 {
                             substr = format!("##{}", substr);
                         }
-
                         if self.vocab.contains_key(&substr) {
                             cur_substr = Some(substr);
                             break;
                         }
                         end -= 1;
                     }
-
                     if let Some(s) = cur_substr {
                         sub_tokens.push(s);
                         start = end;
@@ -166,7 +147,6 @@ pub mod wordpiece {
                         break;
                     }
                 }
-
                 if is_bad {
                     output_tokens.push(self.unk_token.clone());
                 } else {
@@ -175,51 +155,40 @@ pub mod wordpiece {
             }
             output_tokens
         }
-
-        pub fn convert_tokens_to_ids(&self, tokens: &[String]) -> Vec<usize> {
+        pub fn convert_tokens_to_ids(&self, tokens: &[FString]) -> FVec<FSize> {
             tokens
                 .iter()
                 .map(|t| {
-                    *self
-                        .vocab
-                        .get(t)
-                        .unwrap_or(self.vocab.get("[UNK]").unwrap_or(&0))
+                    *self.vocab.get(t).unwrap_or(self.vocab.get("[UNK]").unwrap_or(&0))
                 })
                 .collect()
         }
     }
 }
-
 pub mod sentencepiece {
-
+    use crate::{FSize, FVec, FString};
     /// SentencePiece tokenizer
-    pub struct SentencePieceTokenizer {
-        vocab_size: usize,
+    #[allow(dead_code)]
+    struct SentencePieceTokenizer {
+        vocab_size: FSize,
     }
-
+    #[allow(dead_code)]
     impl SentencePieceTokenizer {
-        pub fn new(vocab_size: usize) -> Self {
+        pub fn new(vocab_size: FSize) -> Self {
             Self { vocab_size }
         }
-
-        pub fn encode_as_ids(&self, text: &str) -> Vec<usize> {
-            // Stub implementation
-            text.chars()
-                .map(|c| (c as usize) % self.vocab_size)
-                .collect()
+        pub fn encode_as_ids(&self, text: &str) -> FVec<FSize> {
+            text.chars().map(|c| (c as FSize) % self.vocab_size).collect()
         }
-
-        pub fn decode_ids(&self, ids: &[usize]) -> String {
+        pub fn decode_ids(&self, ids: &[FSize]) -> FString {
             ids.iter().map(|_| '?').collect()
         }
     }
 }
-
 #[derive(Clone)]
 pub struct LLMTokenizer;
-
 impl LLMTokenizer {
-    pub fn encode(&self, _text: &str) -> Vec<usize> {
+    pub fn encode(&self, _text: &str) -> FVec<FSize> {
         vec![]
     }
 }

@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 llm-tensor-parallel = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use llm_tensor_parallel::Distributed;
 fn main() {
     Distributed::init();
 }
-```
+```text
 
 ## License
 

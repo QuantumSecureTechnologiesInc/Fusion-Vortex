@@ -1,0 +1,6 @@
+// SOURCE: registry/crates/fusion-core/src/types/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod classical;
+mod hybrid;
+mod quantum;
+mod tensor;

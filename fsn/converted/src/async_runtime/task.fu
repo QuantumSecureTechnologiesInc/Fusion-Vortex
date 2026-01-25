@@ -1,0 +1,30 @@
+// SOURCE: src/async_runtime/task.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/async_runtime/task.rs - Async Task Definition
+
+
+/// Unique Task Identifier
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct TaskId(pub FU64);
+
+/// Async Task wrapper
+#[allow(dead_code)]
+struct Task {
+    pub id: TaskId,
+    pub future: Pin<Box<dyn Future<Output = ()> + Send>>,
+}
+
+impl Task {
+    #[allow(dead_code)]
+    fn new(future: impl Future<Output = ()> + Send + 'static, id: FU64) -> Self {
+        Self {
+            id: TaskId(id),
+            future: Box::pin(future),
+        }
+    }
+
+    #[allow(dead_code)]
+    fn poll(&mut self, cx: &mut Context<'_>) -> Poll<()> {
+        self.future.as_mut().poll(cx)
+    }
+}

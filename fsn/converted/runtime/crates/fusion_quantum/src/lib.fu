@@ -1,0 +1,335 @@
+// SOURCE: runtime/crates/fusion_quantum/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! # Fusion Quantum
+//!
+//! Quantum computing primitives for the Fusion Runtime.
+//!
+//! ## Features
+//!
+//! - **Qubit Representation**: High-level qubit abstraction
+//! - **Quantum Gates**: Hadamard, Pauli-X/Y/Z, CNOT, and more
+//! - **Circuit Builder**: Fluent API for building quantum circuits
+//! - **QEM Middleware**: Automatic Quantum Error Mitigation
+//!
+//! ## Architecture
+//!
+//! The quantum module operates in the "Quantum Plane" of the runtime,
+//! interfacing with QPU drivers (IBM Q, Rigetti, or Simulators) through
+//! the QEM layer which automatically injects error mitigation.
+
+use fusion_core::{FusionType, QuantumState, QuantumType};
+use tracing::{debug, trace};
+
+mod qem;
+
+pub use qem::{Circuit as QemCircuit, MitigationError, QemConfig, QemLayer};
+
+/// Qubit representation
+struct Qubit {
+    id: usize,
+    state: QubitState,
+}
+
+#[derive(Debug, Clone)]
+enum QubitState {
+    Zero,
+    One,
+    Superposition,
+}
+
+impl Qubit {
+    /// Create a new qubit in |0⟩ state
+    fn new() -> Self {
+        debug!("Creating new qubit");
+        Self {
+            id: 0,
+            state: QubitState::Zero,
+        }
+    }
+
+    /// Create a new qubit with a specific ID
+    fn with_id(id: usize) -> Self {
+        debug!("Creating qubit with id {}", id);
+        Self {
+            id,
+            state: QubitState::Zero,
+        }
+    }
+
+    /// Get the qubit ID
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    /// Apply Hadamard gate (creates superposition)
+    fn hadamard(&mut self) {
+        trace!("Applying Hadamard gate to qubit {}", self.id);
+        self.state = QubitState::Superposition;
+    }
+
+    /// Apply Pauli-X gate (bit flip)
+    fn pauli_x(&mut self) {
+        trace!("Applying Pauli-X gate to qubit {}", self.id);
+        self.state = match self.state {
+            QubitState::Zero => QubitState::One,
+            QubitState::One => QubitState::Zero,
+            QubitState::Superposition => QubitState::Superposition,
+        };
+    }
+
+    /// Apply Pauli-Y gate
+    fn pauli_y(&mut self) {
+        trace!("Applying Pauli-Y gate to qubit {}", self.id);
+        // In a real implementation, this would apply the Pauli-Y rotation
+        self.state = match self.state {
+            QubitState::Zero => QubitState::One,
+            QubitState::One => QubitState::Zero,
+            QubitState::Superposition => QubitState::Superposition,
+        };
+    }
+
+    /// Apply Pauli-Z gate (phase flip)
+    fn pauli_z(&mut self) {
+        trace!("Applying Pauli-Z gate to qubit {}", self.id);
+        // Pauli-Z doesn't change computational basis states visibly in simulation
+    }
+
+    /// Measure the qubit (collapses superposition)
+    ///
+    /// Returns 0 or 1 based on the measurement outcome.
+    fn measure(&mut self) -> u8 {
+        trace!("Measuring qubit {}", self.id);
+
+        match self.state {
+            QubitState::Zero => 0,
+            QubitState::One => 1,
+            QubitState::Superposition => {
+                // Simulated 50/50 collapse
+                let result = if rand_FBool() { 1 } else { 0 };
+                self.state = if result == 0 {
+                    QubitState::Zero
+                } else {
+                    QubitState::One
+                };
+                result
+            }
+        }
+    }
+}
+
+impl Default for Qubit {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<Qubit> for FusionType {
+    fn from(_qubit: Qubit) -> Self {
+        FusionType::Quantum(QuantumType {
+            num_qubits: 1,
+            state: QuantumState::Simulated(vec![(1.0, 0.0), (0.0, 0.0)]), // |0⟩
+            qpu_device: "simulator".to_string(),
+        })
+    }
+}
+
+/// Quantum gate representation
+#[derive(Debug, Clone)]
+enum QuantumGate {
+    Hadamard(usize),
+    PauliX(usize),
+    PauliY(usize),
+    PauliZ(usize),
+    CNOT(usize, usize),
+    Toffoli(usize, usize, usize),
+    Measure(usize),
+    Rz(usize, f64),
+    Rx(usize, f64),
+    Ry(usize, f64),
+}
+
+/// Quantum circuit builder
+struct Circuit {
+    num_qubits: usize,
+    gates: FVec<QuantumGate>,
+}
+
+impl Circuit {
+    /// Create a new quantum circuit
+    fn new(num_qubits: usize) -> Self {
+        debug!("Creating quantum circuit with {} qubits", num_qubits);
+        Self {
+            num_qubits,
+            gates: Vec::new(),
+        }
+    }
+
+    /// Get the number of qubits
+    fn num_qubits(&self) -> usize {
+        self.num_qubits
+    }
+
+    /// Get the number of gates
+    fn num_gates(&self) -> usize {
+        self.gates.len()
+    }
+
+    /// Apply Hadamard gate
+    fn h(&mut self, qubit: usize) -> &mut Self {
+        self.gates.push(QuantumGate::Hadamard(qubit));
+        self
+    }
+
+    /// Apply Pauli-X gate
+    fn x(&mut self, qubit: usize) -> &mut Self {
+        self.gates.push(QuantumGate::PauliX(qubit));
+        self
+    }
+
+    /// Apply Pauli-Y gate
+    fn y(&mut self, qubit: usize) -> &mut Self {
+        self.gates.push(QuantumGate::PauliY(qubit));
+        self
+    }
+
+    /// Apply Pauli-Z gate
+    fn z(&mut self, qubit: usize) -> &mut Self {
+        self.gates.push(QuantumGate::PauliZ(qubit));
+        self
+    }
+
+    /// Apply CNOT gate
+    fn cx(&mut self, control: usize, target: usize) -> &mut Self {
+        self.gates.push(QuantumGate::CNOT(control, target));
+        self
+    }
+
+    /// Apply Toffoli (CCNOT) gate
+    fn ccx(&mut self, control1: usize, control2: usize, target: usize) -> &mut Self {
+        self.gates
+            .push(QuantumGate::Toffoli(control1, control2, target));
+        self
+    }
+
+    /// Apply measurement
+    fn measure(&mut self, qubit: usize) -> &mut Self {
+        self.gates.push(QuantumGate::Measure(qubit));
+        self
+    }
+
+    /// Apply Rz rotation
+    fn rz(&mut self, qubit: usize, angle: f64) -> &mut Self {
+        self.gates.push(QuantumGate::Rz(qubit, angle));
+        self
+    }
+
+    /// Get the circuit depth (approximation)
+    fn depth(&self) -> usize {
+        // Simplified: assume each gate adds 1 to depth
+        // Real implementation would track parallel gates
+        self.gates.len() / self.num_qubits.max(1)
+    }
+
+    /// Execute circuit (simulation mode)
+    ///
+    /// Returns measurement counts as a map of bitstring to count.
+    fn execute(&self, shots: u32) -> CircuitResult {
+        debug!(
+            "Executing circuit with {} gates, {} shots",
+            self.gates.len(),
+            shots
+        );
+
+        // In a real implementation:
+        // 1. Apply QEM layer
+        // 2. Submit via fusion_runtime_hal QPU interface
+        // 3. Poll for results
+
+        // Simulated result
+        CircuitResult {
+            counts: vec![(vec![0; self.num_qubits], shots)],
+        }
+    }
+}
+
+/// Result from circuit execution
+struct CircuitResult {
+    pub counts: FVec<(FVec<u8>, u32)>,
+}
+
+impl CircuitResult {
+    /// Get the most frequent measurement outcome
+    fn most_frequent(&self) -> Option<&FVec<u8>> {
+        self.counts
+            .iter()
+            .max_by_key(|(_, count)| count)
+            .map(|(bits, _)| bits)
+    }
+
+    /// Get the total number of shots
+    fn total_shots(&self) -> u32 {
+        self.counts.iter().map(|(_, count)| count).sum()
+    }
+}
+
+/// Simple pseudo-random FBoolean generator
+fn rand_FBool() -> FBool {
+    let nanos = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .subsec_nanos();
+    nanos % 2 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_qubit_creation() {
+        let qubit = Qubit::new();
+        assert_eq!(qubit.id(), 0);
+    }
+
+    #[test]
+    fn test_qubit_with_id() {
+        let qubit = Qubit::with_id(5);
+        assert_eq!(qubit.id(), 5);
+    }
+
+    #[test]
+    fn test_qubit_measurement() {
+        let mut qubit = Qubit::new();
+        qubit.hadamard();
+        let result = qubit.measure();
+
+        assert!(result == 0 || result == 1);
+    }
+
+    #[test]
+    fn test_circuit_builder() {
+        let mut circuit = Circuit::new(2);
+        circuit.h(0).cx(0, 1).measure(0).measure(1);
+
+        assert_eq!(circuit.num_gates(), 4);
+        assert_eq!(circuit.num_qubits(), 2);
+    }
+
+    #[test]
+    fn test_circuit_execution() {
+        let mut circuit = Circuit::new(2);
+        circuit.h(0).cx(0, 1);
+
+        let result = circuit.execute(1000);
+        assert_eq!(result.total_shots(), 1000);
+    }
+
+    #[test]
+    fn test_bell_state_circuit() {
+        let mut circuit = Circuit::new(2);
+        circuit.h(0).cx(0, 1).measure(0).measure(1);
+
+        assert_eq!(circuit.num_gates(), 4);
+        assert!(circuit.depth() >= 1);
+    }
+}

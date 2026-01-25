@@ -5,6 +5,7 @@ All notable changes to `fusion-ai-cli-enhanced` will be documented in this file.
 ## [0.1.0] - 2025-12-12
 
 ### Added
+
 - **Smart Command Parsing**: AI-powered command interpretation with intent detection
 - **Intelligent Suggestions**: Context-aware command suggestions with fuzzy matching
 - **Natural Language Processing**: Convert natural language to CLI commands
@@ -17,6 +18,7 @@ All notable changes to `fusion-ai-cli-enhanced` will be documented in this file.
 - **Example Programs**: Complete usage examples
 
 ### Features
+
 - Command intent detection (Build, Run, Test, Install, Clean, etc.)
 - Fuzzy command matching with relevance scoring
 - Natural language patterns for common actions
@@ -25,6 +27,7 @@ All notable changes to `fusion-ai-cli-enhanced` will be documented in this file.
 - Environment-aware suggestions
 
 ### Dependencies
+
 - clap 4.5 - Command-line parsing
 - fuzzy-matcher 0.3 - Fuzzy string matching
 - colored 2.1 - Terminal colors

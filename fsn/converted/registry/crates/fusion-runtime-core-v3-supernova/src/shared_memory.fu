@@ -1,0 +1,143 @@
+// SOURCE: registry/crates/fusion-runtime-core-v3-supernova/src/shared_memory.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/shared_memory.rs
+// Zero-copy shared memory system
+
+use crate::error::{FusionError, Result};
+
+/// Shared tensor that can be accessed from native code, WASM, and GPU
+struct SharedTensor {
+    data: Arc<RwLock<FVec<f32>>>,
+    shape: FVec<usize>,
+    #[cfg(feature = "gpu")]
+    device_ptr: Option<*mut std::ffi::c_void>,
+}
+
+unsafe impl Send for SharedTensor {}
+unsafe impl Sync for SharedTensor {}
+
+impl SharedTensor {
+    /// Create a new shared tensor with the given shape
+    fn new(shape: &[usize]) -> Result<Self> {
+        let total_elements: usize = shape.iter().product();
+        let data = vec![0.0f32; total_elements];
+
+        Ok(Self {
+            data: Arc::new(RwLock::new(data)),
+            shape: shape.to_vec(),
+            #[cfg(feature = "gpu")]
+            device_ptr: None,
+        })
+    }
+
+    /// Write data from native code
+    fn write_native<F>(&self, f: F) -> Result<()>
+    where
+        F: FnOnce(&mut [f32]),
+    {
+        let mut data = self.data.write().map_err(|_| FusionError::Timeout)?;
+        f(&mut data);
+        Ok(())
+    }
+
+    /// Read data from native code
+    fn read_native<F, T>(&self, f: F) -> Result<T>
+    where
+        F: FnOnce(&[f32]) -> T,
+    {
+        let data = self.data.read().map_err(|_| FusionError::Timeout)?;
+        Ok(f(&data))
+    }
+
+    /// Get pointer for WASM access (zero-copy)
+    fn as_wasm_ptr(&self) -> *const f32 {
+        let data = self.data.read().unwrap();
+        data.as_ptr()
+    }
+
+    /// Get mutable pointer for WASM access
+    fn as_wasm_mut_ptr(&self) -> *mut f32 {
+        let mut data = self.data.write().unwrap();
+        data.as_mut_ptr()
+    }
+
+    /// Get device pointer for GPU access (zero-copy)
+    #[cfg(feature = "gpu")]
+    fn device_ptr(&self) -> Result<*mut std::ffi::c_void> {
+        if let Some(ptr) = self.device_ptr {
+            Ok(ptr)
+        } else {
+            Err(FusionError::DeviceError(
+                0,
+                "Tensor not allocated on GPU".into(),
+            ))
+        }
+    }
+
+    /// Allocate tensor on GPU device
+    #[cfg(feature = "gpu")]
+    fn allocate_on_gpu(&mut self, device_id: u32) -> Result<()> {
+        log::info!("Allocating tensor on GPU device {}", device_id);
+        // In production, this would call cudaMalloc
+        // For now, we just mark it as allocated
+        self.device_ptr = Some(std::ptr::null_mut());
+        Ok(())
+    }
+
+    /// Copy data to GPU
+    #[cfg(feature = "gpu")]
+    fn copy_to_gpu(&self) -> Result<()> {
+        log::debug!("Copying tensor data to GPU");
+        // In production: cudaMemcpy(device_ptr, host_data, size, cudaMemcpyHostToDevice)
+        Ok(())
+    }
+
+    /// Copy data from GPU
+    #[cfg(feature = "gpu")]
+    fn copy_from_gpu(&self) -> Result<()> {
+        log::debug!("Copying tensor data from GPU");
+        // In production: cudaMemcpy(host_data, device_ptr, size, cudaMemcpyDeviceToHost)
+        Ok(())
+    }
+
+    fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
+    fn len(&self) -> usize {
+        self.shape.iter().product()
+    }
+
+    fn is_empty(&self) -> FBool {
+        self.len() == 0
+    }
+}
+
+/// Manager for shared memory regions
+struct SharedMemoryManager {
+    tensors: RwLock<FVec<Arc<SharedTensor>>>,
+}
+
+impl SharedMemoryManager {
+    fn new() -> Self {
+        Self {
+            tensors: RwLock::new(Vec::new()),
+        }
+    }
+
+    fn create_tensor(&self, shape: &[usize]) -> Result<Arc<SharedTensor>> {
+        let tensor = Arc::new(SharedTensor::new(shape)?);
+        self.tensors.write().unwrap().push(tensor.clone());
+        Ok(tensor)
+    }
+
+    fn tensor_count(&self) -> usize {
+        self.tensors.read().unwrap().len()
+    }
+}
+
+impl Default for SharedMemoryManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -10,7 +10,7 @@ Supernova is a unified heterogeneous runtime that seamlessly integrates three ex
 
 ## Architecture Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Application Layer                            │
 │  (User Code using Builder API, spawn(), block_on())            │
@@ -53,7 +53,7 @@ Supernova is a unified heterogeneous runtime that seamlessly integrates three ex
     │  - Task migration                 │
     │  - Checkpointing                  │
     └───────────────────────────────────┘
-```
+```text
 
 ## Core Components
 
@@ -107,7 +107,7 @@ runtime.spawn_on_gpu(device_id, async {
 runtime.spawn_on_qpu(device_id, async {
     // Quantum circuit
 }).await;
-```
+```text
 
 ### 5. Shared Memory (`shared_memory.rs`)
 
@@ -125,7 +125,7 @@ let ptr = tensor.as_wasm_ptr();
 // GPU access (device pointer)
 tensor.allocate_on_gpu(0)?;
 let device_ptr = tensor.device_ptr()?;
-```
+```text
 
 ### 6. Host Functions (`host_functions.rs`)
 
@@ -138,7 +138,7 @@ extern "C" {
     fn host_gpu_compute(device_id: i32, data_ptr: *const u8, len: i32) -> i32;
     fn host_qpu_execute(device_id: i32, circuit_ptr: *const u8, len: i32) -> i32;
 }
-```
+```text
 
 ### 7. Metrics (`metrics.rs`)
 
@@ -149,13 +149,13 @@ let metrics = runtime.metrics().snapshot();
 println!("Native tasks: {}", metrics.native_tasks_spawned);
 println!("GPU kernels: {}", metrics.gpu_kernel_launches);
 println!("QPU submissions: {}", metrics.qpu_submissions);
-```
+```text
 
 ## Execution Flow
 
 ### Native Task Execution
 
-```
+```text
 User Code
    │
    ├─> spawn(future)
@@ -170,11 +170,11 @@ User Code
           ├─> Poll task
           ├─> If Pending: register waker
           └─> If Ready: complete
-```
+```text
 
 ### WASM Plugin Execution
 
-```
+```text
 User Code
    │
    ├─> PluginEngine::new()
@@ -200,11 +200,11 @@ User Code
           │             └─> host_shared_memory()
           │
           └─> Return result
-```
+```text
 
 ### Distributed Task Execution
 
-```
+```text
 User Code
    │
    ├─> cluster.spawn_on_node("gpu-node", future)
@@ -220,7 +220,7 @@ User Code
           ├─> Send checkpoint to new node
           ├─> Restore on new node
           └─> Cancel on old node
-```
+```text
 
 ## Performance Characteristics
 

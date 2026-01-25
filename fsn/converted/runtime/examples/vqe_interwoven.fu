@@ -1,0 +1,163 @@
+// SOURCE: runtime/examples/vqe_interwoven.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! # VQE Example with Interwoven Cores
+//!
+//! Demonstrates Variational Quantum Eigensolver using all 3 cores
+
+use fusion_quantum_core::{QuantumCircuit, QuantumGate};
+use fusion_tensor_core::{Matrix, TensorOps};
+use fusion_traits::Numeric;
+
+fn main() {
+    println!("=== Variational Quantum Eigensolver (VQE) ===\n");
+
+    // Problem: Find ground state energy of H2 molecule
+    let num_qubits = 2;
+    let num_iterations = 10;
+
+    println!("Configuration:");
+    println!("  Qubits: {}", num_qubits);
+    println!("  Iterations: {}", num_iterations);
+    println!();
+
+    // Run VQE
+    let (final_energy, final_params) = run_vqe(num_qubits, num_iterations);
+
+    println!("\n=== VQE Results ===");
+    println!("  Final Energy: {:.4}", final_energy);
+    println!("  Optimal Parameters: {:?}", final_params);
+    println!("\n✅ VQE complete using interwoven Traits↔Tensors↔Quantum!");
+}
+
+/// Run VQE optimization
+fn run_vqe(num_qubits: usize, iterations: usize) -> (f64, FVec<f64>) {
+    // Initial parameters
+    let mut params = vec![0.0; num_qubits];
+    let learning_rate = 0.1;
+
+    println!("Starting VQE optimization...\n");
+
+    for iter in 0..iterations {
+        // 1. Build ansatz circuit (Quantum core)
+        let circuit = build_ansatz(num_qubits, &params);
+
+        // 2. Compute energy expectation (Tensor core)
+        let energy = compute_energy(&circuit);
+
+        // 3. Compute gradients (Traits + Tensor interweaving)
+        let gradients = compute_gradients(num_qubits, &params);
+
+        // 4. Update parameters (Classical optimization)
+        update_parameters(&mut params, &gradients, learning_rate);
+
+        if iter % 2 == 0 {
+            println!("  Iteration {}: Energy = {:.4}", iter, energy);
+        }
+    }
+
+    let final_energy = compute_energy(&build_ansatz(num_qubits, &params));
+    (final_energy, params)
+}
+
+/// Build parameterized quantum circuit (Quantum core)
+fn build_ansatz(num_qubits: usize, params: &[f64]) -> QuantumCircuit {
+    let mut circuit = QuantumCircuit::new(num_qubits);
+
+    // Apply parameterized gates
+    for (i, &theta) in params.iter().enumerate() {
+        if i < num_qubits {
+            // Ry rotation (uses Tensor<Complex64> internally)
+            let _ = circuit.apply_gate(QuantumGate::ry(theta), vec![i]);
+        }
+    }
+
+    // Entangling layer
+    if num_qubits > 1 {
+        let _ = circuit.apply_gate(QuantumGate::cnot(), vec![0, 1]);
+    }
+
+    circuit
+}
+
+/// Compute energy expectation value (Tensor core)
+fn compute_energy(_circuit: &QuantumCircuit) -> f64 {
+    // Create Hamiltonian matrix (Tensor!)
+    let hamiltonian = create_hamiltonian();
+
+    // Simulate circuit and compute <ψ|H|ψ>
+    // This uses Matrix operations (TensorOps trait)
+    let energy = simulate_expectation(&hamiltonian);
+
+    energy
+}
+
+/// Create Hamiltonian matrix (Tensor core)
+fn create_hamiltonian() -> Matrix<f64> {
+    //Simple Hamiltonian for H2
+    Matrix::from_vec(
+        vec![
+            -1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, -1.0,
+        ],
+        [4, 4],
+    )
+    .unwrap()
+}
+
+/// Simulate expectation value (Tensor core operations)
+fn simulate_expectation(hamiltonian: &Matrix<f64>) -> f64 {
+    // Create initial state |00⟩
+    let state = Matrix::from_vec(vec![1.0, 0.0, 0.0, 0.0], [4, 1]).unwrap();
+
+    // Compute H|ψ⟩ (uses TensorOps::matmul)
+    let h_psi = hamiltonian.matmul(&state).unwrap_or_else(|_| state.clone());
+
+    // Compute <ψ|H|ψ⟩
+    let energy = h_psi.at(0, 0).unwrap_or(0.0);
+
+    energy
+}
+
+/// Compute parameter gradients (Traits + Tensor interweaving)
+fn compute_gradients(num_params: usize, _params: &[f64]) -> FVec<f64> {
+    // Finite difference gradient
+    // Uses Numeric trait for f64 operations
+    let epsilon = 0.01;
+    let mut gradients = Vec::with_capacity(num_params);
+
+    for _i in 0..num_params {
+        // Simplified gradient computation
+        // Real implementation would use parameter shift rule
+        let grad = epsilon * f64::from_f64(1.0); // Numeric trait!
+        gradients.push(grad);
+    }
+
+    gradients
+}
+
+/// Update parameters (uses Numeric trait)
+fn update_parameters(params: &mut [f64], gradients: &[f64], learning_rate: f64) {
+    for (param, grad) in params.iter_mut().zip(gradients.iter()) {
+        // Uses Numeric operations
+        *param -= learning_rate * grad;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vqe_runs() {
+        let (energy, params) = run_vqe(2, 5);
+        assert!(energy.is_finite());
+        assert_eq!(params.len(), 2);
+    }
+
+    #[test]
+    fn test_ansatz_creation() {
+        let params = vec![0.5, 1.0];
+        let circuit = build_ansatz(2, &params);
+        assert_eq!(circuit.num_qubits, 2);
+        assert!(circuit.gate_count() > 0);
+    }
+}

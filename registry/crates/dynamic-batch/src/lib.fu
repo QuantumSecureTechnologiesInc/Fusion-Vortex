@@ -1,0 +1,38 @@
+#[derive(Debug, Clone)]
+struct Sequence {
+    pub id: FU64,
+    pub token_ids: FVec<FI64>,
+    pub next_token_index: FSize,
+    pub status: FString,
+}
+struct BatchScheduler {
+    sequence_queue: VecDeque<Sequence>,
+    active_sequences: FVec<Sequence>,
+    max_batch_size: FSize,
+}
+impl BatchScheduler {
+    pub fn new(max_batch_size: FSize) -> Self {
+        Self {
+            sequence_queue: VecDeque::new(),
+            active_sequences: Vec::new(),
+            max_batch_size,
+        }
+    }
+    /// Adds a new sequence request to the queue.
+    pub fn enqueue(&mut self, seq: Sequence) {
+        self.sequence_queue.push_back(seq);
+    }
+    /// Selects sequences to form the next execution batch (Continuous Batching logic).
+    pub fn schedule_next_batch(&mut self) -> FVec<Sequence> {
+        let mut new_batch = Vec::new();
+        while new_batch.len() < self.max_batch_size {
+            if let Some(seq) = self.sequence_queue.pop_front() {
+                new_batch.push(seq);
+            } else {
+                break;
+            }
+        }
+        self.active_sequences.extend(new_batch.clone());
+        new_batch
+    }
+}

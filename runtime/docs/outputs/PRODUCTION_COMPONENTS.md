@@ -27,11 +27,12 @@ All seven critical low-level components have been successfully implemented to ma
 **Integration**: Integrated with `fusion_scheduler_m_n` kernel
 
 **API**:
+
 ```rust
 let fiber_scheduler = FiberScheduler::new();
 let fiber_id = fiber_scheduler.spawn_fiber(65536, 128);  // 64KB stack, priority 128
 fiber_scheduler.yield_fiber(fiber_id);
-```
+```text
 
 **Performance**: 40x faster task switching than OS threads
 
@@ -50,6 +51,7 @@ fiber_scheduler.yield_fiber(fiber_id);
 **Integration**: Accessible by VLC (Variational Loop Controller)
 
 **API**:
+
 ```rust
 let timer = LowJitterTimer::new();
 let now_ns = timer.now_ns();
@@ -57,7 +59,7 @@ timer.sleep(Duration::from_micros(50));  // Low-jitter sleep
 
 let deadline = timer.deadline(Duration::from_micros(100));
 if deadline.expired() { /* timeout */ }
-```
+```text
 
 **Performance**: 10x lower jitter than standard timers
 
@@ -76,6 +78,7 @@ if deadline.expired() { /* timeout */ }
 **Integration**: Consolidates network I/O with hardware signals
 
 **API**:
+
 ```rust
 let reactor = FusedIoReactor::new();
 let gpu_id = reactor.register_gpu_event(stream_id);
@@ -88,7 +91,7 @@ reactor.run(|event| {
         _ => {}
     }
 });
-```
+```text
 
 **Performance**: <1μs event polling latency
 
@@ -117,6 +120,7 @@ reactor.run(|event| {
 **Integration**: Integrates with `fusion_ipc_shared_memory_tensor`
 
 **API**:
+
 ```rust
 let shm = SharedMemoryManager::new();
 let id = shm.allocate(1024 * 1024, Some("tensor_buffer"))?;  // 1MB
@@ -126,7 +130,7 @@ shm.write(id, 0, &tensor_data)?;
 let other_shm = SharedMemoryManager::new();
 other_shm.attach("tensor_buffer")?;
 let data = other_shm.read(id, 0, tensor_size)?;
-```
+```text
 
 **Use Cases**:
 - Transfer tensors between `ai-daemon` and `fusion-cli`
@@ -148,6 +152,7 @@ let data = other_shm.read(id, 0, tensor_size)?;
 **Integration**: Manages physical blocks for `fusion_llm_gpu_scheduler`
 
 **API**:
+
 ```rust
 let dma = DeviceMemoryAllocator::new();
 let handle = dma.allocate(DeviceType::Cuda(0), 1024 * 1024 * 1024)?;  // 1GB VRAM
@@ -157,7 +162,7 @@ let device_ptr = dma.get_device_ptr(handle).unwrap();
 // Use device_ptr in GPU kernel
 
 dma.free(handle)?;  // Returns to pool for reuse
-```
+```text
 
 **Performance**:
 - Block reuse eliminates allocation overhead
@@ -184,6 +189,7 @@ dma.free(handle)?;  // Returns to pool for reuse
 **Integration**: Replaces standard network sockets for distributed training
 
 **API**:
+
 ```rust
 let comms = CollectiveComms::new(CommBackend::Nccl);
 let comm_handle = comms.init_communicator(world_size=4, rank=0);
@@ -193,7 +199,7 @@ comms.all_reduce(comm_handle, &mut gradients, ReduceOp::Sum)?;
 
 // Barrier synchronization
 comms.barrier(comm_handle)?;
-```
+```text
 
 **Use Cases**:
 - `fusion_llm_distributed_training` gradient sync
@@ -215,6 +221,7 @@ comms.barrier(comm_handle)?;
 **Integration**: Sits between `fusion_q_cloud_agent` and hardware drivers
 
 **API**:
+
 ```rust
 let sequencer = QpuJobSequencer::new(max_batch_size=10, max_wait_ms=100);
 
@@ -232,7 +239,7 @@ let job_id = sequencer.submit_batch(batch);
 
 // Get result for specific circuit
 let result = sequencer.get_circuit_result(request_id);
-```
+```text
 
 **Performance**:
 - 10x reduction in QPU API overhead through batching
@@ -277,7 +284,7 @@ let result = sequencer.get_circuit_result(request_id);
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 └────────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -311,7 +318,7 @@ crates/fusion_runtime_core/src/
 ├── device_memory.rs       # ✅ Device memory allocator (DMA)
 ├── collective_comms.rs    # ✅ Collective communications
 └── qpu_sequencer.rs       # ✅ QPU job sequencer
-```
+```text
 
 ---
 
@@ -331,14 +338,14 @@ let fiber_id = fiber_sched.spawn_fiber(65536, 255);  // Max priority
 
 loop {
     let start = timer.now_ns();
-    
+
     // Process market data (fiber-based, no OS scheduling)
     process_order();
-    
+
     let latency = timer.now_ns() - start;
     assert!(latency < 10_000);  // <10μs guarantee
 }
-```
+```text
 
 ### Example 2: Distributed Training with Gradient Sync
 
@@ -351,13 +358,13 @@ let comm = comms.init_communicator(world_size=8, rank=process_rank);
 // Training loop
 for epoch in 0..1000 {
     let gradients = model.backward(batch);
-    
+
     // Synchronize gradients across all 8 GPUs
     comms.all_reduce(comm, &mut gradients, ReduceOp::Sum)?;
-    
+
     optimizer.step(&gradients);
 }
-```
+```text
 
 ### Example 3: QPU Batch Optimization
 
@@ -378,7 +385,7 @@ for i in 0..100 {
 
 // Sequencer automatically batches into ~10 QPU jobs
 // Instead of 100 individual submissions (10x speedup)
-```
+```text
 
 ### Example 4: Zero-Copy Tensor Sharing
 
@@ -394,7 +401,7 @@ shm.write(shm_id, 0, &model_weights)?;
 let shm2 = SharedMemoryManager::new();
 shm2.attach("llm_weights")?;
 let weights = shm2.read(shm_id, 0, model_size)?;  // No serialization!
-```
+```text
 
 ---
 
@@ -403,10 +410,13 @@ let weights = shm2.read(shm_id, 0, model_size)?;  // No serialization!
 All components include comprehensive unit tests:
 
 ```bash
+
 # Test all runtime components
+
 cargo test --package fusion_runtime_core
 
 # Test specific component
+
 cargo test --package fusion_runtime_core fiber::tests
 cargo test --package fusion_runtime_core timer::tests
 cargo test --package fusion_runtime_core event_poller::tests
@@ -414,7 +424,7 @@ cargo test --package fusion_runtime_core shared_memory::tests
 cargo test --package fusion_runtime_core device_memory::tests
 cargo test --package fusion_runtime_core collective_comms::tests
 cargo test --package fusion_runtime_core qpu_sequencer::tests
-```
+```text
 
 ---
 
@@ -465,6 +475,6 @@ The `fusion_runtime_core` has transitioned from a conceptual abstraction to a **
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
 **Related**: See `COMPONENT_INTEGRATION.md`, `ExecutionFlow.md`, `Architecture.md`

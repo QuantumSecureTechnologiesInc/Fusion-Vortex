@@ -1,7 +1,7 @@
 # Cargo Converter
 
-**Version:** 0.2.0  
-**Type:** Interop Tool  
+**Version:** 0.2.0
+**Type:** Interop Tool
 **License:** MIT
 
 ## Overview
@@ -17,9 +17,11 @@ Cargo Converter (`fusion_interop_cargo_converter`) is a tool that translates Rus
 ## Usage
 
 ```bash
+
 # Generate Fusion bindings for a Rust crate
+
 fusion cargo-convert --manifest-path ./rust-lib/Cargo.toml --output ./fusion-lib/
-```
+```text
 
 ## Dependencies
 

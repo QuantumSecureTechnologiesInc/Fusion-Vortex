@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/fusion-web-server/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn hello() {
+    println!("Hello from fusion-web-server!");
+}

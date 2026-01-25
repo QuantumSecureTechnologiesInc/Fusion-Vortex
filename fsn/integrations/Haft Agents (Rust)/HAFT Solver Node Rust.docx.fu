@@ -1,0 +1,212 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (Rust)/HAFT Solver Node Rust.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+// //! PROJECT: FUSION HAFT (High Availability Flux Tensor)
+// //! MODULE:  SOLVER NODE (Compute) - RUST EDITION
+// ======================================================================
+// 
+// use rand::Rng;
+// use std::sync::{Arc, atomic::{AtomicBool, AtomicU64, Ordering}};
+// use std::{thread, time};
+// 
+// ======================================================================
+// // INFRASTRUCTURE: LOGGING &amp; SIGNALS
+// ======================================================================
+// 
+// struct Infra;
+// impl Infra {
+//     fn log(component: &amp;str, msg: &amp;str) {
+//         println!(&quot;[{}] {}&quot;, component, msg);
+//     }
+// }
+// 
+// ======================================================================
+// // CORE: FLUX TENSOR
+// ======================================================================
+// 
+// #[derive(Debug, Clone)]
+// struct FluxTensor {
+//     id: String,
+//     data: Vec&lt;f32&gt;,
+//     shape: Vec&lt;usize&gt;,
+//     strides: Vec&lt;usize&gt;,
+// }
+// 
+// impl FluxTensor {
+//     fn new(id: &amp;str, shape: Vec&lt;usize&gt;) -&gt; Self {
+//         let mut total_size = 1;
+//         let mut strides = vec![0; shape.len()];
+//         let mut running_stride = 1;
+// 
+//         // Calculate strides in reverse (row-major)
+//         for i in (0..shape.len()).rev() {
+//             strides[i] = running_stride;
+//             total_size *= shape[i];
+//             running_stride *= shape[i];
+//         }
+// 
+//         let mut t = FluxTensor {
+//             id: id.to_string(),
+//             data: vec![0.0; total_size],
+//             shape,
+//             strides,
+//         };
+//         t.randomise();
+//         t
+//     }
+// 
+//     fn randomise(&amp;mut self) {
+//         let mut rng = rand::thread_rng();
+//         for val in self.data.iter_mut() {
+//             *val = rng.gen_range(-1.0..1.0);
+//         }
+//     }
+// 
+//     fn to_string(&amp;self) -&gt; String {
+//         format!(&quot;FluxTensor[{}] Shape({:?})&quot;, self.id, self.shape)
+//     }
+// }
+// 
+// ======================================================================
+// // AGENTIC CORE
+// ======================================================================
+// 
+// #[derive(Debug, PartialEq, Clone, Copy)]
+// enum AgentState {
+//     Bootstrap,
+//     Idle,
+//     Computing,
+//     Cooldown,
+// }
+// 
+// struct AgenticCore {
+//     id: String,
+//     state: parking_lot::Mutex&lt;AgentState&gt;, // Fast spinlock mutex
+//     health_metric: AtomicU64, // Stored as u64 (double representation * 1000) for atomicity
+// }
+// 
+// impl AgenticCore {
+//     fn new(id: &amp;str) -&gt; Self {
+//         Infra::log(&quot;Core&quot;, &amp;format!(&quot;Initialising Agent: {}&quot;, id));
+//         Self {
+//             id: id.to_string(),
+//             state: parking_lot::Mutex::new(AgentState::Bootstrap),
+//             health_metric: AtomicU64::new(1000), // 1.0 = 1000
+//         }
+//     }
+// 
+//     fn get_state(&amp;self) -&gt; AgentState {
+//         *self.state.lock()
+//     }
+// 
+//     fn set_state(&amp;self, new_state: AgentState) {
+//         let mut guard = self.state.lock();
+//         if *guard != new_state {
+//             *guard = new_state;
+//             Infra::log(&quot;Core&quot;, &amp;format!(&quot;Transitioned to: {:?}&quot;, new_state));
+//         }
+//     }
+// 
+//     fn degrade_health(&amp;self, amount: u64) {
+//         self.health_metric.fetch_sub(amount, Ordering::Relaxed);
+//     }
+// 
+//     fn restore_health(&amp;self) {
+//         self.health_metric.store(1000, Ordering::Relaxed);
+//         Infra::log(&quot;Core&quot;, &quot;Health restored to 100%.&quot;);
+//     }
+// 
+//     fn is_healthy(&amp;self) -&gt; bool {
+//         self.health_metric.load(Ordering::Relaxed) &gt; 800
+//     }
+// }
+// 
+// ======================================================================
+// // LOGIC
+// ======================================================================
+// 
+// struct SolverLogic {
+//     core: Arc&lt;AgenticCore&gt;,
+// }
+// 
+// impl SolverLogic {
+//     fn new(core: Arc&lt;AgenticCore&gt;) -&gt; Self {
+//         Self { core }
+//     }
+// 
+//     fn perform_fusion(&amp;self, a: &amp;FluxTensor, b: &amp;FluxTensor) {
+//         self.core.set_state(AgentState::Computing);
+//         Infra::log(&quot;Logic&quot;, &amp;format!(&quot;Fusing {} with {}&quot;, a.to_string(), b.to_string()));
+// 
+//         // Simulation work
+//         thread::sleep(time::Duration::from_millis(150));
+// 
+//         // Math validation
+//         let limit = std::cmp::min(a.data.len(), b.data.len());
+//         let _fusion_energy: f32 = a.data.iter()
+//             .zip(b.data.iter())
+//             .take(limit)
+//             .map(|(x, y)| x * y)
+//             .sum();
+// 
+//         self.core.degrade_health(50); // -0.05
+// 
+//         if self.core.is_healthy() {
+//             self.core.set_state(AgentState::Idle);
+//         } else {
+//             Infra::log(&quot;Logic&quot;, &quot;Thermal throttling detected. Initiating cooldown.&quot;);
+//             self.core.set_state(AgentState::Cooldown);
+//         }
+//     }
+// 
+//     fn cooldown(&amp;self) {
+//         Infra::log(&quot;Logic&quot;, &quot;Radiating heat...&quot;);
+//         thread::sleep(time::Duration::from_millis(500));
+//         self.core.restore_health();
+//         self.core.set_state(AgentState::Idle);
+//     }
+// }
+// 
+// ======================================================================
+// // ENTRY POINT
+// ======================================================================
+// 
+// fn main() {
+//     let args: Vec&lt;String&gt; = std::env::args().collect();
+//     let agent_id = args.iter().position(|x| x == &quot;--id&quot;)
+//         .map(|i| args[i + 1].clone())
+//         .unwrap_or_else(|| &quot;SOLVER-RUST-01&quot;.to_string());
+// 
+//     let running = Arc::new(AtomicBool::new(true));
+//     let r = running.clone();
+// 
+//     ctrlc::set_handler(move || {
+//         r.store(false, Ordering::SeqCst);
+//     }).expect(&quot;Error setting Ctrl-C handler&quot;);
+// 
+//     Infra::log(&quot;System&quot;, &amp;format!(&quot;Starting HAFT SOLVER Node ({})&quot;, agent_id));
+//     
+//     let core = Arc::new(AgenticCore::new(&amp;agent_id));
+//     let logic = SolverLogic::new(core.clone());
+// 
+//     thread::sleep(time::Duration::from_millis(200));
+//     core.set_state(AgentState::Idle);
+// 
+//     while running.load(Ordering::SeqCst) {
+//         match core.get_state() {
+//             AgentState::Cooldown =&gt; logic.cooldown(),
+//             AgentState::Idle =&gt; {
+//                 let t1 = FluxTensor::new(&quot;TensorA&quot;, vec![128, 128]);
+//                 let t2 = FluxTensor::new(&quot;TensorB&quot;, vec![128, 128]);
+//                 logic.perform_fusion(&amp;t1, &amp;t2);
+//             }
+//             _ =&gt; thread::sleep(time::Duration::from_millis(100)),
+//         }
+//         thread::sleep(time::Duration::from_millis(100));
+//     }
+// 
+//     Infra::log(&quot;System&quot;, &quot;HAFT SOLVER Node halted gracefully.&quot;);
+// }
+// 

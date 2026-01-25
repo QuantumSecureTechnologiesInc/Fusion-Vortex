@@ -53,26 +53,32 @@ By participating in this project, you agree to maintain a respectful, inclusive,
 ### Building
 
 ```bash
+
 # Clone your fork
+
 git clone https://github.com/YOUR_USERNAME/fusion-cli.git
 cd fusion-cli
 
 # Build all crates
+
 cargo build --workspace
 
 # Run tests
+
 cargo test --workspace
 
 # Run linter
+
 cargo clippy --workspace
 
 #Format code
+
 cargo fmt --all
-```
+```text
 
 ### Project Structure
 
-```
+```text
 fusion-cli/
 ├── cmd/fusion           # CLI entry point
 ├── crates/             # Core crates
@@ -83,7 +89,7 @@ fusion-cli/
 ├── docs/              # Documentation
 ├── examples/          # Example projects
 └── tests/e2e         # End-to-end tests
-```
+```text
 
 ## Coding Standards
 
@@ -113,13 +119,13 @@ fusion-cli/
 
 Use **Conventional Commits** format:
 
-```
+```text
 type(scope): subject
 
 body (optional)
 
 footer (optional)
-```
+```text
 
 **Types:**
 - `feat`: New feature
@@ -131,14 +137,15 @@ footer (optional)
 - `chore`: Build process, dependencies, etc.
 
 **Examples:**
-```
+
+```text
 feat(ai-core): add support for Claude API adapter
 
 Implement ClaudeAdapter for Anthropic's Claude API with
 streaming support and safety checks.
 
 Closes #123
-```
+```text
 
 ### Documentation
 
@@ -154,23 +161,30 @@ in rustdoc
 ### Running Tests
 
 ```bash
+
 # All tests
+
 cargo test --workspace
 
 # Specific crate
+
 cargo test -p fusion-core
 
 # With output
+
 cargo test --workspace -- --nocapture
 
 # End-to-end tests
+
 cd tests/e2e && cargo test
-```
+```text
 
 ### Writing Tests
 
 ```rust
+
 #[cfg(test)]
+
 mod tests {
     use super::*;
 
@@ -179,14 +193,14 @@ mod tests {
         let result = my_function("input");
         assert_eq!(result, expected_output);
     }
-    
+
     #[test]
     #[should_panic(expected = "specific error")]
     fn test_error_handling() {
         my_function_that_panics();
     }
 }
-```
+```text
 
 ## AI Subsystem Development
 

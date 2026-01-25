@@ -1,0 +1,302 @@
+// SOURCE: src/wasm/codegen.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/wasm/codegen.rs - WebAssembly Code Generator
+
+use crate::ast::*;
+use crate::wasm::types::*;
+use wasm_encoder::*;
+
+struct WasmCodeGenerator {
+    function_index: u32,
+    function_map: FMap<FString, u32>, // Function name -> index
+    type_section: TypeSection,
+    function_section: FunctionSection,
+    export_section: ExportSection,
+    code_section: CodeSection,
+    memory_section: MemorySection,
+    next_local_index: u32,
+    local_map: FMap<FString, u32>, // Variable name -> local index
+}
+
+impl WasmCodeGenerator {
+    fn new() -> Self {
+        WasmCodeGenerator {
+            function_index: 0,
+            function_map: HashMap::new(),
+            type_section: TypeSection::new(),
+            function_section: FunctionSection::new(),
+            export_section: ExportSection::new(),
+            code_section: CodeSection::new(),
+            memory_section: MemorySection::new(),
+            next_local_index: 0,
+            local_map: HashMap::new(),
+        }
+    }
+
+    /// Generate WASM binary from AST
+    fn generate(&mut self, declarations: &[Declaration]) -> Result<FVec<u8>, FString> {
+        // Add memory section (1 page = 64KB)
+        self.memory_section.memory(MemoryType {
+            minimum: 1,
+            maximum: Some(10),
+            memory64: false,
+            shared: false,
+            page_size_log2: None,
+        });
+
+        // Process all declarations
+        for decl in declarations {
+            self.generate_declaration(decl)?;
+        }
+
+        // Build final module
+        let mut module = Module::new();
+        module.section(&self.type_section);
+        module.section(&self.function_section);
+        module.section(&self.memory_section);
+        module.section(&self.export_section);
+        module.section(&self.code_section);
+
+        Ok(module.finish())
+    }
+
+    fn generate_declaration(&mut self, decl: &Declaration) -> Result<(), FString> {
+        match decl {
+            Declaration::Function {
+                name,
+                params,
+                return_type,
+                body,
+                ..
+            } => {
+                self.generate_function(name, params, return_type, body)?;
+            }
+            Declaration::ModuleDecl { .. } | Declaration::UseDecl { .. } => {
+                // Skip module system declarations in WASM generation
+            }
+            _ => {
+                // Skip other declarations for now
+            }
+        }
+        Ok(())
+    }
+
+    fn generate_function(
+        &mut self,
+        name: &str,
+        params: &[Parameter],
+        return_type: &Type,
+        body: &Block,
+    ) -> Result<(), FString> {
+        // Build function type
+        let param_types: FVec<ValType> = params
+            .iter()
+            .filter_map(|p| fusion_to_wasm_type(&p.param_type))
+            .collect();
+
+        let result_types: FVec<ValType> = fusion_to_wasm_type(return_type).into_iter().collect();
+
+        // Add to type section
+        let type_idx = self.type_section.len();
+        self.type_section
+            .ty()
+            .function(param_types.clone(), result_types.clone());
+
+        // Add to function section
+        self.function_section.function(type_idx);
+
+        // Map function name to index
+        let func_idx = self.function_index;
+        self.function_map.insert(name.to_string(), func_idx);
+        self.function_index += 1;
+
+        // Export the function
+        self.export_section.export(name, ExportKind::Func, func_idx);
+
+        // Generate function body
+        let mut func_body = Function::new(vec![]); // No additional locals for now
+
+        // Reset local tracking for this function
+        self.next_local_index = params.len() as u32;
+        self.local_map.clear();
+
+        // Map parameters to locals
+        for (i, param) in params.iter().enumerate() {
+            self.local_map.insert(param.name.clone(), i as u32);
+        }
+
+        // Generate statements
+        for stmt in &body.statements {
+            self.generate_statement(stmt, &mut func_body)?;
+        }
+
+        func_body.instruction(&Instruction::End);
+
+        // Add function to code section
+        self.code_section.function(&func_body);
+
+        Ok(())
+    }
+
+    fn generate_statement(&mut self, stmt: &Statement, func: &mut Function) -> Result<(), FString> {
+        match stmt {
+            Statement::Return(Some(expr)) => {
+                self.generate_expression(expr, func)?;
+                func.instruction(&Instruction::Return);
+            }
+            Statement::Return(None) => {
+                func.instruction(&Instruction::Return);
+            }
+            Statement::VariableDeclaration {
+                name, initializer, ..
+            } => {
+                // For simplicity, we'll store in locals (not persistent across calls)
+                let local_idx = self.next_local_index;
+                self.local_map.insert(name.clone(), local_idx);
+                self.next_local_index += 1;
+
+                self.generate_expression(initializer, func)?;
+                func.instruction(&Instruction::LocalSet(local_idx));
+            }
+            Statement::Expression(expr) => {
+                self.generate_expression(expr, func)?;
+                func.instruction(&Instruction::Drop);
+            }
+            _ => {
+                return Err(format!("Statement not yet supported in WASM: {:?}", stmt));
+            }
+        }
+        Ok(())
+    }
+
+    fn generate_expression(
+        &mut self,
+        expr: &Expression,
+        func: &mut Function,
+    ) -> Result<(), FString> {
+        match expr {
+            Expression::Literal(lit) => match lit {
+                Literal::Integer(n) => {
+                    func.instruction(&Instruction::I64Const(*n));
+                }
+                Literal::Float(f) => {
+                    func.instruction(&Instruction::F64Const(*f));
+                }
+                Literal::Boolean(b) => {
+                    func.instruction(&Instruction::I32Const(if *b { 1 } else { 0 }));
+                }
+                Literal::FString(_s) => {
+                    // TODO: Implement string handling
+                    func.instruction(&Instruction::I32Const(0));
+                }
+            },
+            Expression::Variable(name) => {
+                let local_idx = self
+                    .local_map
+                    .get(name)
+                    .ok_or(format!("Unknown variable: {}", name))?;
+                func.instruction(&Instruction::LocalGet(*local_idx));
+            }
+            Expression::BinaryOp { left, op, right } => {
+                self.generate_expression(left, func)?;
+                self.generate_expression(right, func)?;
+
+                match op {
+                    BinaryOp::Add => {
+                        func.instruction(&Instruction::I64Add);
+                    }
+                    BinaryOp::Subtract => {
+                        func.instruction(&Instruction::I64Sub);
+                    }
+                    BinaryOp::Multiply => {
+                        func.instruction(&Instruction::I64Mul);
+                    }
+                    BinaryOp::Divide => {
+                        func.instruction(&Instruction::I64DivS);
+                    }
+                    BinaryOp::Modulo => {
+                        func.instruction(&Instruction::I64RemS);
+                    }
+                    BinaryOp::Equal => {
+                        func.instruction(&Instruction::I64Eq);
+                    }
+                    BinaryOp::NotEqual => {
+                        func.instruction(&Instruction::I64Ne);
+                    }
+                    BinaryOp::LessThan => {
+                        func.instruction(&Instruction::I64LtS);
+                    }
+                    BinaryOp::GreaterThan => {
+                        func.instruction(&Instruction::I64GtS);
+                    }
+                    _ => return Err(format!("Binary op not yet supported in WASM: {:?}", op)),
+                }
+            }
+            Expression::FunctionCall { name, args, .. } => {
+                // Generate arguments
+                for arg in args {
+                    self.generate_expression(arg, func)?;
+                }
+
+                // Call function
+                let func_idx = self
+                    .function_map
+                    .get(name)
+                    .ok_or(format!("Unknown function: {}", name))?;
+                func.instruction(&Instruction::Call(*func_idx));
+            }
+            _ => {
+                return Err(format!("Expression not yet supported in WASM: {:?}", expr));
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple_function() {
+        let mut generator = WasmCodeGenerator::new();
+
+        // fn add(a: int, b: int) -> int { return a + b; }
+        let decl = Declaration::Function {
+            name: "add".to_string(),
+            attributes: vec![],
+            generic_params: vec![],
+            where_bounds: vec![],
+            params: vec![
+                Parameter {
+                    name: "a".to_string(),
+                    param_type: Type::Integer,
+                },
+                Parameter {
+                    name: "b".to_string(),
+                    param_type: Type::Integer,
+                },
+            ],
+            return_type: Type::Integer,
+            body: Block {
+                statements: vec![Statement::Return(Some(Expression::BinaryOp {
+                    left: Box::new(Expression::Variable("a".to_string())),
+                    op: BinaryOp::Add,
+                    right: Box::new(Expression::Variable("b".to_string())),
+                }))],
+            },
+        };
+
+        let result = generator.generate(&[decl]);
+        let wasm_bytes = result.expect("WASM generation failed");
+        assert!(!wasm_bytes.is_empty());
+
+        // Validate the WASM module
+        let validation = wasmparser::validate(&wasm_bytes);
+        assert!(
+            validation.is_ok(),
+            "WASM validation failed: {:?}",
+            validation.err()
+        );
+    }
+}

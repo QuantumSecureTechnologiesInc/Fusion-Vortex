@@ -7,9 +7,10 @@ Date and time manipulation library for Fusion.
 ```toml
 [dependencies]
 fusion-calendar = "0.1.0"
-```
+```text
 
 ## Features
+
 - Date arithmetic
 - Timezone support
 - Formatting and parsing

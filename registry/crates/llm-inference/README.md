@@ -1,7 +1,7 @@
 # Fusion LLM Inference Engine
 
-**Version:** 0.2.0  
-**Type:** Core Engine  
+**Version:** 0.2.0
+**Type:** Core Engine
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let stream = engine.generate("Hello, world!").await?;
 while let Some(token) = stream.next().await {
     print!("{}", token);
 }
-```
+```text
 
 ## Dependencies
 

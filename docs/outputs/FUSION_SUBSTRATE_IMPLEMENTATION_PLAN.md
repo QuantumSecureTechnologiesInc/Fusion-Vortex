@@ -1,6 +1,7 @@
 # Fusion Substrate Implementation Plan
 
 ## Project Overview
+
 **Objective**: Create Fusion Substrate by duplicating Fusion VSC CLI and upgrading it through four comprehensive phases.
 
 **Source**: `antigravity/playground/Fusion VSC CLi`
@@ -9,10 +10,11 @@
 ## Phase 1: Protocol Lock + Runtime Hardening
 
 ### Core Deliverables
+
 1. **fusion-mcp-spec** - Locked MCP protocol (v1.0)
    - Never breaks backward compatibility in 1.x
    - Provides `McpRequest`, `McpResponse`, version assertion
-   
+
 2. **fusion-ledger** - Deterministic Replay Engine
    - Append-only, crash-safe, replayable
    - Provides `Ledger`, `LedgerEntry`
@@ -27,7 +29,7 @@
    - No recovery logic required
    - Restart = replay
    - Deterministic state reconstruction
-   
+
 5. **fusion-tests** - Hard Guarantees
    - Policy blocking tests
    - Replay integrity tests
@@ -37,6 +39,7 @@
    - Format, clippy, test enforcement
 
 ### Implementation Steps
+
 - [ ] Create crate directory structure
 - [ ] Implement fusion-mcp-spec with version locking
 - [ ] Implement fusion-ledger with append-only logging
@@ -49,6 +52,7 @@
 ## Phase 2: Agent Execution Layer
 
 ### Core Deliverables
+
 1. **fusion-agent-spec** - Agent ABI
    - Locked specification for agent execution
    - `AgentPlan`, `PlanStep` with rationale
@@ -70,6 +74,7 @@
    - Multi-agent coordination tests
 
 ### Implementation Steps
+
 - [ ] Create fusion-agent-spec crate
 - [ ] Implement AgentPlan, PlanStep structures
 - [ ] Create fusion-agent-graph with state machine
@@ -83,6 +88,7 @@
 ## Phase 3: Fusion-Native Ecosystem
 
 ### Core Deliverables
+
 1. **fusion-tasks** - Native Task System
    - Task graph with dependencies
    - Concurrent execution boundaries
@@ -104,6 +110,7 @@
    - Type inference support
 
 ### Implementation Steps
+
 - [ ] Create fusion-tasks crate
 - [ ] Implement TaskGraph with dependency resolution
 - [ ] Create fusion-watcher with notify integration
@@ -118,6 +125,7 @@
 ## Phase 4: Trusted Execution Runtime
 
 ### Core Deliverables
+
 1. **fusion-tee** - Trusted Execution Environment
    - Enclave-based code execution
    - Remote attestation support
@@ -139,6 +147,7 @@
    - Policy violation detection
 
 ### Implementation Steps
+
 - [ ] Create fusion-tee crate
 - [ ] Implement TEE abstraction layer
 - [ ] Add remote attestation support
@@ -154,16 +163,19 @@
 ## Testing Strategy
 
 ### Unit Tests
+
 - Each crate includes comprehensive unit tests
 - Test coverage target: >90%
 - Property-based testing where applicable
 
 ### Integration Tests
+
 - Cross-crate integration tests
 - End-to-end workflow validation
 - Performance benchmarks
 
 ### Security Tests
+
 - Policy enforcement verification
 - TEE isolation validation
 - Cryptographic primitive tests
@@ -172,11 +184,13 @@
 ## Documentation Requirements
 
 ### Per-Crate Documentation
+
 - README.md with overview and examples
 - API documentation (rustdoc)
 - Architecture decisions
 
 ### System Documentation
+
 - Architecture overview
 - Security model
 - Deployment guide
@@ -185,12 +199,14 @@
 ## Deployment Considerations
 
 ### Build Configuration
+
 - Release optimisations enabled
 - LTO: "fat" for maximum optimisation
 - Strip symbols in production
 - Panic: "abort" for smaller binaries
 
 ### CI/CD Pipeline
+
 - Automated testing on all commits
 - Format and clippy enforcement
 - Security audit integration
@@ -199,6 +215,7 @@
 ## Phase 5: Infrastructure Power (Post-Launch Upgrade)
 
 ### Core Deliverables
+
 1. **fusion-observer** - Observability Layer
    - Live execution tracing
    - Trust confidence scoring
@@ -220,6 +237,7 @@
    - Deterministic execution transcripts
 
 ### Implementation Steps
+
 - [x] Analyze post-Phase-4 requirements
 - [x] Implement fusion-observer
 - [x] Implement fusion-policy-dsl

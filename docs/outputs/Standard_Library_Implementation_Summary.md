@@ -21,7 +21,7 @@ extern fn free(ptr: int) -> void;
 extern fn memcpy(dest: int, src: int, n: int) -> void;
 extern fn strlen(s: string) -> int;
 "#;
-```
+```text
 
 This constant contains the essential C standard library function declarations that are required for memory management and string operations.
 
@@ -32,7 +32,7 @@ Modified the compiler's main entry point to automatically prepend core library d
 ```rust
 // Prepend Core Library Declarations
 content = format!("{}{}", stdlib::CORE_LIBS, content);
-```
+```text
 
 This ensures that all Fusion source files have access to core functions without requiring manual `extern` declarations.
 
@@ -50,7 +50,7 @@ Removed redundant `extern` declarations from:
 
 ```bash
 cargo build
-```
+```text
 
 ✅ **Result**: Successful compilation with standard warnings
 

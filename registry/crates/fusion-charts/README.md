@@ -7,9 +7,10 @@ Charting and graphing library for Fusion applications.
 ```toml
 [dependencies]
 fusion-charts = "0.1.0"
-```
+```text
 
 ## Features
+
 - 2D plotting
 - Interactive charts
 - Data visualization components

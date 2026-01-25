@@ -40,7 +40,7 @@ vscode-fusion/
 │   └── extension.ts                # Main extension code (94 lines)
 └── syntaxes/
     └── fusion.tmLanguage.json      # Syntax grammar (110 lines)
-```
+```text
 
 **Total Lines**: ~500 lines of code + documentation
 
@@ -125,7 +125,7 @@ vscode-fusion/
   "fusion.server.args": [],
   "fusion.trace.server": "off" | "messages" | "verbose"
 }
-```
+```text
 
 **Features Enabled**:
 
@@ -185,7 +185,7 @@ if args.lsp {
         });
     return;
 }
-```
+```text
 
 **Build Impact**: ~10 lines added, zero breaking changes
 
@@ -233,7 +233,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate(): Thenable<void> {
   return client?.stop();
 }
-```
+```text
 
 **Clean Shutdown**: Properly stops LSP server on deactivation
 
@@ -252,7 +252,7 @@ export function deactivate(): Thenable<void> {
 > tsc -p ./
 
 (no output = success)
-```
+```text
 
 **Output**: `out/extension.js` (compiled JavaScript)
 
@@ -287,7 +287,7 @@ The extension is **production-ready** and can be packaged with:
 ```bash
 cd editors/vscode-fusion
 npm run package
-```
+```text
 
 This generates: `fusion-language-0.1.0.vsix`
 
@@ -302,7 +302,7 @@ This generates: `fusion-language-0.1.0.vsix`
 
 ```bash
 code --install-extension fusion-language-0.1.0.vsix
-```
+```text
 
 **Method 3: VS Code Marketplace** (future)
 
@@ -320,7 +320,7 @@ code --install-extension fusion-language-0.1.0.vsix
    cd editors/vscode-fusion
    code --extensionDevelopmentPath=.
 
-```
+```text
 
 2. **Create Test File**
 
@@ -331,7 +331,7 @@ code --install-extension fusion-language-0.1.0.vsix
        println("Hello, Fusion!");
        return x;
    }
-```
+```text
 
 1. **Verify Features**
    - ✅ Syntax highlighting (keywords, types, strings)
@@ -434,7 +434,7 @@ code --install-extension fusion-language-0.1.0.vsix
    ```bash
    npm run package
 
-```
+```text
 
    Creates `.vsix` for distribution
 
@@ -442,7 +442,7 @@ code --install-extension fusion-language-0.1.0.vsix
 
    ```bash
    code --install-extension fusion-language-0.1.0.vsix
-```
+```text
 
 1. **Create Sample Project**
    - Folder with `.fu` files

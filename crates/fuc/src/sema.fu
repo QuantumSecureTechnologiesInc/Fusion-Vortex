@@ -1,0 +1,1172 @@
+//! Semantic analysis and type checking for the Fusion compiler.
+#![allow(missing_docs)]
+use crate::ast::{self, Span, Spanned, StructInfo};
+use ariadne::{Color, Label, Report, ReportKind};
+/// Typed program with extern declarations.
+#[derive(Debug)]
+struct TypedProgram {
+    /// Defined functions.
+    pub functions: FVec<TypedFunction>,
+    /// External declarations.
+    pub externs: FVec<TypedExternFunction>,
+    /// Struct definitions.
+    pub structs: FVec<TypedStructDefinition>,
+}
+/// Typed function definition.
+#[derive(Debug)]
+struct TypedFunction {
+    /// Function name.
+    pub name: FString,
+    /// Parameter names and types.
+    pub params: FVec<(FString, ast::Type)>,
+    /// Return type.
+    pub return_type: ast::Type,
+    /// Typed body.
+    pub body: TypedBlock,
+}
+/// Typed external function declaration.
+#[derive(Debug)]
+struct TypedExternFunction {
+    /// Function name.
+    pub name: FString,
+    /// Parameter names and types.
+    pub params: FVec<(FString, ast::Type)>,
+    /// Return type.
+    pub return_type: ast::Type,
+    /// Whether the function is variadic.
+    pub is_variadic: FBool,
+}
+/// Typed struct definition.
+#[derive(Debug, Clone)]
+struct TypedStructDefinition {
+    /// Struct name.
+    pub name: FString,
+    /// Fields in order (name, type).
+    pub fields: FVec<(FString, ast::Type)>,
+}
+/// Typed block of statements.
+type TypedBlock = FVec<TypedStatement>;
+/// Typed statements.
+#[derive(Debug)]
+enum TypedStatement {
+    /// Let binding.
+    Let { name: FString, ty: ast::Type, value: TypedExpression },
+    /// Assignment statement.
+    Assignment { target: TypedExpression, value: TypedExpression },
+    /// Return statement.
+    Return(Option<TypedExpression>),
+    /// If/else statement.
+    If { cond: TypedExpression, then_block: TypedBlock, else_block: Option<TypedBlock> },
+    /// While loop.
+    While { cond: TypedExpression, body: TypedBlock },
+    /// Expression statement.
+    Expression(TypedExpression),
+}
+/// Typed expression wrapper.
+#[derive(Debug)]
+struct TypedExpression {
+    /// Expression node.
+    pub node: TypedExpressionKind,
+    /// Result type.
+    pub ty: ast::Type,
+    /// Source span.
+    pub span: Span,
+}
+/// Typed expression kinds.
+#[derive(Debug)]
+enum TypedExpressionKind {
+    /// Integer literal.
+    IntLiteral(FI64),
+    /// Boolean literal.
+    BoolLiteral(FBool),
+    /// String literal.
+    StringLiteral(FString),
+    /// Variable reference.
+    Variable(FString),
+    /// Binary operation.
+    BinaryOperation {
+        op: ast::BinaryOp,
+        left: Box<TypedExpression>,
+        right: Box<TypedExpression>,
+    },
+    /// Function call.
+    FunctionCall { name: FString, args: FVec<TypedExpression> },
+    /// Array literal.
+    ArrayLiteral(FVec<TypedExpression>),
+    /// Array repeat syntax.
+    ArrayRepeat { value: Box<TypedExpression>, size: FSize },
+    /// Array indexing.
+    Index { array: Box<TypedExpression>, index: Box<TypedExpression> },
+    /// Address-of expression.
+    AddressOf(Box<TypedExpression>),
+    /// Dereference expression.
+    Dereference(Box<TypedExpression>),
+    /// Struct member access.
+    MemberAccess { base: Box<TypedExpression>, field_name: FString, field_index: FSize },
+    /// Struct literal expression.
+    StructLiteral { name: FString, fields: FVec<(FString, FSize, TypedExpression)> },
+}
+struct SymbolTable {
+    scopes: FVec<FMap<FString, ast::Type>>,
+    functions: FMap<FString, (FVec<ast::Type>, ast::Type, FBool, FBool)>,
+    structs: FMap<FString, StructInfo>,
+}
+impl SymbolTable {
+    fn new() -> Self {
+        Self {
+            scopes: vec![HashMap::new()],
+            functions: HashMap::new(),
+            structs: HashMap::new(),
+        }
+    }
+    fn push_scope(&mut self) {
+        self.scopes.push(HashMap::new());
+    }
+    fn pop_scope(&mut self) {
+        self.scopes.pop();
+    }
+    fn insert_var(&mut self, name: FString, ty: ast::Type) -> Result<(), FString> {
+        let current_scope = self.scopes.last_mut().unwrap();
+        if current_scope.contains_key(&name) {
+            Err(format!("Variable '{}' is already defined in this scope.", name))
+        } else {
+            current_scope.insert(name, ty);
+            Ok(())
+        }
+    }
+    fn lookup_var(&self, name: &str) -> Option<&ast::Type> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(ty) = scope.get(name) {
+                return Some(ty);
+            }
+        }
+        None
+    }
+    fn insert_func(
+        &mut self,
+        name: FString,
+        params: FVec<ast::Type>,
+        ret: ast::Type,
+        is_variadic: FBool,
+        is_extern: FBool,
+    ) -> Result<(), FString> {
+        if self.functions.contains_key(&name) {
+            Err(format!("Function '{}' is already defined.", name))
+        } else {
+            self.functions
+                .insert(name, (params, ret, is_variadic, is_extern));
+            Ok(())
+        }
+    }
+    fn lookup_func(&self, name: &str) -> Option<&(FVec<ast::Type>, ast::Type, FBool, FBool)> {
+        self.functions.get(name)
+    }
+    fn type_layout(&self, ty: &ast::Type) -> Option<(FSize, FSize)> {
+        match ty {
+            ast::Type::Int => Some((4, 4)),
+            ast::Type::Bool => Some((1, 1)),
+            ast::Type::String => Some((8, 8)),
+            ast::Type::Void => Some((0, 1)),
+            ast::Type::Unknown => None,
+            ast::Type::Pointer(_) => Some((8, 8)),
+            ast::Type::Array(elem, len) => {
+                let (elem_size, elem_align) = self.type_layout(elem)?;
+                let size = elem_size.checked_mul(*len)?;
+                Some((size, elem_align))
+            }
+            ast::Type::Struct(name) => {
+                let info = self.structs.get(name)?;
+                let mut size = 0usize;
+                let mut max_align = 1usize;
+                for (_, field_ty) in &info.ordered_fields {
+                    let (field_size, field_align) = self.type_layout(field_ty)?;
+                    if field_align > max_align {
+                        max_align = field_align;
+                    }
+                    let padding = (field_align - (size % field_align)) % field_align;
+                    size = size.checked_add(padding)?;
+                    size = size.checked_add(field_size)?;
+                }
+                let final_padding = (max_align - (size % max_align)) % max_align;
+                size = size.checked_add(final_padding)?;
+                Some((size, max_align))
+            }
+        }
+    }
+    fn reserve_struct(&mut self, name: FString) -> Result<(), FString> {
+        if self.structs.contains_key(&name) {
+            return Err(format!("Struct '{}' is already defined.", name));
+        }
+        self.structs
+            .insert(
+                name,
+                StructInfo {
+                    fields: HashMap::new(),
+                    ordered_fields: Vec::new(),
+                },
+            );
+        Ok(())
+    }
+    fn define_struct(
+        &mut self,
+        name: FString,
+        fields: FVec<(FString, ast::Type)>,
+    ) -> Result<(), FString> {
+        let mut field_map = HashMap::new();
+        for (i, (field_name, field_ty)) in fields.iter().enumerate() {
+            if field_map.contains_key(field_name) {
+                return Err(
+                    format!("Duplicate field '{}' in struct '{}'", field_name, name),
+                );
+            }
+            field_map.insert(field_name.clone(), (field_ty.clone(), i));
+        }
+        self.structs
+            .insert(
+                name,
+                StructInfo {
+                    fields: field_map,
+                    ordered_fields: fields,
+                },
+            );
+        Ok(())
+    }
+    fn lookup_struct(&self, name: &str) -> Option<&StructInfo> {
+        self.structs.get(name)
+    }
+    fn is_valid_type(&self, ty: &ast::Type) -> FBool {
+        match ty {
+            ast::Type::Int | ast::Type::Bool | ast::Type::String | ast::Type::Void => {
+                true
+            }
+            ast::Type::Unknown => true,
+            ast::Type::Pointer(inner) => self.is_valid_type(inner),
+            ast::Type::Array(inner, _) => self.is_valid_type(inner),
+            ast::Type::Struct(name) => self.structs.contains_key(name),
+        }
+    }
+}
+/// Semantic analyzer.
+struct Analyzer<'a> {
+    symbols: SymbolTable,
+    errors: FVec<Report<'a, Span>>,
+    current_return_type: Option<ast::Type>,
+}
+impl<'a> Analyzer<'a> {
+    /// Creates a new analyzer.
+    pub fn new() -> Self {
+        Self {
+            symbols: SymbolTable::new(),
+            errors: Vec::new(),
+            current_return_type: None,
+        }
+    }
+    fn is_lvalue(&self, expr: &TypedExpression) -> FBool {
+        matches!(
+            expr.node,
+            TypedExpressionKind::Variable(_)
+                | TypedExpressionKind::Dereference(_)
+                | TypedExpressionKind::Index { .. }
+                | TypedExpressionKind::MemberAccess { .. }
+        )
+    }
+    fn types_compatible(&self, expected: &ast::Type, found: &ast::Type) -> FBool {
+        expected == found
+            || matches!(expected, ast::Type::Unknown)
+            || matches!(found, ast::Type::Unknown)
+    }
+    fn report_error(&mut self, span: Span, msg: FString) {
+        let report = Report::build(ReportKind::Error, (), span.start)
+            .with_message(msg.clone())
+            .with_label(Label::new(span).with_message(msg).with_color(Color::Red))
+            .finish();
+        self.errors.push(report);
+    }
+    /// Analyzes and type-checks a program.
+    pub fn analyze(
+        mut self,
+        program: ast::Program,
+    ) -> (Option<TypedProgram>, FVec<Report<'a, Span>>) {
+        let ast::Program { functions, externs, structs } = program;
+        for s in &structs {
+            if let Err(msg) = self.symbols.reserve_struct(s.name.clone()) {
+                self.report_error(0..0, msg);
+            }
+        }
+        for s in &structs {
+            self.validate_struct_definition(s);
+        }
+        for ext in &externs {
+            if let Some(msg) = self.check_extern_abi(ext) {
+                self.report_error(0..0, msg);
+            }
+            let param_types = ext
+                .params
+                .iter()
+                .map(|p| self.rewrite_extern_type(&p.1))
+                .collect();
+            let ret_type = self.rewrite_extern_type(&ext.return_type);
+            if let Err(msg) = self
+                .symbols
+                .insert_func(
+                    ext.name.clone(),
+                    param_types,
+                    ret_type,
+                    ext.is_variadic,
+                    true,
+                )
+            {
+                self.report_error(0..0, msg);
+            }
+        }
+        for func in &functions {
+            let param_types = func.params.iter().map(|p| p.1.clone()).collect();
+            if let Err(msg) = self
+                .symbols
+                .insert_func(
+                    func.name.clone(),
+                    param_types,
+                    func.return_type.clone(),
+                    false,
+                    false,
+                )
+            {
+                self.report_error(0..0, msg);
+            }
+        }
+        if !self.errors.is_empty() {
+            return (None, self.errors);
+        }
+        let mut typed_functions = Vec::new();
+        for func in functions {
+            if let Some(msg) = self.check_function_abi(&func) {
+                self.report_error(0..0, msg);
+            }
+            if func.name == "main" && func.return_type != ast::Type::Int {
+                self.report_error(
+                    0..0,
+                    "Entry point 'main' must return int.".to_string(),
+                );
+            }
+            if func.name == "main" && !func.params.is_empty() {
+                self.report_error(
+                    0..0,
+                    "Entry point 'main' must not take parameters.".to_string(),
+                );
+            }
+            self.current_return_type = Some(func.return_type.clone());
+            self.symbols.push_scope();
+            for (name, ty) in &func.params {
+                if let Err(msg) = self.symbols.insert_var(name.clone(), ty.clone()) {
+                    self.report_error(0..0, msg);
+                }
+            }
+            let body = self.analyze_block(func.body);
+            self.symbols.pop_scope();
+            typed_functions
+                .push(TypedFunction {
+                    name: func.name,
+                    params: func.params,
+                    return_type: func.return_type,
+                    body,
+                });
+        }
+        if self.errors.is_empty() {
+            let typed_externs = externs
+                .into_iter()
+                .map(|ext| {
+                    let params = ext
+                        .params
+                        .into_iter()
+                        .map(|(name, ty)| (name, self.rewrite_extern_type(&ty)))
+                        .collect();
+                    let return_type = self.rewrite_extern_type(&ext.return_type);
+                    TypedExternFunction {
+                        name: ext.name,
+                        params,
+                        return_type,
+                        is_variadic: ext.is_variadic,
+                    }
+                })
+                .collect();
+            let typed_structs = structs
+                .iter()
+                .filter_map(|s| {
+                    let info = self.symbols.lookup_struct(&s.name)?;
+                    Some(TypedStructDefinition {
+                        name: s.name.clone(),
+                        fields: info.ordered_fields.clone(),
+                    })
+                })
+                .collect();
+            (
+                Some(TypedProgram {
+                    functions: typed_functions,
+                    externs: typed_externs,
+                    structs: typed_structs,
+                }),
+                self.errors,
+            )
+        } else {
+            (None, self.errors)
+        }
+    }
+    fn check_extern_abi(&self, ext: &ast::ExternFunction) -> Option<FString> {
+        if ext.is_variadic {
+            for (name, ty) in &ext.params {
+                if self.is_aggregate_type(ty) {
+                    return Some(
+                        format!(
+                            "Extern '{}' is variadic; aggregate parameter '{}: {:?}' is not allowed. Use pointer or split fields.",
+                            ext.name, name, ty
+                        ),
+                    );
+                }
+            }
+        }
+        if self.is_aggregate_type(&ext.return_type) {
+            return Some(
+                format!(
+                    "Extern '{}' returns aggregate type '{:?}'. Use a pointer return (e.g., *T) instead.",
+                    ext.name, ext.return_type
+                ),
+            );
+        }
+        for (name, ty) in &ext.params {
+            if self.is_aggregate_type(ty) {
+                if let Some((size, _)) = self.symbols.type_layout(ty) {
+                    if size > 32 {
+                        return Some(
+                            format!(
+                                "Extern '{}' has large aggregate parameter '{}: {:?}' ({} bytes). Use pointer or split fields.",
+                                ext.name, name, ty, size
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+        None
+    }
+    fn is_aggregate_type(&self, ty: &ast::Type) -> FBool {
+        matches!(ty, ast::Type::Struct(_) | ast::Type::Array(_, _))
+    }
+    fn rewrite_extern_type(&self, ty: &ast::Type) -> ast::Type {
+        if self.is_aggregate_type(ty) {
+            ast::Type::Pointer(Box::new(ty.clone()))
+        } else {
+            ty.clone()
+        }
+    }
+    fn check_function_abi(&self, func: &ast::Function) -> Option<FString> {
+        for (name, ty) in &func.params {
+            if self.is_aggregate_type(ty) {
+                if let Some((size, _)) = self.symbols.type_layout(ty) {
+                    if size > 16 {
+                        return Some(
+                            format!(
+                                "Function '{}' has by-value aggregate parameter '{}: {:?}' larger than 16 bytes ({}). Use a pointer instead.",
+                                func.name, name, ty, size
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+        if self.is_aggregate_type(&func.return_type) {
+            if let Some((size, _)) = self.symbols.type_layout(&func.return_type) {
+                if size > 16 {
+                    return Some(
+                        format!(
+                            "Function '{}' has by-value aggregate return type '{:?}' larger than 16 bytes ({}). Use a pointer return instead.",
+                            func.name, func.return_type, size
+                        ),
+                    );
+                }
+            }
+        }
+        None
+    }
+    fn validate_struct_definition(&mut self, def: &ast::StructDefinition) {
+        let mut valid_fields = Vec::new();
+        for (field_name, field_ty) in &def.fields {
+            if !self.symbols.is_valid_type(field_ty) {
+                self.report_error(
+                    0..0,
+                    format!(
+                        "Field '{}' in struct '{}' has unknown type {:?}.", field_name,
+                        def.name, field_ty
+                    ),
+                );
+            } else {
+                valid_fields.push((field_name.clone(), field_ty.clone()));
+            }
+        }
+        if let Err(msg) = self.symbols.define_struct(def.name.clone(), valid_fields) {
+            self.report_error(0..0, msg);
+        }
+        let mut visited = HashSet::new();
+        visited.insert(def.name.clone());
+        for (_, field_ty) in &def.fields {
+            self.check_recursive_type(field_ty, &mut visited, &def.name);
+        }
+    }
+    fn check_recursive_type(
+        &mut self,
+        ty: &ast::Type,
+        visited: &mut FSet<FString>,
+        origin_struct: &str,
+    ) {
+        match ty {
+            ast::Type::Struct(name) => {
+                if visited.contains(name) {
+                    self.report_error(
+                        0..0,
+                        format!(
+                            "Struct '{}' has infinite recursive definition via field of type '{}'.",
+                            origin_struct, name
+                        ),
+                    );
+                } else if let Some(info) = self.symbols.lookup_struct(name).cloned() {
+                    visited.insert(name.clone());
+                    for (_, field_ty) in &info.ordered_fields {
+                        self.check_recursive_type(field_ty, visited, origin_struct);
+                    }
+                    visited.remove(name);
+                }
+            }
+            ast::Type::Pointer(_) => {}
+            ast::Type::Array(inner, _) => {
+                self.check_recursive_type(inner, visited, origin_struct)
+            }
+            _ => {}
+        }
+    }
+    fn analyze_block(&mut self, block: ast::Block) -> TypedBlock {
+        block.into_iter().map(|stmt| self.analyze_statement(stmt)).collect()
+    }
+    fn analyze_statement(&mut self, stmt: Spanned<ast::Statement>) -> TypedStatement {
+        match stmt.node {
+            ast::Statement::Let { name, ty, value } => {
+                let typed_value = self.analyze_expression(value);
+                if !self.types_compatible(&ty, &typed_value.ty) {
+                    self.report_error(
+                        typed_value.span.clone(),
+                        format!(
+                            "Type mismatch. Expected {:?}, found {:?}.", ty, typed_value
+                            .ty
+                        ),
+                    );
+                }
+                if let Err(msg) = self.symbols.insert_var(name.clone(), ty.clone()) {
+                    self.report_error(stmt.span, msg);
+                }
+                TypedStatement::Let {
+                    name,
+                    ty,
+                    value: typed_value,
+                }
+            }
+            ast::Statement::Assignment { target, value } => {
+                let typed_target = self.analyze_expression(target);
+                let typed_value = self.analyze_expression(value);
+                let is_lvalue = matches!(
+                    typed_target.node, TypedExpressionKind::Variable(_) |
+                    TypedExpressionKind::Dereference(_) | TypedExpressionKind::Index { ..
+                    } | TypedExpressionKind::MemberAccess { .. }
+                );
+                if !is_lvalue {
+                    self.report_error(
+                        typed_target.span.clone(),
+                        "Left-hand side of assignment must be an L-value.".to_string(),
+                    );
+                }
+                if !self.types_compatible(&typed_target.ty, &typed_value.ty) {
+                    self.report_error(
+                        typed_value.span.clone(),
+                        format!(
+                            "Type mismatch. Cannot assign {:?} to target of type {:?}.",
+                            typed_value.ty, typed_target.ty
+                        ),
+                    );
+                }
+                TypedStatement::Assignment {
+                    target: typed_target,
+                    value: typed_value,
+                }
+            }
+            ast::Statement::Return(expr_opt) => {
+                let expected = self.current_return_type.as_ref().unwrap().clone();
+                match (expr_opt, expected) {
+                    (Some(expr), expected_ty) => {
+                        let typed_expr = self.analyze_expression(expr);
+                        if !self.types_compatible(&expected_ty, &typed_expr.ty) {
+                            self.report_error(
+                                typed_expr.span.clone(),
+                                format!(
+                                    "Type mismatch. Function expected to return {:?}, but returned {:?}.",
+                                    expected_ty, typed_expr.ty
+                                ),
+                            );
+                        }
+                        TypedStatement::Return(Some(typed_expr))
+                    }
+                    (None, ast::Type::Void) => TypedStatement::Return(None),
+                    (None, expected_ty) => {
+                        self.report_error(
+                            stmt.span,
+                            format!(
+                                "Function must return a value of type {:?}.", expected_ty
+                            ),
+                        );
+                        TypedStatement::Return(None)
+                    }
+                }
+            }
+            ast::Statement::If { cond, then_block, else_block } => {
+                let typed_cond = self.analyze_expression(cond);
+                if !self.types_compatible(&ast::Type::Bool, &typed_cond.ty) {
+                    self.report_error(
+                        typed_cond.span.clone(),
+                        format!(
+                            "If condition must be of type Bool, found {:?}.", typed_cond
+                            .ty
+                        ),
+                    );
+                }
+                self.symbols.push_scope();
+                let typed_then = self.analyze_block(then_block);
+                self.symbols.pop_scope();
+                let typed_else = else_block
+                    .map(|block| {
+                        self.symbols.push_scope();
+                        let b = self.analyze_block(block);
+                        self.symbols.pop_scope();
+                        b
+                    });
+                TypedStatement::If {
+                    cond: typed_cond,
+                    then_block: typed_then,
+                    else_block: typed_else,
+                }
+            }
+            ast::Statement::While { cond, body } => {
+                let typed_cond = self.analyze_expression(cond);
+                if !self.types_compatible(&ast::Type::Bool, &typed_cond.ty) {
+                    self.report_error(
+                        typed_cond.span.clone(),
+                        format!(
+                            "While condition must be of type Bool, found {:?}.",
+                            typed_cond.ty
+                        ),
+                    );
+                }
+                self.symbols.push_scope();
+                let typed_body = self.analyze_block(body);
+                self.symbols.pop_scope();
+                TypedStatement::While {
+                    cond: typed_cond,
+                    body: typed_body,
+                }
+            }
+            ast::Statement::Expression(expr) => {
+                TypedStatement::Expression(self.analyze_expression(expr))
+            }
+        }
+    }
+    fn analyze_expression(&mut self, expr: Spanned<ast::Expression>) -> TypedExpression {
+        let (node, ty) = match expr.node {
+            ast::Expression::IntLiteral(i) => {
+                (TypedExpressionKind::IntLiteral(i), ast::Type::Int)
+            }
+            ast::Expression::BoolLiteral(b) => {
+                (TypedExpressionKind::BoolLiteral(b), ast::Type::Bool)
+            }
+            ast::Expression::StringLiteral(s) => {
+                (TypedExpressionKind::StringLiteral(s), ast::Type::String)
+            }
+            ast::Expression::Variable(name) => {
+                if let Some(ty) = self.symbols.lookup_var(&name) {
+                    (TypedExpressionKind::Variable(name), ty.clone())
+                } else {
+                    self.report_error(
+                        expr.span.clone(),
+                        format!("Undefined variable '{}'.", name),
+                    );
+                    (TypedExpressionKind::Variable(name), ast::Type::Void)
+                }
+            }
+            ast::Expression::BinaryOperation { op, left, right } => {
+                let typed_left = self.analyze_expression(*left);
+                let typed_right = self.analyze_expression(*right);
+                let ty = match op {
+                    ast::BinaryOp::Add
+                    | ast::BinaryOp::Sub
+                    | ast::BinaryOp::Mul
+                    | ast::BinaryOp::Div => {
+                        if !self.types_compatible(&ast::Type::Int, &typed_left.ty)
+                            || !self.types_compatible(&ast::Type::Int, &typed_right.ty)
+                        {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!("Operator {:?} requires Int operands.", op),
+                            );
+                        }
+                        ast::Type::Int
+                    }
+                    ast::BinaryOp::Eq | ast::BinaryOp::Neq => {
+                        if !self.types_compatible(&typed_left.ty, &typed_right.ty) {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!("Operands for {:?} must have same type.", op),
+                            );
+                        }
+                        ast::Type::Bool
+                    }
+                    ast::BinaryOp::Lt | ast::BinaryOp::Gt => {
+                        if !self.types_compatible(&ast::Type::Int, &typed_left.ty)
+                            || !self.types_compatible(&ast::Type::Int, &typed_right.ty)
+                        {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!("Operator {:?} requires Int operands.", op),
+                            );
+                        }
+                        ast::Type::Bool
+                    }
+                    ast::BinaryOp::Or => {
+                        if !self.types_compatible(&ast::Type::Bool, &typed_left.ty)
+                            || !self.types_compatible(&ast::Type::Bool, &typed_right.ty)
+                        {
+                            self.report_error(
+                                expr.span.clone(),
+                                "Operator Or requires Bool operands.".to_string(),
+                            );
+                        }
+                        ast::Type::Bool
+                    }
+                };
+                (
+                    TypedExpressionKind::BinaryOperation {
+                        op,
+                        left: Box::new(typed_left),
+                        right: Box::new(typed_right),
+                    },
+                    ty,
+                )
+            }
+            ast::Expression::FunctionCall { name, args } => {
+                let typed_args: FVec<_> = args
+                    .into_iter()
+                    .map(|arg| self.analyze_expression(arg))
+                    .collect();
+                let arg_count = typed_args.len();
+                if let Some((param_types, ret_type, is_variadic, is_extern)) = self
+                    .symbols
+                    .lookup_func(&name)
+                    .cloned()
+                {
+                    let mut coerced_args: FVec<TypedExpression> = Vec::new();
+                    for (idx, arg) in typed_args.into_iter().enumerate() {
+                        let expected = param_types.get(idx);
+                        if let Some(expected_ty) = expected {
+                            if is_extern
+                                && matches!(expected_ty, ast::Type::Pointer(inner) if self.is_aggregate_type(inner))
+                                && self.is_aggregate_type(&arg.ty)
+                                && self.is_lvalue(&arg)
+                            {
+                                coerced_args.push(TypedExpression {
+                                    node: TypedExpressionKind::AddressOf(Box::new(arg)),
+                                    ty: expected_ty.clone(),
+                                    span: expr.span.clone(),
+                                });
+                                continue;
+                            }
+                        }
+                        coerced_args.push(arg);
+                    }
+                    if !is_variadic && param_types.len() != arg_count {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!(
+                                "Function '{}' expects {} arguments, got {}.", name,
+                                param_types.len(), arg_count
+                            ),
+                        );
+                    } else if is_variadic && arg_count < param_types.len() {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!(
+                                "Function '{}' expects at least {} arguments, got {}.",
+                                name, param_types.len(), arg_count
+                            ),
+                        );
+                    }
+                    for (i, (arg, expected_ty)) in coerced_args
+                        .iter()
+                        .zip(&param_types)
+                        .enumerate()
+                    {
+                        if !self.types_compatible(expected_ty, &arg.ty) {
+                            self.report_error(
+                                arg.span.clone(),
+                                format!("Argument {} of '{}' type mismatch.", i + 1, name),
+                            );
+                        }
+                    }
+                    (
+                        TypedExpressionKind::FunctionCall {
+                            name,
+                            args: coerced_args,
+                        },
+                        ret_type,
+                    )
+                } else {
+                    (
+                        TypedExpressionKind::FunctionCall {
+                            name,
+                            args: typed_args,
+                        },
+                        ast::Type::Unknown,
+                    )
+                }
+            }
+            ast::Expression::MethodCall { base, method, args } => {
+                let typed_base = self.analyze_expression(*base);
+                let mut typed_args: FVec<_> = Vec::new();
+                typed_args.push(typed_base);
+                for arg in args {
+                    typed_args.push(self.analyze_expression(arg));
+                }
+                let name = method;
+                let arg_count = typed_args.len();
+                if let Some((param_types, ret_type, is_variadic, is_extern)) = self
+                    .symbols
+                    .lookup_func(&name)
+                    .cloned()
+                {
+                    let mut coerced_args: FVec<TypedExpression> = Vec::new();
+                    for (idx, arg) in typed_args.into_iter().enumerate() {
+                        let expected = param_types.get(idx);
+                        if let Some(expected_ty) = expected {
+                            if is_extern
+                                && matches!(expected_ty, ast::Type::Pointer(inner) if self.is_aggregate_type(inner))
+                                && self.is_aggregate_type(&arg.ty)
+                                && self.is_lvalue(&arg)
+                            {
+                                coerced_args.push(TypedExpression {
+                                    node: TypedExpressionKind::AddressOf(Box::new(arg)),
+                                    ty: expected_ty.clone(),
+                                    span: expr.span.clone(),
+                                });
+                                continue;
+                            }
+                        }
+                        coerced_args.push(arg);
+                    }
+                    if !is_variadic && param_types.len() != arg_count {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!(
+                                "Function '{}' expects {} arguments, got {}.", name,
+                                param_types.len(), arg_count
+                            ),
+                        );
+                    } else if is_variadic && arg_count < param_types.len() {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!(
+                                "Function '{}' expects at least {} arguments, got {}.",
+                                name, param_types.len(), arg_count
+                            ),
+                        );
+                    }
+                    for (i, (arg, expected_ty)) in coerced_args
+                        .iter()
+                        .zip(&param_types)
+                        .enumerate()
+                    {
+                        if !self.types_compatible(expected_ty, &arg.ty) {
+                            self.report_error(
+                                arg.span.clone(),
+                                format!(
+                                    "Argument {} of '{}' type mismatch.",
+                                    i + 1,
+                                    name
+                                ),
+                            );
+                        }
+                    }
+                    (
+                        TypedExpressionKind::FunctionCall {
+                            name,
+                            args: coerced_args,
+                        },
+                        ret_type,
+                    )
+                } else {
+                    (
+                        TypedExpressionKind::FunctionCall {
+                            name,
+                            args: typed_args,
+                        },
+                        ast::Type::Unknown,
+                    )
+                }
+            }
+            ast::Expression::ArrayLiteral(elements) => {
+                let typed_elements: FVec<_> = elements
+                    .into_iter()
+                    .map(|e| self.analyze_expression(e))
+                    .collect();
+                if typed_elements.is_empty() {
+                    self.report_error(
+                        expr.span.clone(),
+                        "Empty array literals are not yet supported (cannot infer type)."
+                            .to_string(),
+                    );
+                    return TypedExpression {
+                        node: TypedExpressionKind::ArrayLiteral(vec![]),
+                        ty: ast::Type::Void,
+                        span: expr.span,
+                    };
+                }
+                let first_ty = typed_elements[0].ty.clone();
+                for (i, elem) in typed_elements.iter().enumerate().skip(1) {
+                    if !self.types_compatible(&first_ty, &elem.ty) {
+                        self.report_error(
+                            elem.span.clone(),
+                            format!(
+                                "Element {} has type {:?}, but expected {:?} (to match first element).",
+                                i, elem.ty, first_ty
+                            ),
+                        );
+                    }
+                }
+                let array_ty = ast::Type::Array(
+                    Box::new(first_ty),
+                    typed_elements.len(),
+                );
+                (TypedExpressionKind::ArrayLiteral(typed_elements), array_ty)
+            }
+            ast::Expression::ArrayRepeat { value, size } => {
+                let typed_value = self.analyze_expression(*value);
+                if size == 0 {
+                    self.report_error(
+                        expr.span.clone(),
+                        "Array size must be greater than zero.".to_string(),
+                    );
+                }
+                let array_ty = ast::Type::Array(Box::new(typed_value.ty.clone()), size);
+                (
+                    TypedExpressionKind::ArrayRepeat {
+                        value: Box::new(typed_value),
+                        size,
+                    },
+                    array_ty,
+                )
+            }
+            ast::Expression::Index { array, index } => {
+                let typed_array = self.analyze_expression(*array);
+                let typed_index = self.analyze_expression(*index);
+                if !self.types_compatible(&ast::Type::Int, &typed_index.ty) {
+                    self.report_error(
+                        typed_index.span.clone(),
+                        format!(
+                            "Array index must be of type Int, found {:?}.", typed_index
+                            .ty
+                        ),
+                    );
+                }
+                if let ast::Type::Array(elem_ty, _) = typed_array.ty.clone() {
+                    (
+                        TypedExpressionKind::Index {
+                            array: Box::new(typed_array),
+                            index: Box::new(typed_index),
+                        },
+                        *elem_ty,
+                    )
+                } else {
+                    self.report_error(
+                        typed_array.span.clone(),
+                        format!("Cannot index non-array type {:?}.", typed_array.ty),
+                    );
+                    (
+                        TypedExpressionKind::Index {
+                            array: Box::new(typed_array),
+                            index: Box::new(typed_index),
+                        },
+                        ast::Type::Void,
+                    )
+                }
+            }
+            ast::Expression::MemberAccess { base, field } => {
+                let typed_base = self.analyze_expression(*base);
+                if let ast::Type::Struct(struct_name) = &typed_base.ty {
+                    if let Some(info) = self.symbols.lookup_struct(struct_name).cloned()
+                    {
+                        if let Some((field_ty, field_idx)) = info.fields.get(&field) {
+                            (
+                                TypedExpressionKind::MemberAccess {
+                                    base: Box::new(typed_base),
+                                    field_name: field.clone(),
+                                    field_index: *field_idx,
+                                },
+                                field_ty.clone(),
+                            )
+                        } else {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!(
+                                    "Struct '{}' has no field named '{}'.", struct_name, field
+                                ),
+                            );
+                            (
+                                TypedExpressionKind::MemberAccess {
+                                    base: Box::new(typed_base),
+                                    field_name: field,
+                                    field_index: 0,
+                                },
+                                ast::Type::Void,
+                            )
+                        }
+                    } else {
+                        self.report_error(
+                            typed_base.span.clone(),
+                            format!("Unknown struct type '{}'.", struct_name),
+                        );
+                        (
+                            TypedExpressionKind::MemberAccess {
+                                base: Box::new(typed_base),
+                                field_name: field,
+                                field_index: 0,
+                            },
+                            ast::Type::Void,
+                        )
+                    }
+                } else {
+                    self.report_error(
+                        typed_base.span.clone(),
+                        format!(
+                            "Cannot access member '{}' of non-struct type {:?}.", field,
+                            typed_base.ty
+                        ),
+                    );
+                    (
+                        TypedExpressionKind::MemberAccess {
+                            base: Box::new(typed_base),
+                            field_name: field,
+                            field_index: 0,
+                        },
+                        ast::Type::Void,
+                    )
+                }
+            }
+            ast::Expression::StructLiteral { name, fields } => {
+                if let Some(info) = self.symbols.lookup_struct(&name).cloned() {
+                    let mut typed_fields = Vec::new();
+                    let mut initialized = HashSet::new();
+                    for (field_name, field_expr) in fields {
+                        if let Some((expected_ty, field_idx)) = info
+                            .fields
+                            .get(&field_name)
+                        {
+                            let typed_expr = self.analyze_expression(field_expr);
+                            if !self.types_compatible(expected_ty, &typed_expr.ty) {
+                                self.report_error(
+                                    typed_expr.span.clone(),
+                                    format!(
+                                        "Type mismatch for field '{}' in struct '{}'. Expected {:?}, found {:?}.",
+                                        field_name, name, expected_ty, typed_expr.ty
+                                    ),
+                                );
+                            }
+                            typed_fields
+                                .push((field_name.clone(), *field_idx, typed_expr));
+                            initialized.insert(field_name);
+                        } else {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!(
+                                    "Struct '{}' has no field named '{}'.", name, field_name
+                                ),
+                            );
+                        }
+                    }
+                    for (required_field, _) in &info.ordered_fields {
+                        if !initialized.contains(required_field) {
+                            self.report_error(
+                                expr.span.clone(),
+                                format!(
+                                    "Missing field '{}' in literal for struct '{}'.",
+                                    required_field, name
+                                ),
+                            );
+                        }
+                    }
+                    (
+                        TypedExpressionKind::StructLiteral {
+                            name: name.clone(),
+                            fields: typed_fields,
+                        },
+                        ast::Type::Struct(name),
+                    )
+                } else {
+                    self.report_error(
+                        expr.span.clone(),
+                        format!("Unknown struct type '{}'.", name),
+                    );
+                    (
+                        TypedExpressionKind::StructLiteral {
+                            name: name.clone(),
+                            fields: Vec::new(),
+                        },
+                        ast::Type::Struct(name),
+                    )
+                }
+            }
+            ast::Expression::AddressOf(inner) => {
+                let typed_inner = self.analyze_expression(*inner);
+                let is_lvalue = matches!(
+                    typed_inner.node, TypedExpressionKind::Variable(_) |
+                    TypedExpressionKind::Dereference(_) | TypedExpressionKind::Index { ..
+                    } | TypedExpressionKind::MemberAccess { .. }
+                );
+                if !is_lvalue {
+                    self.report_error(
+                        expr.span.clone(),
+                        "Cannot take the address of a temporary value.".to_string(),
+                    );
+                }
+                let ptr_ty = ast::Type::Pointer(Box::new(typed_inner.ty.clone()));
+                (TypedExpressionKind::AddressOf(Box::new(typed_inner)), ptr_ty)
+            }
+            ast::Expression::Dereference(inner) => {
+                let typed_inner = self.analyze_expression(*inner);
+                match typed_inner.ty.clone() {
+                    ast::Type::Pointer(inner_ty) => {
+                        (
+                            TypedExpressionKind::Dereference(Box::new(typed_inner)),
+                            *inner_ty,
+                        )
+                    }
+                    other => {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!("Cannot dereference non-pointer type {:?}.", other),
+                        );
+                        (
+                            TypedExpressionKind::Dereference(Box::new(typed_inner)),
+                            ast::Type::Void,
+                        )
+                    }
+                }
+            }
+        };
+        TypedExpression {
+            node,
+            ty,
+            span: expr.span,
+        }
+    }
+}

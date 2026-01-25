@@ -1,0 +1,113 @@
+use crate::reactor::{HyperRing, Sleep};
+use crate::task::Task;
+use crate::{Device, JoinHandle};
+use crossbeam_queue::SegQueue;
+thread_local! {
+    pub static GLOBAL_RUNTIME : RefCell < Option < RuntimeHandle >> = RefCell::new(None);
+}
+#[derive(Clone)]
+struct RuntimeHandle {
+    pub(crate) injector: Arc<SegQueue<Arc<Task>>>,
+    pub(crate) reactor: Arc<HyperRing>,
+}
+impl RuntimeHandle {
+    pub fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        self.spawn_with_affinity(future, Device::Cpu)
+    }
+    pub fn spawn_with_affinity<F>(
+        &self,
+        future: F,
+        _device: Device,
+    ) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let (tx, rx) = futures::channel::oneshot::channel();
+        let wrapped_future = async move {
+            let output = future.await;
+            let _ = tx.send(output);
+        };
+        let task = Task::spawn(wrapped_future, self.injector.clone());
+        self.injector.push(task);
+        JoinHandle { result_receiver: rx }
+    }
+    pub fn sleep(&self, duration: std::time::Duration) -> Sleep {
+        Sleep::new(duration, self.reactor.clone())
+    }
+}
+struct Runtime {
+    workers: FSize,
+    injector: Arc<SegQueue<Arc<Task>>>,
+    reactor: Arc<HyperRing>,
+}
+impl Runtime {
+    pub fn new(workers: FSize) -> Self {
+        log::info!("Initializing Fusion Supernova Runtime with {} workers", workers);
+        Self {
+            workers,
+            injector: Arc::new(SegQueue::new()),
+            reactor: HyperRing::new(),
+        }
+    }
+    pub fn block_on<F>(&self, future: F) -> F::Output
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let handle = RuntimeHandle {
+            injector: self.injector.clone(),
+            reactor: self.reactor.clone(),
+        };
+        GLOBAL_RUNTIME.with(|rt| *rt.borrow_mut() = Some(handle.clone()));
+        for id in 0..self.workers {
+            let injector = self.injector.clone();
+            let reactor = self.reactor.clone();
+            let handle_clone = handle.clone();
+            thread::Builder::new()
+                .name(format!("fusion-worker-{}", id))
+                .spawn(move || {
+                    GLOBAL_RUNTIME.with(|rt| *rt.borrow_mut() = Some(handle_clone));
+                    run_worker(injector, reactor);
+                })
+                .expect("Failed to spawn worker");
+        }
+        let (tx, mut rx) = futures::channel::oneshot::channel();
+        let wrapped = async move {
+            let res = future.await;
+            let _ = tx.send(res);
+        };
+        self.injector.push(Task::spawn(wrapped, self.injector.clone()));
+        loop {
+            if let Ok(Some(result)) = rx.try_recv() {
+                return result;
+            }
+            if let Some(task) = self.injector.pop() {
+                task.poll();
+            } else {
+                self.reactor.poll_completions();
+                thread::yield_now();
+            }
+        }
+    }
+}
+fn run_worker(injector: Arc<SegQueue<Arc<Task>>>, reactor: Arc<HyperRing>) {
+    loop {
+        if let Some(task) = injector.pop() {
+            task.poll();
+        } else {
+            reactor.poll_completions();
+            thread::yield_now();
+        }
+    }
+}
+fn get_reactor() -> Arc<HyperRing> {
+    GLOBAL_RUNTIME
+        .with(|rt| {
+            rt.borrow().as_ref().expect("Runtime not started").reactor.clone()
+        })
+}

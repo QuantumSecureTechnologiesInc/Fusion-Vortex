@@ -1,0 +1,2 @@
+/// offload implementation
+struct OffloadModule;

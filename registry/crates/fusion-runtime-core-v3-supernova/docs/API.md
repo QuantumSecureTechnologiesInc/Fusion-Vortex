@@ -28,7 +28,7 @@ pub enum Device {
     Gpu(u32),  // GPU device ID
     Qpu(u32),  // QPU device ID
 }
-```
+```text
 
 ### `JoinHandle<T>`
 
@@ -43,13 +43,14 @@ impl<T> Future for JoinHandle<T> {
     type Output = T;
     // ...
 }
-```
+```text
 
 **Usage:**
+
 ```rust
 let handle = spawn(async { 42 });
 let result = handle.await; // result == 42
-```
+```text
 
 ---
 
@@ -72,9 +73,10 @@ impl Builder {
     pub fn enable_distributed(self) -> Self;
     pub fn build(self) -> Runtime;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let runtime = Builder::new()
     .worker_threads(8)
@@ -82,7 +84,7 @@ let runtime = Builder::new()
     .enable_wasm()
     .enable_distributed()
     .build();
-```
+```text
 
 ### `Runtime`
 
@@ -100,14 +102,15 @@ impl Runtime {
         F: Future + Send + 'static,
         F::Output: Send + 'static;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 runtime.block_on(async {
     // Your async code
 });
-```
+```text
 
 ---
 
@@ -122,9 +125,10 @@ pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static;
-```
+```text
 
 **Example:**
+
 ```rust
 let handle = spawn(async {
     // Task code
@@ -132,7 +136,7 @@ let handle = spawn(async {
 });
 
 let result = handle.await;
-```
+```text
 
 ### `RuntimeHandle`
 
@@ -148,9 +152,10 @@ impl RuntimeHandle {
     pub fn spawn_with_affinity<F>(&self, future: F, device: Device) -> JoinHandle<F::Output>;
     pub fn sleep(&self, duration: Duration) -> Sleep;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 use fusion_runtime_core_v3_supernova::executor::GLOBAL_RUNTIME;
 
@@ -158,7 +163,7 @@ GLOBAL_RUNTIME.with(|rt| {
     let handle = rt.borrow().as_ref().unwrap();
     handle.spawn(async { /* ... */ });
 });
-```
+```text
 
 ---
 
@@ -175,15 +180,16 @@ impl RuntimeHandle {
         F: Future + Send + 'static,
         F::Output: Send + 'static;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let result = runtime_handle.spawn_on_gpu(0, async {
     // GPU kernel code
     "GPU computation complete"
 }).await;
-```
+```text
 
 ### `spawn_on_qpu()`
 
@@ -196,15 +202,16 @@ impl RuntimeHandle {
         F: Future + Send + 'static,
         F::Output: Send + 'static;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let result = runtime_handle.spawn_on_qpu(0, async {
     // Quantum circuit
     vec![0u8, 1, 0, 1]
 }).await;
-```
+```text
 
 ### `gpu_kernel()`
 
@@ -212,10 +219,10 @@ Executes a GPU kernel directly.
 
 ```rust
 impl RuntimeHandle {
-    pub async fn gpu_kernel(&self, device_id: u32, duration: Duration) 
+    pub async fn gpu_kernel(&self, device_id: u32, duration: Duration)
         -> Result<(), FusionError>;
 }
-```
+```text
 
 ### `qpu_circuit()`
 
@@ -223,10 +230,10 @@ Executes a quantum circuit directly.
 
 ```rust
 impl RuntimeHandle {
-    pub async fn qpu_circuit(&self, device_id: u32, circuit_depth: u32) 
+    pub async fn qpu_circuit(&self, device_id: u32, circuit_depth: u32)
         -> Result<Vec<u8>, FusionError>;
 }
-```
+```text
 
 ---
 
@@ -247,14 +254,15 @@ impl PluginEngine {
     pub async fn call(&self, plugin: &Plugin, func_name: &str, args: Vec<i32>) -> Result<()>;
     pub fn shared_memory(&self) -> &Arc<SharedMemoryManager>;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let engine = PluginEngine::new(runtime_handle)?;
 let plugin = engine.load(wasm_bytes).await?;
 engine.call(&plugin, "process", vec![]).await?;
-```
+```text
 
 ### Host Functions
 
@@ -278,22 +286,24 @@ fn host_qpu_execute(device_id: i32, circuit_ptr: i32, circuit_len: i32) -> i32;
 
 // Shared Memory
 fn host_shared_memory(name_ptr: i32, name_len: i32) -> i32;
-```
+```text
 
 **WASM Plugin Example (Rust):**
+
 ```rust
 extern "C" {
     fn host_gpu_compute(device_id: i32, data_ptr: *const u8, len: i32) -> i32;
 }
 
 #[no_mangle]
+
 pub extern "C" fn process() {
     let data = vec![1, 2, 3, 4];
     unsafe {
         host_gpu_compute(0, data.as_ptr(), data.len() as i32);
     }
 }
-```
+```text
 
 ---
 
@@ -311,9 +321,9 @@ pub struct ClusterManager {
 impl ClusterManager {
     pub fn new(node_id: String, reactor: Arc<HyperRing>) -> Self;
     pub async fn join_mesh(&self, seed_node: &str);
-    pub async fn spawn_on_node<F>(&self, target_node: &str, future: F) 
+    pub async fn spawn_on_node<F>(&self, target_node: &str, future: F)
         -> Result<JoinHandle<F::Output>>;
-    pub async fn spawn_distributed<F>(&self, future: F) 
+    pub async fn spawn_distributed<F>(&self, future: F)
         -> Result<JoinHandle<F::Output>>;
     pub async fn migrate_task(&self, task_id: u64, target_node: &str) -> Result<()>;
     pub async fn checkpoint_task(&self, task_id: u64) -> Result<Vec<u8>>;
@@ -321,9 +331,10 @@ impl ClusterManager {
     pub fn node_id(&self) -> &str;
     pub fn peer_count(&self) -> usize;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let cluster = ClusterManager::new("node-1".into(), reactor);
 cluster.join_mesh("seed-node").await;
@@ -340,7 +351,7 @@ cluster.spawn_distributed(async {
 
 // Migrate task
 cluster.migrate_task(task_id, "new-node").await?;
-```
+```text
 
 ---
 
@@ -371,9 +382,10 @@ impl SharedTensor {
     pub fn len(&self) -> usize;
     pub fn is_empty(&self) -> bool;
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let tensor = SharedTensor::new(&[1024, 1024])?;
 
@@ -390,7 +402,7 @@ let wasm_ptr = tensor.as_wasm_ptr();
 // GPU access (zero-copy)
 tensor.allocate_on_gpu(0)?;
 let device_ptr = tensor.device_ptr()?;
-```
+```text
 
 ### `SharedMemoryManager`
 
@@ -406,7 +418,7 @@ impl SharedMemoryManager {
     pub fn create_tensor(&self, shape: &[usize]) -> Result<Arc<SharedTensor>>;
     pub fn tensor_count(&self) -> usize;
 }
-```
+```text
 
 ---
 
@@ -439,9 +451,10 @@ impl RuntimeMetrics {
     pub fn print_summary(&self);
     // ... increment methods ...
 }
-```
+```text
 
 **Example:**
+
 ```rust
 let metrics = runtime.metrics();
 metrics.increment_native_tasks_spawned();
@@ -450,7 +463,7 @@ let snapshot = metrics.snapshot();
 println!("Tasks spawned: {}", snapshot.native_tasks_spawned);
 
 metrics.print_summary();
-```
+```text
 
 ---
 
@@ -472,9 +485,10 @@ pub enum FusionError {
 }
 
 pub type Result<T> = std::result::Result<T, FusionError>;
-```
+```text
 
 **Example:**
+
 ```rust
 match runtime_handle.gpu_kernel(0, duration).await {
     Ok(()) => println!("Success"),
@@ -483,7 +497,7 @@ match runtime_handle.gpu_kernel(0, duration).await {
     }
     Err(e) => eprintln!("Error: {}", e),
 }
-```
+```text
 
 ---
 
@@ -505,34 +519,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // 1. Native tasks
         let handle = spawn(async { 42 });
         let result = handle.await;
-        
+
         // 2. GPU execution
         let gpu_handle = executor::GLOBAL_RUNTIME.with(|rt| {
             rt.borrow().as_ref().unwrap()
                 .spawn_on_gpu(0, async { "GPU done" })
         });
         let gpu_result = gpu_handle.await;
-        
+
         // 3. WASM plugin
         let engine = wasm::PluginEngine::new(/* handle */)?;
         let plugin = engine.load(wasm_bytes).await?;
         engine.call(&plugin, "process", vec![]).await?;
-        
+
         // 4. Distributed
         let cluster = cluster::ClusterManager::new("node-1".into(), /* reactor */);
         cluster.join_mesh("seed").await;
         cluster.spawn_distributed(async { /* ... */ }).await?;
-        
+
         // 5. Shared memory
         let tensor = SharedTensor::new(&[1024, 1024])?;
         tensor.write_native(|data| data[0] = 42.0)?;
-        
+
         Ok::<(), FusionError>(())
     })?;
 
     Ok(())
 }
-```
+```text
 
 ---
 

@@ -66,7 +66,7 @@ We've successfully completed all four major enhancements to the VS Code extensio
 
 ##  Architecture Overview
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │              Fusion Advanced AI CLI                       │
 │                                                           │
@@ -99,39 +99,44 @@ We've successfully completed all four major enhancements to the VS Code extensio
 │  │  - Extension bridge                                 │  │
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────┘
-```
+```text
 
 ## 🎯 What This Enables
 
 ### For Users
 
 1. **Install any VS Code extension from CLI:**
+
    ```bash
    fusion extensions install rust-lang.rust-analyzer
    fusion extensions install dbaeumer.vscode-eslint
    fusion extensions install esbenp.prettier-vscode
-   ```
+```text
 
 2. **AI-enhanced with extension intelligence:**
+
    ```bash
    fusion ai analyze --use-ext rust-analyzer
    # AI now gets type info, trait impls, semantic analysis
-   ```
+```text
 
 3. **Run WASM-compiled extensions:**
+
    ```bash
    fusion extensions activate --wasm my-fast-extension
-   ```
+```text
 
 4. **LSP-powered code intelligence:**
+
    ```bash
    fusion lsp start rust-analyzer
    fusion lsp complete src/main.rs --line 42 --char 10
-   ```
+```text
 
 ### For Extension Developers
 
 **JavaScript Extensions work out-of-box:**
+
 ```javascript
 // extension.js
 const vscode = require('vscode');
@@ -141,16 +146,19 @@ const path = require('path');
 function activate(context) {
     // Full Node.js and VS Code API support
 }
-```
+```text
 
 **WASM Extensions for performance:**
+
 ```rust
 // Compile to WASM for maximum speed
+
 #[no_mangle]
+
 pub extern "C" fn process_large_file(data: &[u8]) -> Vec<u8> {
     // Native speed in WASM sandbox
 }
-```
+```text
 
 ## 📊 Stats
 
@@ -165,13 +173,16 @@ pub extern "C" fn process_large_file(data: &[u8]) -> Vec<u8> {
 All components include comprehensive tests and can be tested individually:
 
 ```bash
+
 # Test each module
+
 cargo test -p fusion-vscode-runtime
 
 # Integration test with real extension
+
 fusion extensions install ms-python.python
 fusion extensions exec python.startREPL
-```
+```text
 
 ## 📚 Documentation
 

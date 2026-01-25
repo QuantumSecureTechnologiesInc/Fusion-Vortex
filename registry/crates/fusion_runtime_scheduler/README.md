@@ -7,9 +7,10 @@ Task scheduler for the Fusion runtime.
 ```toml
 [dependencies]
 fusion_runtime_scheduler = "0.1.0"
-```
+```text
 
 ## Features
+
 - Cooperative and preemptive scheduling
 - Priority management
 - Concurrency primitives

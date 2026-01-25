@@ -1,7 +1,7 @@
 # Fusion Transform
 
-**Version:** 0.2.0  
-**Type:** Signal Processing  
+**Version:** 0.2.0
+**Type:** Signal Processing
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use num_complex::Complex;
 
 let mut signal = vec![Complex::new(1.0, 0.0); 1024];
 fft::process(&mut signal);
-```
+```text
 
 ## Dependencies
 

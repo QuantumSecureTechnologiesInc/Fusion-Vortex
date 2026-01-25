@@ -1,7 +1,7 @@
 # Fusion AI Daemon
 
-**Version:** Workspace  
-**Type:** Background Service  
+**Version:** Workspace
+**Type:** Background Service
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -28,7 +28,7 @@ The daemon is typically managed automatically by `fusion-ai-cli` or other tools,
 
 ```bash
 fusion-ai-daemon --port 1234 --model-dir /path/to/models
-```
+```text
 
 ## API
 

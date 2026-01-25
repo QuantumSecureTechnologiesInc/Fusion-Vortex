@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-wasm-runtime = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_wasm_runtime::Runtime;
 fn main() {
     Runtime::new().start();
 }
-```
+```text
 
 ## License
 

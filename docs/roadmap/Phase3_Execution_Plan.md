@@ -162,7 +162,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
        fn add(other: TensorT) -> TensorT
    }
 
-```
+```text
 
 2. **`stdlib/ml/layer.fu`** - Neural network layers
 
@@ -174,7 +174,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
 
    class Dense implements Layer { ... }
    class Conv2D implements Layer { ... }
-```
+```text
 
 1. **`stdlib/ml/optimizer.fu`** - Training optimizers
 
@@ -186,7 +186,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
    class Adam implements Optimizer { ... }
    class SGD implements Optimizer { ... }
 
-```
+```text
 
 4. **`stdlib/ml/model.fu`** - Model container
 
@@ -197,7 +197,7 @@ Build machine learning primitives with GPU acceleration support, enabling neural
        @gpu_accelerated("cuda")
        fn train(data: Dataset, epochs: int) -> Result<Sequential, String>
    }
-```
+```text
 
 **Status**: ⏳ Not Started
 
@@ -258,7 +258,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
        fn measure_all() -> QuantumCircuit
    }
 
-```
+```text
 
 2. **`stdlib/quantum/gates.fu`** - Quantum gates
 
@@ -267,7 +267,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
    class X { target: int }
    class CNOT { control: int, target: int }
    class Rz { target: int, angle: float }
-```
+```text
 
 1. **`stdlib/quantum/backend.fu`** - Quantum execution
 
@@ -279,7 +279,7 @@ Enable quantum circuit programming in Fusion, with integration to real quantum b
    class IBMQBackend implements QuantumBackend { ... }
    class Simulator implements QuantumBackend { ... }
 
-```
+```text
 
 **Status**: ⏳ Not Started
 
@@ -362,7 +362,7 @@ trait IteratorT {
     fn map<U>(f: fn(T) -> U) -> Iterator<U>   // Requires first-class functions
     fn filter(f: fn(T) -> bool) -> IteratorT
 }
-```
+```text
 
 **Status**: ⏳ Blocked (requires first-class functions)
 
@@ -390,7 +390,7 @@ trait IteratorT {
    ```fusion
    fn process<T: Display>(item: T) -> void
 
-```
+```text
 
 3. **For-Each Loops** (requires Iterator)
 
@@ -398,7 +398,7 @@ trait IteratorT {
    for item in vector {
        println(item);
    }
-```
+```text
 
 ### Compiler Improvements
 
@@ -499,7 +499,7 @@ trait IteratorT {
 
 ### Rust Crates (add to Cargo.toml)
 
-```
+```text
 
 # WebAssembly
 
@@ -519,7 +519,7 @@ opencl-sys = "0.2"
 # Quantum (optional)
 
 qiskit-ffi = "0.1"  # Hypothetical binding
-```
+```text
 
 ### External Tools
 

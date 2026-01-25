@@ -27,7 +27,7 @@ Expression::Literal(Literal::Boolean(b)) => {
     let val = if *b { "1" } else { "0" };
     Ok((val.to_string(), Type::Integer))
 }
-```
+```text
 
 ### 2. Negative Number Literals
 
@@ -68,14 +68,14 @@ Expression::Literal(Literal::Boolean(b)) => {
 ```fusion
 let truth = true;
 let falsehood = false;
-```
+```text
 
 ✅ **Negative Literals**: Successfully compiles and generates IR
 
 ```fusion
 let neg = -1;
 let pos = 42;
-```
+```text
 
 ✅ **Logical AND**: Successfully compiles and generates IR
 
@@ -83,7 +83,7 @@ let pos = 42;
 if (a < b && b > 0) {
     print("Logical AND works!");
 }
-```
+```text
 
 ### StringUtils Status
 
@@ -105,7 +105,7 @@ if (c >= 97 && c <= 122) {
     c = c - 32;  // Error: can't assign to immutable variable
 }
 ptr_write::<int>(result, i, c);
-```
+```text
 
 **After** (compiles):
 
@@ -116,7 +116,7 @@ if (c >= 97 && c <= 122) {
 } else {
     ptr_write::<int>(result, i, c);
 }
-```
+```text
 
 **Remaining Issue**: Loop counter `i = i + 1` still requires mutable variables.
 
@@ -150,7 +150,7 @@ Replace manual loop counter manipulation with for loops:
 for i in 0..len {
     // loop body
 }
-```
+```text
 
 ## Updated Component Status
 

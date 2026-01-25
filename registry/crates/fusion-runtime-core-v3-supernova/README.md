@@ -5,8 +5,8 @@
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 
-**Version:** 3.0.0  
-**Status:** 🚀 Production Ready  
+**Version:** 3.0.0
+**Status:** 🚀 Production Ready
 **Architecture:** Unified Heterogeneous Runtime (Native + WASM + Distributed)
 
 ---
@@ -26,6 +26,7 @@ Unlike traditional runtimes, Supernova provides **zero-overhead abstraction** be
 ## ✨ Key Features
 
 ### 🚀 **Native Execution**
+
 - ✅ Custom work-stealing scheduler with `SegQueue`
 - ✅ Multi-threaded task execution
 - ✅ Device affinity (CPU/GPU/QPU)
@@ -33,6 +34,7 @@ Unlike traditional runtimes, Supernova provides **zero-overhead abstraction** be
 - ✅ `spawn_on_gpu()` and `spawn_on_qpu()` for device-specific execution
 
 ### 🔌 **WASM Plugin System**
+
 - ✅ Production Wasmtime integration
 - ✅ Async WASM execution
 - ✅ Fuel-based resource limits
@@ -40,6 +42,7 @@ Unlike traditional runtimes, Supernova provides **zero-overhead abstraction** be
 - ✅ **Bidirectional host functions** - Plugins can call GPU/QPU!
 
 ### 🌐 **Distributed Runtime**
+
 - ✅ Cluster mesh networking
 - ✅ Remote task offloading (`spawn_on_node`)
 - ✅ Load-balanced execution (`spawn_distributed`)
@@ -47,12 +50,14 @@ Unlike traditional runtimes, Supernova provides **zero-overhead abstraction** be
 - ✅ gRPC-based node communication
 
 ### ⚡ **High Performance**
+
 - ✅ io_uring on Linux for async I/O
 - ✅ Lock-free work-stealing queues
 - ✅ Unified reactor for all I/O types
 - ✅ Sub-microsecond task spawn latency (~50ns)
 
 ### 🔍 **Observability**
+
 - ✅ Comprehensive metrics tracking
 - ✅ Native task counters
 - ✅ GPU/QPU operation metrics
@@ -70,8 +75,9 @@ Add to your `Cargo.toml`:
 fusion-runtime-core-v3-supernova = "3.0.0"
 
 # Or with specific features
+
 fusion-runtime-core-v3-supernova = { version = "3.0.0", features = ["full"] }
-```
+```text
 
 ### Feature Flags
 
@@ -98,17 +104,17 @@ fn main() {
 
     runtime.block_on(async {
         println!("Hello from Supernova!");
-        
+
         // Spawn concurrent tasks
         let handle = fusion_runtime_core_v3_supernova::spawn(async {
             42
         });
-        
+
         let result = handle.await;
         println!("Result: {}", result);
     });
 }
-```
+```text
 
 ### Device-Specific Execution
 
@@ -117,23 +123,23 @@ use fusion_runtime_core_v3_supernova::*;
 
 runtime.block_on(async {
     // Get runtime handle
-    let handle = executor::GLOBAL_RUNTIME.with(|rt| 
+    let handle = executor::GLOBAL_RUNTIME.with(|rt|
         rt.borrow().as_ref().unwrap().clone()
     );
-    
+
     // GPU execution
     let gpu_result = handle.spawn_on_gpu(0, async {
         // GPU kernel code
         "GPU computation complete"
     }).await;
-    
+
     // QPU execution
     let qpu_result = handle.spawn_on_qpu(0, async {
         // Quantum circuit
         vec![0u8, 1, 0, 1]
     }).await;
 });
-```
+```text
 
 ### WASM Plugins with Host Functions
 
@@ -143,15 +149,15 @@ use fusion_runtime_core_v3_supernova::wasm::PluginEngine;
 runtime.block_on(async {
     let handle = /* get runtime handle */;
     let engine = PluginEngine::new(handle)?;
-    
+
     // Load plugin
     let plugin = engine.load(wasm_bytes).await?;
-    
+
     // Call plugin function
     // Plugin can call host_gpu_compute(), host_qpu_execute(), etc.
     engine.call(&plugin, "process", vec![]).await?;
 });
-```
+```text
 
 ### Distributed Execution
 
@@ -161,21 +167,21 @@ use fusion_runtime_core_v3_supernova::cluster::ClusterManager;
 runtime.block_on(async {
     let reactor = executor::get_reactor();
     let cluster = ClusterManager::new("node-1".into(), reactor);
-    
+
     // Join cluster
     cluster.join_mesh("seed-node").await;
-    
+
     // Spawn on specific node
     cluster.spawn_on_node("gpu-node", async {
         // Runs on gpu-node
     }).await?;
-    
+
     // Spawn on best available node
     cluster.spawn_distributed(async {
         // Runs on least-loaded node
     }).await?;
 });
-```
+```text
 
 ### Zero-Copy Shared Memory
 
@@ -195,13 +201,13 @@ let wasm_ptr = tensor.as_wasm_ptr();
 // GPU access (zero-copy)
 tensor.allocate_on_gpu(0)?;
 let device_ptr = tensor.device_ptr()?;
-```
+```text
 
 ---
 
 ## 📊 Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                   Supernova Runtime v3.0                    │
 ├─────────────────────────────────────────────────────────────┤
@@ -220,7 +226,7 @@ let device_ptr = tensor.device_ptr()?;
 │  ├─ Edge Computing Integration                              │
 │  └─ Cluster Mesh Networking                                 │
 └─────────────────────────────────────────────────────────────┘
-```
+```text
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
 
@@ -270,7 +276,7 @@ Run examples:
 
 ```bash
 cargo run --example supernova_complete --features wasm,distributed,gpu
-```
+```text
 
 ---
 

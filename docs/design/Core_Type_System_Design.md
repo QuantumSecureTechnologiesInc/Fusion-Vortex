@@ -51,7 +51,7 @@ FusionType (Root)
     ├── QuantumGate (unitary operation)
     ├── QuantumCircuit (gate sequence)
     └── MeasurementType (classical outcome)
-```
+```text
 
 ### 1.3 Type Safety Invariants
 
@@ -86,7 +86,7 @@ type f32, f64;
 // Complex numbers (for quantum amplitudes)
 type complex = Complex<f64>;
 type complex32 = Complex<f32>;
-```
+```text
 
 ### 2.2 Compound Types
 
@@ -105,7 +105,7 @@ enum OptionT {
 
 // Tuples
 type Pair<A, B> = (A, B);
-```
+```text
 
 ### 2.3 Collection Types
 
@@ -115,7 +115,7 @@ type VectorT = VecT;           // Dynamic array
 type HashMap<K, V> = Map<K, V>;    // Hash table
 type HashSetT = SetT;          // Set
 type LinkedListT = ListT;      // Linked list
-```
+```text
 
 ---
 
@@ -140,7 +140,7 @@ type Vector1DT = Tensor<T, 1>;   // 1D tensor (vector)
 type MatrixT = Tensor<T, 2>;     // 2D tensor (matrix)
 type Tensor3DT = Tensor<T, 3>;   // 3D tensor (volume)
 type TensorNDT = Tensor<T, N>;   // ND tensor (arbitrary rank)
-```
+```text
 
 ### 3.2 Tensor Data Types
 
@@ -161,7 +161,7 @@ trait Numeric {
     fn mul(self, other: Self) -> Self;
     // ... other numeric operations
 }
-```
+```text
 
 ### 3.3 Tensor Operations
 
@@ -203,7 +203,7 @@ impl<T: Numeric> MatrixT {
     fn determinant(self) -> T;
     fn inverse(self) -> Option<MatrixT>;
 }
-```
+```text
 
 ---
 
@@ -233,7 +233,7 @@ impl Qubit {
     // Measurement (consumes qubit, returns classical bit)
     fn measure(self) -> bool;  // Takes ownership, returns classical value
 }
-```
+```text
 
 ### 4.2 Qubit Register
 
@@ -258,7 +258,7 @@ impl QubitRegister {
     // Measure specific qubits (partial measurement)
     fn measure_qubits(mut self, indices: Vector<usize>) -> Vector<bool>;
 }
-```
+```text
 
 ### 4.3 Quantum Gates
 
@@ -299,7 +299,7 @@ impl QuantumGate {
     fn apply(&self, qubits: &mut QubitRegister, targets: Vector<usize>)
         -> Result<(), string>;
 }
-```
+```text
 
 ### 4.4 Quantum Circuit
 
@@ -356,7 +356,7 @@ struct CircuitResult {
     measurements: Vector<bool>,  // Measurement outcomes
     final_state: Option<QuantumState>,  // If not fully measured
 }
-```
+```text
 
 ### 4.5 Quantum State
 
@@ -391,7 +391,7 @@ impl QuantumState {
     // Entanglement entropy
     fn entanglement_entropy(&self, partition: Vector<usize>) -> float;
 }
-```
+```text
 
 ---
 
@@ -439,7 +439,7 @@ impl From<QuantumState> for Vector1D<complex> {
         Vector1D::from_vec(state.amplitudes)
     }
 }
-```
+```text
 
 ### 5.2 Hybrid Type System
 
@@ -474,7 +474,7 @@ enum QuantumValue {
     Circuit(QuantumCircuit),
     State(QuantumState),
 }
-```
+```text
 
 ### 5.3 Type Checker Integration
 
@@ -505,7 +505,7 @@ enum TypeError {
     MeasuredQubitReuse { qubit: QubitId },
     UnitarityViolation { gate: string },
 }
-```
+```text
 
 ---
 
@@ -533,7 +533,7 @@ fusion_core/
     ├── type_checker.rs   # Type checking
     ├── optimizer.rs      # IR optimization
     └── codegen.rs        # Code generation
-```
+```text
 
 ### 6.2 Public API Surface
 
@@ -571,7 +571,7 @@ pub mod runtime {
     // Simulation
     pub use quantum_sim::{Simulator, simulate_circuit};
 }
-```
+```text
 
 ---
 
@@ -675,7 +675,7 @@ impl SemanticAnalyzer {
         Ok(FusionType::Classical(ClassicalType::Unit))
     }
 }
-```
+```text
 
 ### 7.2 Runtime Representation
 
@@ -730,7 +730,7 @@ enum QuantumBackend {
     Rigetti(RigettiClient),         // Rigetti
     Local(QuantumHardware),         // Local quantum processor
 }
-```
+```text
 
 ---
 
@@ -745,7 +745,7 @@ fn fibonacci(n: int) -> int {
     }
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
-```
+```text
 
 ### 8.2 Pure Tensor
 
@@ -757,7 +757,7 @@ fn neural_layer(input: Matrix<float>, weights: Matrix<float>, bias: Matrix<float
     let output = matmul(input, weights);
     return output + bias;  // Broadcasting
 }
-```
+```text
 
 ### 8.3 Pure Quantum
 
@@ -776,7 +776,7 @@ fn bell_state() -> (bool, bool) {
 
     return (m1, m2);
 }
-```
+```text
 
 ### 8.4 Hybrid Classical-Tensor
 
@@ -804,7 +804,7 @@ fn train_model(data: Vector1D<float>, labels: Vector1D<int>, epochs: int) {
         epoch = epoch + 1;
     }
 }
-```
+```text
 
 ### 8.5 Hybrid Quantum-Classical (Variational Quantum Eigensolver)
 
@@ -854,7 +854,7 @@ fn build_ansatz(n: int, params: Vector<float>) -> QuantumCircuit {
 
     return circuit;
 }
-```
+```text
 
 ---
 
@@ -884,7 +884,7 @@ impl<T: Numeric> Tensor<T, N> {
         }
     }
 }
-```
+```text
 
 ### 9.2 Quantum Simulation Performance
 
@@ -934,11 +934,11 @@ fn test_tensor_shape_safety() {
     let b = Matrix::zeros([5, 6]);
     // let c = a.matmul(b);  // ❌ Compile error: shape mismatch
 }
-```
+```text
 
 ### 10.2 Runtime Tests
 
-```
+```text
 
 #[test]
 
@@ -964,7 +964,7 @@ fn test_tensor_gpu_equivalence() {
 
     assert_tensors_equal(cpu_result, gpu_result, eps=1e-6);
 }
-```
+```text
 
 ---
 
@@ -993,7 +993,7 @@ fn test_tensor_gpu_equivalence() {
 /// - SIMD vectorization on CPU
 /// - Cache-optimized memory access
 fn matmul<T: Numeric>(a: MatrixT, b: MatrixT) -> MatrixT;
-```
+```text
 
 ### 11.2 User Guide Sections
 

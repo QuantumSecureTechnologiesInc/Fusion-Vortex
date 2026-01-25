@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Logits Processor Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_logits_processor"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Post-processing chain for raw model logits (repetition penalty, output bias)"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }

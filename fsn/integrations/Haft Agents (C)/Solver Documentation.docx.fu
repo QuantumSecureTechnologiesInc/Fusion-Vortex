@@ -1,0 +1,63 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/Solver Documentation.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// HAFT Component: The Solver
+// Executable: haft_solver
+// Role: High-Performance Compute Node
+// Status: Active
+// Part 1: Explanation (The Concept)
+// 1.1 The Muscle of the Mesh
+// The Solver acts as the &quot;muscle&quot; of the Fusion network. In traditional distributed systems, compute nodes are often treated as passive workers—dumb terminals waiting for instruction. In the Fusion HAFT (High Availability Flux Tensor) architecture, we invert this paradigm: the Solver is an autonomous agent.
+// We designed the Solver using a rigorous biological metaphor. Just as a muscle fibre fatigues and requires recovery after intense exertion, the Solver actively tracks its own internal &quot;health metric&quot;. This metric is not merely a number; it is a composite representation of CPU thermal headroom, memory fragmentation, and thread pool saturation.
+// 1.2 Autonomous Homeostasis
+// The core innovation here is Homeostasis. If a Solver performs too many high-entropy tensor contractions in rapid succession, it does not wait for a master controller to tell it to stop. Instead, it autonomously simulates &quot;thermal throttling&quot; and enters a cooldown state.
+// This design choice prevents catastrophic cascading failures—a common plague in microservice architectures where a struggling node is hammered with retries until it crashes completely. By empowering the Solver to say &quot;No&quot; when its health degrades, we ensure that individual nodes fail gracefully, recover independently, and return to the mesh stronger than before. It shifts the burden of resilience from the network (the Nexus) to the edge (the Solver).
+// Part 2: Reference (Architecture &amp; API)
+// 2.1 The FluxTensor Struct
+// This is the core data container for the Fusion language. It is engineered specifically to avoid the pointer-chasing inefficiencies common in high-level tensor libraries.
+// Contiguous Memory Layout:Unlike a standard std::vector&lt;std::vector&lt;float&gt;&gt;, which fragments data across the heap, the FluxTensor allocates a single, contiguous block of memory (std::vector&lt;float&gt;).
+// Benefit: This guarantees that tensor operations leverage the CPU's hardware prefetcher, drastically reducing L1/L2 cache misses during heavy matrix multiplications.
+// Strided Views:Dimensionality is handled via a separate strides vector, calculated in reverse row-major order.
+// Mechanism: To access element $(i, j)$ in a 2D tensor, we calculate the index as i * stride[0] + j * stride[1].
+// Implication: This allows us to create &quot;views&quot; (slices) of a tensor without copying the underlying data, simply by manipulating the shape and stride metadata.
+// Entropy &amp; Noise Injection:The randomise() method does more than fill memory; it injects &quot;entropy.&quot; In the context of the HAFT simulation, this represents the non-deterministic thermal noise inherent in analogue hardware. It forces the control logic to be robust against slight variations, discouraging brittle &quot;happy path&quot; programming.
+// 2.2 The Agentic Core
+// The AgenticCore is the state machine that drives the node's lifecycle. It governs the transition between active work and self-repair.
+// State
+// Description
+// Transition Triggers
+// BOOTSTRAP
+// Initialisation and memory allocation.
+// Triggered on process start. Transitions to IDLE after setup completes.
+// IDLE
+// Ready to accept tasks.
+// Default state. Transitions to COMPUTING when a task is received from the Nexus.
+// COMPUTING
+// Currently executing a blocking tensor fusion.
+// Entered when performing math. Transitions to IDLE (success) or COOLDOWN (fatigue).
+// COOLDOWN
+// Rejecting tasks to restore health metric.
+// Entered when health_metric &lt; 0.8. Transitions to IDLE once health restores to 1.0.
+// ERROR_RECOVERY
+// Unexpected state handling.
+// Entered on unrecoverable exceptions. Attempts a soft reset of the Core.
+// Part 3: How-To (Operations)
+// 3.1 Compilation
+// To build the Solver, you must use a C++20 compliant compiler. We rely on specific compiler flags to unlock the hardware capabilities required for the FluxTensor.
+// g++ -std=c++20 -O3 -pthread -march=native haft_solver.cpp -o haft_solver
+// Flag Breakdown:
+// -std=c++20: Enables modern features like std::span and atomic wait/notify.
+// -O3: Aggressive optimisation. This is critical for vectorising the inner loops of the tensor operations.
+// -pthread: Links the POSIX threading library, necessary for the sleep/wake cycles of the agent.
+// -march=native: Tells the compiler to use the specific instruction set (AVX2, AVX-512) available on your CPU, ensuring the contiguous memory layout is exploited via SIMD instructions.
+// 3.2 Running the Simulation
+// Execute the binary directly. It will run through a predetermined 5-cycle simulation to demonstrate the lifecycle.
+// ./haft_solver
+// 3.3 Verifying Behaviour &amp; Troubleshooting
+// Watch the standard output to validate the agent's logic. You are looking for a specific narrative arc:
+// Init: [Core] Initialising Agent... — Confirming the agent exists.
+// Work: [Logic] Fusing TensorA with TensorB... — confirming the Logic layer is commanding the Core.
+// Fatigue: [Logic] Thermal throttling detected...
+// Note: If you do not see this, the simulation parameters (entropy injection) might be too low for your CPU speed. The code includes a degrade_health(0.05) call that should force this after ~4-5 heavy operations.
+// Recovery: [Logic] Radiating heat... — This confirms the autonomous self-healing capability is functioning. The node should eventually return to [Core] Transitioned to: IDLE.

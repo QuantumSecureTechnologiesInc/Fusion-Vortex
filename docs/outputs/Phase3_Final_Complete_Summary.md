@@ -54,7 +54,7 @@ impl Hash for int {
         return self;
     }
 }
-```
+```text
 
 ### Iterator Trait (iterator.fu - 90 lines)
 
@@ -76,7 +76,7 @@ trait IteratorT {
 // Usage:
 let iter = range(0, 10);
 let total = sum(iter); // 45
-```
+```text
 
 ### HashMap (hashmap.fu - 150 lines)
 
@@ -95,7 +95,7 @@ let mut map = HashMap::<int, string>::new();
 map.insert(1, "one");
 map.insert(2, "two");
 let value = map.get(1); // Some("one")
-```
+```text
 
 ### HashSet (hashset.fu - 140 lines)
 
@@ -114,7 +114,7 @@ let mut set = HashSet::<int>::new();
 set.insert(1);
 set.insert(2);
 let has_one = set.contains(1); // true
-```
+```text
 
 ---
 
@@ -186,7 +186,7 @@ fn main() -> int {
     let value = map.get(1);
     return 0;
 }
-```
+```text
 
 ### Iterator Usage
 
@@ -201,7 +201,7 @@ fn calculate() -> int {
     let total = sum(iter);   // 55
     return total;
 }
-```
+```text
 
 ### HashSet Operations
 
@@ -222,7 +222,7 @@ fn set_demo() {
 
     let intersection = primes.intersection(evens); // {2}
 }
-```
+```text
 
 ---
 

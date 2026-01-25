@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-rest-server = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_rest_server::hello;
 fn main() {
     hello();
 }
-```
+```text
 
 ## License
 

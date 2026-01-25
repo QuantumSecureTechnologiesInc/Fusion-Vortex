@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/tensor-optim/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// tensor-optim implementation
+
+struct TensorOptimModule;

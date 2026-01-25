@@ -1,7 +1,7 @@
 # Fusion JS Interop
 
-**Version:** 0.2.0  
-**Type:** Language Bridge  
+**Version:** 0.2.0
+**Type:** Language Bridge
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ runtime.execute("const add = (a, b) => a + b;")?;
 
 let result: i32 = runtime.call("add", &[10, 20])?;
 assert_eq!(result, 30);
-```
+```text
 
 ## Dependencies
 

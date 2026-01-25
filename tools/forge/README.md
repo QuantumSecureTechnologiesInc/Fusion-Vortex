@@ -15,7 +15,7 @@
 ```bash
 cd C:\Projects\Fusion - Programming Language\tools\forge
 cargo build --release
-```
+```text
 
 The compiled binary will be at `target/release/forge.exe`.
 
@@ -26,13 +26,13 @@ The compiled binary will be at `target/release/forge.exe`.
 ```bash
 forge new my-project --target supernova
 cd my-project
-```
+```text
 
 ### Build Your Project
 
 ```bash
 forge build
-```
+```text
 
 ## Fusion.toml Configuration
 
@@ -60,7 +60,7 @@ entry_point = "src/ai/model.py"
 [languages.js]
 manager = "bun"
 packages = { react = "^18.0" }
-```
+```text
 
 ## Runtime Targets
 
@@ -72,21 +72,25 @@ packages = { react = "^18.0" }
 ## Language Support
 
 ### Rust
+
 - Supported on all runtime targets
 - Automatic WASM compilation for Nebula targets
 - Native builds for v1 and Supernova
 
 ### C++
+
 - Requires `clang++`
 - Blocked on Nebula v2.0 (strict sandbox)
 - Compiles to native `.so` or WASM objects
 
 ### Python
+
 - Requires `python3` or `uv`
 - **Supernova only** (v3.0)
 - Automatic virtual environment management
 
 ### JavaScript
+
 - Requires `bun` or `npm`
 - Blocked on v1
 - Automatic dependency installation

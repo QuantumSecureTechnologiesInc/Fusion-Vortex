@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "fusion-core"
 version = "0.2.0"
 edition = "2021"
@@ -9,26 +9,21 @@ repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming
 keywords = ["foundation", "core", "primitives", "fusion"]
 categories = ["development-tools", "no-std"]
 readme = "README.md"
+
+[dependencies]
+anyhow = { version = "1.0.94" }
+clap = { version = "4.5.23", features = ["derive"] }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = { version = "1.0.133" }
+num_complex = { package = "num-complex", version = "0.4", features = ["serde"] }
+rand = { version = "0.8.5" }
+ndarray = { version = "0.15" }
+num-traits = { version = "0.2" }
+thiserror = { version = "2.0.6" }
+
+[dev-dependencies]
+criterion = { version = "0.5.1" }
+
 [lib]
 name = "fusion_core"
 path = "src/lib.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-clap = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-num_complex = { workspace = true, features = ["serde"] }
-rand = { workspace = true }
-ndarray = "0.15"
-num-traits = { workspace = true }
-thiserror = { workspace = true }
-
-[dev-dependencies]
-criterion = { workspace = true }
-
-[[example]]
-name = "hybrid_vqe"
-path = "examples/hybrid_vqe.rs"
-
-

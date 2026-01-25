@@ -1,0 +1,55 @@
+#![allow(dead_code)]
+use super::{PackageMetadata, RegistryError};
+/// API endpoint handlers
+struct ApiServer {
+    /// Port to listen on
+    port: u16,
+    /// Package store
+    packages: FMap<FString, FVec<PackageMetadata>>,
+}
+impl ApiServer {
+    pub fn new(port: u16) -> Self {
+        Self {
+            port,
+            packages: HashMap::new(),
+        }
+    }
+    /// Start the API server
+    pub fn start(&self) -> Result<(), RegistryError> {
+        println!("Registry API server starting on port {}", self.port);
+        Ok(())
+    }
+    /// Handle package upload
+    pub fn upload_package(
+        &mut self,
+        metadata: PackageMetadata,
+        _data: FVec<u8>,
+    ) -> Result<(), RegistryError> {
+        self.packages
+            .entry(metadata.name.clone())
+            .or_insert_with(Vec::new)
+            .push(metadata);
+        Ok(())
+    }
+    /// Handle package download
+    pub fn download_package(
+        &self,
+        name: &str,
+        version: &str,
+    ) -> Result<FVec<u8>, RegistryError> {
+        if let Some(versions) = self.packages.get(name) {
+            if versions.iter().any(|v| v.version == version) {
+                return Ok(vec![]);
+            }
+        }
+        Err(RegistryError::PackageNotFound(name.to_string()))
+    }
+    /// Search packages
+    pub fn search(&self, query: &str) -> FVec<&PackageMetadata> {
+        self.packages
+            .values()
+            .flatten()
+            .filter(|p| p.name.contains(query) || p.description.contains(query))
+            .collect()
+    }
+}

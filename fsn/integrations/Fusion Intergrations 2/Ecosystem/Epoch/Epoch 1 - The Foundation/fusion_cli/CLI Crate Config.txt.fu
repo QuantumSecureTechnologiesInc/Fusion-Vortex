@@ -1,0 +1,25 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 1 - The Foundation/fusion_cli/CLI Crate Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_cli"
+// version = "0.1.0"
+// edition = "2021"
+// description = " The official CLI for the Fusion Programming Language"
+// authors = ["Fusion Language Team"]
+// license = "MIT"
+// 
+// [[bin]]
+// name = "fusion"
+// path = "src/main.rs"
+// 
+// [dependencies]
+// clap = { workspace = true }
+// tokio = { workspace = true }
+// anyhow = { workspace = true }
+// tracing = { workspace = true }
+// tracing-subscriber = { workspace = true }
+// 
+// # Internal
+// fusion_core = { workspace = true }
+// fusion_toolchain = { workspace = true }

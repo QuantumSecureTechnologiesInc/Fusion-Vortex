@@ -1,7 +1,7 @@
 # Developer Guide: Fusion Runtime Core
 
-**Document Version:** 1.1 (Aligned with v0.3.0)  
-**Audience:** Core Contributors, System Architects, Low-Latency Engineers  
+**Document Version:** 1.1 (Aligned with v0.3.0)
+**Audience:** Core Contributors, System Architects, Low-Latency Engineers
 **Scope:** Architecture Internals, Build Systems, CI/CD, and Hardware Integration
 
 ---
@@ -67,20 +67,25 @@ Building a hybrid runtime requires a complex toolchain.
 ### 2.2 Workspace Setup
 
 ```bash
+
 # Clone the repository
+
 git clone https://github.com/QuantumSecureTechnologiesInc/fusion.git
 cd fusion/runtime
 
 # Install system dependencies (Ubuntu/Debian)
+
 sudo apt-get install libssl-dev pkg-config protobuf-compiler libclang-dev
 
 # Setup the specific toolchain
+
 rustup override set nightly
 rustup component add rustfmt clippy
 
 # Build the runtime core only
+
 cargo build -p fusion_runtime_core --release
-```
+```text
 
 ### 2.3 Feature Flags
 
@@ -105,7 +110,7 @@ Runs on any machine. Mocks all hardware interfaces.
 
 ```bash
 cargo test --lib
-```
+```text
 
 ### Tier 2: Simulation Integration
 
@@ -113,17 +118,19 @@ Runs full flows but uses software simulators (QASM Simulator for Quantum, CPU-Te
 
 ```bash
 cargo test --features simulation
-```
+```text
 
 ### Tier 3: Hardware-in-the-Loop (HITL)
 
 Requires actual access to QPUs and GPUs. Usually run only in CI/CD pipelines connected to lab hardware.
 
 ```bash
+
 # Requires environment variables for API keys
+
 export IBMQ_API_TOKEN="sk_..."
 cargo test --features hardware_verify -- --ignored
-```
+```text
 
 ---
 
@@ -148,17 +155,21 @@ Our CI pipeline (GitHub Actions / GitLab CI) is configured to ensure stability a
 We provide a standard developer container to avoid toolchain hell.
 
 ```dockerfile
+
 # Dockerfile.dev
+
 FROM nvidia/cuda:12.0-devel-ubuntu22.04
 
 # Install Rust & Quantum tools
+
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN pip3 install qiskit numpy
 
 # Set up environment for Fusion
+
 ENV FUSION_BACKEND="simulation"
 WORKDIR /app
-```
+```text
 
 ---
 
@@ -207,7 +218,7 @@ Enable detailed tracing with:
 
 ```bash
 RUST_LOG=fusion_cortex=debug,fusion_runtime_core=trace cargo run
-```
+```text
 
 ### Memory Profiling
 
@@ -217,7 +228,7 @@ Use the built-in memory stats:
 let stats = runtime.memory_manager().stats();
 println!("Peak usage: {} bytes", stats.peak_usage);
 println!("Zero-copy transfers: {}", stats.zero_copy_transfers);
-```
+```text
 
 ### Performance Monitoring
 
@@ -227,7 +238,7 @@ The Cortex exposes prediction accuracy metrics:
 let cortex = CortexEngine::new();
 // After training
 let accuracy = cortex.evaluate_predictions(&test_logs);
-```
+```text
 
 ---
 

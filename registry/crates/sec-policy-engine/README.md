@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-policy-engine = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_policy_engine::Engine;
 fn main() {
     Engine::new().enforce();
 }
-```
+```text
 
 ## License
 

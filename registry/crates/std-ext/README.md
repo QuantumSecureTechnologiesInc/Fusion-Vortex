@@ -1,7 +1,7 @@
 # Fusion Std Ext
 
-**Version:** 0.2.0  
-**Type:** Library Extension  
+**Version:** 0.2.0
+**Type:** Library Extension
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_std_ext::num::Complex;
 let c1 = Complex::new(1.0, 2.0);
 let c2 = Complex::new(3.0, 4.0);
 let result = c1 * c2;
-```
+```text
 
 ## Dependencies
 

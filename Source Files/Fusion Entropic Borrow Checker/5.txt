@@ -1,0 +1,270 @@
+This is the final leap. You are moving from having a Compiler (fuc) to having a Language Ecosystem (fusion).
+
+In modern languages (Rust, Go, Zig), users rarely invoke the compiler directly. They use a Driver that manages the project, dependencies, and build settings.
+
+You are asking to build fusionc (or simply fusion), which will be your equivalent of cargo.
+
+Here is the architectural blueprint and the starter code to turn your compiler into a production-grade build system.
+
+1. The Architecture: "The Driver Pattern"
+Your new executable fusion will not compile code itself. Instead, it acts as a coordinator.
+
+fusion new: Scaffolds a project structure.
+
+fusion build: Reads fusion.toml, resolves dependencies, calculates the build graph, and calls fuc (your compiler) on every file in the correct order.
+
+fusion test: Builds a special test binary and runs it.
+
+fusion fmt: Parses code and re-prints it nicely.
+
+2. The Manifest: fusion.toml
+Every modern language needs a manifest. Define yours simply.
+
+Ini, TOML
+
+[package]
+name = "my-game"
+version = "0.1.0"
+authors = ["CyberArchitect"]
+
+[dependencies]
+std = { git = "https://github.com/fusion-lang/std", version = "1.0" }
+physics_engine = { path = "../physics" }
+3. Implementation: The fusion Driver
+Create a new Rust project alongside your compiler. This is a separate tool.
+
+cargo new fusion-driver
+
+Cargo.toml dependencies:
+
+Ini, TOML
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+anyhow = "1.0"
+The Code Structure
+Here is the complete skeleton for your build driver. It implements the CLI and the project loading logic.
+
+src/main.rs
+
+Rust
+
+mod project;
+mod builder;
+
+use clap::{Parser, Subcommand};
+use anyhow::Result;
+use std::path::PathBuf;
+
+#[derive(Parser)]
+#[command(name = "fusion")]
+#[command(about = "The Fusion Language Build Driver", version = "0.1")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Create a new Fusion project
+    New {
+        name: String,
+    },
+    /// Compile the current project
+    Build {
+        #[arg(long)]
+        release: bool,
+    },
+    /// Run the resulting binary
+    Run,
+    /// Format source code
+    Fmt,
+    /// Run unit tests
+    Test,
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::New { name } => project::create_new(name)?,
+        Commands::Build { release } => builder::build_project(release)?,
+        Commands::Run => {
+            builder::build_project(false)?;
+            builder::run_project()?;
+        }
+        Commands::Fmt => println!("Formatter not yet implemented"), // Next step
+        Commands::Test => println!("Test runner not yet implemented"), // Next step
+    }
+
+    Ok(())
+}
+src/project.rs (Handling the Manifest)
+
+Rust
+
+use serde::Deserialize;
+use std::fs;
+use std::path::Path;
+use anyhow::{Context, Result};
+
+#[derive(Deserialize, Debug)]
+pub struct Manifest {
+    pub package: Package,
+    pub dependencies: Option<std::collections::HashMap<String, Dependency>>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Package {
+    pub name: String,
+    pub version: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Dependency {
+    Simple(String), // version string
+    Detailed {
+        version: Option<String>,
+        path: Option<String>,
+        git: Option<String>,
+    },
+}
+
+pub fn load_manifest() -> Result<Manifest> {
+    let content = fs::read_to_string("fusion.toml")
+        .context("Could not find fusion.toml. Are you in a Fusion project?")?;
+    
+    let manifest: Manifest = toml::from_str(&content)
+        .context("Failed to parse fusion.toml")?;
+        
+    Ok(manifest)
+}
+
+pub fn create_new(name: String) -> Result<()> {
+    fs::create_dir_all(&name)?;
+    fs::create_dir_all(format!("{}/src", name))?;
+    
+    let toml_content = format!(
+        r#"[package]
+name = "{}"
+version = "0.1.0"
+
+[dependencies]
+"#, name);
+
+    fs::write(format!("{}/fusion.toml", name), toml_content)?;
+    
+    let main_content = r#"fn main() -> void {
+    print("Hello, Fusion world!\n");
+}
+"#;
+    fs::write(format!("{}/src/main.fu", name), main_content)?;
+    
+    println!("Created new project `{}`", name);
+    Ok(())
+}
+src/builder.rs (Invoking the Compiler)
+
+This is where the magic happens. The driver doesn't compile code; it calls your fuc binary.
+
+Rust
+
+use std::process::Command;
+use anyhow::{Result, bail};
+use crate::project;
+
+pub fn build_project(release: bool) -> Result<()> {
+    let manifest = project::load_manifest()?;
+    
+    println!("Compiling {} v{}...", manifest.package.name, manifest.package.version);
+
+    // 1. Ensure 'target' directory exists
+    std::fs::create_dir_all("target")?;
+
+    // 2. Construct the compiler command
+    // We assume 'fuc' is in the system PATH.
+    let mut cmd = Command::new("fuc");
+    
+    // Input file (Convention: src/main.fu is the entry point)
+    cmd.arg("src/main.fu");
+    
+    // Output file
+    cmd.arg("-o").arg(format!("target/{}", manifest.package.name));
+
+    if release {
+        cmd.arg("--opt-level").arg("3");
+    }
+
+    // 3. Execute
+    let output = cmd.output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        eprintln!("{}", stderr);
+        bail!("Compilation failed.");
+    }
+
+    println!("Finished build.");
+    Ok(())
+}
+
+pub fn run_project() -> Result<()> {
+    let manifest = project::load_manifest()?;
+    let bin_path = format!("./target/{}", manifest.package.name);
+    
+    let status = Command::new(bin_path).status()?;
+    if !status.success() {
+        bail!("Program exited with error code");
+    }
+    Ok(())
+}
+4. Roadmap to "100% Production Ready"
+You now have a working driver. Here is how you fill in the missing pieces to match Rust/Go.
+
+A. The Dependency Resolver (Hard)
+Stage 1 (Path only): Only allow { path = "../lib" } dependencies. Your builder recursively looks at those fusion.toml files and compiles them as libraries (you'll need to update fuc to output static libraries .a or .rlib equivalents).
+
+Stage 2 (Git): Allow { git = "..." }. The driver clones the repo into ~/.fusion/registry/, checks out the tag, and points the compiler there.
+
+Stage 3 (Registry): Requires a web server backend. Skip for now. Use Git.
+
+B. The Formatter (fusion fmt)
+Strategy: Don't write a new parser. Reuse your parser module from fuc.
+
+Action:
+
+Parse source to AST.
+
+Write a "Pretty Printer" that walks the AST and outputs strings.
+
+The Pretty Printer applies standard indentation rules (e.g., 4 spaces) regardless of input.
+
+C. The Test Runner (fusion test)
+Strategy:
+
+Update fuc to accept a --test flag.
+
+When --test is passed, the compiler looks for functions marked #[test].
+
+It generates a custom main function that calls all those test functions and reports pass/fail.
+
+fusion test simply invokes fuc --test src/main.fu and runs the result.
+
+Immediate Action
+Run cargo new fusion-driver.
+
+Paste the code above.
+
+Build it: cargo install --path ..
+
+Test it:
+
+Bash
+
+fusion new hello_world
+cd hello_world
+fusion run
+You now have a professional CLI entry point for your language.

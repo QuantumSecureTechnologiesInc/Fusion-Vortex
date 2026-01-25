@@ -20,7 +20,7 @@ stdlib/
 ├── hashmap.fu      # HashMap<K, V> implementation
 ├── hashset.fu      # HashSetT implementation
 └── iterator.fu     # Iterator trait and implementations
-```
+```text
 
 ### Core Components
 
@@ -55,7 +55,7 @@ impl Hash for string {
         return hash;
     }
 }
-```
+```text
 
 ### Iterator Trait
 
@@ -72,7 +72,7 @@ trait IteratorExtT: IteratorT {
     fn filter(mut self, f: fn(T) -> bool) -> FilterIteratorT;
     fn count(mut self) -> int;
 }
-```
+```text
 
 ---
 
@@ -94,7 +94,7 @@ class HashMap<K, V> where K: Hash {
     capacity: int;
     load_factor: float;
 }
-```
+```text
 
 ### Core Operations
 
@@ -108,7 +108,7 @@ fn insert(mut self, key: K, value: V) -> Option<V> {
     // Handle collision with chaining
     // Return old value if key exists
 }
-```
+```text
 
 **Get** - O(1) average:
 
@@ -118,7 +118,7 @@ fn get(self, key: K) -> Option<V> {
     let index = hash % self.capacity;
     // Linear probe or chain walk
 }
-```
+```text
 
 **Remove** - O(1) average:
 
@@ -126,7 +126,7 @@ fn get(self, key: K) -> Option<V> {
 fn remove(mut self, key: K) -> Option<V> {
     // Remove and return old value
 }
-```
+```text
 
 **Resize** - O(n):
 
@@ -135,7 +135,7 @@ fn resize(mut self) {
     // Double capacity when load factor > 0.75
     // Rehash all entries
 }
-```
+```text
 
 ### Additional Methods
 
@@ -157,7 +157,7 @@ fn resize(mut self) {
 class HashSetT where T: Hash {
     map: HashMap<T, bool>;  // Use HashMap internally
 }
-```
+```text
 
 ### Core Operations
 
@@ -175,7 +175,7 @@ fn contains(self, value: T) -> bool {
 fn remove(mut self, value: T) -> bool {
     return self.map.remove(value).is_some();
 }
-```
+```text
 
 ### Set Operations
 
@@ -218,7 +218,7 @@ fn test_iterator() {
     let count = map.keys().count();
     assert(count == 2);
 }
-```
+```text
 
 ---
 

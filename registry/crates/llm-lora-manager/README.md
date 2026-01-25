@@ -1,7 +1,7 @@
 # Fusion LLM LoRA Manager
 
-**Version:** 0.2.0  
-**Type:** Model Management  
+**Version:** 0.2.0
+**Type:** Model Management
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let adapter_id = manager.load_adapter("sql-tuner", "path/to/lora").await?;
 
 // Use in inference
 let output = model.generate(input, &mut manager.get(adapter_id).context());
-```
+```text
 
 ## Dependencies
 

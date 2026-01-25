@@ -1,0 +1,4 @@
+//! Exec mode implementation stub
+fn execute(task: &str, _json: FBool) {
+    println!("Executing task: {}", task);
+}

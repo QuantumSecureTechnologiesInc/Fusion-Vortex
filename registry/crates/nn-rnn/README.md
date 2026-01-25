@@ -7,9 +7,10 @@ Recurrent Neural Network (RNN) primitives.
 ```toml
 [dependencies]
 nn-rnn = "0.1.0"
-```
+```text
 
 ## Features
+
 - Vanilla RNN cells
 - Stacked RNNs
 - Sequence processing

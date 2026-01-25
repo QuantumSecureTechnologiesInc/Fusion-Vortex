@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/fusion-id-provider/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing fusion-id-provider...");
+}

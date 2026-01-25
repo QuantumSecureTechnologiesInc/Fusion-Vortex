@@ -1,0 +1,16 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Package Registry/Pkg Client Crate Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_pkg_client"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Client for resolving and downloading Fusion packages"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_std = { path = "../std", version = "0.1.0" }
+// fusion_http = { path = "../http", version = "0.1.0" }
+// semver = "1.0"
+// serde = { version = "1.0", features = ["derive"] }

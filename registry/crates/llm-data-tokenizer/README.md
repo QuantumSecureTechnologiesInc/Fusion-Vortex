@@ -1,7 +1,7 @@
 # Fusion LLM Data Tokenizer
 
-**Version:** 0.2.0  
-**Type:** Data Pipeline  
+**Version:** 0.2.0
+**Type:** Data Pipeline
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use fusion_llm_data_tokenizer::{BatchTokenizer, Config};
 let config = Config::default();
 let tokenizer = BatchTokenizer::new(config);
 tokenizer.process_dir("raw_data/", "tokenized_data/").await?;
-```
+```text
 
 ## Dependencies
 

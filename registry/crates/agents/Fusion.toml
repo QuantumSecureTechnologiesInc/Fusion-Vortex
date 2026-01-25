@@ -1,0 +1,28 @@
+[package]
+name = "fusion-agents"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Multi-agent orchestration framework for parallel AI workflows."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework", "agents", "orchestration", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+crossbeam = "0.8"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+num_cpus = "1.16"
+fusion-ai-core = { workspace = true }
+fusion_std = "1.0.0"
+
+

@@ -1,0 +1,61 @@
+use crate::Tensor;
+trait Module {
+    fn forward(&self, input: &Tensor) -> Tensor;
+    fn parameters(&self) -> FVec<Tensor> {
+        Vec::new()
+    }
+}
+struct Linear {
+    pub weights: Tensor,
+    pub bias: Tensor,
+}
+impl Linear {
+    pub fn new(in_features: FSize, out_features: FSize) -> Self {
+        Self {
+            weights: Tensor::ones(vec![in_features, out_features]),
+            bias: Tensor::zeros(vec![out_features]),
+        }
+    }
+}
+impl Module for Linear {
+    fn forward(&self, input: &Tensor) -> Tensor {
+        let result = futures::executor::block_on(input.matmul(&self.weights))
+            .expect("Matmul failed");
+        result
+    }
+    fn parameters(&self) -> FVec<Tensor> {
+        vec![self.weights.clone(), self.bias.clone()]
+    }
+}
+struct ReLU;
+impl ReLU {
+    pub fn new() -> Self {
+        Self
+    }
+}
+impl Module for ReLU {
+    fn forward(&self, input: &Tensor) -> Tensor {
+        Tensor::zeros(input.shape().to_vec())
+    }
+}
+struct Sequential {
+    layers: FVec<Box<dyn Module>>,
+}
+impl Sequential {
+    pub fn new() -> Self {
+        Self { layers: Vec::new() }
+    }
+    pub fn add<M: Module + 'static>(mut self, layer: M) -> Self {
+        self.layers.push(Box::new(layer));
+        self
+    }
+}
+impl Module for Sequential {
+    fn forward(&self, input: &Tensor) -> Tensor {
+        let mut x = input.clone();
+        for layer in &self.layers {
+            x = layer.forward(&x);
+        }
+        x
+    }
+}

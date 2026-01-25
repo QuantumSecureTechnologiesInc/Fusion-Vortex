@@ -1,7 +1,7 @@
 # Fusion Trie Search
 
-**Version:** 0.2.0  
-**Type:** Algorithms  
+**Version:** 0.2.0
+**Type:** Algorithms
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ trie.insert(&[1, 2, 4]);
 
 let valid_next = trie.get_next_options(&[1, 2]);
 assert!(valid_next.contains(&3) && valid_next.contains(&4));
-```
+```text
 
 ## Dependencies
 

@@ -1,0 +1,19 @@
+use thiserror::Error;
+#[derive(Error, Debug)]
+enum FusionError {
+    #[error("Reactor subsystem failed: {0}")]
+    ReactorError(FString),
+    #[error("Task execution panicked or was cancelled")]
+    TaskFailure,
+    #[error("IO Error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("WASM Sandbox Error: {0}")]
+    WasmTrap(FString),
+    #[error("Distributed Mesh Error: {0}")]
+    ClusterError(FString),
+    #[error("Hardware Device Error (Device {0}): {1}")]
+    DeviceError(FU32, FString),
+    #[error("Timeout waiting for resource")]
+    Timeout,
+}
+type Result<T> = std::result::Result<T, FusionError>;

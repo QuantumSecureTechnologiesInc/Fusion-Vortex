@@ -1,0 +1,19 @@
+// sys/mcp_server.fsn
+// AI context server: exposes runtime state to LLMs.
+
+struct McpServer;
+
+impl McpServer {
+    fn serve(self) {
+        let input = Stdio::read_line();
+        let request = Json::parse(input);
+
+        match request.method {
+            "get_runtime_state" => {
+                let state = Kernel::snapshot();
+                Stdio::write_json(state);
+            }
+            _ => Stdio::error("Unknown Method"),
+        }
+    }
+}

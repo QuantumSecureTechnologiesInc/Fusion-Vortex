@@ -1,0 +1,7 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn main() -> int {
+    let x: int = 10 + 20;
+    printf("Hello from Fusion! The answer is %d\n", x);
+    return 0;
+}

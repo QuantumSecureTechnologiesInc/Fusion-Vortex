@@ -1,7 +1,7 @@
 # Fusion Telemetry Ingestor
 
-**Version:** 0.2.0  
-**Type:** Observability  
+**Version:** 0.2.0
+**Type:** Observability
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use fusion_telemetry_ingestor::{Ingestor, Config};
 let config = Config::default();
 let ingestor = Ingestor::new(config);
 ingestor.start_server("0.0.0.0:9090").await?;
-```
+```text
 
 ## Dependencies
 

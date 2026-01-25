@@ -1,7 +1,7 @@
 # Fusion XML
 
-**Version:** 0.2.0  
-**Type:** Data Format  
+**Version:** 0.2.0
+**Type:** Data Format
 **License:** MIT
 
 ## Overview
@@ -22,6 +22,7 @@ use fusion_xml::from_str;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+
 struct Config {
     port: u16,
     host: String,
@@ -29,7 +30,7 @@ struct Config {
 
 let xml = "<Config><port>8080</port><host>localhost</host></Config>";
 let config: Config = from_str(xml)?;
-```
+```text
 
 ## Dependencies
 

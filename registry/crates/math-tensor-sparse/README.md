@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 math-tensor-sparse = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use math_tensor_sparse::Tensor;
 fn main() {
     let t = Tensor::new();
 }
-```
+```text
 
 ## License
 

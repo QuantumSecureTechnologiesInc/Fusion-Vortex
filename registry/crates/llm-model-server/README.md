@@ -1,7 +1,7 @@
 # Fusion LLM Model Server
 
-**Version:** 0.2.0  
-**Type:** Application Server  
+**Version:** 0.2.0
+**Type:** Application Server
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ Run as a binary:
 
 ```bash
 fusion-model-server --model llama-3-8b --port 8080
-```
+```text
 
 Or embed in code:
 
@@ -32,7 +32,7 @@ let server = Server::builder()
     .model("llama-3-8b")
     .build()?;
 server.run().await?;
-```
+```text
 
 ## Dependencies
 

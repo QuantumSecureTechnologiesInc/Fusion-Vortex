@@ -1,7 +1,7 @@
 # Fusion LLM Attention Mask
 
-**Version:** 0.2.0  
-**Type:** AI Utility  
+**Version:** 0.2.0
+**Type:** AI Utility
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use fusion_llm_attention_mask::{MaskGenerator, MaskType};
 let seq_len = 1024;
 let mask = MaskGenerator::generate(seq_len, MaskType::Causal);
 // Returns a boolean or float tensor
-```
+```text
 
 ## Dependencies
 

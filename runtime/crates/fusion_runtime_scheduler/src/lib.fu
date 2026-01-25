@@ -1,0 +1,214 @@
+//! # Fusion Runtime Scheduler
+//!
+//! Heterogeneous scheduler optimized for Quantum/AI/Classical workloads.
+//!
+//! ## Architecture
+//!
+//! The scheduler maintains three separate queues:
+//!
+//! 1. **Low-Jitter Queue** (`QoS::High`): For latency-sensitive operations
+//!    - Financial order processing (target: <10μs)
+//!    - Quantum control flow
+//!    - Time-critical network packets
+//!
+//! 2. **High-Throughput Queue** (`QoS::Normal`): For bulk operations
+//!    - AI/ML gradient calculations
+//!    - Tensor transformations
+//!    - Batch processing
+//!
+//! 3. **External Device Queue** (`QoS::External`): For async hardware ops
+//!    - QPU job submissions (high latency, async)
+//!    - TPU operations
+//!    - Network I/O with completion callbacks
+use crossbeam::channel::{self, Receiver, Sender};
+use parking_lot::Mutex;
+use tracing::{debug, trace};
+/// Task priority levels
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum TaskPriority {
+    /// Highest priority - low-jitter queue
+    High = 3,
+    /// Normal priority - throughput queue
+    Normal = 2,
+    /// Low priority - background tasks
+    Low = 1,
+    /// External device operations
+    External = 0,
+}
+/// A queue for tasks of a specific priority
+struct TaskQueue {
+    priority: TaskPriority,
+    queue: Mutex<VecDeque<BoxedTask>>,
+    metrics: QueueMetrics,
+}
+type BoxedTask = Pin<Box<dyn Future<Output = ()> + Send>>;
+#[derive(Default)]
+struct QueueMetrics {
+    enqueued: AtomicU64,
+    dequeued: AtomicU64,
+}
+impl TaskQueue {
+    fn new(priority: TaskPriority) -> Self {
+        Self {
+            priority,
+            queue: Mutex::new(VecDeque::new()),
+            metrics: QueueMetrics::default(),
+        }
+    }
+    fn push(&self, task: BoxedTask) {
+        self.queue.lock().push_back(task);
+        self.metrics.enqueued.fetch_add(1, Ordering::Relaxed);
+        trace!("Enqueued task to {:?} queue", self.priority);
+    }
+    fn pop(&self) -> Option<BoxedTask> {
+        let task = self.queue.lock().pop_front();
+        if task.is_some() {
+            self.metrics.dequeued.fetch_add(1, Ordering::Relaxed);
+            trace!("Dequeued task from {:?} queue", self.priority);
+        }
+        task
+    }
+    fn len(&self) -> FSize {
+        self.queue.lock().len()
+    }
+}
+/// Heterogeneous scheduler
+struct Scheduler {
+    /// Low-jitter queue for latency-sensitive tasks
+    high_priority_queue: Arc<TaskQueue>,
+    /// High-throughput queue for bulk operations
+    normal_priority_queue: Arc<TaskQueue>,
+    /// Low priority background tasks
+    low_priority_queue: Arc<TaskQueue>,
+    /// External device queue for QPU/TPU operations
+    external_device_queue: Arc<TaskQueue>,
+    /// Notification channel for waking workers
+    wake_tx: Sender<()>,
+    wake_rx: Receiver<()>,
+    /// Global task ID counter
+    next_task_id: AtomicU64,
+}
+use fusion_runtime_core::{GpuBackend, QoSMode, RuntimeConfig};
+impl Scheduler {
+    pub fn new(_config: &RuntimeConfig) -> Self {
+        let (wake_tx, wake_rx) = channel::unbounded();
+        Self {
+            high_priority_queue: Arc::new(TaskQueue::new(TaskPriority::High)),
+            normal_priority_queue: Arc::new(TaskQueue::new(TaskPriority::Normal)),
+            low_priority_queue: Arc::new(TaskQueue::new(TaskPriority::Low)),
+            external_device_queue: Arc::new(TaskQueue::new(TaskPriority::External)),
+            wake_tx,
+            wake_rx,
+            next_task_id: AtomicU64::new(1),
+        }
+    }
+    /// Spawn a task with a given priority
+    pub fn spawn_task<F>(
+        &self,
+        future: F,
+        priority: TaskPriority,
+    ) -> TaskHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let task_id = self.next_task_id.fetch_add(1, Ordering::Relaxed);
+        debug!("Spawning task {} with priority {:?}", task_id, priority);
+        let boxed = Box::pin(async move {
+            future.await;
+        });
+        match priority {
+            TaskPriority::High => self.high_priority_queue.push(boxed),
+            TaskPriority::Normal => self.normal_priority_queue.push(boxed),
+            TaskPriority::Low => self.low_priority_queue.push(boxed),
+            TaskPriority::External => self.external_device_queue.push(boxed),
+        }
+        let _ = self.wake_tx.send(());
+        TaskHandle::new(task_id)
+    }
+    /// Poll for the next task to execute (priority-based)
+    pub fn next_task(&self) -> Option<BoxedTask> {
+        self.high_priority_queue
+            .pop()
+            .or_else(|| self.normal_priority_queue.pop())
+            .or_else(|| self.external_device_queue.pop())
+            .or_else(|| self.low_priority_queue.pop())
+    }
+    /// Wait for a task to become available
+    pub fn wait_for_task(&self) {
+        let _ = self.wake_rx.recv();
+    }
+    /// Get scheduler statistics
+    pub fn stats(&self) -> SchedulerStats {
+        SchedulerStats {
+            high_priority_len: self.high_priority_queue.len(),
+            normal_priority_len: self.normal_priority_queue.len(),
+            low_priority_len: self.low_priority_queue.len(),
+            external_device_len: self.external_device_queue.len(),
+        }
+    }
+}
+/// Scheduler statistics
+#[derive(Debug, Clone)]
+struct SchedulerStats {
+    pub high_priority_len: FSize,
+    pub normal_priority_len: FSize,
+    pub low_priority_len: FSize,
+    pub external_device_len: FSize,
+}
+struct TaskHandle<T> {
+    id: FU64,
+    _marker: std::marker::PhantomData<T>,
+}
+impl<T> TaskHandle<T> {
+    fn new(id: FU64) -> Self {
+        Self {
+            id,
+            _marker: std::marker::PhantomData,
+        }
+    }
+    pub fn id(&self) -> FU64 {
+        self.id
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fusion_runtime_core::{GpuBackend, QoSMode, RuntimeConfig};
+    #[test]
+    fn test_scheduler_creation() {
+        let config = RuntimeConfig {
+            enable_gpu: false,
+            enable_qpu: false,
+            qos_mode: QoSMode::Balanced,
+            gpu_backend: GpuBackend::Auto,
+            worker_threads: 4,
+            memory_pool_size: 1024 * 1024 * 1024,
+        };
+        let scheduler = Scheduler::new(&config);
+        let stats = scheduler.stats();
+        assert_eq!(stats.high_priority_len, 0);
+        assert_eq!(stats.normal_priority_len, 0);
+    }
+    #[test]
+    fn test_task_enqueueing() {
+        let config = RuntimeConfig {
+            enable_gpu: false,
+            enable_qpu: false,
+            qos_mode: QoSMode::Balanced,
+            gpu_backend: GpuBackend::Auto,
+            worker_threads: 4,
+            memory_pool_size: 1024 * 1024 * 1024,
+        };
+        let scheduler = Scheduler::new(&config);
+        let _ = scheduler
+            .spawn_task(
+                async {
+                    println!("Test task");
+                },
+                TaskPriority::High,
+            );
+        let stats = scheduler.stats();
+        assert_eq!(stats.high_priority_len, 1);
+    }
+}

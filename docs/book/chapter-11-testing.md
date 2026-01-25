@@ -22,12 +22,14 @@ Let's create a new library project called `adder`:
 ```bash
 fusion new adder --lib
 cd adder
-```
+```text
 
 Open `src/lib.fu`. You'll see a generated test:
 
 ```fusion
+
 #[cfg(test)]
+
 mod tests {
     #[test]
     fn it_works() {
@@ -35,30 +37,33 @@ mod tests {
         assert_eq!(result, 4)
     }
 }
-```
+```text
 
 Let's break it down:
-1.  `#[test]`: This attribute indicates this is a test function.
-2.  `assert_eq!`: A macro that asserts two values are equal. If they are not, it panics, causing the test to fail.
+1. `#[test]`: This attribute indicates this is a test function.
+2. `assert_eq!`: A macro that asserts two values are equal. If they are not, it panics, causing the test to fail.
 
 To run it:
+
 ```bash
 fusion test
-```
+```text
 
 ### 11.1.2 Checking Results with Assert Macros
 
 The `assert!` macro checks that a boolean condition is true.
 
 ```fusion
+
 #[test]
+
 fn larger_can_hold_smaller() {
     let larger = Rectangle { width: 8, height: 7 }
     let smaller = Rectangle { width: 5, height: 1 }
 
     assert!(larger.can_hold(&smaller))
 }
-```
+```text
 
 The `assert_eq!` and `assert_ne!` macros compare two arguments for equality or inequality. They print the values if the assertion fails, which is very helpful for debugging.
 
@@ -68,10 +73,11 @@ pub fn add_two(a: i32) -> i32 {
 }
 
 #[test]
+
 fn it_adds_two() {
     assert_eq!(4, add_two(2))
 }
-```
+```text
 
 ### 11.1.3 Adding Custom Failure Messages
 
@@ -83,7 +89,7 @@ assert!(
     "Greeting did not contain name, value was `{}`",
     result
 )
-```
+```text
 
 ### 11.1.4 Checking for Panics with `should_panic`
 
@@ -105,6 +111,7 @@ impl Guess {
 }
 
 #[cfg(test)]
+
 mod tests {
     use super::*
 
@@ -114,7 +121,7 @@ mod tests {
         Guess::new(200)
     }
 }
-```
+```text
 
 The `expected` parameter validates that the panic message contains the provided text.
 
@@ -123,7 +130,9 @@ The `expected` parameter validates that the panic message contains the provided 
 Tests can also return `Result<(), E>`. This allows you to use the `?` operator in tests.
 
 ```fusion
+
 #[test]
+
 fn it_works() -> Result<(), String> {
     if 2 + 2 == 4 {
         Ok(())
@@ -131,7 +140,7 @@ fn it_works() -> Result<(), String> {
         Err(String::from("two plus two does not equal four"))
     }
 }
-```
+```text
 
 ---
 
@@ -144,9 +153,10 @@ fn it_works() -> Result<(), String> {
 By default, tests run in parallel using threads. This is fast, but if your tests share state (like writing to the same file 'test.txt'), they might interfere with each other.
 
 To run tests one at a time:
+
 ```bash
 fusion test -- --test-threads=1
-```
+```text
 
 ### 11.2.2 Showing Function Output
 
@@ -154,7 +164,7 @@ By default, if a test passes, Fusion captures anything printed to stdout (like `
 
 ```bash
 fusion test -- --show-output
-```
+```text
 
 ### 11.2.3 Running a Subset of Tests
 
@@ -162,7 +172,7 @@ You can pass the name (or part of the name) of a test to run only that test.
 
 ```bash
 fusion test it_works
-```
+```text
 
 This will run any test function that has "it_works" in its name.
 
@@ -171,17 +181,22 @@ This will run any test function that has "it_works" in its name.
 Some tests are expensive (e.g., they take minutes to run). You can mark them as ignored:
 
 ```fusion
+
 #[test]
+
+
 #[ignore]
+
 fn expensive_test() {
     // code that takes an hour to run
 }
-```
+```text
 
 It won't run by default. To run it explicitly:
+
 ```bash
 fusion test -- --ignored
-```
+```text
 
 ---
 
@@ -204,6 +219,7 @@ fn internal_adder(a: i32, b: i32) -> i32 {
 }
 
 #[cfg(test)]
+
 mod tests {
     use super::* // Import the parent module's items
 
@@ -212,7 +228,7 @@ mod tests {
         assert_eq!(4, internal_adder(2, 2))
     }
 }
-```
+```text
 
 Since the tests are in the same file, they can test **private** functions.
 
@@ -224,13 +240,14 @@ Since the tests are in the same file, they can test **private** functions.
 Fusion treats each file in the `tests` directory as a separate crate.
 
 Project structure:
+
 ```text
 adder
 ├── src
 │   └── lib.fu
 └── tests
     └── integration_test.fu
-```
+```text
 
 Inside `tests/integration_test.fu`:
 
@@ -238,10 +255,11 @@ Inside `tests/integration_test.fu`:
 use adder
 
 #[test]
+
 fn it_adds_two() {
     assert_eq!(4, adder::add_two(2))
 }
-```
+```text
 
 We don't need `#[cfg(test)]` here; the `tests` folder is special. Also, integration tests can **only** call public functions.
 
@@ -260,9 +278,9 @@ As you write larger projects, automated testing becomes not just helpful, but ne
 
 ## 11.5 Exercises
 
-1.  **Testing Math**: In your `fusion_math` library from Chapter 7, add unit tests for your `add` and `subtract` functions.
-2.  **Bug Hunt**: Intentionally introduce a bug in your code (e.g., change `+` to `-`). Run `fusion test` to see the failure. Fix it.
-3.  **TDD**: Write a test for a new function `multiply(a, b)` *before* you implement the function (Test Driven Development). Watch it fail to compile, then fail the test, then implement it to pass.
+1. **Testing Math**: In your `fusion_math` library from Chapter 7, add unit tests for your `add` and `subtract` functions.
+2. **Bug Hunt**: Intentionally introduce a bug in your code (e.g., change `+` to `-`). Run `fusion test` to see the failure. Fix it.
+3. **TDD**: Write a test for a new function `multiply(a, b)` *before* you implement the function (Test Driven Development). Watch it fail to compile, then fail the test, then implement it to pass.
 
 ---
 

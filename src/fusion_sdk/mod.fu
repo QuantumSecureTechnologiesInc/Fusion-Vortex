@@ -1,0 +1,51 @@
+//! Fusion SDK: a cohesive set of secure primitives aligned to Rust chapters 3–22.
+//!
+//! Explanation:
+//! This module groups the Fusion equivalents into three narrative sections:
+//! `fusion_core` (variables/ownership/traits), `fusion_data` (collections/error handling/
+//! iterators), and `fusion_runtime` (smart pointers/concurrency/async). Every operation
+//! enforces a dual-key consensus: Classical + Post-Quantum proofs must both be present.
+//!
+//! Reference:
+//! - `SecurityContext`: global trait representing a dual-key proof.
+//! - `SecurityProof`: concrete proof payload used across Fusion types.
+//! - `fusion_core`: variables and ownership under verification.
+//! - `fusion_data`: collections, errors, and secure iteration.
+//! - `fusion_runtime`: smart pointers and async channels.
+mod fusion_core;
+mod fusion_data;
+mod fusion_runtime;
+/// Global security context for Fusion operations.
+/// Implementations must provide both Classical and Post-Quantum signatures.
+trait SecurityContext {
+    fn classical_sig(&self) -> &[u8];
+    fn pq_sig(&self) -> &[u8];
+    /// Dual-key verification: both signatures must be present.
+    fn verify(&self) -> FBool {
+        !self.classical_sig().is_empty() && !self.pq_sig().is_empty()
+    }
+}
+/// Concrete proof payload used by Fusion primitives.
+#[derive(Clone, Debug)]
+struct SecurityProof {
+    pub classical_sig: FVec<u8>,
+    pub pq_sig: FVec<u8>,
+}
+impl SecurityProof {
+    /// Creates a new dual-key proof.
+    pub fn new(classical_sig: FVec<u8>, pq_sig: FVec<u8>) -> Self {
+        Self { classical_sig, pq_sig }
+    }
+    /// Convenience wrapper for dual-key verification.
+    pub fn verify(&self) -> FBool {
+        <Self as SecurityContext>::verify(self)
+    }
+}
+impl SecurityContext for SecurityProof {
+    fn classical_sig(&self) -> &[u8] {
+        &self.classical_sig
+    }
+    fn pq_sig(&self) -> &[u8] {
+        &self.pq_sig
+    }
+}

@@ -1,0 +1,248 @@
+// SOURCE: runtime/crates/fusion_cortex/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! # Fusion Cortex Engine
+//!
+//! The "Brain" of the Fusion Runtime scheduler. The Cortex Engine is an AI-powered
+//! scheduler that replaces traditional round-robin scheduling with intelligent
+//! task routing based on cost prediction.
+//!
+//! ## Architecture
+//!
+//! The Cortex uses a quantised Reinforcement Learning model to predict task costs
+//! and dynamically route work to the most efficient hardware (CPU vs GPU vs QPU).
+//!
+//! ## Decision Loop
+//!
+//! 1. User spawns a task with an `Intent` (e.g., `HighThroughput`, `Critical`)
+//! 2. Cortex queries the internal `CostModel`
+//! 3. If `Prediction(GPU) < Prediction(CPU) + TransferCost`, schedule to GPU
+//! 4. Otherwise, run locally on the CPU thread pool
+//!
+//! ## HFT Guard
+//!
+//! For `Intent::Critical` (High-Frequency Trading) tasks, the Cortex always
+//! schedules to CPU to guarantee minimal jitter (<10μs).
+
+use ndarray::{Array1, Array2};
+use tracing::debug;
+
+mod types;
+
+pub use types::{Device, Intent, TaskProfile};
+
+/// Represents the "Brain" of the scheduler.
+///
+/// The CortexEngine uses machine learning to predict the optimal device
+/// for each task based on its profile (estimated operations, memory footprint,
+/// intent, and dependencies).
+struct CortexEngine {
+    model: RwLock<Option<SimpleLinearModel>>,
+}
+
+/// A simple linear model for cost prediction.
+///
+/// In production, this would be replaced with a more sophisticated
+/// quantised RL model loaded from `crates/fusion_cortex/models/`.
+#[derive(Clone)]
+struct SimpleLinearModel {
+    #[allow(dead_code)]
+    weights: Array2<f32>,
+    #[allow(dead_code)]
+    bias: Array1<f32>,
+}
+
+impl CortexEngine {
+    /// Create a new CortexEngine instance.
+    ///
+    /// The engine starts without a trained model and uses heuristic
+    /// scheduling until a model is loaded via `load_model()`.
+    fn new() -> Self {
+        debug!("Initialising Cortex Engine (AI Scheduler)");
+        Self {
+            model: RwLock::new(None),
+        }
+    }
+
+    /// Schedule a task to the optimal device based on its profile.
+    ///
+    /// # Arguments
+    ///
+    /// * `profile` - The task's metadata including estimated operations,
+    ///               memory footprint, intent, and dependencies.
+    ///
+    /// # Returns
+    ///
+    /// The optimal `Device` for executing this task.
+    ///
+    /// # HFT Guard
+    ///
+    /// If the task has `Intent::Critical`, it will always be scheduled
+    /// to the CPU to guarantee minimal jitter for HFT operations.
+    fn schedule(&self, profile: &TaskProfile) -> Device {
+        // Feature Engineering
+        let features = Array1::from_vec(vec![
+            (profile.estimated_ops as f32).log10().max(0.0),
+            (profile.memory_footprint_bytes as f32).log10().max(0.0),
+            profile.intent as FInt as f32,
+        ]);
+
+        // HFT Guard: Critical tasks always run on CPU
+        if profile.intent == Intent::Critical {
+            debug!("HFT Guard: Routing Critical task to CPU");
+            return Device::Cpu;
+        }
+
+        // Mock Inference (Production would use self.model)
+        // GPU Score = weighted combination of log(ops) and log(memory)
+        let gpu_score = features[0] * 0.8 + features[1] * 0.2;
+
+        debug!(
+            "Cortex decision: gpu_score={:.2}, intent={:?}",
+            gpu_score, profile.intent
+        );
+
+        // Decision threshold: GPU if high computational intensity
+        if gpu_score > 5.0 {
+            Device::Gpu(0)
+        } else {
+            Device::Cpu
+        }
+    }
+
+    /// Load a trained model from the models directory.
+    ///
+    /// In production, this loads a quantised RL model that has been
+    /// trained on execution logs from previous runs.
+    fn load_model(&self, _model_path: &str) -> Result<(), CortexError> {
+        // Placeholder for model loading logic
+        // In production:
+        // 1. Load model weights from file
+        // 2. Validate model architecture
+        // 3. Store in self.model
+        debug!("Loading Cortex model (placeholder)");
+        Ok(())
+    }
+
+    /// Train the model on new execution data.
+    ///
+    /// This is called during CI/CD to retrain the scheduler's cost
+    /// prediction model based on execution logs from previous releases.
+    fn train(&self, _execution_logs: &[ExecutionLog]) -> Result<(), CortexError> {
+        debug!("Training Cortex model on execution logs");
+        // Placeholder for online learning
+        Ok(())
+    }
+
+    /// Predict the execution cost for a task on a specific device.
+    ///
+    /// # Arguments
+    ///
+    /// * `profile` - The task's metadata
+    /// * `device` - The target device for prediction
+    ///
+    /// # Returns
+    ///
+    /// Predicted execution time in microseconds.
+    fn predict_cost(&self, profile: &TaskProfile, device: Device) -> f64 {
+        let base_cost = (profile.estimated_ops as f64).log10().max(1.0);
+        let memory_factor = (profile.memory_footprint_bytes as f64 / 1024.0)
+            .log10()
+            .max(1.0);
+
+        match device {
+            Device::Cpu => base_cost * 1.0 + memory_factor * 0.5,
+            Device::Gpu(_) => base_cost * 0.1 + memory_factor * 0.8 + 100.0, // Transfer cost
+            Device::Qpu(_) => base_cost * 0.01 + 1000.0,                     // High setup cost
+        }
+    }
+}
+
+impl Default for CortexEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Execution log entry for training the Cortex model.
+#[derive(Debug, Clone)]
+struct ExecutionLog {
+    /// The task profile that was executed
+    pub profile: TaskProfile,
+    /// The device the task was executed on
+    pub device: Device,
+    /// Actual execution time in microseconds
+    pub actual_time_us: FU64,
+    /// Whether the execution was successful
+    pub success: FBool,
+}
+
+/// Errors that can occur in the Cortex Engine.
+#[derive(Debug, thiserror::Error)]
+enum CortexError {
+    #[error("Failed to load model: {0}")]
+    ModelLoadError(FString),
+    #[error("Training failed: {0}")]
+    TrainingError(FString),
+    #[error("Invalid profile: {0}")]
+    InvalidProfile(FString),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cortex_creation() {
+        let cortex = CortexEngine::new();
+        assert!(cortex.model.read().unwrap().is_none());
+    }
+
+    #[test]
+    fn test_hft_guard() {
+        let cortex = CortexEngine::new();
+        let profile = TaskProfile::new(Intent::Critical);
+
+        let device = cortex.schedule(&profile);
+        assert_eq!(device, Device::Cpu);
+    }
+
+    #[test]
+    fn test_high_throughput_gpu_scheduling() {
+        let cortex = CortexEngine::new();
+        let profile = TaskProfile {
+            estimated_ops: 10_000_000_000,              // 10B ops
+            memory_footprint_bytes: 1024 * 1024 * 1024, // 1GB
+            intent: Intent::HighThroughput,
+            dependencies: 0,
+        };
+
+        let device = cortex.schedule(&profile);
+        assert!(matches!(device, Device::Gpu(_)));
+    }
+
+    #[test]
+    fn test_background_cpu_scheduling() {
+        let cortex = CortexEngine::new();
+        let profile = TaskProfile {
+            estimated_ops: 100,
+            memory_footprint_bytes: 1024,
+            intent: Intent::Background,
+            dependencies: 0,
+        };
+
+        let device = cortex.schedule(&profile);
+        assert_eq!(device, Device::Cpu);
+    }
+
+    #[test]
+    fn test_cost_prediction() {
+        let cortex = CortexEngine::new();
+        let profile = TaskProfile::new(Intent::HighThroughput);
+
+        let cpu_cost = cortex.predict_cost(&profile, Device::Cpu);
+        let gpu_cost = cortex.predict_cost(&profile, Device::Gpu(0));
+
+        // GPU should have transfer overhead
+        assert!(gpu_cost > cpu_cost);
+    }
+}

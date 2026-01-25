@@ -1,0 +1,56 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/Sentinel Documentation(1).docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// HAFT Component: The Warden
+// | Metadata | Details |
+// | Executable | haft_sentinel |
+// | Role | Health Monitor &amp; Failure Detection |
+// | Architecture | Active Polling / Hysteresis Loop |
+// | Status | Active |
+// Part 1: The Philosophy (Explanation)
+// 1.1 The &quot;Let It Crash&quot; Paradigm
+// The Warden embodies the &quot;Let It Crash&quot; philosophy, a resilience pattern famously derived from Erlang/OTP telecommunication systems. In the realm of high-performance Fusion mesh computing, attempting to defensively code against every possible error condition memory corruption, thread starvation, socket disconnects, or thermal throttling leads to bloated, slow, and ultimately brittle code. &quot;Catch and Patch&quot; logic often hides bugs rather than fixing them, leaving the system in an undefined, limping state.
+// Instead, we accept a radical, paradoxical premise: nodes will fail, and that is acceptable.
+// The Warden does not attempt to prevent these failures. Rather, it acts as the system's ruthless immune system. When a Solver or Vault node exhibits undefined behaviour, slows down significantly, or stops responding, the Warden’s job is not to debug it or nurse it back to health. Its job is to surgically excise it from the network and force a clean, hard restart. This approach guarantees that the system state remains fresh and prevents &quot;zombie&quot; nodes processes that are technically alive but functionally useless from corrupting the shared tensor space or locking up valuable resources. We trade individual node uptime for total system integrity.
+// 1.2 The Source of Truth (Consensus)
+// In distributed systems, consensus is the hardest problem to solve. If every node attempted to determine the health of every other node via a peer-to-peer gossip protocol, the network would quickly succumb to &quot;Split-Brain&quot; scenarios. In such a scenario, a network partition might cause half the network to believe the other half is dead, leading to divergent data writes, race conditions, and corrupted models.
+// The Warden prevents this by acting as the single authoritative Source of Truth for the cluster topology. It functions as the arbiter of reality. It is the only entity authorised to update the global routing table used by the Nexus.
+// The Arbiter Model: If the Warden says a node is down, it is effectively down for the entire cluster, regardless of whether that node believes itself to be alive.
+// Architectural Implication: This centralisation of health status drastically simplifies the logic required in the Solver and Nexus nodes. They do not need complex timeout logic or consensus algorithms (like Raft or Paxos); they simply query the Warden's manifest. They can focus purely on compute and routing, trusting the Warden to keep the neighbourhood clean.
+// Part 2: The Mechanics (Reference)
+// 2.1 Heartbeat Protocol (Active Polling)
+// Unlike passive monitoring systems that wait for error signals or &quot;I'm dying&quot; gasps from failing nodes, the Warden utilises an Active Polling mechanism. Passive monitoring is often too slow for high-availability tensor operations; a silent failure (like a thread deadlock or an infinite loop) emits no error signals, leaving the system waiting indefinitely.
+// Mechanism: The Warden iterates through a strictly typed fleet vector containing RemoteAgent stubs. It executes a synchronous ping() on each agent. This is a &quot;Pull&quot; model, which is superior to a &quot;Push&quot; model (nodes reporting in) because a flooding of &quot;I'm alive&quot; messages from a dying node cannot DDoS the monitoring infrastructure.
+// Simulation Logic: To stress-test the resilience of the mesh in this standalone executable, the ping() function is backed by a Mersenne Twister (std::mt19937) pseudo-random number generator. This introduces a deterministic yet unpredictable 20% packet loss rate. This simulates an accelerated version of real-world entropy. While a 20% loss rate would be catastrophic in production, it is used here to ensure failure modes are observable within the short lifespan of the simulation.
+// 2.2 The Three-Strike Rule (Hysteresis)
+// Network reliability is probabilistic, not binary. A single missed heartbeat could be caused by a temporary Garbage Collection (GC) pause, a micro-burst of network traffic, or a CPU context switch not necessarily a node failure. Reacting to every missed ping would cause &quot;flapping&quot; where nodes are rapidly cycled in and out of the mesh, destabilising the system and causing unnecessary task failures.
+// To mitigate this, we implement a Hysteresis Loop via a threshold counter. This creates a buffer zone between &quot;Healthy&quot; and &quot;Dead&quot;:
+// Strike 1 (Warning): The node fails a ping. It is flagged internally. The Warden logs UNRESPONSIVE but takes no destructive action. The node remains in the active routing pool, assuming the issue is transient.
+// Strike 2 (Probation): The node is now highly suspect. The Warden continues to monitor, but the probability of a true failure has increased significantly. The system prepares for potential failover.
+// Strike 3 (Isolation): The threshold is breached. The Warden executes isolate_node(). The node is immediately stripped from the active topology. The Nexus is informed to stop routing new tasks to this address, preventing data loss.
+// 2.3 Auto-Healing (Asynchronous Recovery)
+// Recovery is a slow operation compared to monitoring. If the Warden halted its monitoring loop to restart a failed node, it would stop monitoring the rest of the fleet, potentially missing other failures. Therefore, recovery must be asynchronous.
+// Threading Model: We utilise std::thread in a &quot;fire-and-forget&quot; detached mode. This ensures the main monitoring loop maintains its high-frequency tick rate.
+// The Restart Lifecycle:
+// Kill Signal: The thread sends a termination signal to the failed logic core. In a production environment, this would invoke a system call (e.g., kill(pid, SIGTERM)); in this simulation, it triggers a logical reset of the agent's state machine.
+// Cooldown: A mandatory sleep period (simulated 500ms) is enforced. This is crucial to allow the Operating System to reclaim resources, such as closing TCP sockets stuck in TIME_WAIT or freeing shared memory handles.
+// Bootstrap: The node is re-initialised with a clean state, reloading configuration and allocating fresh memory.
+// Reintegration: The heartbeat counter is reset to zero, and the is_isolated flag is cleared. The node effectively &quot;rejoins&quot; the mesh as a fresh volunteer, ready for work.
+// Part 3: The Operation (How-To)
+// 3.1 Compilation
+// The Warden relies heavily on POSIX threads (pthreads) for its non-blocking recovery mechanism. You must link against the pthread library during compilation. We recommend matching the flags used in the production Makefile.
+// # Compile with C++20 for atomic support, threading, and native architecture optimisationg++ -std=c++20 -O3 -pthread -march=native haft_sentinel.cpp -o haft_sentinel
+// Optimisation Note: The -O3 and -march=native flags are recommended for maximum performance, though note that -march=native produces a binary specific to the host CPU and is not portable across different machine architectures. While the Warden is not doing heavy math, it is running a tight polling loop. Vectorisation helps minimise the CPU footprint of the monitoring process itself, ensuring the observer does not slow down the observed.
+// 3.2 Running the Simulation
+// Execute the binary directly. The simulation is hard-coded to run for 6 heartbeat cycles, providing enough time to observe the full failure-detection-recovery loop without requiring manual intervention.
+// ./haft_sentinel
+// 3.3 Verifying Behaviour &amp; Troubleshooting
+// To validate the architecture, observe the standard output stream for the following narrative arc. This sequence proves the resilience logic is functioning:
+// Healthy State: Look for &gt; SOLVER-01: HEALTHY. This confirms the RPC stub is responding and the network is clean.
+// Transient Failure: Look for ! SOLVER-01: UNRESPONSIVE (Count: 1). This validates that the random failure injection is working and the Hysteresis filter is counting.
+// Threshold Breach: If the random seed triggers three consecutive failures, look for !!! CRITICAL: Isolating.... This confirms the Warden has made an executive decision to prune the node.
+// Recovery: Verify that the main loop continues to scan other nodes (logs continue scrolling) while the [Auto-Heal] thread runs in the background. You should eventually see [Auto-Heal] ...rejoined mesh appear asynchronously, potentially intermixed with other log lines.
+// Common Issues:
+// No Failures Observed: The random seed might generate a &quot;lucky&quot; run where packet loss never hits 3 consecutive times. Simply re-run the executable to trigger different entropy.
+// Segfaults: Ensure you are not sharing mutable state between the main thread and the detached recovery thread without mutex protection. The provided haft_sentinel.cpp handles this via std::atomic flags to ensure thread safety.

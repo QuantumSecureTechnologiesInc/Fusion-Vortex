@@ -1,0 +1,102 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (Rust)/HAFT Router Node Rust.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+// //! PROJECT: FUSION HAFT (High Availability Flux Tensor)
+// //! MODULE:  NEXUS NODE (Router) - RUST EDITION
+// ======================================================================
+// 
+// use std::collections::BinaryHeap;
+// use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+// use std::{thread, time, cmp::Ordering as CmpOrdering};
+// use parking_lot::Mutex; // High-performance Mutex
+// 
+// ======================================================================
+// // DATA STRUCTURES
+// ======================================================================
+// 
+// #[derive(Eq, PartialEq)]
+// struct Task {
+//     id: String,
+//     priority: u8, // 0 = High, 10 = Low
+// }
+// 
+// // Custom ordering to make BinaryHeap a Min-Heap based on priority value
+// impl Ord for Task {
+//     fn cmp(&amp;self, other: &amp;Self) -&gt; CmpOrdering {
+//         // Reverse comparison: smaller integer = greater priority
+//         other.priority.cmp(&amp;self.priority)
+//     }
+// }
+// 
+// impl PartialOrd for Task {
+//     fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;CmpOrdering&gt; {
+//         Some(self.cmp(other))
+//     }
+// }
+// 
+// ======================================================================
+// // LOGIC
+// ======================================================================
+// 
+// struct NexusLogic {
+//     queue: Mutex&lt;BinaryHeap&lt;Task&gt;&gt;,
+// }
+// 
+// impl NexusLogic {
+//     fn new() -&gt; Self {
+//         Self { queue: Mutex::new(BinaryHeap::new()) }
+//     }
+// 
+//     fn submit(&amp;self, id: &amp;str, priority: u8) {
+//         let mut q = self.queue.lock();
+//         q.push(Task { id: id.to_string(), priority });
+//         println!(&quot;[Nexus] Enqueued: {} (P{})&quot;, id, priority);
+//     }
+// 
+//     fn process(&amp;self) {
+//         let mut q = self.queue.lock();
+//         if let Some(task) = q.pop() {
+//             println!(&quot;[Nexus] Dispatching: {}&quot;, task.id);
+//         }
+//     }
+// }
+// 
+// ======================================================================
+// // ENTRY POINT
+// ======================================================================
+// 
+// fn main() {
+//     let running = Arc::new(AtomicBool::new(true));
+//     let r = running.clone();
+// 
+//     ctrlc::set_handler(move || {
+//         r.store(false, Ordering::SeqCst);
+//     }).expect(&quot;Error setting Ctrl-C handler&quot;);
+// 
+//     println!(&quot;[Nexus] Router Online. Waiting for traffic...&quot;);
+//     let nexus = Arc::new(NexusLogic::new());
+// 
+//     // Mock Traffic Generator
+//     let nexus_producer = nexus.clone();
+//     let r_producer = running.clone();
+//     let producer_handle = thread::spawn(move || {
+//         let mut id = 0;
+//         while r_producer.load(Ordering::SeqCst) {
+//             id += 1;
+//             nexus_producer.submit(&amp;format!(&quot;Task-{}&quot;, id), (id % 10) as u8);
+//             thread::sleep(time::Duration::from_millis(400));
+//         }
+//     });
+// 
+//     // Main Dispatch Loop
+//     while running.load(Ordering::SeqCst) {
+//         nexus.process();
+//         thread::sleep(time::Duration::from_millis(100));
+//     }
+// 
+//     let _ = producer_handle.join();
+//     println!(&quot;[Nexus] Router Offline.&quot;);
+// }
+// 

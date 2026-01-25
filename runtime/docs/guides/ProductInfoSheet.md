@@ -2,12 +2,12 @@
 
 ## Product Identity
 
-**Name**: Fusion Runtime Core  
-**Version**: 0.2.0  
-**Release Date**: December 2025  
-**Category**: Async Runtime / Execution Engine  
-**Licence**: Dual MIT/Apache-2.0  
-**Vendor**: Quantum Secure Technologies Inc.  
+**Name**: Fusion Runtime Core
+**Version**: 0.2.0
+**Release Date**: December 2025
+**Category**: Async Runtime / Execution Engine
+**Licence**: Dual MIT/Apache-2.0
+**Vendor**: Quantum Secure Technologies Inc.
 
 ---
 
@@ -216,13 +216,13 @@ Batteries-included crates for specialised workloads:
 
 ### Open Source (Free)
 
-**Licence**: MIT OR Apache-2.0  
-**Includes**: Full source code, all crates, community support  
-**Best For**: Individual developers, startups, researchers  
+**Licence**: MIT OR Apache-2.0
+**Includes**: Full source code, all crates, community support
+**Best For**: Individual developers, startups, researchers
 
 ### Enterprise Support (Custom Pricing)
 
-**Pricing**: Contact sales (starting $50K/year)  
+**Pricing**: Contact sales (starting $50K/year)
 **Includes**:
 - SLA: 24-48 hour bug fix response
 - Dedicated support engineer
@@ -230,11 +230,11 @@ Batteries-included crates for specialised workloads:
 - Training and onboarding
 - Compliance assistance (SOC 2, ISO 27001)
 
-**Best For**: Financial institutions, large enterprises  
+**Best For**: Financial institutions, large enterprises
 
 ### Managed Cloud Service (Future - Q3 2026)
 
-**Pricing**: Pay-as-you-go (estimated $0.10-$1.00/hour)  
+**Pricing**: Pay-as-you-go (estimated $0.10-$1.00/hour)
 **Includes**:
 - Hosted runtime infrastructure
 - Auto-scaling
@@ -242,7 +242,7 @@ Batteries-included crates for specialised workloads:
 - Monitoring and analytics
 - 99.99% uptime SLA
 
-**Best For**: SaaS companies, cloud-native applications  
+**Best For**: SaaS companies, cloud-native applications
 
 ---
 
@@ -281,14 +281,17 @@ Batteries-included crates for specialised workloads:
 ### Quick Start (5 minutes)
 
 ```bash
+
 # Add to existing Rust project
+
 cargo add fusion_runtime_core fusion_core
 
 # Or clone and build from source
+
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion.git
 cd Fusion
 cargo build --release
-```
+```text
 
 ### Deployment Options
 
@@ -382,10 +385,10 @@ Stable API, 99.99% SLA, enterprise certifications
 
 ## About Quantum Secure Technologies Inc.
 
-**Founded**: 2024  
-**Headquarters**: [Location TBD]  
-**Employees**: 3 (core team)  
-**Mission**: Enable the next generation of hybrid quantum-classical computing  
+**Founded**: 2024
+**Headquarters**: [Location TBD]
+**Employees**: 3 (core team)
+**Mission**: Enable the next generation of hybrid quantum-classical computing
 
 ### Leadership Team
 
@@ -401,21 +404,21 @@ Stable API, 99.99% SLA, enterprise certifications
 
 ## Contact Information
 
-**General Enquiries**: hello@quantumsecuretech.com  
-**Sales**: sales@quantumsecuretech.com  
-**Support**: support@quantumsecuretech.com  
-**Press**: press@quantumsecuretech.com  
+**General Enquiries**: hello@quantumsecuretech.com
+**Sales**: sales@quantumsecuretech.com
+**Support**: support@quantumsecuretech.com
+**Press**: press@quantumsecuretech.com
 
-**Website**: [quantumsecuretech.com](https://quantumsecuretech.com)  
-**Blog**: [blog.fusion-lang.org](https://blog.fusion-lang.org)  
-**Twitter**: [@FusionLang](https://twitter.com/FusionLang)  
+**Website**: [quantumsecuretech.com](https://quantumsecuretech.com)
+**Blog**: [blog.fusion-lang.org](https://blog.fusion-lang.org)
+**Twitter**: [@FusionLang](https://twitter.com/FusionLang)
 **LinkedIn**: [Quantum Secure Technologies Inc.](https://linkedin.com/company/quantum-secure-tech)
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
-**Product Version**: 0.2.0  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
+**Product Version**: 0.2.0
 
-© 2025 Quantum Secure Technologies Inc. All rights reserved.  
+© 2025 Quantum Secure Technologies Inc. All rights reserved.
 Fusion Runtime Core is dual-licensed under MIT OR Apache-2.0.

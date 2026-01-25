@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 schema-validator = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use schema_validator::validate;
 fn main() {
     validate();
 }
-```
+```text
 
 ## License
 

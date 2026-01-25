@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 math-sparse-ops = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use math_sparse_ops::spmv;
 fn main() {
     spmv();
 }
-```
+```text
 
 ## License
 

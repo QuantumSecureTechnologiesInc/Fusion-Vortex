@@ -69,7 +69,7 @@ cd editors/vscode-fusion
 npm install
 npm run compile
 npm run package
-```
+```text
 
 Then install the generated `.vsix` file.
 
@@ -88,7 +88,7 @@ This extension contributes the following settings:
   "fusion.server.path": "/usr/local/bin/fusion_lang",
   "fusion.trace.server": "verbose"
 }
-```
+```text
 
 ## Commands
 

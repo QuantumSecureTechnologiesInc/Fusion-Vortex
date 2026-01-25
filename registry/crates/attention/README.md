@@ -1,7 +1,7 @@
 # Fusion Attention
 
-**Version:** 0.2.0  
-**Type:** Neural Network Layer  
+**Version:** 0.2.0
+**Type:** Neural Network Layer
 **License:** MIT
 
 ## Overview
@@ -28,7 +28,7 @@ let attention = MultiHeadAttention::new(embed_dim, num_heads)?;
 // Forward pass
 let input = Tensor::randn(&[32, 10, embed_dim]); // [Batch, Seq, Dim]
 let output = attention.forward(&input)?;
-```
+```text
 
 ## Mathematics
 

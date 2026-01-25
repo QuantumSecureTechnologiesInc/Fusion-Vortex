@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 llm-stream-parser = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use llm_stream_parser::Parser;
 fn main() {
     let p = Parser::new();
 }
-```
+```text
 
 ## License
 

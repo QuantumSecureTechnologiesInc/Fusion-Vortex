@@ -1,0 +1,191 @@
+// SOURCE: runtime/crates/fusion_runtime_core/src/time.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Time utilities - Tokio-Compatible API
+//!
+//! Provides sleep, interval, timeout and other time-based utilities
+
+
+// ==================== Sleep ====================
+struct Sleep {
+    deadline: Instant,
+    registered: FBool,
+}
+
+impl Sleep {
+    /// Create a new `Sleep` future that completes after the duration
+    fn new(duration: Duration) -> Self {
+        Self {
+            deadline: Instant::now() + duration,
+            registered: false,
+        }
+    }
+
+    /// Reset the sleep to a new deadline
+    fn reset(&mut self, deadline: Instant) {
+        self.deadline = deadline;
+        self.registered = false;
+    }
+}
+
+impl Future for Sleep {
+    type Output = ();
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        if Instant::now() >= self.deadline {
+            return Poll::Ready(());
+        }
+
+        if !self.registered {
+            self.registered = true;
+            // In real implementation, would register with timer wheel
+            cx.waker().wake_by_ref();
+        }
+
+        Poll::Pending
+    }
+}
+
+/// Wait until `duration` has elapsed
+fn sleep(duration: Duration) -> Sleep {
+    Sleep::new(duration)
+}
+
+/// Wait until `deadline` is reached
+fn sleep_until(deadline: Instant) -> Sleep {
+    let now = Instant::now();
+    let duration = if deadline > now {
+        deadline - now
+    } else {
+        Duration::from_secs(0)
+    };
+    Sleep::new(duration)
+}
+
+// ==================== Interval ====================
+struct Interval {
+    period: Duration,
+    next_tick: Instant,
+}
+
+impl Interval {
+    fn new(period: Duration) -> Self {
+        Self {
+            period,
+            next_tick: Instant::now() + period,
+        }
+    }
+
+    /// Wait for the next tick
+    pub async fn tick(&mut self) {
+        let now = Instant::now();
+
+        if now >= self.next_tick {
+            self.next_tick = now + self.period;
+            return;
+        }
+
+        sleep_until(self.next_tick).await;
+        self.next_tick += self.period;
+    }
+
+    /// Reset the interval to tick immediately
+    fn reset(&mut self) {
+        self.next_tick = Instant::now() + self.period;
+    }
+}
+
+/// Create a new interval that yields every `period`
+fn interval(period: Duration) -> Interval {
+    Interval::new(period)
+}
+
+/// Create a new interval that yields at `start` and every `period` after
+fn interval_at(start: Instant, period: Duration) -> Interval {
+    let now = Instant::now();
+    let first_delay = if start > now {
+        start - now
+    } else {
+        Duration::from_secs(0)
+    };
+
+    Interval {
+        period,
+        next_tick: Instant::now() + first_delay,
+    }
+}
+
+// ==================== Timeout ====================
+struct Timeout<T> {
+    future: Pin<Box<T>>,
+    deadline: Instant,
+}
+
+impl<T: Future> Future for Timeout<T> {
+    type Output = Result<T::Output, Elapsed>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        // Check if deadline has passed
+        if Instant::now() >= self.deadline {
+            return Poll::Ready(Err(Elapsed));
+        }
+
+        // Poll the inner future
+        match self.future.as_mut().poll(cx) {
+            Poll::Ready(v) => Poll::Ready(Ok(v)),
+            Poll::Pending => {
+                // In real implementation, would wake when deadline is reached
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            }
+        }
+    }
+}
+
+/// Error returned when a future times out
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Elapsed;
+
+impl std::fmt::Display for Elapsed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "deadline has elapsed")
+    }
+}
+
+impl std::error::Error for Elapsed {}
+
+/// Require a future to complete before the specified duration has elapsed
+fn timeout<T>(duration: Duration, future: T) -> Timeout<T>
+where
+    T: Future,
+{
+    Timeout {
+        future: Box::pin(future),
+        deadline: Instant::now() + duration,
+    }
+}
+
+/// Require a future to complete before the specified instant
+fn timeout_at<T>(deadline: Instant, future: T) -> Timeout<T>
+where
+    T: Future,
+{
+    Timeout {
+        future: Box::pin(future),
+        deadline,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sleep_creation() {
+        let _sleep = sleep(Duration::from_millis(100));
+    }
+
+    #[test]
+    fn test_interval_creation() {
+        let _interval = interval(Duration::from_secs(1));
+    }
+}

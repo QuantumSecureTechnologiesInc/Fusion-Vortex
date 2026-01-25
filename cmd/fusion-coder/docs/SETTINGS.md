@@ -22,7 +22,9 @@ Settings are merged with the following precedence (highest to lowest):
 ## Settings File Locations
 
 ### User Settings
+
 `~/.fusion-coder/settings.json`
+
 ```json
 {
   "agent": {
@@ -33,10 +35,12 @@ Settings are merged with the following precedence (highest to lowest):
     "deny": ["rm", "sudo"]
   }
 }
-```
+```text
 
 ### Project Settings (Shared)
+
 `<project>/fusion-coder.json`
+
 ```json
 {
   "agent": {
@@ -46,21 +50,24 @@ Settings are merged with the following precedence (highest to lowest):
     "allow": ["cargo*", "npm*"]
   }
 }
-```
+```text
 
 ### Local Project Settings
+
 `<project>/.fusion-coder/settings.json` (add to `.gitignore`)
+
 ```json
 {
   "env": {
     "FUSION_CODER_API_KEY": "sk-..."
   }
 }
-```
+```text
 
 ## Available Settings
 
 ### Agent Configuration
+
 ```json
 {
   "agent": {
@@ -68,9 +75,10 @@ Settings are merged with the following precedence (highest to lowest):
     "reasoning_enabled": true
   }
 }
-```
+```text
 
 ### Permissions
+
 ```json
 {
   "permissions": {
@@ -79,9 +87,10 @@ Settings are merged with the following precedence (highest to lowest):
     "deny": ["rm", "sudo -rf"]
   }
 }
-```
+```text
 
 ### Sandbox Settings
+
 ```json
 {
   "sandbox": {
@@ -93,9 +102,10 @@ Settings are merged with the following precedence (highest to lowest):
     }
   }
 }
-```
+```text
 
 ### Hooks
+
 ```json
 {
   "hooks": {
@@ -104,9 +114,10 @@ Settings are merged with the following precedence (highest to lowest):
     "post_tool_use": ["git add ."]
   }
 }
-```
+```text
 
 ### MCP Servers
+
 ```json
 {
   "mcp": {
@@ -115,9 +126,10 @@ Settings are merged with the following precedence (highest to lowest):
     "denied_servers": []
   }
 }
-```
+```text
 
 ### Other Settings
+
 ```json
 {
   "model": "gpt-4",
@@ -128,11 +140,12 @@ Settings are merged with the following precedence (highest to lowest):
     "pr_descriptions": true
   }
 }
-```
+```text
 
 ## Environment Variables
 
 Managed via settings files:
+
 ```json
 {
   "env": {
@@ -140,7 +153,7 @@ Managed via settings files:
     "RUST_BACKTRACE": "1"
   }
 }
-```
+```text
 
 ## Glob Patterns
 
@@ -152,6 +165,7 @@ Permissions support glob patterns:
 ## Example: Team Configuration
 
 **Project root: `fusion-coder.json`**
+
 ```json
 {
   "agent": {
@@ -173,9 +187,10 @@ Permissions support glob patterns:
     "session_start": ["git fetch"]
   }
 }
-```
+```text
 
 **User override: `~/.fusion-coder/settings.json`**
+
 ```json
 {
   "agent": {
@@ -183,7 +198,7 @@ Permissions support glob patterns:
   },
   "model": "gpt-4-turbo"
 }
-```
+```text
 
 Result: User gets Fast mode by default, but team permissions still apply.
 

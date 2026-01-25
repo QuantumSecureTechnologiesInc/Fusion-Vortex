@@ -1,8 +1,8 @@
 # Fusion Type System - Complete Reference
 
-**Dataset Category**: Fundamentals  
-**Training Level**: Beginner to Advanced  
-**Last Updated**: December 2025 (v0.2.0-beta.1)
+**Dataset Category**: Fundamentals
+**Training Level**: Beginner to Advanced
+**Last Updated**: December 2025 (v1.0.0) (v1.0.0)
 
 ---
 
@@ -23,7 +23,7 @@ Fusion's type system is designed around three core principles:
 let numbers = [1, 2, 3, 4, 5]              // Inferred as [int]
 let sum = numbers.reduce(|a, b| a + b, 0)  // Inferred as int
 let doubled = numbers.map(|x| x * 2)       // Inferred as [int]
-```
+```text
 
 ## 2. Primitive Types
 
@@ -50,7 +50,7 @@ uint    // Platform-sized unsigned
 let byte: u8 = 255
 let counter: i32 = -100
 let large_num: i64 = 9_223_372_036_854_775_807  // Underscores for readability
-```
+```text
 
 ### 2.2 Floating-Point Types
 
@@ -67,7 +67,7 @@ let large: float = 9.87e15
 let infinity = float::INFINITY
 let neg_inf = float::NEG_INFINITY
 let not_a_number = float::NAN
-```
+```text
 
 ### 2.3 Boolean Type
 
@@ -79,7 +79,7 @@ let has_errors = false
 
 // Boolean expressions
 let result = (x > 0) and (y < 10)
-```
+```text
 
 ### 2.4 Character and String Types
 
@@ -96,7 +96,7 @@ text.len()                  // Length in bytes
 text.chars().count()        // Count Unicode characters
 text.to_uppercase()         // "HELLO, WORLD!"
 text.contains("World")      // true
-```
+```text
 
 ## 3. Compound Types
 
@@ -120,7 +120,7 @@ let last = numbers[numbers.len() - 1]
 numbers.len()               // Get length
 numbers.iter()              // Get iterator
 numbers.contains(&3)        // Check membership
-```
+```text
 
 ### 3.2 Slices
 
@@ -136,7 +136,7 @@ let slice: &[int] = &numbers[1..4]  // [2, 3, 4]
 slice.len()                 // 3
 slice.first()               // Some(&2)
 slice.last()                // Some(&4)
-```
+```text
 
 ### 3.3 Vectors (Dynamic Arrays)
 
@@ -157,7 +157,7 @@ vec.capacity()              // Allocated capacity
 let v1 = [1, 2, 3]          // From literal
 let v2 = [0; 10]            // 10 zeros
 let v3 = (0..10).collect()  // From range
-```
+```text
 
 ### 3.4 Tuples
 
@@ -175,7 +175,7 @@ let second = pair.1
 
 // Unit type (empty tuple)
 let unit: () = ()           // Used for functions with no return value
-```
+```text
 
 ## 4. User-Defined Types
 
@@ -199,7 +199,7 @@ let red = Color(255, 0, 0)
 // Unit struct (no fields)
 class Marker
 let m = Marker
-```
+```text
 
 ### 4.2 Enums
 
@@ -249,7 +249,7 @@ fn process_message(msg: Message) {
         Message::ChangeColor(r, g, b) => println("Color: ({}, {}, {})", r, g, b)
     }
 }
-```
+```text
 
 ### 4.3 Type Aliases
 
@@ -262,7 +262,7 @@ type HashMap<K, V> = std::collections::HashMap<K, V>
 // Usage
 let user_id: UserId = 42
 let result: Result<string> = Ok("Success")
-```
+```text
 
 ## 5. Generic Types
 
@@ -285,11 +285,11 @@ impl<T> Box<T> {
     fn new(value: T) -> Box<T> {
         return Box { value }
     }
-    
+
     fn get(self) -> T {
         return self.value
     }
-    
+
     fn set(mut self, value: T) {
         self.value = value
     }
@@ -298,7 +298,7 @@ impl<T> Box<T> {
 // Usage
 let int_box = Box::new(42)
 let str_box = Box::new("hello")
-```
+```text
 
 ### 5.2 Generic Functions
 
@@ -317,7 +317,7 @@ fn swap<T, U>(a: T, b: U) -> (U, T) {
 fn print_debug<T: Debug>(value: T) {
     println("{:?}", value)
 }
-```
+```text
 
 ## 6. Trait System
 
@@ -334,7 +334,7 @@ trait Drawable {
 // Trait with default implementation
 trait Iterator<T> {
     fn next(mut self) -> Option<T>
-    
+
     // Default method implementation
     fn count(mut self) -> int {
         let mut n = 0
@@ -348,11 +348,11 @@ trait Iterator<T> {
 // Trait with associated types
 trait Container {
     type Item
-    
+
     fn get(self, index: int) -> Option<Self::Item>
     fn len(self) -> int
 }
-```
+```text
 
 ### 6.2 Implementing Traits
 
@@ -379,7 +379,7 @@ impl Clone for Circle {
         return Circle { radius: self.radius }
     }
 }
-```
+```text
 
 ### 6.3 Trait Bounds
 
@@ -407,7 +407,7 @@ let drawables: [&dyn Drawable] = [&circle, &rectangle, &triangle]
 for item in drawables {
     item.draw()
 }
-```
+```text
 
 ### 6.4 Marker Traits
 
@@ -417,7 +417,7 @@ trait Send { }      // Can be transferred across thread boundaries
 trait Sync { }      // Safe to share references across threads
 trait Copy { }      // Can be copied bit-wise
 trait Sized { }     // Has known size at compile time
-```
+```text
 
 ## 7. Advanced Type Features
 
@@ -426,18 +426,18 @@ trait Sized { }     // Has known size at compile time
 ```fusion
 trait Iterator {
     type Item  // Associated type
-    
+
     fn next(mut self) -> Option<Self::Item>
 }
 
 impl Iterator for Range {
     type Item = int  // Specify associated type
-    
+
     fn next(mut self) -> Option<int> {
         // Implementation
     }
 }
-```
+```text
 
 ### 7.2 Higher-Kinded Types
 
@@ -456,7 +456,7 @@ impl Functor for Option {
         }
     }
 }
-```
+```text
 
 ### 7.3 Phantom Types
 
@@ -478,7 +478,7 @@ class Unlocked<T> {
 fn lock<T>(unlocked: Unlocked<T>) -> Locked<T> {
     return Locked { data: unlocked.data, _phantom: PhantomData }
 }
-```
+```text
 
 ## 8. Type Inference
 
@@ -493,7 +493,7 @@ let s = "hello"             // Inferred as string
 // Partial inference
 let numbers: [_] = [1, 2, 3]    // [int] inferred
 let map = HashMap::<_, int>::new()  // Key type inferred from usage
-```
+```text
 
 ### 8.2 Turbofocus (Function Return Type Inference)
 
@@ -507,7 +507,7 @@ fn add(a: int, b: int) {
 fn multiply(a: int, b: int) -> int {
     return a * b
 }
-```
+```text
 
 ## 9. Type Coercion and Conversion
 
@@ -526,7 +526,7 @@ let word: u16 = byte as u16  // Always succeeds
 // Lossy conversions
 let large: i64 = 1000
 let small: i32 = large as i32  // May truncate
-```
+```text
 
 ### 9.2 From/Into Traits
 
@@ -542,7 +542,7 @@ impl From<i32> for i64 {
 let x: i32 = 42
 let y: i64 = x.into()  // Uses From<i32> for i64
 let z = i64::from(x)   // Explicit
-```
+```text
 
 ## 10. Smart Pointers and References
 
@@ -566,7 +566,7 @@ let r2 = &x
 let mut z = 20
 let mr1 = &mut z
 // let mr2 = &mut z  // ERROR: cannot have two mutable references
-```
+```text
 
 ### 10.2 Box (Heap Allocation)
 
@@ -582,7 +582,7 @@ enum List {
 }
 
 let list = List::Cons(1, Box::new(List::Cons(2, Box::new(List::Nil))))
-```
+```text
 
 ### 10.3 Rc and Arc (Reference Counted)
 
@@ -597,7 +597,7 @@ let rc2 = Rc::clone(&rc1)  // Increment ref count
 // Arc<T> - thread-safe reference counting
 let arc1 = Arc::new(42)
 let arc2 = Arc::clone(&arc1)
-```
+```text
 
 ## 11. Lifetime Annotations
 
@@ -623,7 +623,7 @@ fn complex<'a, 'b>(x: &'a str, y: &'b str) -> &'a str {
 
 // Static lifetime (lives for entire program)
 let s: &'static str = "I live forever"
-```
+```text
 
 ## 12. Type System Training Examples
 
@@ -660,7 +660,7 @@ impl<T: Ord> BinaryTree<T> {
         }
     }
 }
-```
+```text
 
 ### Example 2: Custom Iterator
 
@@ -671,7 +671,7 @@ class Counter {
 
 impl Iterator for Counter {
     type Item = int
-    
+
     fn next(mut self) -> Option<int> {
         self.count += 1
         if self.count < 6 {
@@ -689,7 +689,7 @@ fn main() -> int {
     }
     return 0
 }
-```
+```text
 
 ---
 

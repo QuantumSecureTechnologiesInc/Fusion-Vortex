@@ -21,7 +21,7 @@ enum IpAddrKind {
     V4,
     V6,
 }
-```
+```text
 
 `IpAddrKind` is now a custom data type.
 
@@ -32,7 +32,7 @@ We can create instances of each of the two variants:
 ```fusion
 let four = IpAddrKind::V4
 let six = IpAddrKind::V6
-```
+```text
 
 We can define a function that takes any `IpAddrKind`:
 
@@ -41,7 +41,7 @@ fn route(ip_type: IpAddrKind) { }
 
 route(IpAddrKind::V4)
 route(IpAddrKind::V6)
-```
+```text
 
 ### 6.1.2 Storing Data Inside Variants
 
@@ -57,7 +57,7 @@ enum IpAddr {
 
 let home = IpAddr::V4(String::from("127.0.0.1"))
 let loopback = IpAddr::V6(String::from("::1"))
-```
+```text
 
 Each variant can contain different types or amounts of data:
 
@@ -68,7 +68,7 @@ enum Message {
     Write(String),              // Single String
     ChangeColor(i32, i32, i32), // Transformation to tuple
 }
-```
+```text
 
 This is incredibly powerful. A function accepting `Message` can handle any of these variants safely.
 
@@ -85,7 +85,7 @@ impl Message {
 
 let m = Message::Write(String::from("hello"))
 m.call()
-```
+```text
 
 ---
 
@@ -102,7 +102,7 @@ enum Option<T> {
     Some(T),
     None,
 }
-```
+```text
 
 - `Some(T)` holds a value of type `T`.
 - `None` represents the absence of a value.
@@ -116,7 +116,7 @@ let x: i8 = 5
 let y: Option<i8> = Some(5)
 
 // let sum = x + y  // Error! Cannot add i8 and Option<i8>
-```
+```text
 
 You **must** convert the `Option<T>` to a `T` before you can perform `T` operations on it. This forces you to handle the `None` case explicitly. You can never accidentally assume a value exists when it might be null.
 
@@ -142,7 +142,7 @@ fn value_in_cents(coin: Coin) -> u8 {
         Coin::Quarter => 25,
     }
 }
-```
+```text
 
 ### 6.3.1 Patterns that Bind to Values
 
@@ -161,7 +161,7 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
 let five = Some(5)
 let six = plus_one(five)
 let none = plus_one(None)
-```
+```text
 
 In the `Some(i)` arm, `i` binds to the value contained in `Some`.
 
@@ -175,7 +175,8 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
         Some(i) => Some(i + 1),
     }
 }
-```
+```text
+
 **Compilation Error**: `pattern 'None' not covered`.
 
 This protects you from forgetting to handle edge cases.
@@ -192,7 +193,7 @@ match u8_value {
     5 => println("five"),
     _ => (), // Do nothing for all measure values
 }
-```
+```text
 
 ---
 
@@ -201,21 +202,23 @@ match u8_value {
 The `match` syntax can be verbose if you only care about *one* specific case. `if let` is syntax sugar for a `match` that runs code only if the value matches one pattern.
 
 Using `match`:
+
 ```fusion
 let config_max = Some(3u8)
 match config_max {
     Some(max) => println!("The maximum is configured to be {}", max),
     _ => (),
 }
-```
+```text
 
 Using `if let`:
+
 ```fusion
 let config_max = Some(3u8)
 if let Some(max) = config_max {
     println!("The maximum is configured to be {}", max)
 }
-```
+```text
 
 You can also use `else`:
 
@@ -226,7 +229,7 @@ if let Coin::Quarter(state) = coin {
 } else {
     count += 1
 }
-```
+```text
 
 ---
 
@@ -244,9 +247,9 @@ Enums and structs are the building blocks of data in Fusion. Next, we'll see how
 
 ## 6.6 Exercises
 
-1.  **Calculator Enum**: Define an enum `Operation` with variants `Add`, `Subtract`, `Multiply`, `Divide`. Each should hold two `f64` values.
-2.  **Evaluate Function**: Write a function `evaluate(op: Operation) -> f64` that performs the math.
-3.  **Option Handling**: Write a function that takes `Option<String>` and returns the string length as `Option<usize>`. It should return `None` if the input is `None`.
+1. **Calculator Enum**: Define an enum `Operation` with variants `Add`, `Subtract`, `Multiply`, `Divide`. Each should hold two `f64` values.
+2. **Evaluate Function**: Write a function `evaluate(op: Operation) -> f64` that performs the math.
+3. **Option Handling**: Write a function that takes `Option<String>` and returns the string length as `Option<usize>`. It should return `None` if the input is `None`.
 
 ---
 

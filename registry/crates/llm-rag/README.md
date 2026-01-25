@@ -1,7 +1,7 @@
 # Fusion LLM RAG
 
-**Version:** 0.2.0  
-**Type:** Application Framework  
+**Version:** 0.2.0
+**Type:** Application Framework
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let mut store = VectorStore::new();
 store.add(Document::new("Fusion is fast.", vec![0.1, 0.2]))?;
 
 let results = store.search(query_vec, 5)?;
-```
+```text
 
 ## Dependencies
 

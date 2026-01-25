@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/stream-monitor/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// stream-monitor implementation
+struct StreamMonitorModule;

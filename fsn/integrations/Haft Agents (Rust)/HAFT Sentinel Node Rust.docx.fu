@@ -1,0 +1,115 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (Rust)/HAFT Sentinel Node Rust.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+// //! PROJECT: FUSION HAFT (High Availability Flux Tensor)
+// //! MODULE:  WARDEN NODE (Sentinel) - RUST EDITION
+// ======================================================================
+// 
+// use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+// use std::{thread, time};
+// use rand::Rng;
+// 
+// struct Infra;
+// impl Infra {
+//     fn log(msg: &amp;str) {
+//         println!(&quot;[Warden] {}&quot;, msg);
+//     }
+// }
+// 
+// #[derive(Clone)]
+// struct RemoteAgent {
+//     id: String,
+//     missed_heartbeats: u32,
+//     is_isolated: bool,
+// }
+// 
+// impl RemoteAgent {
+//     fn new(id: &amp;str) -&gt; Self {
+//         Self {
+//             id: id.to_string(),
+//             missed_heartbeats: 0,
+//             is_isolated: false,
+//         }
+//     }
+// 
+//     fn ping(&amp;self) -&gt; bool {
+//         let mut rng = rand::thread_rng();
+//         rng.gen_range(0..100) &gt; 20 // 80% Success Rate
+//     }
+// }
+// 
+// struct WardenLogic {
+//     fleet: Vec&lt;RemoteAgent&gt;,
+// }
+// 
+// impl WardenLogic {
+//     fn new() -&gt; Self {
+//         Self {
+//             fleet: vec![
+//                 RemoteAgent::new(&quot;SOLVER-01&quot;),
+//                 RemoteAgent::new(&quot;SOLVER-02&quot;),
+//                 RemoteAgent::new(&quot;VAULT-01&quot;),
+//                 RemoteAgent::new(&quot;NEXUS-01&quot;),
+//             ],
+//         }
+//     }
+// 
+//     fn scan(&amp;mut self) {
+//         for node in self.fleet.iter_mut() {
+//             if node.is_isolated { continue; }
+// 
+//             if node.ping() {
+//                 if node.missed_heartbeats &gt; 0 {
+//                     Infra::log(&amp;format!(&quot;{} recovered.&quot;, node.id));
+//                     node.missed_heartbeats = 0;
+//                 }
+//             } else {
+//                 node.missed_heartbeats += 1;
+//                 Infra::log(&amp;format!(&quot;{} unresponsive ({}/3)&quot;, node.id, node.missed_heartbeats));
+//                 
+//                 if node.missed_heartbeats &gt;= 3 {
+//                     Self::isolate_and_heal(node);
+//                 }
+//             }
+//         }
+//     }
+// 
+//     fn isolate_and_heal(node: &amp;mut RemoteAgent) {
+//         Infra::log(&amp;format!(&quot;CRITICAL: Isolating {}&quot;, node.id));
+//         node.is_isolated = true;
+// 
+//         // Clone ID for the thread
+//         let node_id = node.id.clone();
+//         
+//         thread::spawn(move || {
+//             thread::sleep(time::Duration::from_secs(1));
+//             Infra::log(&amp;format!(&quot;[Auto-Heal] Rebooting {}&quot;, node_id));
+//         });
+//         
+//         // Simulating immediate recovery start for the next scan cycle
+//         node.missed_heartbeats = 0;
+//         node.is_isolated = false; 
+//     }
+// }
+// 
+// fn main() {
+//     let running = Arc::new(AtomicBool::new(true));
+//     let r = running.clone();
+// 
+//     ctrlc::set_handler(move || {
+//         r.store(false, Ordering::SeqCst);
+//     }).expect(&quot;Error setting Ctrl-C handler&quot;);
+// 
+//     Infra::log(&quot;Sentinel Online. Monitoring Mesh...&quot;);
+//     let mut warden = WardenLogic::new();
+// 
+//     while running.load(Ordering::SeqCst) {
+//         warden.scan();
+//         thread::sleep(time::Duration::from_millis(1000));
+//     }
+// 
+//     Infra::log(&quot;Sentinel Offline.&quot;);
+// }
+// 

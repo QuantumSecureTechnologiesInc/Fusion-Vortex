@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/q-measurement-opt/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing q-measurement-opt...");
+}

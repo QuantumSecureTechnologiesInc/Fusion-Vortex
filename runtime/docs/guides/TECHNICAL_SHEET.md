@@ -1,7 +1,7 @@
 # Technical Sheet: Fusion Runtime Core
 
-**Artifact ID:** FUS-003-TECH  
-**Version:** v0.3.0 (Alpha)  
+**Artifact ID:** FUS-003-TECH
+**Version:** v0.3.0 (Alpha)
 **Date:** 2025-12-11
 
 ---
@@ -25,15 +25,18 @@ Fusion Runtime Core is designed for high-performance bare-metal environments. Wh
 The runtime uses the `fusion_hal` crate to interface with accelerators.
 
 #### NVIDIA
+
 - **Driver:** 525.x or higher
 - **Architecture:** Volta (V100), Ampere (A100/A30), Hopper (H100), Blackwell (B200)
 - **Capabilities:** Compute Capability 7.0+
 
 #### AMD
+
 - **Driver:** ROCm 5.4+
 - **Architecture:** CDNA2 (MI200 series)
 
 #### TPU
+
 - **Support:** Coral Edge TPU (Local) or Google Cloud TPU v4 (via gRPC bridge)
 
 ### 1.3 Quantum Backend Compatibility
@@ -63,9 +66,11 @@ To achieve sub-10μs latency, the OS kernel must be tuned significantly.
 For production deployment, the following boot parameters are required to isolate the runtime from OS noise:
 
 ```bash
+
 # /etc/default/grub
+
 GRUB_CMDLINE_LINUX="isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 hugepagesz=1G hugepages=16 default_hugepagesz=1G intel_iommu=on"
-```
+```text
 
 | Parameter        | Purpose                                                           |
 | ---------------- | ----------------------------------------------------------------- |

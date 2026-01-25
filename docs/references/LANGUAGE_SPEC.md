@@ -29,7 +29,7 @@ qreg<N>  // Quantum register of N qubits
 
 // Tensor types (for AI/ML)
 tensor<T, Shape>
-```
+```text
 
 ### Variable Declaration
 
@@ -44,7 +44,7 @@ counter = counter + 1;
 
 // Type inference
 let inferred = 3.14;  // f64
-```
+```text
 
 ### Functions
 
@@ -62,7 +62,7 @@ fn identity<T>(value: T) -> T {
 async fn fetch_data(url: String) -> Result<Data, Error> {
     // Implementation
 }
-```
+```text
 
 ### Control Flow
 
@@ -95,7 +95,7 @@ while condition {
 for item in collection {
     // For loop
 }
-```
+```text
 
 ### Structs and Enums
 
@@ -110,7 +110,7 @@ impl Point {
     fn new(x: f64, y: f64) -> Self {
         Point { x, y }
     }
-    
+
     fn distance(&self, other: &Point) -> f64 {
         ((self.x - other.x).pow(2.0) + (self.y - other.y).pow(2.0)).sqrt()
     }
@@ -127,7 +127,7 @@ match result {
     Ok(value) => println!("Success: {}", value),
     Err(error) => println!("Error: {}", error),
 }
-```
+```text
 
 ### Traits
 
@@ -141,7 +141,7 @@ impl Display for Point {
         format!("({}, {})", self.x, self.y)
     }
 }
-```
+```text
 
 ### Quantum Computing
 
@@ -149,17 +149,17 @@ impl Display for Point {
 // Quantum circuit definition
 quantum circuit Bell {
     qubits: qreg<2>;
-    
+
     fn prepare(&mut self) {
         H(self.qubits[0]);
         CNOT(self.qubits[0], self.qubits[1]);
     }
-    
+
     fn measure(&self) -> (bool, bool) {
         (measure(self.qubits[0]), measure(self.qubits[1]))
     }
 }
-```
+```text
 
 ### AI/ML Integration
 
@@ -180,7 +180,7 @@ impl<const IN: usize, const OUT: usize> Dense<IN, OUT> {
         input @ &self.weights + &self.bias
     }
 }
-```
+```text
 
 ### Memory Safety
 
@@ -197,7 +197,7 @@ fn borrow(s: &String) {  // Borrows immutably
 fn mutate(s: &mut String) {  // Borrows mutably
     s.push_str(" world");
 }
-```
+```text
 
 ### Error Handling
 
@@ -222,7 +222,7 @@ fn calculate() -> Result<i32, String> {
 if critical_condition {
     panic!("Critical error occurred");
 }
-```
+```text
 
 ### Modules and Imports
 
@@ -232,7 +232,7 @@ mod geometry {
     pub struct Circle {
         pub radius: f64,
     }
-    
+
     impl Circle {
         pub fn area(&self) -> f64 {
             std::math::PI * self.radius * self.radius
@@ -243,18 +243,21 @@ mod geometry {
 // Importing
 use geometry::Circle;
 use std::collections::HashMap;
-```
+```text
 
 ### Attributes and Macros
 
 ```fusion
 // Attributes for metadata
+
 #[derive(Debug, Clone, PartialEq)]
+
 struct Data {
     value: i32,
 }
 
 #[quantum]
+
 fn quantum_algorithm() -> Result<i32, Error> {
     // Quantum code
 }
@@ -262,7 +265,7 @@ fn quantum_algorithm() -> Result<i32, Error> {
 // Macros
 println!("Hello, {}!", name);
 vec![1, 2, 3, 4];
-```
+```text
 
 ### Concurrency
 
@@ -289,7 +292,7 @@ thread::spawn(move || {
     tx.send("message").unwrap();
 });
 let received = rx.recv().unwrap();
-```
+```text
 
 ### Post-Quantum Cryptography
 
@@ -309,7 +312,7 @@ let shared_secret = pqc::kyber::decrypt(&secret_key, &ciphertext);
 let (signing_key, verify_key) = pqc::dilithium::keypair();
 let signature = pqc::dilithium::sign(&signing_key, message);
 let valid = pqc::dilithium::verify(&verify_key, message, &signature);
-```
+```text
 
 ## Standard Library
 
@@ -367,7 +370,7 @@ type = primitive_type
      | generic_type
      | tensor_type
      | quantum_type ;
-```
+```text
 
 ## Compiler Phases
 
@@ -385,18 +388,22 @@ type = primitive_type
 fn main() {
     println!("Hello, Fusion!");
 }
-```
+```text
 
 ```bash
+
 # Compile
+
 fusion build hello.fu
 
 # Run
+
 fusion run hello.fu
 
 # Build optimized
+
 fusion build --release hello.fu
-```
+```text
 
 ---
 

@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/fusion-wasm-server/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing fusion-wasm-server...");
+}

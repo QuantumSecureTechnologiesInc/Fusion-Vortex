@@ -1,8 +1,10 @@
 # Policy Integration Report - Phase 2
+
 Date: 2025-12-13
 Status: Partial Success (Core Logic Implemented, Bridge Enforcement Deferred)
 
 ## Achievements
+
 1. **Extension Host Enhancement**:
    - Integrated `fusion-policy` crate into `ExtensionHost`.
    - Implemented `ExtensionManifest` loading and creation logic.
@@ -27,18 +29,23 @@ Status: Partial Success (Core Logic Implemented, Bridge Enforcement Deferred)
    - Resolved `fusion` CLI build errors.
 
 ## Deferred Items & Technical Debt
+
+
 ### Node.js Bridge Policy Enforcement
+
 **Status**: Deferred / Stubbed
 **Reason**: The `boa_engine` (v0.19) API for `NativeFunction` does not support closures with captures easily in the way `ExtensionHost` requires (passing thread-safe `Arc<RwLock<PolicyEnforcer>>`). Additionally, `NativeObject` trait implementation details have changed, complicating the alternative "Global State" approach without deeper investigation.
-**Action Taken**: 
+**Action Taken**:
 - `setup_fs_bridge` logic is currently stubbed to log intent but NOT enforce policy, ensuring the project builds and runs.
 - `setup_console` was also disabled due to API mismatches.
 
 ### Network Gating
+
 **Status**: API Ready, Implementation Pending
 **Reason**: While the `ExtensionHost` has `check_capability` ready, the actual instrumentation of network calls (via `vscode-runtime`'s `fetch` or `http` modules) was not completed due to the focus on fixing the `NodeRuntime` build integration.
 
 ## Next Steps
+
 1. **Resolve Boa Bindings**: Investigate `boa_engine` 0.19 `Context` user data or `ForeignFunction` capabilities to properly pass the `PolicyEnforcer` to native functions.
 2. **Instrument APIs**: Apply `check_capability` to `vscode_api` implementation for `fetch`, `net`, and `fs` operations.
 3. **Persistence**: Implement persistent storage for Global Enforcement Mode (currently resets on restart).

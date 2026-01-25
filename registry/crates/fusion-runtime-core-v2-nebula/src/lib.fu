@@ -1,0 +1,5 @@
+mod engine;
+mod fusion_proto {
+    tonic::include_proto!("fusion_core_v2");
+}
+pub use engine::WasmEngine;

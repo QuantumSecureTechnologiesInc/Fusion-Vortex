@@ -1,7 +1,7 @@
 # HAFT Engines (Hyper-Adaptive Flux Tensors)
 
-**Version:** Workspace  
-**Type:** Intelligent Tensor Storage & Memory Management  
+**Version:** Workspace
+**Type:** Intelligent Tensor Storage & Memory Management
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -15,18 +15,21 @@ Unlike static arrays, HAFT tensors are **intelligent, self-optimizing data struc
 ## The Three-Agent Architecture
 
 ### 1. The Researcher Agent
+
 Profiles tensor access patterns:
 - Sequential vs. random vs. sparse access
 - Hot/warm/cold frequency maps
 - Temporal access patterns for prefetching
 
-### 2. The Builder Agent  
+### 2. The Builder Agent
+
 Restructures data across storage tiers:
 - **Hot Tier**: GPU VRAM / CPU L3 cache (frequently accessed)
 - **Warm Tier**: Main RAM (moderately accessed)
 - **Cold Tier**: Compressed NVMe/SSD (rarely accessed)
 
 ### 3. The Optimizer Agent
+
 Fine-tunes data layout and operations:
 - Memory layout optimization (row-major vs column-major)
 - Sparse format conversion
@@ -46,7 +49,7 @@ Fine-tunes data layout and operations:
 ```toml
 [dependencies]
 haft-fusion = { workspace = true }
-```
+```text
 
 ## Usage
 
@@ -62,7 +65,7 @@ let massive_tensor = FluxTensor::from_file("100GB_dataset.dat");
 // - Sequential row reading → Row-major layout
 // - Only 5% of columns used → Sparse storage
 // - First 1000 rows accessed repeatedly → Cache in GPU
-```
+```text
 
 ### Explicit Tier Control
 
@@ -74,7 +77,7 @@ tensor.pin_to_gpu()?;
 
 // Allow cold data to migrate to SSD
 tensor.allow_tiering(true);
-```
+```text
 
 ### GPU Integration
 
@@ -87,7 +90,7 @@ let tensor = FluxTensor::new([4096, 4096]);
 // HAFT ensures data is in GPU memory
 // Then provides raw CUDA pointer
 cublas::gemm(tensor.as_device_ptr(), ...);
-```
+```text
 
 ### Distributed HAFT
 
@@ -105,7 +108,7 @@ let huge_tensor = DistributedTensor::new([1_000_000, 1_000_000], cluster);
 
 // Operations run in parallel across cluster
 let result = huge_tensor.matmul(&other_tensor);
-```
+```text
 
 ### Profile Management
 
@@ -116,11 +119,11 @@ tensor.save_profile("production.haft")?;
 // Load in production
 std::env::set_var("FUSION_HAFT_PROFILE", "production.haft");
 let optimized = FluxTensor::from_file("dataset.dat");
-```
+```text
 
 ## Architecture
 
-```
+```text
 ╔══════════════════════════════════╗
 ║      FluxTensor (Public API)     ║
 ╠══════════════════════════════════╣
@@ -133,7 +136,7 @@ let optimized = FluxTensor::from_file("dataset.dat");
 ╠══════════════════════════════════╣
 ║      Storage Backend (GPU/FS)    ║
 ╚══════════════════════════════════╝
-```
+```text
 
 ## Configuration
 
@@ -162,15 +165,19 @@ Environment variables:
 ## CLI Tools
 
 ```bash
+
 # Monitor HAFT agent activity
+
 fusion haft monitor --dashboard http://localhost:8080
 
 # Save optimization profile
+
 fusion haft save-profile production.haft
 
 # Analyze tensor layout
+
 fusion haft analyze my_tensor.bin
-```
+```text
 
 ## Integration
 

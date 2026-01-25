@@ -1,0 +1,6 @@
+/// Production gRPC Server.
+/// Provides high-speed, structured communication based on HTTP/2 and Protobuf.
+struct FusionGrpcServer;
+async fn run_grpc_server() {
+    println!("gRPC server not implemented yet (proto missing)");
+}

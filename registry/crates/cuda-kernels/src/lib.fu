@@ -1,0 +1,2 @@
+/// cuda-kernels implementation
+struct CudaKernelsModule;

@@ -1,0 +1,59 @@
+// SOURCE: crates/fusion_entry/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, ItemFn};
+
+/// Defines the entry point for a Fusion application.
+///
+/// This macro:
+/// 1) Loads ephemeral keys from the environment (set by `fusion`).
+/// 2) Builds a `FusionContext`.
+/// 3) Activates the thread-local context before user code runs.
+#[proc_macro_attribute]
+fn fusion_main(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input_fn = parse_macro_input!(item as ItemFn);
+
+    let fn_vis = &input_fn.vis;
+    let fn_sig = &input_fn.sig;
+    let fn_block = &input_fn.block;
+
+    let expanded = quote! {
+        #fn_vis #fn_sig {
+            {
+                use fusion_std::security::{FusionContext, set_context};
+
+                let classical_key = env::var("FUSION_CLASSICAL_KEY")
+                    .expect("FUSION FATAL: Missing classical key. Use `fusion run`.");
+                let pq_key = env::var("FUSION_PQ_KEY")
+                    .expect("FUSION FATAL: Missing post-quantum key. Use `fusion run`.");
+
+                let decode_hex = |s: FString| -> FVec<u8> {
+                    if s.len() % 2 != 0 {
+                        panic!("FUSION FATAL: Invalid key length.");
+                    }
+                    let mut bytes = Vec::with_capacity(s.len() / 2);
+                    let mut i = 0;
+                    while i < s.len() {
+                        let byte = u8::from_str_radix(&s[i..i + 2], 16)
+                            .expect("FUSION FATAL: Invalid hex key.");
+                        bytes.push(byte);
+                        i += 2;
+                    }
+                    bytes
+                };
+
+                let ctx = FusionContext {
+                    classical_sig: decode_hex(classical_key),
+                    pq_sig: decode_hex(pq_key),
+                };
+
+                set_context(ctx).expect("FUSION FATAL: Invalid security context.");
+            }
+
+            #fn_block
+        }
+    };
+
+    TokenStream::from(expanded)
+}

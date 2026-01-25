@@ -1,0 +1,40 @@
+// SOURCE: registry/crates/mcp/src/resource.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use crate::tool::McpTool;
+use serde::{Deserialize, Serialize};
+
+/// High-level resource type combining Tools and LSP servers
+enum McpResource {
+    /// A standard MCP tool
+    Tool(McpTool),
+    /// An LSP server exposed as a resource
+    LspServer(LspResource),
+}
+
+/// Represents an LSP server exposed as an MCP resource
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct LspResource {
+    /// The language ID (e.g., "rust", "python")
+    pub language: FString,
+    /// LSP capabilities supported by this server
+    pub capabilities: FVec<FString>,
+}
+
+impl LspResource {
+    fn new(language: impl Into<FString>, capabilities: FVec<FString>) -> Self {
+        Self {
+            language: language.into(),
+            capabilities,
+        }
+    }
+
+    /// Common LSP endpoints exposed by this resource
+    fn exposed_endpoints(&self) -> FVec<FString> {
+        vec![
+            format!("lsp.{}.diagnostics", self.language),
+            format!("lsp.{}.symbols", self.language),
+            format!("lsp.{}.references", self.language),
+            format!("lsp.{}.codeActions", self.language),
+        ]
+    }
+}

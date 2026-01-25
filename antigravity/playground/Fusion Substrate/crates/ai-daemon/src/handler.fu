@@ -1,0 +1,4 @@
+use anyhow::Result;
+async fn handle_request(_request: serde_json::Value) -> Result<serde_json::Value> {
+    Ok(serde_json::json!({ "status" : "ok", "response" : "Mock AI daemon response" }))
+}

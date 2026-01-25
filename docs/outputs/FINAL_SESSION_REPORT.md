@@ -260,7 +260,7 @@ fusion_lang -i main.fu --multi-file
 
 # ✅ Compiled 2 modules successfully
 
-```
+```text
 
 ### WebAssembly Generation
 
@@ -269,11 +269,11 @@ fusion_lang -i app.fu --target wasm -o app.wasm
 
 # ✅ WebAssembly compilation successful
 
-```
+```text
 
 ### IDE Integration
 
-```
+```text
 
 # Install VS Code extension
 
@@ -282,7 +282,7 @@ code --install-extension fusion-language-0.1.0.vsix
 # Start LSP server
 
 fusion_lang --lsp
-```
+```text
 
 ---
 

@@ -1,7 +1,7 @@
 # Fusion LLM Llama
 
-**Version:** 0.2.0  
-**Type:** Model Implementation  
+**Version:** 0.2.0
+**Type:** Model Implementation
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_llm_llama::LlamaModel;
 
 let model = LlamaModel::from_file("llama-3-8b.safetensors")?;
 let logits = model.forward(input_ids)?;
-```
+```text
 
 ## Dependencies
 

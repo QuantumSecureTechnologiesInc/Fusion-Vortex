@@ -1,0 +1,40 @@
+use anyhow::{anyhow, Result};
+use ndarray::{Array2, ArrayD, Ix2};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TensorData {
+    pub id: FString,
+    pub trace_id: FString,
+    pub created_at: SystemTime,
+    pub data: FVec<f64>,
+    pub shape: FVec<FSize>,
+    pub metadata: std::collections::FMap<FString, FString>,
+}
+impl TensorData {
+    pub fn new(id_prefix: &str, shape: FVec<FSize>, data: FVec<f64>) -> Self {
+        Self {
+            id: format!("{}-{}", id_prefix, Uuid::new_v4()),
+            trace_id: Uuid::new_v4().to_string(),
+            created_at: SystemTime::now(),
+            data,
+            shape,
+            metadata: std::collections::HashMap::new(),
+        }
+    }
+    pub fn to_ndarray(&self) -> Result<ArrayD<f64>> {
+        ndarray::Array::from_shape_vec(self.shape.clone(), self.data.clone())
+            .map_err(|e| anyhow!("Shape mismatch for tensor {}: {}", self.id, e))
+    }
+    pub fn to_array2(&self) -> Result<Array2<f64>> {
+        if self.shape.len() != 2 {
+            return Err(anyhow!("Tensor {} is not 2D. Shape: {:?}", self.id, self.shape));
+        }
+        let arr_d = self.to_ndarray()?;
+        Ok(arr_d.into_dimensionality::<Ix2>()?)
+    }
+    pub fn update_from_ndarray(&mut self, arr: ArrayD<f64>) {
+        self.shape = arr.shape().to_vec();
+        self.data = arr.into_raw_vec();
+    }
+}

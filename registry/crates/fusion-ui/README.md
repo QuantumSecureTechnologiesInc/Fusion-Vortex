@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-ui = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_ui::App;
 fn main() {
     App::new().run();
 }
-```
+```text
 
 ## License
 

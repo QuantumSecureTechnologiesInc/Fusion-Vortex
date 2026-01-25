@@ -1,0 +1,17 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 3 - The Specialized Pillars/fusion_finance/Finance Library.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// //! # Fusion Finance Engine
+// //! 
+// //! High-Performance Financial Engineering framework.
+// //! Features:
+// //! - FIX Protocol Parser
+// //! - Limit Order Book (LOB)
+// //! - Market Data Types
+// 
+// pub mod fix_engine;
+// pub mod order_book;
+// pub mod market_data;
+// 
+// pub use fix_engine::FixMessage;
+// pub use order_book::{OrderBook, Order, Side};

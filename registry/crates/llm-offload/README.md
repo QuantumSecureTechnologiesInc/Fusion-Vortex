@@ -1,7 +1,7 @@
 # Fusion LLM Offload
 
-**Version:** 0.2.0  
-**Type:** Resource Management  
+**Version:** 0.2.0
+**Type:** Resource Management
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let offloader = Offloader::new(Strategy::CpuRam);
 offloader.offload(layer_tensor).await?;
 // Bring back to GPU
 let gpu_tensor = offloader.load(layer_tensor).await?;
-```
+```text
 
 ## Dependencies
 

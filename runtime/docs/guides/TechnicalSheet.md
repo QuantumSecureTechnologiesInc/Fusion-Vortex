@@ -66,7 +66,7 @@ impl Runtime {
     pub fn metrics(&self) -> RuntimeMetrics;
     pub fn shutdown(self);
 }
-```
+```text
 
 #### RuntimeBuilder
 
@@ -82,7 +82,7 @@ impl RuntimeBuilder {
     pub fn memory_pool_size(self, size: usize) -> Self;
     pub fn build(self) -> Runtime;
 }
-```
+```text
 
 #### QoSMode
 
@@ -93,7 +93,7 @@ pub enum QoSMode {
     Balanced,         // Default
     HighThroughput,   // Maximum throughput
 }
-```
+```text
 
 ### fusion_core
 
@@ -115,7 +115,7 @@ impl FusionType {
     pub fn type_hint(&self) -> TypeHint;
     pub fn is_transitioning(&self) -> bool;
 }
-```
+```text
 
 ### fusion_ai_core
 
@@ -132,7 +132,7 @@ impl Tensor {
     pub async fn matmul(&self, other: &Tensor) -> Tensor;
     pub fn shape(&self) -> &[usize];
 }
-```
+```text
 
 #### Autodiff
 
@@ -143,7 +143,7 @@ impl Autodiff {
     pub fn new() -> Self;
     pub fn backward(&mut self, loss: &Tensor);
 }
-```
+```text
 
 ### fusion_finance
 
@@ -158,7 +158,7 @@ impl OrderBook {
     pub fn best_bid(&self) -> Option<f64>;
     pub fn best_ask(&self) -> Option<f64>;
 }
-```
+```text
 
 #### Order
 
@@ -174,7 +174,7 @@ impl Order {
     pub fn limit_buy(price: f64, quantity: f64) -> Self;
     pub fn limit_sell(price: f64, quantity: f64) -> Self;
 }
-```
+```text
 
 ### fusion_quantum
 
@@ -189,7 +189,7 @@ impl Qubit {
     pub fn pauli_x(&mut self);
     pub async fn measure(&mut self) -> u8;
 }
-```
+```text
 
 #### Circuit
 
@@ -203,7 +203,7 @@ impl Circuit {
     pub fn measure(&mut self, qubit: usize) -> &mut Self;
     pub async fn execute(&self) -> CircuitResult;
 }
-```
+```text
 
 ## Environment Variables
 
@@ -245,7 +245,7 @@ dpdk_enabled = false
 [logging]
 level = "info"
 format = "json"
-```
+```text
 
 ## Error Codes
 
@@ -265,7 +265,7 @@ format = "json"
 
 ```bash
 cargo bench --workspace
-```
+```text
 
 **Benchmarks**:
 
@@ -283,7 +283,7 @@ use fusion_runtime_core::Runtime;
 
 fn bench_task_spawn(c: &mut Criterion) {
     let runtime = Runtime::new();
-    
+
     c.bench_function("task_spawn", |b| {
         b.iter(|| {
             runtime.spawn(async {
@@ -295,7 +295,7 @@ fn bench_task_spawn(c: &mut Criterion) {
 
 criterion_group!(benches, bench_task_spawn);
 criterion_main!(benches);
-```
+```text
 
 ## Compatibility Matrix
 

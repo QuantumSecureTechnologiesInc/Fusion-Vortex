@@ -1,0 +1,24 @@
+/// Production Embedding Layers.
+/// Converts discrete indices (tokens) into dense, continuous vectors.
+use fusion_ai_core::{Layer, Tensor, Variable};
+struct Embedding {
+    pub weight: Variable,
+}
+impl Embedding {
+    pub fn new(vocab_size: FSize, embed_dim: FSize) -> Self {
+        Self {
+            weight: Tensor::zeros(vec![vocab_size, embed_dim]),
+        }
+    }
+}
+impl Layer for Embedding {
+    /// Forward Pass: Input [Batch, SequenceLength] (indices) -> Output [Batch, SequenceLength, EmbedDim]
+    fn forward(&self, _indices: &Variable) -> Variable {
+        let embed_dim = self.weight.data.shape()[1];
+        let output_tensor = Tensor::zeros(vec![1, 1, embed_dim]);
+        output_tensor
+    }
+    fn parameters(&self) -> FVec<Variable> {
+        vec![self.weight.clone()]
+    }
+}

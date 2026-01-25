@@ -23,7 +23,7 @@ git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Lan
 cd registry/crates/fusion-runtime-core-v3-supernova
 cargo build --all-features
 cargo test
-```
+```text
 
 ## Development Workflow
 
@@ -31,7 +31,7 @@ cargo test
 
 ```bash
 git checkout -b feature/your-feature-name
-```
+```text
 
 ### 2. Make Changes
 
@@ -40,32 +40,39 @@ Follow the coding standards below.
 ### 3. Test
 
 ```bash
+
 # Run all tests
+
 cargo test --all-features
 
 # Run specific module tests
+
 cargo test --test executor_tests
 
 # Run examples
+
 cargo run --example supernova_complete --features wasm,distributed
-```
+```text
 
 ### 4. Format and Lint
 
 ```bash
+
 # Format code
+
 cargo fmt
 
 # Run clippy
+
 cargo clippy --all-features -- -D warnings
-```
+```text
 
 ### 5. Commit
 
 ```bash
 git add .
 git commit -m "feat: add new feature"
-```
+```text
 
 Use conventional commits:
 - `feat:` - New feature
@@ -126,14 +133,16 @@ where
 {
     // Implementation
 }
-```
+```text
 
 ## Testing Guidelines
 
 ### Unit Tests
 
 ```rust
+
 #[cfg(test)]
+
 mod tests {
     use super::*;
 
@@ -143,24 +152,26 @@ mod tests {
         assert_eq!(tensor.len(), 128 * 128);
     }
 }
-```
+```text
 
 ### Integration Tests
 
 ```rust
+
 #[tokio::test]
+
 async fn test_gpu_execution() {
     let runtime = Builder::new().enable_gpu().build();
-    
+
     runtime.block_on(async {
         let result = runtime_handle.spawn_on_gpu(0, async {
             42
         }).await;
-        
+
         assert_eq!(result, 42);
     });
 }
-```
+```text
 
 ### Benchmarks
 
@@ -177,7 +188,7 @@ fn bench_task_spawn(c: &mut Criterion) {
 
 criterion_group!(benches, bench_task_spawn);
 criterion_main!(benches);
-```
+```text
 
 ## Areas for Contribution
 

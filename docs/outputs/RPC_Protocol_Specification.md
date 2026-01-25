@@ -1,7 +1,7 @@
 # Fusion RPC Protocol Specification
 
-**Version:** 1.0  
-**Status:** Production  
+**Version:** 1.0
+**Status:** Production
 **Last Updated:** 2025-12-10
 
 ## Overview
@@ -12,7 +12,7 @@ The Fusion RPC (Remote Procedure Call) protocol provides secure, authenticated c
 
 ### Protocol Stack
 
-```
+```text
 ┌─────────────────────────────────┐
 │  Application Layer              │
 │  (RPC Messages: Execute,        │
@@ -30,7 +30,7 @@ The Fusion RPC (Remote Procedure Call) protocol provides secure, authenticated c
 │  Transport Layer                │
 │  (TCP)                          │
 └─────────────────────────────────┘
-```
+```text
 
 ### Security Properties
 
@@ -46,38 +46,40 @@ The Fusion RPC (Remote Procedure Call) protocol provides secure, authenticated c
 All RPC messages use the following Rust enum, serialized via bincode:
 
 ```rust
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum Message {
     /// Execute a remote function with arguments
     Execute {
         function_name: String,
         args: Vec<u8>,
     },
-    
+
     /// Return the result of an execution
     Result {
         success: bool,
         data: Vec<u8>,
     },
-    
+
     /// Health check / keepalive
     Ping,
-    
+
     /// Response to Ping
     Pong,
 }
-```
+```text
 
 ### Wire Format
 
 Each message on the wire consists of:
 
-```
+```text
 ┌──────────────┬──────────────┬────────────────┐
 │ Nonce        │ Length       │ Ciphertext     │
 │ (12 bytes)   │ (4 bytes)    │ (variable)     │
 └──────────────┴──────────────┴────────────────┘
-```
+```text
 
 1. **Nonce** (12 bytes): Random value used once for ChaCha20-Poly1305
 2. **Length** (4 bytes, big-endian u32): Length of ciphertext in bytes
@@ -95,18 +97,18 @@ Messages are serialized using `bincode` with the following properties:
 
 ### 1. Connection Establishment
 
-```
+```text
 Client                                    Server
   │                                          │
   │────────── TCP Connect ──────────────────▶│
   │                                          │
   │◀────────── TCP Accept ───────────────────│
   │                                          │
-```
+```text
 
 ### 2. Kyber Handshake
 
-```
+```text
 Client                                    Server
   │                                          │
   │  1. Generate keypair (pk_c, sk_c)        │
@@ -120,7 +122,7 @@ Client                                    Server
   │                                          │
   │  Both sides now have: shared secret      │
   │  Derive ChaCha20 key: K = shared[0..32]  │
-```
+```text
 
 **Handshake Details:**
 - **Client sends**: Kyber-768 public key (1184 bytes)
@@ -145,7 +147,7 @@ match response {
     Message::Result { success, data } => { /* handle */ },
     _ => { /* unexpected */ }
 }
-```
+```text
 
 ### 4. Connection Termination
 
@@ -156,12 +158,13 @@ Either party can close the TCP connection at any time. No explicit teardown prot
 ### Pattern 1: Request-Response (RPC)
 
 **Server:**
+
 ```rust
 use fusion_lang::network::{FusionNetwork, Message, NetResult};
 
 fn main() -> NetResult<()> {
     let mut executor = Executor::new();
-    
+
     FusionNetwork::run_server("127.0.0.1:8080", |mut channel| {
         loop {
             let request = channel.recv_message()?;
@@ -169,7 +172,7 @@ fn main() -> NetResult<()> {
                 Message::Execute { function_name, args } => {
                     // Execute function
                     let result = execute_function(&function_name, &args);
-                    
+
                     // Send result back
                     let response = Message::Result {
                         success: true,
@@ -185,22 +188,23 @@ fn main() -> NetResult<()> {
         }
     }, &mut executor)
 }
-```
+```text
 
 **Client:**
+
 ```rust
 use fusion_lang::network::{FusionNetwork, Message, NetResult};
 
 fn main() -> NetResult<()> {
     let mut channel = FusionNetwork::connect("127.0.0.1:8080")?;
-    
+
     // Send execute request
     let request = Message::Execute {
         function_name: "fibonacci".to_string(),
         args: bincode::serialize(&10u32).unwrap(),
     };
     channel.send_message(&request)?;
-    
+
     // Wait for result
     let response = channel.recv_message()?;
     match response {
@@ -214,10 +218,10 @@ fn main() -> NetResult<()> {
         }
         _ => eprintln!("Unexpected response"),
     }
-    
+
     Ok(())
 }
-```
+```text
 
 ### Pattern 2: Health Monitoring
 
@@ -225,15 +229,15 @@ fn main() -> NetResult<()> {
 // Keepalive loop
 loop {
     channel.send_message(&Message::Ping)?;
-    
+
     match channel.recv_message()? {
         Message::Pong => { /* connection alive */ },
         _ => return Err(/* unexpected response */),
     }
-    
+
     std::thread::sleep(Duration::from_secs(30));
 }
-```
+```text
 
 ### Pattern 3: Streaming Results
 
@@ -254,7 +258,7 @@ channel.send_message(&Message::Result {
     success: true,
     data: bincode::serialize(&"Complete").unwrap(),
 })?;
-```
+```text
 
 ## Error Handling
 
@@ -263,21 +267,23 @@ channel.send_message(&Message::Result {
 The protocol defines `NetResult<T> = Result<T, NetworkError>` where:
 
 ```rust
+
 #[derive(Debug, thiserror::Error)]
+
 pub enum NetworkError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Cryptographic error: {0}")]
     Crypto(String),
-    
+
     #[error("Handshake failed: {0}")]
     Handshake(String),
-    
+
     #[error("Serialization error: {0}")]
     Serialization(String),
 }
-```
+```text
 
 ### Common Error Scenarios
 
@@ -292,6 +298,7 @@ pub enum NetworkError {
 ### Malformed Message Handling
 
 **Detection:**
+
 ```rust
 let msg = match channel.recv_message() {
     Ok(m) => m,
@@ -302,7 +309,7 @@ let msg = match channel.recv_message() {
     }
     Err(e) => return Err(e),
 };
-```
+```text
 
 **Prevention:**
 - Add version field to `Message` enum
@@ -332,20 +339,23 @@ let msg = match channel.recv_message() {
 **Recommended Enhancements:**
 
 1. **Client Certificates:**
+
 ```rust
 Message::Authenticate {
     client_id: String,
     signature: Vec<u8>,  // Sign challenge with private key
 }
-```
+```text
 
 2. **Pre-Shared Keys:**
+
 ```rust
 // Derive session key from PSK + Kyber shared secret
 let session_key = HKDF(psk || kyber_shared_secret);
-```
+```text
 
 3. **Challenge-Response:**
+
 ```rust
 // Server sends random challenge
 Message::Challenge { nonce: [u8; 32] }
@@ -354,27 +364,31 @@ Message::Challenge { nonce: [u8; 32] }
 Message::AuthResponse {
     signature: sign(nonce, client_private_key)
 }
-```
+```text
 
 ### Versioning
 
 **Recommended Message Format:**
+
 ```rust
+
 #[derive(Serialize, Deserialize)]
+
 pub struct VersionedMessage {
     version: u8,  // Protocol version (currently 1)
     payload: Message,
 }
-```
+```text
 
 **Version Negotiation:**
+
 ```rust
 // Client sends supported versions
 Message::Hello { versions: vec![1, 2] }
 
 // Server responds with chosen version
 Message::Version { selected: 1 }
-```
+```text
 
 ### Rate Limiting
 
@@ -392,11 +406,11 @@ impl RateLimiter {
     fn check(&mut self) -> bool {
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_refill).as_secs();
-        
+
         self.tokens = (self.tokens + elapsed as u32 * MAX_MESSAGES_PER_SECOND)
             .min(MAX_MESSAGES_PER_SECOND);
         self.last_refill = now;
-        
+
         if self.tokens > 0 {
             self.tokens -= 1;
             true
@@ -405,7 +419,7 @@ impl RateLimiter {
         }
     }
 }
-```
+```text
 
 ## Performance Characteristics
 
@@ -441,7 +455,9 @@ impl RateLimiter {
 ### Unit Tests
 
 ```rust
+
 #[cfg(test)]
+
 mod tests {
     use super::*;
 
@@ -451,68 +467,74 @@ mod tests {
             function_name: "test".into(),
             args: vec![1, 2, 3],
         };
-        
+
         let bytes = bincode::serialize(&msg).unwrap();
         let decoded: Message = bincode::deserialize(&bytes).unwrap();
-        
+
         assert_eq!(format!("{:?}", msg), format!("{:?}", decoded));
     }
 }
-```
+```text
 
 ### Integration Tests
 
 ```rust
+
 #[test]
+
 fn test_secure_channel_echo() {
     let server = std::thread::spawn(|| {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
-        
+
         let (socket, _) = listener.accept().unwrap();
         let mut channel = SecureChannel::server_handshake(socket).unwrap();
-        
+
         let msg = channel.recv_message().unwrap();
         channel.send_message(&msg).unwrap();
     });
-    
+
     let mut channel = FusionNetwork::connect(&addr).unwrap();
-    
+
     let request = Message::Ping;
     channel.send_message(&request).unwrap();
-    
+
     let response = channel.recv_message().unwrap();
     assert!(matches!(response, Message::Ping));
-    
+
     server.join().unwrap();
 }
-```
+```text
 
 ## Best Practices
 
 ### Do's ✅
 
 1. **Always validate received messages:**
+
    ```rust
    match channel.recv_message()? {
        Message::Execute { .. } => { /* expected */ },
        _ => return Err("Unexpected message type"),
    }
-   ```
+```text
 
 2. **Implement timeouts:**
+
    ```rust
    channel.set_read_timeout(Some(Duration::from_secs(30)))?;
-   ```
+```text
 
 3. **Log security events:**
+
    ```rust
    if let Err(NetworkError::Crypto(_)) = channel.recv() {
        log::error!("Decryption failed - possible attack");
    }
-   ```
+```text
 
 4. **Use structured error handling:**
+
    ```rust
    Message::Result {
        success: false,
@@ -521,7 +543,7 @@ fn test_secure_channel_echo() {
            message: "Function not found".into(),
        }).unwrap(),
    }
-   ```
+```text
 
 ### Don'ts ❌
 
@@ -550,6 +572,6 @@ fn test_secure_channel_echo() {
 
 ---
 
-**Maintained by:** Fusion Language Team  
-**Contact:** security@fusion-lang.org  
+**Maintained by:** Fusion Language Team
+**Contact:** security@fusion-lang.org
 **License:** MIT OR Apache-2.0

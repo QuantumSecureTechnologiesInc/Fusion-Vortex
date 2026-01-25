@@ -25,7 +25,7 @@ fn main() {
     println("The value of x is: {}", x)
     // x = 6  // This would cause a compile-time error
 }
-```
+```text
 
 If you try to assign `6` to `x`, the compiler will produce an error: `cannot assign twice to immutable variable x`. This prevents bugs where one part of your code assumes a value is constant, but another part changes it.
 
@@ -40,7 +40,7 @@ fn main() {
     x = 6
     println("The value of x is: {}", x)
 }
-```
+```text
 
 Using `mut` conveys intent to future readers of the code (including yourself) that "this value will change".
 
@@ -55,7 +55,7 @@ Like immutable variables, **constants** are values that are bound to a name and 
 ```fusion
 const MAX_POINTS: u32 = 100_000
 const PI: f64 = 3.14159
-```
+```text
 
 Naming convention for constants is ALL_UPPERCASE with underscores.
 
@@ -67,15 +67,15 @@ You can declare a new variable with the same name as a previous variable. This i
 fn main() {
     let x = 5
     let x = x + 1    // New variable 'x' hides the previous one
-    
+
     {
         let x = x * 2
         println("Inner scope x: {}", x) // Prints 12
     }
-    
+
     println("Outer scope x: {}", x) // Prints 6
 }
-```
+```text
 
 Shadowing is different from mutation:
 1. We use the `let` keyword again, creating a fresh variable.
@@ -84,7 +84,7 @@ Shadowing is different from mutation:
 ```fusion
 let spaces = "   "
 let spaces = spaces.len() // First 'spaces' is string, second is int
-```
+```text
 
 If we used `mut`, this type change would not be allowed.
 
@@ -133,7 +133,7 @@ Fusion has two primitive types for floating-point numbers (numbers with decimal 
 ```fusion
 let x = 2.0      // f64
 let y: f32 = 3.0 // f32
-```
+```text
 
 #### The Boolean Type
 
@@ -142,7 +142,7 @@ A boolean type has two possible values: `true` and `false`. They are one byte in
 ```fusion
 let t = true
 let f: bool = false
-```
+```text
 
 #### The Character Type
 
@@ -152,7 +152,7 @@ The `char` type is the language's most primitive alphabetic type.
 let c = 'z'
 let z = 'ℤ'
 let heart_eyed_cat = '😻'
-```
+```text
 
 Fusion `char` literals are specified with single quotes. A `char` represents a **Unicode Scalar Value**, meaning it can represent a lot more than just ASCII: accented letters, Chinese/Japanese/Korean ideographs, emoji, and zero-width spaces are all valid `char` values.
 
@@ -174,7 +174,7 @@ println("The value of y is: {}", y)
 // Direct access with dot notation
 let five_hundred = tup.0
 let six_point_four = tup.1
-```
+```text
 
 #### The Array Type
 
@@ -183,20 +183,20 @@ An array is a collection of multiple values of the **same type**. Arrays in Fusi
 ```fusion
 let a = [1, 2, 3, 4, 5]
 let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-```
+```text
 
 You write an array's type using square brackets with the type of each element, a semicolon, and then the number of elements in the array:
 
 ```fusion
 let a: [i32; 5] = [1, 2, 3, 4, 5]
-```
+```text
 
 **Accessing Array Elements**:
 
 ```fusion
 let first = a[0]
 let second = a[1]
-```
+```text
 
 **Out of Bounds Access**:
 If you try to access an index that is past the end of the array (e.g., `a[10]`), Fusion will check this at runtime and **panic** (crash safely) rather than allowing buffer overflow bugs that lead to security vulnerabilities.
@@ -219,7 +219,7 @@ fn main() {
 fn print_labeled_measurement(value: i32, unit_label: char) {
     println("The measurement is: {}{}", value, unit_label)
 }
-```
+```text
 
 In function signatures, you **must** declare the type of each parameter.
 
@@ -238,7 +238,7 @@ let y = {
     let x = 3
     x + 1  // Expression! Note the lack of semicolon
 }
-```
+```text
 
 If you add a semicolon to the end of an expression, you turn it into a statement, and it will then not return a value.
 
@@ -259,7 +259,7 @@ fn main() {
     let x = plus_one(5)
     println("The value of x is: {}", x)
 }
-```
+```text
 
 ---
 
@@ -276,7 +276,7 @@ Code tells the computer what to do; comments tell the humans *why* code does wha
 */
 
 // In Fusion, idiomatic comments are often single-line comments using //
-```
+```text
 
 **Documentation Comments**:
 For documenting functions and libraries for other users, use triple slashes `///`. These support Markdown formatting and are used by the `fusion doc` tool.
@@ -294,7 +294,7 @@ For documenting functions and libraries for other users, use triple slashes `///
 fn add_one(x: i32) -> i32 {
     x + 1
 }
-```
+```text
 
 ---
 
@@ -316,7 +316,7 @@ fn main() {
         println("condition was false")
     }
 }
-```
+```text
 
 The condition **must** remain a `bool`. Unlike some languages, Fusion will not automatically convert non-boolean types (like integers) to a boolean. You cannot write `if number { ... }`.
 
@@ -326,7 +326,7 @@ Because `if` is an expression, we can use it on the right side of a `let` statem
 ```fusion
 let condition = true
 let number = if condition { 5 } else { 6 }
-```
+```text
 
 Both arms must return the same type.
 
@@ -343,7 +343,7 @@ loop {
     println("again!")
     break // Necessary to exit
 }
-```
+```text
 
 **Returning values from loops**:
 You can pass the result of the operation found in the loop to the rest of your code by putting it after the `break` expression.
@@ -356,7 +356,7 @@ let result = loop {
         break counter * 2
     }
 } // result is 20
-```
+```text
 
 #### `while`
 
@@ -371,7 +371,7 @@ while number != 0 {
 }
 
 println("LIFTOFF!!!")
-```
+```text
 
 #### `for`
 
@@ -385,7 +385,7 @@ let a = [10, 20, 30, 40, 50]
 for element in a {
     println("the value is: {}", element)
 }
-```
+```text
 
 **Iterating over a range**:
 
@@ -394,7 +394,8 @@ for number in (1..4).rev() {
     println("{}!", number)
 }
 println("LIFTOFF!!!")
-```
+```text
+
 This prints: 3!, 2!, 1!, LIFTOFF!!!
 
 ---
@@ -414,9 +415,9 @@ In the next chapter, we will tackle Fusion's most unique and powerful feature: o
 
 ## 3.7 Exercises
 
-1.  **Fibonacci**: Write a function `fib(n: u32) -> u32` that returns the *n*-th Fibonacci number.
-2.  **Temperature Conversion**: Create a program that converts temperatures between Fahrenheit and Celsius, allowing the user to choose the direction of conversion.
-3.  **The Twelve Days of Christmas**: Write a program that prints the lyrics to the Christmas carol "The Twelve Days of Christmas," taking advantage of the repetition in the song (looping).
+1. **Fibonacci**: Write a function `fib(n: u32) -> u32` that returns the *n*-th Fibonacci number.
+2. **Temperature Conversion**: Create a program that converts temperatures between Fahrenheit and Celsius, allowing the user to choose the direction of conversion.
+3. **The Twelve Days of Christmas**: Write a program that prints the lyrics to the Christmas carol "The Twelve Days of Christmas," taking advantage of the repetition in the song (looping).
 
 ---
 

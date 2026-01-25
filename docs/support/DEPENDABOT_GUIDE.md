@@ -120,7 +120,7 @@ Navigate to the repository and filter pull requests:
 
 ```text
 is:pr is:open author:app/dependabot
-```
+```text
 
 ### Check Dependabot Alerts
 
@@ -143,7 +143,7 @@ You can manually trigger Dependabot updates from the GitHub UI:
 
 If you want to dismiss a Dependabot PR:
 
-```
+```text
 
 # Comment on the PR
 
@@ -156,29 +156,29 @@ If you want to dismiss a Dependabot PR:
 # or
 
 @dependabot ignore this minor version
-```
+```text
 
 ### Rebase a PR
 
 If a Dependabot PR has conflicts:
 
-```
+```text
 
 # Comment on the PR
 
 @dependabot rebase
-```
+```text
 
 ### Recreate a PR
 
 If you closed a PR but want it back:
 
-```
+```text
 
 # Comment on the closed PR
 
 @dependabot recreate
-```
+```text
 
 ## Ignoring Dependencies
 
@@ -196,7 +196,7 @@ updates:
 
       - dependency-name: "another-crate"
         update-types: ["version-update:semver-major"]  # Ignore major updates
-```
+```text
 
 ## Best Practices
 
@@ -229,7 +229,7 @@ Reduce the `open-pull-requests-limit` in `dependabot.yml`:
 
 ```yaml
 open-pull-requests-limit: 5  # Default is 10
-```
+```text
 
 ## Related Documentation
 

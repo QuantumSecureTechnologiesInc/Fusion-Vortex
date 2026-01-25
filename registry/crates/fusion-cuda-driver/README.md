@@ -21,13 +21,13 @@ use fusion_cuda_driver::CudaDriver;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let driver = CudaDriver::new(0)?; // Device 0
-    
+
     driver.launch_kernel("my_kernel")?;
     driver.synchronize()?;
-    
+
     Ok(())
 }
-```
+```text
 
 ## Requirements
 

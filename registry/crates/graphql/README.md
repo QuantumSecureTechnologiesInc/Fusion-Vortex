@@ -1,7 +1,7 @@
 # Fusion GraphQL
 
-**Version:** 0.2.0  
-**Type:** API Server  
+**Version:** 0.2.0
+**Type:** API Server
 **License:** MIT
 
 ## Overview
@@ -23,6 +23,7 @@ use fusion_api_graphql::{Schema, Object};
 struct Query;
 
 #[Object]
+
 impl Query {
     async fn hello(&self) -> &str {
         "Hello Fusion"
@@ -30,7 +31,7 @@ impl Query {
 }
 
 let schema = Schema::build(Query, EmptyMutation, EmptySubscription).finish();
-```
+```text
 
 ## Dependencies
 

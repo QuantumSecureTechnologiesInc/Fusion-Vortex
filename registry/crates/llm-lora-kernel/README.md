@@ -1,7 +1,7 @@
 # Fusion LLM LoRA Kernel
 
-**Version:** 0.2.0  
-**Type:** Compute Kernel  
+**Version:** 0.2.0
+**Type:** Compute Kernel
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_llm_lora_kernel::apply_lora;
 
 // y = x * W + x * A * B * scaling
 let y = apply_lora(x, w, lora_a, lora_b, scaling)?;
-```
+```text
 
 ## Dependencies
 

@@ -1,0 +1,10 @@
+// flux/resolve.fsn
+// Vectorized merge with SIMD fallback.
+
+fn merge_gradients(grads: FVec<Tensor>) -> Tensor {
+    fusion_if!(Hardware::has_avx512(), {
+        Simd::average_512(grads)
+    } else {
+        Math::average(grads)
+    })
+}

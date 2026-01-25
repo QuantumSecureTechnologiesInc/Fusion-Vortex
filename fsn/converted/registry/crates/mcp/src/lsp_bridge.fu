@@ -1,0 +1,98 @@
+// SOURCE: registry/crates/mcp/src/lsp_bridge.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use crate::protocol::CallToolResult;
+use crate::tool::{McpHandler, McpToolFacet};
+use anyhow::{Context, Result};
+use fusion_vscode_runtime::LspClient;
+use serde_json::Value;
+use tokio::sync::Mutex;
+
+/// Adapter to bridge MCP requests to an LSP server
+struct LspAdapter {
+    client: Arc<Mutex<LspClient>>,
+    language_id: FString,
+}
+
+impl LspAdapter {
+    /// Create a new LSP adapter
+    pub async fn new(
+        command: &str,
+        args: &[&str],
+        root_uri: &str,
+        language_id: &str,
+    ) -> Result<Self> {
+        let client = LspClient::start(command, args, root_uri)
+            .await
+            .context("Failed to start LSP client")?;
+
+        Ok(Self {
+            client: Arc::new(Mutex::new(client)),
+            language_id: language_id.to_string(),
+        })
+    }
+
+    /// Generate MCP tool facets for this LSP server
+    fn facets(&self) -> FVec<McpToolFacet> {
+        let mut facets = Vec::new();
+
+        // Diagnostics Facet
+        facets.push(McpToolFacet {
+            name: "diagnostics".to_string(),
+            description: format!("Get diagnostics for {} files", self.language_id),
+            handler: Box::new(LspDiagnosticsHandler {
+                client: self.client.clone(),
+            }),
+        });
+
+        // Symbols Facet
+        facets.push(McpToolFacet {
+            name: "symbols".to_string(),
+            description: format!("Get document symbols for {} files", self.language_id),
+            handler: Box::new(LspSymbolsHandler {
+                client: self.client.clone(),
+            }),
+        });
+
+        facets
+    }
+}
+
+/// Handler for LSP diagnostics
+struct LspDiagnosticsHandler {
+    client: Arc<Mutex<LspClient>>,
+}
+
+#[async_trait::async_trait]
+impl McpHandler for LspDiagnosticsHandler {
+    async fn handle(&self, _arguments: Option<Value>) -> Result<CallToolResult> {
+        // In a real impl, we'd parse arguments for file URI
+        // let uri = arguments.get("uri")...
+
+        // let client = self.client.lock().await;
+        // let diagnostics = client.get_diagnostics(uri).await?;
+
+        Ok(CallToolResult {
+            content: vec![crate::protocol::ToolContent::Text {
+                text: "LSP Diagnostics implementation placeholder".to_string(),
+            }],
+            is_error: Some(false),
+        })
+    }
+}
+
+/// Handler for LSP symbols
+struct LspSymbolsHandler {
+    client: Arc<Mutex<LspClient>>,
+}
+
+#[async_trait::async_trait]
+impl McpHandler for LspSymbolsHandler {
+    async fn handle(&self, _arguments: Option<Value>) -> Result<CallToolResult> {
+        Ok(CallToolResult {
+            content: vec![crate::protocol::ToolContent::Text {
+                text: "LSP Symbols implementation placeholder".to_string(),
+            }],
+            is_error: Some(false),
+        })
+    }
+}

@@ -34,11 +34,11 @@ Let's see these rules in action:
 fn main() {
     let s1 = String::from("hello")  // s1 owns the string
     let s2 = s1                      // Ownership moves to s2
-    
+
     // println("{}", s1)  // Error! s1 no longer owns the string
     println("{}", s2)     // Works: s2 is the owner
 }  // s2 goes out of scope, string is deallocated
-```
+```text
 
 When we assign `s1` to `s2`, we don't copy the string—we *move* ownership. After the move, `s1` is no longer valid. This prevents the dangerous situation of two variables pointing to the same memory, where freeing one would leave the other dangling.
 
@@ -52,7 +52,7 @@ strcpy(s1, "hello");
 char* s2 = s1;  // Both point to same memory
 free(s1);       // Memory freed
 free(s2);       // DOUBLE FREE - undefined behaviour!
-```
+```text
 
 This is undefined behaviour that can crash your program, corrupt memory, or create security vulnerabilities. In Fusion, this scenario is impossible. The type system prevents `s2` from being used after `s1` is freed because the move makes the relationship explicit.
 
@@ -64,11 +64,11 @@ For simple types that live entirely on the stack (integers, floats, booleans, ch
 fn main() {
     let x = 5     // x owns the value 5
     let y = x     // y gets a COPY; x is still valid
-    
+
     println("{}", x)  // Works!
     println("{}", y)  // Also works!
 }
-```
+```text
 
 Types that implement `Copy`:
 - All integer types (`i8`, `i16`, `i32`, `i64`, `i128`, `u8`, etc.)
@@ -96,10 +96,10 @@ fn main() {
         // s is valid from here...
         println("{}", s)
     }  // ...until here. s goes out of scope; memory is freed.
-    
+
     // println("{}", s)  // Error! s no longer exists
 }
-```
+```text
 
 This is called **RAII** (Resource Acquisition Is Initialization)—a design pattern where resources are tied to variable lifetime. Files close automatically. Network connections terminate. Locks release. No forgetting, no leaks.
 
@@ -117,7 +117,7 @@ fn main() {
     take_ownership(my_string)      // Ownership moves to the function
     // println("{}", my_string)    // Error! my_string is no longer valid
 }
-```
+```text
 
 If you want to use a value after passing it to a function, you have two options:
 1. **Clone** the value (creates a deep copy)
@@ -135,7 +135,7 @@ fn main() {
     let s = create_string()  // s now owns the string
     println("{}", s)
 }
-```
+```text
 
 ---
 
@@ -151,14 +151,14 @@ A **reference** is a pointer to a value that doesn't own it. References are crea
 fn main() {
     let s1 = String::from("hello")
     let len = calculate_length(&s1)  // Pass a reference
-    
+
     println("The length of '{}' is {}", s1, len)  // s1 still valid!
 }
 
 fn calculate_length(s: &String) -> int {
     s.len()
 }  // s goes out of scope, but doesn't drop the String (doesn't own it)
-```
+```text
 
 The function `calculate_length` takes `&String`—a reference to a String. It can read the string's contents but doesn't own it and won't deallocate it.
 
@@ -170,25 +170,25 @@ By default, references are **immutable**. You can read the borrowed value but no
 fn main() {
     let s = String::from("hello")
     let r = &s
-    
+
     // r.push_str(" world")  // Error! Cannot mutate through immutable reference
     println("{}", r)  // Reading is fine
 }
-```
+```text
 
 You can have **multiple immutable references** to the same value simultaneously:
 
 ```fusion
 fn main() {
     let s = String::from("hello")
-    
+
     let r1 = &s
     let r2 = &s
     let r3 = &s
-    
+
     println("{}, {}, {}", r1, r2, r3)  // All valid
 }
-```
+```text
 
 This is safe because none of these references can modify the data. Multiple readers cause no conflicts.
 
@@ -199,29 +199,29 @@ If you need to modify borrowed data, use a **mutable reference** with `&mut`:
 ```fusion
 fn main() {
     let mut s = String::from("hello")
-    
+
     change(&mut s)
-    
+
     println("{}", s)  // "hello, world"
 }
 
 fn change(s: &mut String) {
     s.push_str(", world")
 }
-```
+```text
 
 Critical rule: **You can have only ONE mutable reference to a value at a time**:
 
 ```fusion
 fn main() {
     let mut s = String::from("hello")
-    
+
     let r1 = &mut s
     // let r2 = &mut s  // Error! Cannot borrow `s` as mutable more than once
-    
+
     println("{}", r1)
 }
-```
+```text
 
 This restriction prevents **data races** at compile time. A data race occurs when:
 1. Two or more pointers access the same data simultaneously
@@ -245,18 +245,18 @@ These rules are checked by the **borrow checker**, a component of the Fusion com
 ```fusion
 fn main() {
     let mut s = String::from("hello")
-    
+
     let r1 = &s     // Immutable borrow
     let r2 = &s     // Another immutable borrow - OK
     // let r3 = &mut s  // Error! Cannot borrow as mutable while immutable borrows exist
-    
+
     println("{} and {}", r1, r2)
     // r1 and r2 are no longer used after this point
-    
+
     let r3 = &mut s  // Now OK! Previous borrows have ended
     println("{}", r3)
 }
-```
+```text
 
 Notice that the borrow checker is smart about *when* references are used, not just when they're declared. This is called **Non-Lexical Lifetimes (NLL)**—borrows end when the reference is last used, not when the variable goes out of scope.
 
@@ -269,17 +269,17 @@ fn dangle() -> &String {
     let s = String::from("hello")
     &s  // Error! `s` will be dropped when this function returns
 }       // Returning a reference to freed memory is forbidden
-```
+```text
 
 The compiler produces a clear error:
 
-```
+```text
 error: cannot return reference to local variable `s`
   --> src/main.fu:3:5
    |
 3  |     &s
    |     ^^ returns a reference to data owned by the current function
-```
+```text
 
 The solution is to return the owned value, transferring ownership to the caller:
 
@@ -288,7 +288,7 @@ fn no_dangle() -> String {
     let s = String::from("hello")
     s  // Ownership transfers; no dangling reference
 }
-```
+```text
 
 ---
 
@@ -303,14 +303,14 @@ A **string slice** (`&str`) is a reference to a portion of a `String`:
 ```fusion
 fn main() {
     let s = String::from("hello world")
-    
+
     let hello = &s[0..5]   // Slice from index 0 to 5 (exclusive)
     let world = &s[6..11]  // Slice from index 6 to 11
-    
+
     println("{}", hello)  // "hello"
     println("{}", world)  // "world"
 }
-```
+```text
 
 Slice syntax:
 - `&s[start..end]` - from `start` to `end` (exclusive)
@@ -325,25 +325,25 @@ Consider finding the first word in a string:
 ```fusion
 fn first_word(s: &String) -> &str {
     let bytes = s.as_bytes()
-    
+
     for (i, &item) in bytes.iter().enumerate() {
         if item == b' ' {
             return &s[0..i]
         }
     }
-    
+
     &s[..]
 }
 
 fn main() {
     let mut s = String::from("hello world")
     let word = first_word(&s)
-    
+
     // s.clear()  // Error! Cannot mutate `s` while `word` references it
-    
+
     println("First word: {}", word)
 }
-```
+```text
 
 The borrow checker prevents `s.clear()` because `word` holds an immutable reference to part of `s`. This catches bugs that would otherwise corrupt the slice reference.
 
@@ -355,10 +355,10 @@ Slices work on any contiguous memory, including arrays and vectors:
 fn main() {
     let a = [1, 2, 3, 4, 5]
     let slice = &a[1..3]  // [2, 3]
-    
+
     println("{:?}", slice)
 }
-```
+```text
 
 The type of an array slice is `&[T]`, where `T` is the element type.
 
@@ -368,7 +368,7 @@ When you write a string literal, you get a `&str`:
 
 ```fusion
 let s: &str = "Hello, world!"
-```
+```text
 
 The bytes of the string are stored in the read-only section of the binary. `s` is a slice pointing to that location. This is why string literals are immutable and live for the entire program.
 
@@ -390,7 +390,7 @@ fn longest(x: &str, y: &str) -> &str {
         y
     }
 }
-```
+```text
 
 This won't compile. The compiler asks: "Does the returned reference come from `x` or `y`? How long is it valid for?" Without knowing this, it can't ensure the reference remains valid.
 
@@ -406,7 +406,7 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
         y
     }
 }
-```
+```text
 
 This signature says: "Given two string slices that both live for at least the lifetime `'a`, return a string slice that also lives for `'a`."
 
@@ -428,7 +428,7 @@ fn first_word(s: &str) -> &str { ... }
 
 // Compiler infers:
 fn first_word<'a>(s: &'a str) -> &'a str { ... }
-```
+```text
 
 ### 4.4.4 Lifetimes in Structs
 
@@ -442,14 +442,14 @@ struct ImportantExcerpt<'a> {
 fn main() {
     let novel = String::from("Call me Ishmael. Some years ago...")
     let first_sentence = novel.split('.').next().unwrap()
-    
+
     let excerpt = ImportantExcerpt {
         part: first_sentence
     }
-    
+
     println("Excerpt: {}", excerpt.part)
 }
-```
+```text
 
 This annotation means: "An `ImportantExcerpt` instance cannot outlive the reference in its `part` field."
 
@@ -459,7 +459,7 @@ One special lifetime is `'static`, meaning the reference lives for the entire pr
 
 ```fusion
 let s: &'static str = "I live forever!"
-```
+```text
 
 String literals have the `'static` lifetime because they're embedded in the binary.
 
@@ -485,7 +485,7 @@ fn print_length(s: &str) {
 fn print_length_owned(s: String) {
     println("Length: {}", s.len())
 }  // s is dropped here; caller can't use it
-```
+```text
 
 ### 4.5.2 Use Slices for Flexibility
 
@@ -501,7 +501,7 @@ fn count_words(s: &str) -> int {
 fn count_words_owned(s: String) -> int {
     s.split_whitespace().count()
 }
-```
+```text
 
 ### 4.5.3 Clone Deliberately
 
@@ -513,7 +513,7 @@ let s2 = s1.clone()  // Explicit deep copy
 
 println("{}", s1)  // Works—s1 wasn't moved
 println("{}", s2)
-```
+```text
 
 Don't clone to "fix" borrow checker errors without understanding why. Often there's a better design.
 
@@ -531,7 +531,7 @@ fn add(a: int, b: int) -> int {
 fn add_to(a: &mut int, b: int) {
     *a += b
 }
-```
+```text
 
 ### 4.5.5 Keep Borrows Short
 
@@ -540,17 +540,17 @@ End borrows as soon as possible to avoid conflicts:
 ```fusion
 fn main() {
     let mut data = vec![1, 2, 3]
-    
+
     // Bad: Long-lived borrow
     let first = &data[0]
     // ... many lines of code ...
     // data.push(4)  // Error! `first` still active
-    
+
     // Good: Use and release borrow immediately
     println("First: {}", data[0])
     data.push(4)  // Works!
 }
-```
+```text
 
 ---
 
@@ -568,7 +568,7 @@ fn split_at(s: String, mid: int) -> (String, String) {
     let second = s[mid..].to_string()
     (first, second)
 }
-```
+```text
 
 ### 4.6.2 Interior Mutability
 
@@ -579,12 +579,12 @@ use std::cell::RefCell
 
 fn main() {
     let data = RefCell::new(5)
-    
+
     *data.borrow_mut() += 1
-    
+
     println("{}", data.borrow())  // 6
 }
-```
+```text
 
 `RefCell` moves borrow checking to runtime. Use sparingly.
 
@@ -597,13 +597,13 @@ use std::rc::Rc
 
 fn main() {
     let data = Rc::new(String::from("shared"))
-    
+
     let a = Rc::clone(&data)
     let b = Rc::clone(&data)
-    
+
     println("{} {} {}", data, a, b)  // All valid
 }  // Memory freed when last Rc is dropped
-```
+```text
 
 ---
 

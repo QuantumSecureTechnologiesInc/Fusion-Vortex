@@ -1,0 +1,258 @@
+// SOURCE: src/security/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/security/mod.rs - Security Infrastructure for v0.2.0
+#![allow(dead_code)]
+// FIPS 140-3 compliant cryptography, ZKP, fuzzing, and formal verification
+
+mod fips;
+mod fuzzing;
+mod reliability;
+mod verification;
+mod zkp;
+
+
+/// Security error types
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SecurityError {
+    /// Cryptographic operation failed
+    CryptoError(FString),
+    /// Proof verification failed
+    ProofVerificationFailed(FString),
+    /// Security policy violation
+    PolicyViolation(FString),
+    /// Key management error
+    KeyManagementError(FString),
+    /// Random number generation failed
+    RandomGenerationError(FString),
+    /// FIPS self-test failed
+    SelfTestFailed(FString),
+    /// Formal verification failed
+    VerificationError(FString),
+}
+
+impl fmt::Display for SecurityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SecurityError::CryptoError(msg) => write!(f, "Cryptographic error: {}", msg),
+            SecurityError::ProofVerificationFailed(msg) => {
+                write!(f, "Proof verification failed: {}", msg)
+            }
+            SecurityError::PolicyViolation(msg) => write!(f, "Security policy violation: {}", msg),
+            SecurityError::KeyManagementError(msg) => write!(f, "Key management error: {}", msg),
+            SecurityError::RandomGenerationError(msg) => {
+                write!(f, "Random generation error: {}", msg)
+            }
+            SecurityError::SelfTestFailed(msg) => write!(f, "FIPS self-test failed: {}", msg),
+            SecurityError::VerificationError(msg) => {
+                write!(f, "Formal verification error: {}", msg)
+            }
+        }
+    }
+}
+
+impl Error for SecurityError {}
+
+/// Security configuration
+#[derive(Debug, Clone)]
+struct SecurityConfig {
+    /// Enable FIPS 140-3 mode
+    pub fips_mode: FBool,
+    /// Enable continuous self-tests
+    pub continuous_self_tests: FBool,
+    /// Minimum key length in bits
+    pub min_key_length: usize,
+    /// Enable audit logging
+    pub audit_logging: FBool,
+    /// Maximum authentication attempts
+    pub max_auth_attempts: u32,
+}
+
+impl Default for SecurityConfig {
+    fn default() -> Self {
+        Self {
+            fips_mode: true,
+            continuous_self_tests: true,
+            min_key_length: 256,
+            audit_logging: true,
+            max_auth_attempts: 3,
+        }
+    }
+}
+
+impl SecurityConfig {
+    /// Create a high-security configuration
+    fn high_security() -> Self {
+        Self {
+            fips_mode: true,
+            continuous_self_tests: true,
+            min_key_length: 384,
+            audit_logging: true,
+            max_auth_attempts: 3,
+        }
+    }
+
+    /// Create a maximum security configuration
+    fn maximum_security() -> Self {
+        Self {
+            fips_mode: true,
+            continuous_self_tests: true,
+            min_key_length: 512,
+            audit_logging: true,
+            max_auth_attempts: 1,
+        }
+    }
+
+    /// Validate configuration
+    fn validate(&self) -> Result<(), SecurityError> {
+        if self.min_key_length < 128 {
+            return Err(SecurityError::PolicyViolation(
+                "Minimum key length must be at least 128 bits".to_string(),
+            ));
+        }
+
+        if self.max_auth_attempts == 0 {
+            return Err(SecurityError::PolicyViolation(
+                "Maximum authentication attempts must be greater than 0".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+}
+
+/// Security manager
+struct SecurityManager {
+    config: SecurityConfig,
+    initialized: FBool,
+}
+
+impl SecurityManager {
+    /// Create a new security manager
+    fn new(config: SecurityConfig) -> Result<Self, SecurityError> {
+        config.validate()?;
+
+        Ok(Self {
+            config,
+            initialized: false,
+        })
+    }
+
+    /// Initialize security subsystems
+    fn initialize(&mut self) -> Result<(), SecurityError> {
+        if self.initialized {
+            return Ok(());
+        }
+
+        // Run FIPS self-tests if in FIPS mode
+        if self.config.fips_mode {
+            self.run_self_tests()?;
+        }
+
+        self.initialized = true;
+        Ok(())
+    }
+
+    /// Run cryptographic self-tests
+    fn run_self_tests(&self) -> Result<(), SecurityError> {
+        // Known answer tests for cryptographic algorithms
+        // This would include tests for AES, SHA, HMAC, etc.
+
+        // For now, return success
+        Ok(())
+    }
+
+    /// Check if initialized
+    fn is_initialized(&self) -> FBool {
+        self.initialized
+    }
+
+    /// Get configuration
+    fn config(&self) -> &SecurityConfig {
+        &self.config
+    }
+
+    /// Audit log an event
+    fn audit_log(&self, event: &str) {
+        if self.config.audit_logging {
+            println!("[AUDIT] {}", event);
+        }
+    }
+}
+
+/// Security statistics
+#[derive(Debug, Default, Clone)]
+struct SecurityStats {
+    /// Total cryptographic operations
+    pub crypto_operations: FU64,
+    /// Total ZKP verifications
+    pub zkp_verifications: FU64,
+    /// Total security violations detected
+    pub violations_detected: FU64,
+    /// Total fuzzing iterations
+    pub fuzzing_iterations: FU64,
+    /// Total formal verification checks
+    pub verification_checks: FU64,
+}
+
+impl SecurityStats {
+    /// Print statistics summary
+    fn print_summary(&self) {
+        println!("\n🔐 Security Statistics:");
+        println!("  🔑 Cryptographic operations: {}", self.crypto_operations);
+        println!("  ✅ ZKP verifications: {}", self.zkp_verifications);
+        println!("  ⚠️  Security violations: {}", self.violations_detected);
+        println!("  🐛 Fuzzing iterations: {}", self.fuzzing_iterations);
+        println!("  ✓  Verification checks: {}", self.verification_checks);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_security_config_default() {
+        let config = SecurityConfig::default();
+        assert!(config.fips_mode);
+        assert_eq!(config.min_key_length, 256);
+    }
+
+    #[test]
+    fn test_security_config_validation() {
+        let mut config = SecurityConfig::default();
+        assert!(config.validate().is_ok());
+
+        config.min_key_length = 64;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_security_manager_creation() {
+        let config = SecurityConfig::default();
+        let manager = SecurityManager::new(config);
+        assert!(manager.is_ok());
+    }
+
+    #[test]
+    fn test_security_manager_initialization() {
+        let config = SecurityConfig::default();
+        let mut manager = SecurityManager::new(config).unwrap();
+        assert!(!manager.is_initialized());
+
+        assert!(manager.initialize().is_ok());
+        assert!(manager.is_initialized());
+    }
+
+    #[test]
+    fn test_high_security_config() {
+        let config = SecurityConfig::high_security();
+        assert_eq!(config.min_key_length, 384);
+    }
+
+    #[test]
+    fn test_maximum_security_config() {
+        let config = SecurityConfig::maximum_security();
+        assert_eq!(config.min_key_length, 512);
+        assert_eq!(config.max_auth_attempts, 1);
+    }
+}

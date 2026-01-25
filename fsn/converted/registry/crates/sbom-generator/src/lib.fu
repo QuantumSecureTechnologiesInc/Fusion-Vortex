@@ -1,0 +1,314 @@
+// SOURCE: registry/crates/sbom-generator/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use fusion_std::error::{StdError, StdResult};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use walkdir::WalkDir;
+
+/// Software Bill of Materials (SBOM) Generator
+/// Generates comprehensive dependency manifests with cryptographic hashes
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SBOMEntry {
+    pub name: FString,
+    pub version: FString,
+    pub file_path: FString,
+    pub sha256: FString,
+    pub size_bytes: FU64,
+    pub license: Option<FString>,
+    pub dependencies: FVec<FString>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SBOM {
+    pub project_name: FString,
+    pub project_version: FString,
+    pub generated_at: FString,
+    pub entries: FVec<SBOMEntry>,
+    pub total_files: usize,
+    pub total_size_bytes: FU64,
+}
+
+struct SBOMGenerator {
+    project_root: PathBuf,
+    exclude_patterns: FVec<FString>,
+    include_dev_dependencies: FBool,
+}
+
+impl SBOMGenerator {
+    fn new(project_root: PathBuf) -> Self {
+        Self {
+            project_root,
+            exclude_patterns: vec![
+                "target".to_string(),
+                ".git".to_string(),
+                "node_modules".to_string(),
+                ".idea".to_string(),
+                ".vscode".to_string(),
+            ],
+            include_dev_dependencies: false,
+        }
+    }
+
+    fn exclude_pattern(&mut self, pattern: FString) -> &mut Self {
+        self.exclude_patterns.push(pattern);
+        self
+    }
+
+    fn include_dev_dependencies(&mut self, include: FBool) -> &mut Self {
+        self.include_dev_dependencies = include;
+        self
+    }
+
+    /// Generate SBOM by scanning project directory
+    fn generate(&self, project_name: FString, project_version: FString) -> StdResult<SBOM> {
+        let mut entries = Vec::new();
+        let mut total_size = 0FU64;
+
+        // Scan Cargo.toml files for dependencies
+        let cargo_deps = self.scan_cargo_dependencies()?;
+
+        // Scan all source files and compute hashes
+        for entry in WalkDir::new(&self.project_root)
+            .follow_links(false)
+            .into_iter()
+            .filter_entry(|e| !self.should_exclude(e.path()))
+        {
+            let entry = entry.map_err(|e| StdError::IoError(e.to_string()))?;
+
+            if entry.file_type().is_file() {
+                let path = entry.path();
+
+                // Only process source files and manifests
+                if self.is_relevant_file(path) {
+                    let hash = self.compute_file_hash(path)?;
+                    let metadata =
+                        fs::metadata(path).map_err(|e| StdError::IoError(e.to_string()))?;
+
+                    let relative_path = path
+                        .strip_prefix(&self.project_root)
+                        .unwrap_or(path)
+                        .to_string_lossy()
+                        .to_string();
+
+                    let file_name = path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+
+                    // Get dependencies for this file if it's a Cargo.toml
+                    let deps = if file_name == "Cargo.toml" {
+                        cargo_deps.get(&relative_path).cloned().unwrap_or_default()
+                    } else {
+                        Vec::new()
+                    };
+
+                    entries.push(SBOMEntry {
+                        name: file_name,
+                        version: "1.0.0".to_string(), // Would parse from Cargo.toml
+                        file_path: relative_path,
+                        sha256: hash,
+                        size_bytes: metadata.len(),
+                        license: None, // Would parse from Cargo.toml
+                        dependencies: deps,
+                    });
+
+                    total_size += metadata.len();
+                }
+            }
+        }
+
+        Ok(SBOM {
+            project_name,
+            project_version,
+            generated_at: chrono::Utc::now().to_rfc3339(),
+            total_files: entries.len(),
+            total_size_bytes: total_size,
+            entries,
+        })
+    }
+
+    /// Compute SHA256 hash of a file
+    fn compute_file_hash(&self, path: &Path) -> StdResult<FString> {
+        let contents = fs::read(path)
+            .map_err(|e| StdError::IoError(format!("Failed to read {}: {}", path.display(), e)))?;
+
+        let mut hasher = Sha256::new();
+        hasher.update(&contents);
+        let result = hasher.finalize();
+
+        Ok(format!("{:x}", result))
+    }
+
+    /// Scan Cargo.toml files for dependencies
+    fn scan_cargo_dependencies(&self) -> StdResult<FMap<FString, FVec<FString>>> {
+        let mut deps_map = HashMap::new();
+
+        for entry in WalkDir::new(&self.project_root)
+            .follow_links(false)
+            .into_iter()
+            .filter_entry(|e| !self.should_exclude(e.path()))
+        {
+            let entry = entry.map_err(|e| StdError::IoError(e.to_string()))?;
+
+            if entry.file_type().is_file() {
+                let path = entry.path();
+                if path.file_name().and_then(|n| n.to_str()) == Some("Cargo.toml") {
+                    let relative_path = path
+                        .strip_prefix(&self.project_root)
+                        .unwrap_or(path)
+                        .to_string_lossy()
+                        .to_string();
+
+                    let deps = self.parse_cargo_dependencies(path)?;
+                    deps_map.insert(relative_path, deps);
+                }
+            }
+        }
+
+        Ok(deps_map)
+    }
+
+    /// Parse dependencies from Cargo.toml
+    fn parse_cargo_dependencies(&self, path: &Path) -> StdResult<FVec<FString>> {
+        let contents = fs::read_to_string(path).map_err(|e| StdError::IoError(e.to_string()))?;
+
+        let mut deps = Vec::new();
+
+        // Simple parsing - look for [dependencies] section
+        let mut in_deps_section = false;
+        for line in contents.lines() {
+            let trimmed = line.trim();
+
+            if trimmed == "[dependencies]" {
+                in_deps_section = true;
+                continue;
+            }
+
+            if trimmed.starts_with('[') && in_deps_section {
+                // New section started
+                if !self.include_dev_dependencies || !trimmed.starts_with("[dev-dependencies]") {
+                    break;
+                }
+            }
+
+            if in_deps_section && !trimmed.is_empty() && !trimmed.starts_with('#') {
+                if let Some(dep_name) = trimmed.split('=').next() {
+                    let dep_name = dep_name.trim();
+                    if !dep_name.is_empty() {
+                        deps.push(dep_name.to_string());
+                    }
+                }
+            }
+        }
+
+        Ok(deps)
+    }
+
+    fn should_exclude(&self, path: &Path) -> FBool {
+        for pattern in &self.exclude_patterns {
+            if path.to_string_lossy().contains(pattern) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn is_relevant_file(&self, path: &Path) -> FBool {
+        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+            matches!(
+                ext,
+                "rs" | "toml" | "lock" | "md" | "txt" | "json" | "yaml" | "yml"
+            )
+        } else {
+            false
+        }
+    }
+
+    /// Export SBOM to JSON
+    fn export_json(&self, sbom: &SBOM) -> StdResult<FString> {
+        serde_json::to_string_pretty(sbom).map_err(|e| StdError::Serialization(e.to_string()))
+    }
+
+    /// Export SBOM to CycloneDX format
+    fn export_cyclonedx(&self, sbom: &SBOM) -> StdResult<FString> {
+        // CycloneDX XML format
+        let mut xml = FString::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        xml.push_str("<bom xmlns=\"http://cyclonedx.org/schema/bom/1.4\">\n");
+        xml.push_str("  <metadata>\n");
+        xml.push_str(&format!(
+            "    <timestamp>{}</timestamp>\n",
+            sbom.generated_at
+        ));
+        xml.push_str("    <component type=\"application\">\n");
+        xml.push_str(&format!("      <name>{}</name>\n", sbom.project_name));
+        xml.push_str(&format!(
+            "      <version>{}</version>\n",
+            sbom.project_version
+        ));
+        xml.push_str("    </component>\n");
+        xml.push_str("  </metadata>\n");
+        xml.push_str("  <components>\n");
+
+        for entry in &sbom.entries {
+            xml.push_str("    <component type=\"library\">\n");
+            xml.push_str(&format!("      <name>{}</name>\n", entry.name));
+            xml.push_str(&format!("      <version>{}</version>\n", entry.version));
+            xml.push_str("      <hashes>\n");
+            xml.push_str(&format!(
+                "        <hash alg=\"SHA-256\">{}</hash>\n",
+                entry.sha256
+            ));
+            xml.push_str("      </hashes>\n");
+            xml.push_str("    </component>\n");
+        }
+
+        xml.push_str("  </components>\n");
+        xml.push_str("</bom>\n");
+
+        Ok(xml)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_file_hash_computation() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("test.txt");
+
+        let mut file = fs::File::create(&file_path).unwrap();
+        file.write_all(b"Hello, World!").unwrap();
+
+        let generator = SBOMGenerator::new(temp_dir.path().to_path_buf());
+        let hash = generator.compute_file_hash(&file_path).unwrap();
+
+        // SHA256 of "Hello, World!"
+        assert_eq!(
+            hash,
+            "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+        );
+    }
+
+    #[test]
+    fn test_sbom_generation() {
+        let temp_dir = TempDir::new().unwrap();
+        let src_dir = temp_dir.path().join("src");
+        fs::create_dir(&src_dir).unwrap();
+
+        let mut file = fs::File::create(src_dir.join("main.rs")).unwrap();
+        file.write_all(b"fn main() {}").unwrap();
+
+        let generator = SBOMGenerator::new(temp_dir.path().to_path_buf());
+        let sbom = generator
+            .generate("test-project".to_string(), "1.0.0".to_string())
+            .unwrap();
+
+        assert_eq!(sbom.project_name, "test-project");
+        assert!(sbom.total_files > 0);
+    }
+}

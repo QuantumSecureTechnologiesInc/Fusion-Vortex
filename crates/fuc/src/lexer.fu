@@ -1,0 +1,173 @@
+//! Lexer for the Fusion compiler.
+#![allow(missing_docs)]
+use logos::{Logos, Span};
+/// Token definitions for the language.
+#[derive(Logos, Clone, Debug, PartialEq, Hash, Eq)]
+#[logos(skip r"[ \t\n\f]+")]
+#[logos(skip r"//[^\n]*")]
+enum Token {
+    #[token("fn")]
+    KwFn,
+    #[token("let")]
+    KwLet,
+    #[token("return")]
+    KwReturn,
+    #[token("if")]
+    KwIf,
+    #[token("else")]
+    KwElse,
+    #[token("while")]
+    KwWhile,
+    #[token("impl")]
+    KwImpl,
+    #[token("trait")]
+    KwTrait,
+    #[token("where")]
+    KwWhere,
+    #[token("const")]
+    KwConst,
+    #[token("use")]
+    KwUse,
+    #[token("mod")]
+    KwMod,
+    #[token("pub")]
+    KwPub,
+    #[token("async")]
+    KwAsync,
+    #[token("await")]
+    KwAwait,
+    #[token("struct")]
+    KwStruct,
+    #[token("extern")]
+    KwExtern,
+    #[regex("[a-zA-Z_][a-zA-Z0-9_]*", |lex|lex.slice().to_string())]
+    Identifier(FString),
+    #[regex("[0-9]+", |lex|lex.slice().parse::<i64>().unwrap())]
+    IntLiteral(FI64),
+    #[regex("r#\"[^\"]*\"#", |lex|unescape_string(&lex.slice()[3..lex.slice().len()-2]))]
+    #[regex(r#""[^"]*""#, |lex|unescape_string(&lex.slice()[1..lex.slice().len()-1]))]
+    StringLiteral(FString),
+    #[token(":")]
+    Colon,
+    #[token("::")]
+    ColonColon,
+    #[token(";")]
+    Semicolon,
+    #[token("=")]
+    Assign,
+    #[token("==")]
+    Equals,
+    #[token("!=")]
+    NotEquals,
+    #[token("||")]
+    Or,
+    #[token("->")]
+    Arrow,
+    #[token("<")]
+    Less,
+    #[token(">")]
+    Greater,
+    #[token("+")]
+    Plus,
+    #[token("-")]
+    Minus,
+    #[token("*")]
+    Star,
+    #[token("/")]
+    Slash,
+    #[token("&")]
+    Ampersand,
+    #[token("(")]
+    LParen,
+    #[token(")")]
+    RParen,
+    #[token("{")]
+    LBrace,
+    #[token("}")]
+    RBrace,
+    #[token("[")]
+    LBracket,
+    #[token("]")]
+    RBracket,
+    #[token(",")]
+    Comma,
+    #[token("...")]
+    Ellipsis,
+    #[token(".")]
+    Dot,
+    #[token("#")]
+    Hash,
+    #[token("int")]
+    TypeInt,
+    #[token("bool")]
+    TypeBool,
+    #[token("string")]
+    TypeString,
+    #[token("void")]
+    TypeVoid,
+    #[token("true")]
+    True,
+    #[token("false")]
+    False,
+    Error,
+}
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+fn unescape_string(input: &str) -> FString {
+    let mut out = String::new();
+    let mut chars = input.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('t') => out.push('\t'),
+                Some('r') => out.push('\r'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+/// Token paired with a span.
+type SpannedToken = (Token, Span);
+fn strip_block_comments(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut chars = input.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '/' {
+            if let Some('*') = chars.peek() {
+                chars.next();
+                while let Some(c) = chars.next() {
+                    if c == '*' {
+                        if let Some('/') = chars.peek() {
+                            chars.next();
+                            break;
+                        }
+                    }
+                }
+                continue;
+            }
+        }
+        out.push(ch);
+    }
+    out
+}
+/// Lexes the given input into tokens with spans.
+fn lex(input: &str) -> FVec<SpannedToken> {
+    let cleaned = strip_block_comments(input);
+    Token::lexer(&cleaned)
+        .spanned()
+        .map(|(token, span)| (token.unwrap_or(Token::Error), span))
+        .collect()
+}

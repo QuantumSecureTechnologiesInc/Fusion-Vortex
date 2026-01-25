@@ -48,3 +48,6 @@ test_result.fu
 
 # Package manager cache
 .fusionpkg/cache/
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md

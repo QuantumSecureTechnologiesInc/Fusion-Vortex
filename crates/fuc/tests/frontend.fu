@@ -1,0 +1,18 @@
+#[test]
+fn parse_only_rejects_invalid_syntax() {
+    let status = Command::new(env!("CARGO_BIN_EXE_fuc"))
+        .arg("--parse-only")
+        .arg("tests/fixtures/invalid/parse_error.fu")
+        .status()
+        .expect("Failed to run compiler");
+    assert!(! status.success(), "parse-only accepted invalid syntax");
+}
+#[test]
+fn sema_only_rejects_invalid_types() {
+    let status = Command::new(env!("CARGO_BIN_EXE_fuc"))
+        .arg("--sema-only")
+        .arg("tests/fixtures/invalid/sema_error.fu")
+        .status()
+        .expect("Failed to run compiler");
+    assert!(! status.success(), "sema-only accepted invalid types");
+}

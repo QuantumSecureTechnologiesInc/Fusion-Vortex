@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-incident-response = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_incident_response::Resolver;
 fn main() {
     Resolver::new().run();
 }
-```
+```text
 
 ## License
 

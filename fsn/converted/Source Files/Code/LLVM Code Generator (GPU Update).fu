@@ -1,0 +1,67 @@
+// SOURCE: Source Files/Code/LLVM Code Generator (GPU Update).rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/codegen/mod.rs - LLVM Code Generation for Fusion (Logical Update)
+
+// ... (existing LLVM mock bindings and structures omitted for brevity) ...
+
+impl<'a> LLVMCodeGenerator<'a> {
+    // ... (existing new, generate, generate_declaration methods) ...
+
+    fn generate_declaration(&mut self, decl: &Declaration) -> Result<(), FString> {
+        match decl {
+            Declaration::Function {
+                name,
+                attributes,
+                params,
+                return_type,
+                body,
+                ..
+            } => {
+                // 1. Check for GPU Acceleration Attribute
+                let is_gpu_accelerated = attributes
+                    .iter()
+                    .any(|attr| matches!(attr, Attribute::HardwareAccelerated(_)));
+
+                // 2. Generate Function Signature
+                // ... (standard signature generation) ...
+
+                // 3. GPU Dispatch Logic (Conditional Code Path Generation)
+                if is_gpu_accelerated {
+                    // For GPU code, generate kernel calls (LLVM offloading passes).
+                    // This involves calling LLVM intrinsics for CUDA or OpenCL runtime libraries.
+                    println!(
+                        "Generating CUDA/OpenCL dispatch code for function: {}",
+                        name
+                    );
+                    self.generate_gpu_dispatch(name, body)?;
+                } else {
+                    // Standard CPU code generation path
+                    self.generate_block(body)?;
+                }
+
+                Ok(())
+            }
+            // ... (other declarations remain the same)
+            _ => Ok(()),
+        }
+    }
+
+    fn generate_gpu_dispatch(&mut self, name: &str, body: &Block) -> Result<(), FString> {
+        // --- LLVM Steps for GPU Offloading ---
+        // 1. Allocate GPU memory for input Tensors (via CUDA Runtime API).
+        // 2. Insert LLVM intrinsic call to copy data from CPU RAM to GPU VRAM.
+        // 3. Generate the kernel launch wrapper (e.g., call `cudaLaunchKernel`).
+        // 4. Generate the actual GPU kernel IR (derived from the loop structures in the function's body).
+        // 5. Insert LLVM intrinsic call to copy result data back from GPU to CPU.
+
+        println!(
+            "  -> Successfully mapped function '{}' to GPU offload pass.",
+            name
+        );
+        self.generate_block(body)?; // Generate the block body which will contain the actual kernel logic
+
+        Ok(())
+    }
+
+    // ... (existing generate_statement, generate_expression, etc., methods omitted) ...
+}

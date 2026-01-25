@@ -1,0 +1,20 @@
+extern fn printf(fmt: string, ...) -> int;
+extern fn panic(msg: string) -> void;
+
+fn main() -> int {
+    let arr: [int; 10] = [77; 10];
+    printf("arr[0] (should be 77): %d\n", arr[0]);
+    printf("arr[9] (should be 77): %d\n", arr[9]);
+
+    let idx: int = 5;
+    arr[idx] = 100;
+    printf("arr[5] (should be 100): %d\n", arr[5]);
+
+    printf("About to crash...\n", 0);
+
+    let bad_idx: int = 10;
+    arr[bad_idx] = 999;
+
+    printf("Should not print this.\n", 0);
+    return 0;
+}

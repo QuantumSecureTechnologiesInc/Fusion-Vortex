@@ -1,7 +1,7 @@
 # Fusion HTTP
 
-**Version:** 0.2.0  
-**Type:** Web Framework  
+**Version:** 0.2.0
+**Type:** Web Framework
 **License:** MIT
 
 ## Overview
@@ -25,12 +25,13 @@ async fn handler(_req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
 }
 
 #[tokio::main]
+
 async fn main() -> anyhow::Result<()> {
     let server = Server::bind("127.0.0.1:3000".parse()?);
     server.serve(handler).await?;
     Ok(())
 }
-```
+```text
 
 ## Dependencies
 

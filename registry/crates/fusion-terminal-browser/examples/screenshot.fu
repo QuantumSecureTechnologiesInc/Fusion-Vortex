@@ -1,0 +1,22 @@
+//! Screenshot capture example
+use fusion_terminal_browser::{Browser, BrowserConfig};
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt::init();
+    let mut config = BrowserConfig::default();
+    config.window_width = 1920;
+    config.window_height = 1080;
+    let mut browser = Browser::new(config)?;
+    let urls = vec![
+        ("https://example.com", "example_screenshot.png"), ("https://rust-lang.org",
+        "rust_screenshot.png"), ("https://github.com", "github_screenshot.png"),
+    ];
+    for (url, filename) in urls {
+        println!("Capturing screenshot of {}...", url);
+        browser.navigate(url)?;
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        browser.screenshot_to_file(Path::new(filename))?;
+        println!("  Saved to {}", filename);
+    }
+    println!("\nAll screenshots captured successfully!");
+    Ok(())
+}

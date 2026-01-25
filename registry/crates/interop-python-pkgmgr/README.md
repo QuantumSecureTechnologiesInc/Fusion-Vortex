@@ -1,7 +1,7 @@
 # Fusion Python Package Manager
 
-**Version:** 0.2.0  
-**Type:** Tooling  
+**Version:** 0.2.0
+**Type:** Tooling
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use interop_python_pkgmgr::{PackageManager, Package};
 
 let pm = PackageManager::new("venv");
 pm.install(&Package::new("numpy", "1.24"))?;
-```
+```text
 
 ## Dependencies
 

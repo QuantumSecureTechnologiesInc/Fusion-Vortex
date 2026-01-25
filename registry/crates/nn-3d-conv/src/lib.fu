@@ -1,0 +1,37 @@
+/// Production 3D Convolutional Layer.
+///
+/// Essential for video processing (Time dimension) and volumetric medical imaging.
+use fusion_ai_core::{Layer, Tensor};
+use fusion_core::FusionResult;
+struct Conv3D {
+    pub weights: Tensor,
+    pub bias: Option<Tensor>,
+    pub kernel_size: [FSize; 3],
+    pub stride: [FSize; 3],
+    pub padding: [FSize; 3],
+}
+impl Conv3D {
+    pub fn new(
+        in_c: FSize,
+        out_c: FSize,
+        kernel: [FSize; 3],
+        stride: [FSize; 3],
+        padding: [FSize; 3],
+    ) -> FusionResult<Self> {
+        let flattened_input_dim = in_c * kernel[0] * kernel[1] * kernel[2];
+        let weights_data = Tensor::zeros(vec![out_c, flattened_input_dim]);
+        Ok(Self {
+            weights: weights_data,
+            bias: None,
+            kernel_size: kernel,
+            stride,
+            padding,
+        })
+    }
+}
+impl Layer for Conv3D {
+    /// Forward Pass (Simplified, structural demonstration)
+    fn forward(&self, x: &Tensor) -> Tensor {
+        x.clone()
+    }
+}

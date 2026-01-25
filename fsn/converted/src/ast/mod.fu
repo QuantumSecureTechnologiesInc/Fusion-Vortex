@@ -1,0 +1,222 @@
+// SOURCE: src/ast/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/ast/mod.rs - Abstract Syntax Tree Definitions (Updated for Generics and Traits)
+
+#[allow(dead_code)] // Suppresses warnings for fields/variants not yet used in the compiler
+#[derive(Debug, Clone)]
+enum Declaration {
+    Function {
+        name: FString,
+        attributes: FVec<Attribute>,
+        generic_params: FVec<FString>, // New: Generic Type Parameters (e.g., T, U)
+        where_bounds: FVec<TraitBound>, // New: Trait Constraints
+        params: FVec<Parameter>,
+        return_type: Type,
+        body: Block,
+    },
+    Class {
+        name: FString,
+        generic_params: FVec<FString>, // New: Generic Type Parameters for the class itself
+        implements: FVec<FString>,
+        fields: FVec<Field>,
+        methods: FVec<Declaration>,
+    },
+    Trait {
+        name: FString,
+        methods: FVec<MethodSignature>,
+    },
+    GlobalVariable {
+        name: FString,
+        var_type: Option<Type>,
+        initializer: Expression,
+    },
+    ExternFunction {
+        name: FString,
+        params: FVec<Parameter>,
+        return_type: Type,
+    },
+    Module {
+        name: FString,
+        declarations: FVec<Declaration>,
+    },
+    ModuleDecl {
+        name: FString,
+        is_public: FBool,
+    },
+    UseDecl {
+        path: FVec<FString>,     // e.g., ["lib", "utils"]
+        alias: Option<FString>, // Optional rename
+        import_all: FBool,      // true for "use mod::*"
+    },
+}
+
+#[derive(Debug, Clone)]
+struct TraitBound {
+    pub type_name: FString,  // The generic type being constrained (e.g., "T")
+    pub trait_name: FString, // The required trait (e.g., "Serializable")
+}
+
+#[derive(Debug, Clone)]
+struct Parameter {
+    pub name: FString,
+    pub param_type: Type,
+}
+
+#[derive(Debug, Clone)]
+struct Field {
+    pub name: FString,
+    pub field_type: Type,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+struct MethodSignature {
+    pub name: FString,
+    pub params: FVec<Parameter>,
+    pub return_type: Option<Type>,
+}
+
+#[derive(Debug, Clone)]
+struct Block {
+    pub statements: FVec<Statement>,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Statement {
+    VariableDeclaration {
+        name: FString,
+        mutable: FBool, // New: tracks if variable is mutable
+        var_type: Option<Type>,
+        initializer: Expression,
+    },
+    Assignment {
+        target: Expression,
+        value: Expression,
+    },
+    If {
+        condition: Expression,
+        then_block: Block,
+        else_block: Option<Block>,
+    },
+    While {
+        condition: Expression,
+        body: Block,
+    },
+    For {
+        variable: FString,
+        iterator: Expression,
+        body: Block,
+    },
+    Return(Option<Expression>),
+    Expression(Expression),
+    Break,
+    Continue,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Expression {
+    Literal(Literal),
+    Variable(FString),
+    BinaryOp {
+        left: Box<Expression>,
+        op: BinaryOp,
+        right: Box<Expression>,
+    },
+    UnaryOp {
+        op: UnaryOp,
+        operand: Box<Expression>,
+    },
+    FunctionCall {
+        name: FString,
+        generic_args: FVec<Type>, // New: Explicit generic arguments, e.g. foo<int>(...)
+        args: FVec<Expression>,
+    },
+    MethodCall {
+        object: Box<Expression>,
+        method: FString,
+        args: FVec<Expression>,
+    },
+    FieldAccess {
+        object: Box<Expression>,
+        field: FString,
+    },
+    StructInit {
+        name: FString,
+        generic_args: FVec<Type>, // New
+        fields: FVec<(FString, Expression)>,
+    },
+    Index {
+        object: Box<Expression>,
+        index: Box<Expression>,
+    },
+    Array(FVec<Expression>),
+    Map(FVec<(Expression, Expression)>),
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Literal {
+    Integer(i64),
+    Float(f64),
+    FString(FString),
+    Boolean(FBool),
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+enum BinaryOp {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Equal,
+    NotEqual,
+    LessThan,
+    LessEqual,
+    GreaterThan,
+    GreaterEqual,
+    LogicalAnd,
+    LogicalOr,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+enum UnaryOp {
+    Negate,
+    Not,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+enum Type {
+    Unknown,
+    Void,
+    Integer,
+    Float,
+    FString,
+    Boolean,
+    Custom(FString),        // Named types (e.g., DataProcessor)
+    TypeParameter(FString), // New: Represents an unresolved generic type (e.g., 'T')
+    Array(Box<Type>),
+    Optional(Box<Type>),
+    Union(FVec<Type>),
+    Function {
+        params: FVec<Type>,
+        return_type: Box<Type>,
+    },
+    // New: A concrete type instantiated with generic arguments (e.g., List<int>)
+    GenericInstance {
+        base_name: FString, // "List"
+        args: FVec<Type>,   // [Integer]
+    },
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Attribute {
+    HardwareAccelerated(FString),
+    // Add other attributes as needed
+}

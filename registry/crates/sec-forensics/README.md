@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-forensics = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_forensics::analyze;
 fn main() {
     analyze();
 }
-```
+```text
 
 ## License
 

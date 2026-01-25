@@ -1,0 +1,10 @@
+//! src/cycle/mod.rs
+//! The Compute Module Definition.
+mod contract;
+mod error;
+mod market;
+mod node;
+pub use contract::ServiceAgreement;
+pub use error::CycleFailure;
+pub use market::MarketBid;
+pub use node::ComputeNode;

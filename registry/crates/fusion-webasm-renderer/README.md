@@ -1,7 +1,7 @@
 # Fusion WebASM Renderer
 
-**Version:** 0.2.0  
-**Type:** Web Tools  
+**Version:** 0.2.0
+**Type:** Web Tools
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ let renderer = Renderer::new();
 // Generate SVG visualization
 let svg = renderer.render_svg(&wasm_bytes)?;
 std::fs::write("module.svg", svg)?;
-```
+```text
 
 ## Dependencies
 

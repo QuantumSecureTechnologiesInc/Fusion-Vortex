@@ -1,7 +1,7 @@
 # Fusion LLM Cache Compression
 
-**Version:** 0.2.0  
-**Type:** Optimization  
+**Version:** 0.2.0
+**Type:** Optimization
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_llm_cache_compression::{Compressor, Method};
 
 let compressor = Compressor::new(Method::Int8);
 let compressed_kv = compressor.compress(&kv_cache)?;
-```
+```text
 
 ## Dependencies
 

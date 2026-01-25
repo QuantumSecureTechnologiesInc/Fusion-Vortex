@@ -1,0 +1,25 @@
+// SOURCE: registry/crates/fusion_net/src/pqc.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Post-Quantum Cryptography Networking Primitives
+
+#[derive(Debug, Clone, Copy)]
+enum EncryptionParam {
+    Kyber512,
+    Kyber768,
+    Kyber1024,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SecurityPolicy {
+    pub param: EncryptionParam,
+    pub enforce_auth: FBool,
+}
+
+impl Default for SecurityPolicy {
+    fn default() -> Self {
+        Self {
+            param: EncryptionParam::Kyber768,
+            enforce_auth: true,
+        }
+    }
+}

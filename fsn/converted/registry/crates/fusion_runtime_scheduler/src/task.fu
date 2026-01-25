@@ -1,0 +1,54 @@
+// SOURCE: registry/crates/fusion_runtime_scheduler/src/task.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Task abstraction for the scheduler
+
+use parking_lot::Mutex;
+
+/// Handle to a spawned task
+struct TaskHandle<T> {
+    id: FU64,
+    result: Arc<Mutex<Option<Result<T, JoinError>>>>,
+}
+
+impl<T> TaskHandle<T> {
+    pub(crate) fn new(id: FU64) -> Self {
+        Self {
+            id,
+            result: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    fn id(&self) -> FU64 {
+        self.id
+    }
+}
+
+impl<T: Clone> Future for TaskHandle<T> {
+    type Output = Result<T, JoinError>;
+
+    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if let Some(result) = self.result.lock().as_ref() {
+            Poll::Ready(result.clone())
+        } else {
+            Poll::Pending
+        }
+    }
+}
+
+/// Error from joining a task
+#[derive(Debug, Clone)]
+enum JoinError {
+    Cancelled,
+    Panic,
+}
+
+impl std::fmt::Display for JoinError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JoinError::Cancelled => write!(f, "task was cancelled"),
+            JoinError::Panic => write!(f, "task panicked"),
+        }
+    }
+}
+
+impl std::error::Error for JoinError {}

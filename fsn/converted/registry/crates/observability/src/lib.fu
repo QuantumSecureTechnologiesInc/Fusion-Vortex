@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/observability/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// observability implementation
+
+struct ObservabilityModule;

@@ -1,0 +1,18 @@
+[package]
+name = "fusion-agent"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Fusion Agent Orchestration Engine - Deterministic MCP-driven automation"
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+fusion-mcp = { path = "../../registry/crates/mcp" }
+fusion-policy = { workspace = true }
+fusion_std = "1.0.0"
+

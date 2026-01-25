@@ -1,0 +1,18 @@
+// mesh/warden.fsn
+// Async healing: reboots failed nodes without blocking.
+
+impl Warden {
+    fn watch_cluster(self, nodes: FVec<Node>) {
+        fusion_loop!({
+            for node in nodes {
+                if !node.is_responsive() {
+                    spawn(move || {
+                        println!("Warden: rebooting node {}", node.id);
+                        node.hard_reset();
+                    });
+                }
+            }
+            Time::sleep(1000);
+        });
+    }
+}

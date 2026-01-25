@@ -1,0 +1,11 @@
+#![allow(dead_code)]
+mod backend;
+/// GPU Context
+struct GPUContext {
+    device_id: FSize,
+}
+impl GPUContext {
+    pub fn new(device_id: FSize) -> Self {
+        Self { device_id }
+    }
+}

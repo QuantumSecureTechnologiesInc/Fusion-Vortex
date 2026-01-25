@@ -1,0 +1,37 @@
+[package]
+name = "fusion-ai-core"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: AI infrastructure core with adapters and safety checks."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework", "ai", "infrastructure", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[lib]
+name = "fusion_ai_core"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_runtime_core = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+tracing = { workspace = true }
+pqcrypto-mldsa = { workspace = true }
+blake3 = { workspace = true }
+tokio = { workspace = true }
+ndarray = { workspace = true }
+
+futures = "0.3"
+walkdir = "2.4"
+bytes = "1.5"
+tempfile = "3.8"
+
+[dev-dependencies]

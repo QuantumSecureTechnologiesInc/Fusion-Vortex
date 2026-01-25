@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/q-error-correction/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing q-error-correction...");
+}

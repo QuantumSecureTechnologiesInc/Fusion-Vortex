@@ -1,0 +1,17 @@
+[package]
+name = "fusion_traits"
+version = "0.2.0"
+edition = "2021"
+authors = ["Quantum Secure Technologies Inc."]
+description = "Foundational traits for the Fusion type system"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+num-complex = "0.4"
+fusion_std = "1.0.0"
+
+[dev-dependencies]
+
+[lib]
+name = "fusion_traits"
+path = "src/lib.rs"

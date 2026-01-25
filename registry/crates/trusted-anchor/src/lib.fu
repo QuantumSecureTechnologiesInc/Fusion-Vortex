@@ -1,0 +1,2 @@
+/// trusted-anchor implementation
+struct TrustedAnchorModule;

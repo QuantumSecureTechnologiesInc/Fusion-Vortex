@@ -8,10 +8,10 @@ Before the consolidation into `fusion-monolith-core`, the Fusion toolchain was *
 
 #### Old Scattered Crates Structure
 
-```
+```text
 Old Structure (Pre-Monolith):
 ├── fusion-check          # Semantic analysis only
-├── fusion-build          # Compilation orchestration  
+├── fusion-build          # Compilation orchestration
 ├── fusion-audit          # Security vulnerability scanning
 ├── fusion-lsp            # Language Server Protocol
 ├── fusion-run            # Runtime execution
@@ -30,7 +30,7 @@ Old Structure (Pre-Monolith):
 ├── fusion-projects       # Project scaffolding
 ├── fusion-toolchain      # Toolchain management
 └── fusion-github         # GitHub integration
-```
+```text
 
 ### The Problems This Caused
 
@@ -62,23 +62,27 @@ Old Structure (Pre-Monolith):
 As the project grew, we hit a critical issue:
 
 ```toml
+
 # Two different crates, same library name!
+
 fusion-core     → libfusion_core.rlib  (compiler core)
 fusion_core     → libfusion_core.rlib  (runtime core)
 
 # Same problem here:
+
 fusion-ai-core  → libfusion_ai_core.rlib  (AI adapters)
 fusion_ai_core  → libfusion_ai_core.rlib  (AI runtime)
-```
+```text
 
 Cargo couldn't handle this - both crates produced identical `.rlib` files!
 
 **Fix Applied:**
 - Renamed library targets explicitly in `Cargo.toml`:
+
   ```toml
   [lib]
   name = "fusion_core_compiler"  # Was: fusion_core (implicit)
-  ```
+```text
 
 ---
 
@@ -87,11 +91,12 @@ Cargo couldn't handle this - both crates produced identical `.rlib` files!
 ### What Changed
 
 **Before (Scattered):**
-```
+
+```text
 User runs: cargo build
 ├─▶ fusion-resolve (process 1)
 │   └─▶ Downloads deps
-├─▶ fusion-audit (process 2)  
+├─▶ fusion-audit (process 2)
 │   └─▶ Re-reads deps, scans vulns
 ├─▶ fusion-build (process 3)
 │   └─▶ Spawns rustc
@@ -99,10 +104,11 @@ User runs: cargo build
     └─▶ Re-parses everything for IDE
 
 Total: 4 processes, ~2GB RAM, 10-15s startup
-```
+```text
 
 **After (Monolith):**
-```
+
+```text
 User runs: fusion build
 └─▶ fusion-monolith-core (single process)
     ├─ Flux-Resolve (GPU-accelerated)
@@ -112,11 +118,12 @@ User runs: fusion build
     └─ TUI (unified progress)
 
 Total: 1 process, ~500MB RAM, 2-3s startup
-```
+```text
 
 ### Key Innovations
 
 1. **Shared Memory Architecture**
+
    ```rust
    Arc<RwLock<FusionState>> {
        dependency_graph,
@@ -125,7 +132,8 @@ Total: 1 process, ~500MB RAM, 2-3s startup
        security_advisories,
        build_artifacts
    }
-   ```
+```text
+
    - All subsystems read from the same memory
    - LSP sees compiler's live type information
    - Auditor checks dependencies BEFORE download
@@ -148,7 +156,7 @@ Total: 1 process, ~500MB RAM, 2-3s startup
 
 ### Three-Tier Structure
 
-```
+```text
 Current Structure (v3.4+):
 ├── crates/                        # Core toolchain (monolith)
 │   ├── fusion-monolith-core       # ⭐ THE CONSOLIDATION
@@ -171,7 +179,7 @@ Current Structure (v3.4+):
     ├── ai-core                    # AI public API
     ├── std                        # Standard library
     └── ...                        # User-facing crates
-```
+```text
 
 ### What Survived vs What Merged
 
@@ -207,18 +215,20 @@ Current Structure (v3.4+):
 ### Developer Experience
 
 **Before:**
+
 ```bash
 $ cargo check     # Wait 10s for metadata load
 $ cargo build     # Wait another 8s, reload metadata
 $ # rust-analyzer confused, can't find types
-```
+```text
 
 **After:**
+
 ```bash
 $ fusion check    # 2s, shared state
 $ fusion build    # 1s incremental, reuses check results
 $ # LSP sees everything in real-time, zero-copy
-```
+```text
 
 ---
 
@@ -250,14 +260,17 @@ This separates:
 ## 📝 Key Takeaways
 
 ### The Old Way (Scattered Crates)
+
 - ✅ Pros: Modular, easy to understand
 - ❌ Cons: Slow, wasteful, integration hell
 
 ### The New Way (Monolith Core)
+
 - ✅ Pros: Fast, efficient, unified UX
 - ❌ Cons: More complex internals, larger binary
 
 ### The Verdict
+
 The monolith is a **substantial leap forward** in toolchain design, reducing latency by 5-10x while simplifying the user experience.
 
 ---

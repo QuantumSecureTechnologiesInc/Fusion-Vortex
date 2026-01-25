@@ -1,0 +1,80 @@
+#![allow(dead_code)]
+use fusion_ai_core::{Layer, Linear, Tensor};
+use fusion_core::types::classical::ClassicalType;
+use fusion_core::types::hybrid::HybridValue;
+/// Fusion AI Model Server.
+///
+/// This application demonstrates the "Interwoven" strategy in action.
+/// It uses the Tensor engine (Core) inside a Web Server (Ext) to serve AI predictions (Pillar).
+use fusion_http::{Request, Response, Server};
+use tokio::sync::Mutex;
+struct MyModel {
+    layer: Linear,
+}
+impl MyModel {
+    fn new() -> Self {
+        Self { layer: Linear::new(2, 1) }
+    }
+    fn predict(&self, input: FVec<f64>) -> f64 {
+        use ndarray::IxDyn;
+        let mut input_tensor = Tensor::from_slice(&input);
+        input_tensor.data = input_tensor.data.into_shape(IxDyn(&[1, 2])).unwrap();
+        let output_var = self.layer.forward(&input_tensor);
+        output_var.item::<f64>()
+    }
+}
+#[derive(serde::Deserialize)]
+struct InferenceRequest {
+    features: FVec<f64>,
+}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("Initializing Fusion Model Server...");
+    let model = Arc::new(Mutex::new(MyModel::new()));
+    let handler = move |req: Request<FVec<u8>>| -> Response<FVec<u8>> {
+        match (req.method().as_str(), req.uri().path()) {
+            ("POST", "/predict") => {
+                let body_str = String::from_utf8_lossy(req.body());
+                let inference_req: InferenceRequest = match serde_json::from_str(
+                    &body_str,
+                ) {
+                    Ok(r) => r,
+                    Err(_) => {
+                        return Response::builder()
+                            .status(400)
+                            .body(b"Invalid JSON".to_vec())
+                            .unwrap();
+                    }
+                };
+                if inference_req.features.len() != 2 {
+                    return Response::builder()
+                        .status(400)
+                        .body(b"Model expects 2 features".to_vec())
+                        .unwrap();
+                }
+                let prediction = {
+                    let m = model.blocking_lock();
+                    m.predict(inference_req.features)
+                };
+                let response_val = HybridValue::Classical(
+                    ClassicalType::Float(prediction),
+                );
+                let json_body = serde_json::to_string(&response_val).unwrap_or_default();
+                Response::builder().status(200).body(json_body.into_bytes()).unwrap()
+            }
+            ("GET", "/health") => {
+                Response::builder()
+                    .status(200)
+                    .body(
+                        b"{\"status\": \"healthy\", \"framework\": \"Fusion AI\"}"
+                            .to_vec(),
+                    )
+                    .unwrap()
+            }
+            _ => Response::builder().status(404).body(Vec::new()).unwrap(),
+        }
+    };
+    let server = Server::new(handler);
+    server.listen("127.0.0.1:3000").await?;
+    Ok(())
+}

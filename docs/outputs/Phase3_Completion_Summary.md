@@ -244,7 +244,7 @@ fusion_lang -i main.fu --multi-file
 
 # ✅ Compiled 2 modules successfully
 
-```
+```text
 
 ### WebAssembly Generation
 
@@ -255,11 +255,11 @@ fusion_lang -i math.fu --target wasm -o math.wasm
 
 # Output: math.wasm (73 bytes)
 
-```
+```text
 
 ### IDE Integration
 
-```
+```text
 
 # Start LSP server
 
@@ -268,7 +268,7 @@ fusion_lang --lsp
 # Or install VS Code extension
 
 code --install-extension fusion-language-0.1.0.vsix
-```
+```text
 
 ---
 

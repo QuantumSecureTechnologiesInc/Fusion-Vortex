@@ -8,11 +8,10 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-toml = "0.8"
-anyhow = "1.0"
-dirs = "5.0"
-glob = "0.3"
-
-# Fusion dependencies
+serde_json = { version = "1.0.133" }
+toml = { version = "0.8.19" }
+anyhow = { version = "1.0.94" }
+dirs = { version = "5.0.1" }
+glob = { version = "0.3.1" }
 fusion-review-policy = { path = "../fusion-review-policy" }
+fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }

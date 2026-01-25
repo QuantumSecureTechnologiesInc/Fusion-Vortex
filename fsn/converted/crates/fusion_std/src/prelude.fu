@@ -1,0 +1,14 @@
+// SOURCE: crates/fusion_std/src/prelude.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Fusion prelude.
+//! Importing this module shadows common types with Fusion equivalents.
+
+pub use crate::collections::FVec as Vec;
+pub use crate::primitives::{FBool, F32, FInt, FFString as FString};
+pub use crate::runtime::{fusion_channel, spawn_secure, FusionReceiver, FusionSender};
+pub use crate::security::{clear_context, set_context, FusionContext};
+
+pub use crate::{fusion_if, fusion_loop, fusion_match, fvec};
+
+pub type Int = FInt;
+pub type Bool = FBool;

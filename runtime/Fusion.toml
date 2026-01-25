@@ -1,0 +1,87 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/fusion_core",
+    "crates/fusion_runtime_core",
+    "crates/fusion_runtime_scheduler",
+    "crates/fusion_runtime_mem_mgr",
+    "crates/fusion_runtime_hal",
+    "crates/fusion_ai_core",
+    "crates/fusion_finance",
+    "crates/fusion_net",
+    "crates/fusion_quantum",
+    "crates/fusion_traits",           # ⭐ Phase 2: Core traits
+    "crates/fusion_tensor_core",      # ⭐ Phase 2: Tensor operations
+    "crates/fusion_quantum_core",     # ⭐ Phase 2: Quantum primitives
+    "crates/fusion_cortex",           # ⭐ v0.3.0: AI Scheduler
+    "crates/fusion_hal",              # ⭐ v0.3.0: Hardware Abstraction Layer
+    "crates/fusion_flux_resolve",     # ⭐ Flux-Resolve Engine
+]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion"
+authors = ["Quantum Secure Technologies Inc."]
+
+[workspace.dependencies]
+# Core async runtime primitives
+parking_lot = "0.12"
+crossbeam = "0.8"
+crossbeam-deque = "0.8"
+dashmap = "6.1"
+
+# Low-level memory management
+libc = "0.2"
+memmap2 = "0.9"
+
+# Hardware interfacing
+ash = "0.38"  # Vulkan bindings
+metal = "0.28"  # Metal for macOS/iOS
+cuda-sys = "0.3"  # CUDA FFI
+
+# Thread pool and core affinity
+core_affinity = "0.8"
+num_cpus = "1.16"
+
+# Network performance
+socket2 = "0.5"
+
+# Async primitives
+futures = "0.3"
+pin-project-lite = "0.2"
+
+# Monitoring and profiling
+metrics = "0.21"
+tracing = "0.1"
+tracing-subscriber = "0.3.20"
+
+# Testing
+criterion = "0.5"
+proptest = "1.4"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Numeric types (for tensor/quantum/AI)
+num-complex = "0.4"
+ndarray = "0.15"
+uuid = { version = "1.4", features = ["v4"] }
+
+# Error handling
+thiserror = "1.0"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+
+[profile.bench]
+inherits = "release"
+
+[dependencies]
+fusion_std = "1.0.0"

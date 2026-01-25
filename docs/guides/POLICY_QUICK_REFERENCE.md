@@ -79,7 +79,7 @@ let extensions_dir = dirs::home_dir()
     .unwrap()
     .join(".fusion/extensions");
 manifest.save(&extensions_dir)?;
-```
+```text
 
 ### Loading a Manifest
 
@@ -97,7 +97,7 @@ let manifest = ExtensionManifest::load(
 
 println!("Trust level: {}", manifest.trust);
 println!("Capabilities: {:?}", manifest.capabilities);
-```
+```text
 
 ### Enforcing Capabilities
 
@@ -125,7 +125,7 @@ enforcer.check_capability(
     &Capability::FilesystemWrite,
     &allowed,
 )?; // Error: FilesystemWrite not allowed
-```
+```text
 
 ### Trust Verification
 
@@ -144,7 +144,7 @@ println!("Trust level: {}", level); // 🔐 Trusted
 // Get recommended trust by publisher
 let recommended = verifier.recommended_trust("microsoft");
 assert_eq!(recommended, TrustLevel::Verified);
-```
+```text
 
 ### Warn Mode (for Migration)
 
@@ -158,7 +158,7 @@ let allowed = vec![]; // Nothing allowed
 
 // This succeeds but logs a warning
 enforcer.enforce(&requested, &allowed)?; // ⚠️  WARNING logged
-```
+```text
 
 ---
 
@@ -169,73 +169,131 @@ Once integrated, these commands will be available:
 ### View Extension Capabilities
 
 ```bash
+
 # Show what an extension can do
+
 fusion policy show google.gemini-code-assist
 
 # Output:
+
+
 # Extension: google.gemini-code-assist
+
+
 # Trust: 🔐 Trusted
+
+
 # Capabilities:
+
+
 #   - NetworkOutbound (Medium risk)
+
+
 #     Reason: Makes API calls to Gemini service
+
+
 #   - WorkspaceInspect (Low risk)
+
+
 #     Reason: Analyzes project structure
-```
+
+```text
 
 ### Grant/Revoke Capabilities
 
 ```bash
+
 # Grant a capability
+
 fusion policy grant google.gemini-code-assist FilesystemRead
 
 # Revoke a capability
+
 fusion policy revoke google.gemini-code-assist NetworkOutbound
-```
+```text
 
 ### Audit All Extensions
 
 ```bash
+
 # Audit all installed extensions
+
 fusion policy audit
 
 # Output:
+
+
 # Auditing 5 extensions...
-# 
+
+
+#
+
+
 # google.gemini-code-assist (🔐 Trusted)
+
+
 #   ✅ NetworkOutbound
+
+
 #   ✅ WorkspaceInspect
-# 
+
+
+#
+
+
 # saoudrizwan.cline (⚠️  Unverified)
+
+
 #   ⚠️  FilesystemWrite (High risk, unverified publisher)
+
+
 #   ⚠️  ProcessSpawn (High risk, unverified publisher)
-```
+
+```text
 
 ### Set Enforcement Mode
 
 ```bash
+
 # Set to strict mode (production)
+
 fusion policy mode strict
 
 # Set to warn mode (migration)
+
 fusion policy mode warn
 
 # Disable enforcement (development only)
+
 fusion policy mode disabled
-```
+```text
 
 ### Check Compatibility
 
 ```bash
+
 # Check if extension capabilities are compatible
+
 fusion policy check google.gemini-code-assist
 
 # Output:
+
+
 # ✅ All capabilities are valid
+
+
 # ⚠️  3 high-risk capabilities require user approval:
+
+
 #    - FilesystemWrite
+
+
 #    - ProcessSpawn
+
+
 #    - CredentialWrite
-```
+
+```text
 
 ---
 
@@ -268,7 +326,7 @@ fusion policy check google.gemini-code-assist
   ],
   "version": 1
 }
-```
+```text
 
 ---
 
@@ -309,7 +367,7 @@ impl ExtensionHost {
     ) -> Result<()> {
         let manifest = self.manifests.get(extension_id)
             .ok_or_else(|| anyhow!("No manifest for {}", extension_id))?;
-        
+
         self.enforcer.check_capability(&capability, &manifest.capabilities)
     }
 
@@ -331,7 +389,7 @@ impl ExtensionHost {
         reqwest::get(url).await?.text().await
     }
 }
-```
+```text
 
 ### Node.js Bridge Integration
 
@@ -370,7 +428,7 @@ impl NodeFsBridge {
         std::fs::write(path, data)
     }
 }
-```
+```text
 
 ---
 
@@ -396,7 +454,7 @@ let manifest = ExtensionManifest::with_capabilities(
         Capability::WorkspaceInspect, // Only inspect, no writes
     ],
 );
-```
+```text
 
 ### 2. Always Justify Capabilities
 
@@ -407,7 +465,7 @@ manifest.add_capability(
     Capability::NetworkOutbound,
     "Makes API calls to check for updates", // Clear explanation
 );
-```
+```text
 
 ### 3. Use Appropriate Trust Levels
 
@@ -425,7 +483,7 @@ let manifest = ExtensionManifest::new(
     "unknown.extension",
     TrustLevel::Unverified, // Be cautious
 );
-```
+```text
 
 ### 4. Start with Warn Mode
 
@@ -439,7 +497,7 @@ let enforcer = PolicyEnforcer::warn_only();
 
 // Phase 3: Enable strict mode
 let enforcer = PolicyEnforcer::strict();
-```
+```text
 
 ---
 
@@ -447,9 +505,9 @@ let enforcer = PolicyEnforcer::strict();
 
 ### Error: "Capability not permitted"
 
-```
+```text
 🚫 POLICY VIOLATION: Capability violations detected: FilesystemWrite
-```
+```text
 
 **Solution**: Grant the capability in the manifest:
 
@@ -459,14 +517,14 @@ manifest.add_capability(
     "Needs to save generated files",
 );
 manifest.save(&extensions_dir)?;
-```
+```text
 
 ### Warning: "Using deprecated mode"
 
-```
+```text
 ⚠️  POLICY WARNING: Capability violations detected: ProcessSpawn
    Enforcement mode is 'Warn' - operation allowed but flagged
-```
+```text
 
 **Solution**: This is expected in Warn mode. Review the violation and either:
 1. Grant the capability if legitimate
@@ -486,7 +544,7 @@ match ExtensionManifest::load(&extensions_dir, ext_id) {
     Ok(m) => println!("✅ Manifest loaded: {:?}", m),
     Err(e) => println!("❌ Manifest error: {}", e),
 }
-```
+```text
 
 ---
 
@@ -495,28 +553,32 @@ match ExtensionManifest::load(&extensions_dir, ext_id) {
 ### For Existing Extensions
 
 1. **Create manifest**:
+
    ```rust
    let manifest = ExtensionManifest::new(ext_id, TrustLevel::UserTrusted);
-   ```
+```text
 
 2. **Add capabilities based on usage**:
+
    ```rust
    // If extension reads files
    manifest.add_capability(Capability::FilesystemRead, "...");
-   
+
    // If extension makes network calls
    manifest.add_capability(Capability::NetworkOutbound, "...");
-   ```
+```text
 
 3. **Save manifest**:
+
    ```rust
    manifest.save(&extensions_dir)?;
-   ```
+```text
 
 4. **Test in Warn mode**:
+
    ```rust
    let enforcer = PolicyEnforcer::warn_only();
-   ```
+```text
 
 5. **Review logs for violations**
 
@@ -534,6 +596,6 @@ match ExtensionManifest::load(&extensions_dir, ext_id) {
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: 2025-12-13  
+**Version**: 1.0
+**Last Updated**: 2025-12-13
 **Status**: Phase 1 Complete ✅

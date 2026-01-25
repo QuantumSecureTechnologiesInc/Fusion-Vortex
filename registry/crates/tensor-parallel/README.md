@@ -1,7 +1,7 @@
 # Fusion Tensor Parallel
 
-**Version:** 0.2.0  
-**Type:** Distributed ML  
+**Version:** 0.2.0
+**Type:** Distributed ML
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let layer = ColumnParallelLinear::new(input_dim, output_dim, &ctx)?;
 
 // Forward pass executes locally, then synchronizes if needed
 let output = layer.forward(input)?;
-```
+```text
 
 ## Dependencies
 

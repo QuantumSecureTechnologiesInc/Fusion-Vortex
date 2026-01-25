@@ -1,0 +1,14 @@
+[package]
+name = "fusion-cli"
+version = "1.0.0"
+edition = "2024"
+description = "Fusion toolchain manager."
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+clap = { version = "4.5.23", features = ["derive"] }
+rand = "0.8"
+colored = "2.0"
+hex = "0.4"
+ctrlc = "3.4"
+fusion_std = "1.0.0"

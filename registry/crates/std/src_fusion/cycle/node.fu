@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: cycle/node (stub)
+fn _cycle_node_stub() -> void { }

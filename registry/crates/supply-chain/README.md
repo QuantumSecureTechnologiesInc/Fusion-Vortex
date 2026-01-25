@@ -1,7 +1,7 @@
 # Fusion Supply Chain
 
-**Version:** 0.2.0  
-**Type:** Security Tool  
+**Version:** 0.2.0
+**Type:** Security Tool
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use fusion_sec_supply_chain::{SbomGenerator, Format};
 let generator = SbomGenerator::new(".");
 let sbom = generator.generate(Format::CycloneDX)?;
 std::fs::write("sbom.json", sbom)?;
-```
+```text
 
 ## Dependencies
 

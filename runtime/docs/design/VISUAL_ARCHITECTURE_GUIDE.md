@@ -163,7 +163,7 @@ This table details components for distributed large model training:
 │  └──────────────────────────────────────────────────────────── │ │
 │                                                                 │
 └────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -207,7 +207,7 @@ Step 8: VLC returns control to Scheduler
           │
           ▼
 Step 9: Fiber resumes with optimized weights
-```
+```text
 
 **Total overhead**: ~200ns (vs ~400μs traditional approach)
 **Speedup**: **2000x** reduction in scheduling overhead
@@ -243,7 +243,7 @@ Fusion VLC Approach:
 Total Overhead: 1 × 50ns = 50ns
 
 SPEEDUP: 40,000x
-```
+```text
 
 ---
 
@@ -283,7 +283,7 @@ SPEEDUP: 40,000x
 │ VRAM Block 1 │         │ VRAM Block 2 │
 │ (Reused)     │         │ (Reused)     │
 └──────────────┘         └──────────────┘
-```
+```text
 
 ---
 
@@ -310,6 +310,6 @@ All visual documentation has been integrated into the Fusion Runtime Core docume
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
 **Related**: See `PRODUCTION_COMPONENTS.md`, `COMPONENT_INTEGRATION.md`, `ExecutionFlow.md`

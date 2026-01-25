@@ -1,0 +1,2 @@
+/// cargo-converter implementation
+struct CargoConverterModule;

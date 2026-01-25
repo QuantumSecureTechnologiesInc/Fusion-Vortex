@@ -7,9 +7,10 @@ Core runtime functionality for the Fusion environment.
 ```toml
 [dependencies]
 fusion_runtime_core = "0.1.0"
-```
+```text
 
 ## Features
+
 - Task execution management
 - Resource allocation
 - Runtime lifecycle management

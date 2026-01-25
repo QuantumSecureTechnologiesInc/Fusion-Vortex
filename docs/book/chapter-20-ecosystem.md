@@ -40,7 +40,7 @@ serde = { version = "1.0", features = ["derive"] }
 [profile.release]
 opt-level = 3
 lto = true
-```
+```text
 
 ---
 
@@ -55,12 +55,12 @@ Add them to your project:
 
 ```bash
 fusion add fusion-web
-```
+```text
 
 ### 20.2.2 Publishing Crates
 
-1.  Login: `fusion login <api-token>`
-2.  Publish: `fusion publish`
+1. Login: `fusion login <api-token>`
+2. Publish: `fusion publish`
 
 Fusion checks your package for uncommitted changes and uncompiled code before allowing a publish.
 
@@ -72,7 +72,7 @@ Fusion has a built-in documentation generator.
 
 ```bash
 fusion doc --open
-```
+```text
 
 This commands reads the standard `///` comments in your code (supporting Markdown) and builds a static HTML site.
 
@@ -88,7 +88,7 @@ Code blocks inside documentation comments are actually **tests**!
 /// assert_eq!(fusion::add_one(x), 6);
 /// ```
 pub fn add_one(x: i32) -> i32 { x + 1 }
-```
+```text
 
 Running `fusion test` will also run these code blocks. This guarantees your documentation never goes out of date.
 
@@ -106,15 +106,16 @@ members = [
     "adder",
     "add-one",
 ]
-```
+```text
 
 Directory structure:
+
 ```text
 /
 ├── fusion.toml
 ├── adder/        (binary)
 └── add-one/      (library)
-```
+```text
 
 Running `fusion build` in the root builds the entire workspace.
 

@@ -1,0 +1,16 @@
+// tools/forge.fsn
+// Incremental builds: caches dependency artifacts.
+
+fn build_project(manifest: Manifest) {
+    let cache = BuildCache::load(".forge/cache");
+
+    for dep in manifest.dependencies {
+        if cache.has_artifact(dep.hash) {
+            println!("Reusing cached artifact: {}", dep.name);
+        } else {
+            println!("Compiling: {}", dep.name);
+            Compiler::compile(dep);
+            cache.store(dep.hash);
+        }
+    }
+}

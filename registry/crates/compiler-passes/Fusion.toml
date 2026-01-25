@@ -1,0 +1,17 @@
+[package]
+name = "fusion_q_compiler_pass"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Quantum compiler optimization passes and gate synthesis."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm", "quantum", "compiler", "optimization"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.2.0" }
+# fusion_quantfusion_core = { workspace = true }
+fusion_core = { workspace = true }
+fusion_std = "1.0.0"
+

@@ -1,0 +1,84 @@
+//! Chaos Math Engine - Deterministic entropy source
+//!
+//! Uses logistic map for high-entropy key generation.
+use serde::{Deserialize, Serialize};
+/// Chaos Engine using logistic map for entropy generation
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ChaosEngine {
+    /// Logistic map parameter (close to 4.0 for maximum chaos)
+    r: f64,
+    /// Current state value (between 0 and 1)
+    x: f64,
+}
+impl ChaosEngine {
+    /// Create a new Chaos Engine with a seed offset
+    ///
+    /// # Arguments
+    ///
+    /// * `seed_offset` - Initial seed value for chaos initialization
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use sentinael_tribrid::ChaosEngine;
+    ///
+    /// let mut engine = ChaosEngine::new(0.5);
+    /// let value = engine.next_val();
+    /// assert!(value > 0.0 && value < 1.0);
+    /// ```
+    pub fn new(seed_offset: f64) -> Self {
+        let x = (seed_offset.fract().abs() + 0.1).min(0.999);
+        ChaosEngine { r: 3.999, x }
+    }
+    /// Advances the logistic map and returns the new state x
+    ///
+    /// Uses the logistic map equation: x_{n+1} = r * x_n * (1 - x_n)
+    pub fn next_val(&mut self) -> f64 {
+        self.x = self.r * self.x * (1.0 - self.x);
+        self.x
+    }
+    /// Generates high-entropy key material derived from chaos
+    ///
+    /// # Arguments
+    ///
+    /// * `length` - Number of bytes to generate
+    ///
+    /// # Returns
+    ///
+    /// A vector of pseudo-random bytes suitable for cryptographic key material
+    pub fn generate_key_material(&mut self, length: FSize) -> FVec<u8> {
+        let mut buffer = Vec::with_capacity(length);
+        for _ in 0..length {
+            let val = (self.next_val() * 255.0) as u8;
+            buffer.push(val);
+        }
+        buffer
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_chaos_determinism() {
+        let mut c1 = ChaosEngine::new(0.5);
+        let mut c2 = ChaosEngine::new(0.5);
+        for _ in 0..100 {
+            assert_eq!(c1.next_val(), c2.next_val());
+        }
+    }
+    #[test]
+    fn test_chaos_bounds() {
+        let mut engine = ChaosEngine::new(0.314159);
+        for _ in 0..1000 {
+            let val = engine.next_val();
+            assert!(val > 0.0 && val < 1.0, "Value out of bounds: {}", val);
+        }
+    }
+    #[test]
+    fn test_key_material_generation() {
+        let mut engine = ChaosEngine::new(0.5);
+        let key = engine.generate_key_material(64);
+        assert_eq!(key.len(), 64);
+        assert!(key.iter().any(|& b | b != key[0]));
+    }
+}

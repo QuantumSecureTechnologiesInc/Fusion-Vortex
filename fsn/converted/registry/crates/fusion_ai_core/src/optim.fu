@@ -1,0 +1,43 @@
+// SOURCE: registry/crates/fusion_ai_core/src/optim.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use crate::Tensor;
+
+pub trait Optimizer {
+    fn step(&mut self);
+}
+
+#[allow(dead_code)]
+struct Adam {
+    lr: f64,
+    params: FVec<Tensor>,
+}
+
+impl Adam {
+    fn new(params: FVec<Tensor>, lr: f64) -> Self {
+        Self { lr, params }
+    }
+}
+
+impl Optimizer for Adam {
+    fn step(&mut self) {
+        // Mock optimization step
+    }
+}
+
+#[allow(dead_code)]
+struct SGD {
+    lr: f64,
+    params: FVec<Tensor>,
+}
+
+impl SGD {
+    fn new(params: FVec<Tensor>, lr: f64) -> Self {
+        Self { lr, params }
+    }
+}
+
+impl Optimizer for SGD {
+    fn step(&mut self) {
+        // Mock optimization step
+    }
+}

@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/ai-core/src/ops/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod rope;
+
+pub use rope::RotaryEmbedding;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Major Release
 
 #### Tier 1: Native Execution
+
 - **Multi-threaded executor** with work-stealing scheduler using `SegQueue`
 - **`spawn()`** - Spawn async tasks on worker pool
 - **`block_on()`** - Block on future completion
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - QPU completion polling
 
 #### Tier 2: WASM Plugin System
+
 - **Wasmtime integration** - Production WASM engine with async support
 - **Plugin loading** - Compile and load WASM modules
 - **Plugin execution** - Call WASM functions with fuel limits
@@ -38,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HostState** - Context passed to plugins with runtime handle
 
 #### Tier 3: Distributed Execution
+
 - **ClusterManager** - Cluster mesh networking
 - **`join_mesh()`** - Join cluster via seed node
 - **`spawn_on_node()`** - Spawn task on specific node
@@ -47,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`restore_task()`** - Restore from checkpoint
 
 #### Shared Memory System
+
 - **SharedTensor** - Zero-copy tensor sharing
 - **`write_native()`** - Native write access
 - **`read_native()`** - Native read access
@@ -56,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SharedMemoryManager** - Manage shared memory regions
 
 #### Metrics & Observability
+
 - **RuntimeMetrics** - Comprehensive metrics collection
   - Native task counters
   - GPU/QPU operation counters
@@ -67,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`print_summary()`** - Human-readable metrics output
 
 #### CUDA Driver
+
 - **fusion-cuda-driver** crate - Direct CUDA FFI bindings
 - **CudaDriver** - CUDA device management
 - **Stream management** - CUDA stream creation and synchronization
@@ -74,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Linux-only** - Full support on Linux, stub on Windows/macOS
 
 #### Core Infrastructure
+
 - **Builder pattern** - Ergonomic runtime configuration
 - **Feature flags** - Optional GPU, WASM, distributed, io-uring
 - **Error handling** - Comprehensive `FusionError` types
@@ -81,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Task system** - Self-waking futures with `ArcWake`
 
 ### Documentation
+
 - **README.md** - Comprehensive project overview
 - **ARCHITECTURE.md** - Detailed architecture guide
 - **MIGRATION.md** - Migration guide from v1/v2
@@ -90,11 +98,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `supernova_complete.rs` - Complete feature showcase
 
 ### Platform Support
+
 - **Linux** - Full support with io_uring
 - **Windows** - Thread pool I/O, WASM, distributed
 - **macOS** - Thread pool I/O, WASM, distributed
 
 ### Performance
+
 - Task spawn: ~50ns (native), ~10μs (WASM)
 - Context switch: <100ns
 - Host function call: ~500ns
@@ -104,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - Previous (Nebula)
 
 ### Features
+
 - WASM-only execution
 - Basic plugin system
 - gRPC server
@@ -112,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - Previous (v1)
 
 ### Features
+
 - Native execution only
 - Heterogeneous scheduler
 - GPU/QPU support

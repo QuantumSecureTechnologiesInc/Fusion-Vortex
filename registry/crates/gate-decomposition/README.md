@@ -1,7 +1,7 @@
 # Fusion Gate Decomposition
 
-**Version:** 0.2.0  
-**Type:** Quantum Compiler Pass  
+**Version:** 0.2.0
+**Type:** Quantum Compiler Pass
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let dense_gate = Gate::Toffoli(0, 1, 2);
 
 let circuit = decomposer.decompose(&dense_gate)?;
 // Result: Sequence of H, T, CX, T_dagger...
-```
+```text
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 # Fusion Tensor Sparse
 
-**Version:** 0.2.0  
-**Type:** Mathematics  
+**Version:** 0.2.0
+**Type:** Mathematics
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_tensor_sparse::SparseTensor;
 
 let sparse = SparseTensor::from_coo(indices, values, shape)?;
 let dense = sparse.to_dense()?;
-```
+```text
 
 ## Dependencies
 

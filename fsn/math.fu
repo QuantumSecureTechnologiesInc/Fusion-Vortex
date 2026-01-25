@@ -1,0 +1,17 @@
+// math.fsn
+// Secure operator logic.
+
+fn secure_add(a: FInt, b: FInt) -> FInt {
+    fusion_if!(true, {
+        a + b
+    } else {
+        panic!("Crypto-context missing: arithmetic halted");
+    })
+}
+
+fn secure_access(vault: FVec<FInt>, index: usize) -> FInt {
+    match vault.get(index) {
+        Some(val) => val.clone(),
+        None => FInt::new(0),
+    }
+}

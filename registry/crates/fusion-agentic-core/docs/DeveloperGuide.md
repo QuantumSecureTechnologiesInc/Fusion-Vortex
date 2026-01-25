@@ -16,7 +16,7 @@
 
 The Fusion Agentic Core follows a modular architecture with four primary components:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │         AgenticCore (Facade)            │
 │  Unified API for all functionality      │
@@ -28,7 +28,7 @@ The Fusion Agentic Core follows a modular architecture with four primary compone
 │Agentic │  │Chain of  │  │  Vibe    │  │  Excellence  │
 │Engine  │  │Thought   │  │  Coding  │  │  Enforcer    │
 └────────┘  └──────────┘  └──────────┘  └──────────────┘
-```
+```text
 
 ### Design Principles
 
@@ -42,7 +42,7 @@ The Fusion Agentic Core follows a modular architecture with four primary compone
 
 ### Project Layout
 
-```
+```text
 fusion-agentic-core/
 ├── Cargo.toml
 ├── src/
@@ -61,11 +61,11 @@ fusion-agentic-core/
 ├── CHANGELOG.md
 ├── LICENSE-MIT
 └── LICENSE-APACHE
-```
+```text
 
 ### Module Dependencies
 
-```
+```text
 lib.rs
   ├─→ agentic.rs
   │     └─→ chain_of_thought (uses ReasoningChain)
@@ -73,58 +73,73 @@ lib.rs
   ├─→ vibe_coding.rs
   ├─→ code_excellence.rs
   └─→ reasoning.rs
-```
+```text
 
 ## Building and Testing
 
 ### Building
 
 ```bash
+
 # Build the crate
+
 cargo build
 
 # Build with optimisations
+
 cargo build --release
 
 # Check without building
+
 cargo check
-```
+```text
 
 ### Running Tests
 
 ```bash
+
 # Run all tests
+
 cargo test
 
 # Run with output
+
 cargo test -- --nocapture
 
 # Run specific test
+
 cargo test test_agentic_core_creation
 
 # Run with coverage (requires cargo-tarpaulin)
+
 cargo tarpaulin --out Html
-```
+```text
 
 ### Running Examples
 
 ```bash
+
 # Basic usage example
+
 cargo run --example basic_usage
 
 # With release optimisations
+
 cargo run --release --example basic_usage
-```
+```text
 
 ### Documentation
 
 ```bash
+
 # Generate and open documentation
+
 cargo doc --open
 
 # Generate without dependencies
+
 cargo doc --no-deps
-```
+```text
 
 ## API Reference
 
@@ -137,13 +152,13 @@ pub struct AgenticCore { /* ... */ }
 
 impl AgenticCore {
     pub fn new() -> Self;
-    
+
     pub fn process_problem(&self, problem: &str) -> Result<String>;
     pub fn vibe_code(&self, intent: &str) -> Result<String>;
     pub fn iterate_solution(&self, current: &str, feedback: &str) -> Result<String>;
     pub fn check_excellence(&self, code: &str) -> Result<QualityMetrics>;
 }
-```
+```text
 
 #### AgenticEngine
 
@@ -158,7 +173,7 @@ impl AgenticEngine {
     pub fn new() -> Self;
     pub fn reason(&mut self, context: &AgenticContext, chain: &ReasoningChain) -> Result<String>;
 }
-```
+```text
 
 #### ChainOfThought
 
@@ -177,7 +192,7 @@ impl ChainOfThought {
     pub fn extract_insights(&self, chain: &ReasoningChain) -> Vec<String>;
     pub fn visualise(&self, chain: &ReasoningChain) -> String;
 }
-```
+```text
 
 #### VibeEngine
 
@@ -195,7 +210,7 @@ impl VibeEngine {
     pub fn add_pattern(&mut self, pattern: CodePattern);
     pub fn patterns_by_category(&self, category: PatternCategory) -> Vec<&CodePattern>;
 }
-```
+```text
 
 #### ExcellenceEnforcer
 
@@ -213,7 +228,7 @@ impl ExcellenceEnforcer {
     pub fn set_strict_mode(&mut self, strict: bool);
     pub fn set_min_score(&mut self, score: f64);
 }
-```
+```text
 
 ## Extending the System
 
@@ -233,7 +248,7 @@ let custom_pattern = CodePattern {
 
 let mut vibe = VibeEngine::new();
 vibe.add_pattern(custom_pattern);
-```
+```text
 
 ### Creating Custom Quality Standards
 
@@ -252,7 +267,7 @@ let custom_standard = CodeStandard {
         },
     ],
 };
-```
+```text
 
 ### Implementing Custom Reasoning Strategies
 
@@ -266,7 +281,7 @@ session.add_premise("Observation 2".to_string());
 // Implement custom reasoning logic
 let conclusion = perform_abductive_reasoning(&session);
 session.add_conclusion(conclusion);
-```
+```text
 
 ### Extending ThoughtNode
 
@@ -281,51 +296,55 @@ let child1 = ThoughtNode::new("Sub-problem 1".to_string())
     .with_confidence(0.9);
 
 root.add_child(child1);
-```
+```text
 
 ## Performance Considerations
 
 ### Optimisation Tips
 
 1. **Reuse Core Instance**
+
    ```rust
    // Good: Create once, use many times
    let core = AgenticCore::new();
    for problem in problems {
        core.process_problem(&problem)?;
    }
-   
+
    // Avoid: Creating new instances
    for problem in problems {
        let core = AgenticCore::new(); // Wasteful
        core.process_problem(&problem)?;
    }
-   ```
+```text
 
 2. **Parallel Processing**
+
    ```rust
    use rayon::prelude::*;
-   
+
    let results: Vec<_> = problems.par_iter()
        .map(|p| core.process_problem(p))
        .collect();
-   ```
+```text
 
 3. **Limit Iterations**
+
    ```rust
    // For quick prototypes
    let mut engine = AgenticEngine::new();
    engine.max_iterations = 5; // Instead of default 10
-   ```
+```text
 
 4. **Pattern Pre-loading**
+
    ```rust
    // Load all patterns at startup
    let mut vibe = VibeEngine::new();
    for pattern in load_custom_patterns() {
        vibe.add_pattern(pattern);
    }
-   ```
+```text
 
 ### Memory Management
 
@@ -337,14 +356,17 @@ root.add_child(child1);
 ### Benchmarking
 
 ```bash
+
 # Run benchmarks (requires criterion)
+
 cargo bench
 
 # Profile with perf
+
 cargo build --release
 perf record target/release/examples/basic_usage
 perf report
-```
+```text
 
 ## Security
 
@@ -376,7 +398,7 @@ let metrics = enforcer.analyse(code)?;
 if metrics.security < 90.0 {
     eprintln!("Security concerns detected!");
 }
-```
+```text
 
 Security rules checked:
 - Unsafe code usage
@@ -387,27 +409,30 @@ Security rules checked:
 ### Best Practices
 
 1. **Always Validate Inputs**
+
    ```rust
    if problem.len() > MAX_PROBLEM_LENGTH {
        return Err(AgenticError::InvalidContext("Problem too long".into()));
    }
-   ```
+```text
 
 2. **Use Result Types**
+
    ```rust
    // Good
    pub fn process(&self, input: &str) -> Result<String>;
-   
+
    // Avoid
    pub fn process(&self, input: &str) -> String; // No error handling
-   ```
+```text
 
 3. **Limit Resource Usage**
+
    ```rust
    const MAX_ITERATIONS: usize = 10;
    const MAX_CHAIN_DEPTH: usize = 20;
    const MAX_PATTERN_COUNT: usize = 1000;
-   ```
+```text
 
 ## Contributing
 
@@ -443,19 +468,23 @@ Security rules checked:
 **Problem**: Compilation errors
 
 **Solution**:
+
 ```bash
 cargo clean
 cargo update
 cargo build
-```
+```text
 
 **Problem**: Dependency conflicts
 
 **Solution**:
+
 ```bash
 cargo tree
+
 # Review and resolve conflicts
-```
+
+```text
 
 ### Runtime Issues
 
@@ -482,6 +511,6 @@ cargo tree
 
 ---
 
-**Version**: 0.1.0  
-**Last Updated**: 2025-12-12  
+**Version**: 0.1.0
+**Last Updated**: 2025-12-12
 **Licence**: MIT OR Apache-2.0

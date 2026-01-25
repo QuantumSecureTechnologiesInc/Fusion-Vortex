@@ -1,0 +1,12 @@
+// sys/drivers.fsn
+// Metal drivers: zero-copy I/O and DMA support.
+
+struct DmaDriver {
+    device_id: FString,
+}
+
+impl DmaDriver {
+    fn load_tensor(self, address: u64, size: usize) -> FVec<f32> {
+        Hardware::dma_map(self.device_id, address, size)
+    }
+}

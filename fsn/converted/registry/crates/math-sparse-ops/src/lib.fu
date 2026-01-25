@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/math-sparse-ops/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing math-sparse-ops...");
+}

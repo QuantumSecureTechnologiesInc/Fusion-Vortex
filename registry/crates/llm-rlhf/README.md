@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 llm-rlhf = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use llm_rlhf::Trainer;
 fn main() {
     Trainer::new().step();
 }
-```
+```text
 
 ## License
 

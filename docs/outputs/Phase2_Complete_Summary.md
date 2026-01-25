@@ -83,7 +83,7 @@ class VectorT {
     fn len() -> int
     fn free() -> void
 }
-```
+```text
 
 **Features**:
 
@@ -109,7 +109,7 @@ class LinkedListT {
     fn is_empty() -> int
     fn clear() -> void
 }
-```
+```text
 
 **Features**:
 
@@ -133,7 +133,7 @@ class OptionT {
     fn unwrap() -> T
     fn unwrap_or(default: T) -> T
 }
-```
+```text
 
 **Features**:
 
@@ -159,7 +159,7 @@ class Result<T, E> {
     fn unwrap_err() -> E
     fn unwrap_or(default: T) -> T
 }
-```
+```text
 
 **Features**:
 
@@ -182,7 +182,7 @@ class StringUtils {
     fn to_uppercase(s: int) -> int
     fn to_lowercase(s: int) -> int
 }
-```
+```text
 
 **Features**:
 
@@ -207,7 +207,7 @@ All standard library components successfully compile:
 ✅ stdlib/result.fu       - Generates valid LLVM IR
 ✅ stdlib/string.fu       - Generates valid LLVM IR (expected borrow warnings)
 ✅ stdlib/stringutils.fu  - All features working
-```
+```text
 
 ### Feature Tests
 
@@ -218,7 +218,7 @@ All standard library components successfully compile:
 ✅ test_linkedlist.fu          - LinkedList operations
 ✅ test_option.fu              - Option type
 ✅ test_result.fu              - Result type
-```
+```text
 
 ## Known Limitations & Future Work
 

@@ -1,0 +1,59 @@
+// SOURCE: registry/crates/trie-search/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Production Trie Search.
+///
+/// Used to constrain beam search or implement grammar-based decoding.
+
+#[derive(Debug)]
+struct TrieNode {
+    children: FMap<u32, TrieNode>, // Token ID -> Child Node
+    is_terminal: FBool,
+}
+
+impl TrieNode {
+    fn new() -> Self {
+        Self {
+            children: HashMap::new(),
+            is_terminal: false,
+        }
+    }
+}
+
+struct DecodingTrie {
+    root: TrieNode,
+}
+
+impl DecodingTrie {
+    fn new() -> Self {
+        Self {
+            root: TrieNode::new(),
+        }
+    }
+
+    /// Adds a constraint sequence to the trie.
+    fn insert_sequence(&mut self, sequence: &[u32]) {
+        let mut current = &mut self.root;
+        for &token in sequence {
+            current = current.children.entry(token).or_insert_with(TrieNode::new);
+        }
+        current.is_terminal = true;
+    }
+
+    /// Returns a mask (FVec<FBool>) that filters logits to only valid next tokens.
+    fn get_valid_tokens(&self, current_prefix: &[u32]) -> FVec<u32> {
+        let mut node = &self.root;
+
+        // Traverse to the current prefix position
+        for &token in current_prefix {
+            if let Some(child) = node.children.get(&token) {
+                node = child;
+            } else {
+                // Prefix is already invalid, no valid next tokens from this branch
+                return Vec::new();
+            }
+        }
+
+        // Return all possible next tokens (keys of current node's children)
+        node.children.keys().cloned().collect()
+    }
+}

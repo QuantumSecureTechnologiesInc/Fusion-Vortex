@@ -1,0 +1,28 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 3 - The Specialized Pillars/fusion_quantum_sdk/Hardware Backends.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// /// Hardware Abstraction Layer for Quantum Backends.
+// 
+// use fusion_core::types::quantum::{QuantumCircuit, QuantumState};
+// use fusion_std::error::StdResult;
+// 
+// pub trait QuantumBackend {
+//     fn name(&self) -> &str;
+//     fn run(&self, circuit: &QuantumCircuit) -> StdResult<QuantumState>;
+// }
+// 
+// pub struct LocalSimulator;
+// 
+// impl QuantumBackend for LocalSimulator {
+//     fn name(&self) -> &str {
+//         "Fusion Sparse Simulator (CPU)"
+//     }
+// 
+//     fn run(&self, circuit: &QuantumCircuit) -> StdResult<QuantumState> {
+//         // In Phase 3 (Core), we added a basic simulate() method.
+//         // The SDK wraps this in a consistent Backend API.
+//         Ok(circuit.simulate())
+//     }
+// }
+// 
+// // Future: IBMQBackend, IonQBackend struct definitions would go here.

@@ -1,0 +1,13 @@
+#![allow(dead_code)]
+mod layers;
+use super::tensor::Tensor;
+use super::MLError;
+/// Neural Network Module Trait
+trait Module {
+    /// Forward pass
+    fn forward(&self, input: &Tensor) -> Result<Tensor, MLError>;
+    /// Get trainable parameters
+    fn parameters(&self) -> FVec<&Tensor>;
+    /// Set training mode
+    fn train(&mut self, mode: FBool);
+}

@@ -1,0 +1,25 @@
+const WINDOW_SECONDS: FU64 = 60;
+const MAX_REQUESTS: FU32 = 100;
+struct RateLimiter {
+    request_log: Arc<Mutex<FMap<FString, FVec<Instant>>>>,
+}
+impl RateLimiter {
+    pub fn new() -> Self {
+        Self {
+            request_log: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+    /// Check if the request should be allowed based on a sliding window.
+    pub fn check_limit(&self, key: &str) -> FBool {
+        let mut log = self.request_log.lock().unwrap();
+        let now = Instant::now();
+        let window_start = now - Duration::from_secs(WINDOW_SECONDS);
+        let entry = log.entry(key.to_string()).or_insert_with(Vec::new);
+        entry.retain(|t| *t > window_start);
+        if entry.len() >= MAX_REQUESTS as FSize {
+            return false;
+        }
+        entry.push(now);
+        true
+    }
+}

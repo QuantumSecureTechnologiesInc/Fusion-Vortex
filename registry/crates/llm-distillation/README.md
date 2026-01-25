@@ -1,7 +1,7 @@
 # Fusion LLM Distillation
 
-**Version:** 0.2.0  
-**Type:** ML Framework  
+**Version:** 0.2.0
+**Type:** ML Framework
 **License:** MIT
 
 ## Overview
@@ -27,7 +27,7 @@ while let Some(batch) = dataset.next().await {
     let loss = distiller.step(batch).await?;
     println!("Distillation Loss: {}", loss);
 }
-```
+```text
 
 ## Dependencies
 

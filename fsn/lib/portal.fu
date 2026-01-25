@@ -1,0 +1,39 @@
+// lib/portal.fsn
+// Thread-safe encrypted communication.
+
+struct Portal<T> {
+    tx: ChannelSender<T>,
+    rx: ChannelReceiver<T>,
+}
+
+impl<T> Portal<T> {
+    fn open() -> Self {
+        let (tx, rx) = Channel::new();
+        Portal { tx, rx }
+    }
+
+    fn send(self, msg: T) {
+        let proof = Kernel::snapshot_context();
+        let packet = SecurePacket { msg, proof };
+        self.tx.send(packet);
+    }
+
+    fn recv(self) -> T {
+        let packet = self.rx.recv();
+
+        fusion_if!(packet.proof.verify(), {
+            packet.msg
+        } else {
+            panic!("Portal interception detected: signature mismatch");
+        })
+    }
+}
+
+fn spawn(task: Fn()) {
+    let ctx = Kernel::current_context();
+
+    Thread::spawn(move || {
+        Kernel::inject(ctx);
+        task();
+    });
+}

@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/cuda-kernels/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// cuda-kernels implementation
+
+struct CudaKernelsModule;

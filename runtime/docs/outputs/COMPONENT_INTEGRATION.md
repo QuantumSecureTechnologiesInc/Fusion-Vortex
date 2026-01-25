@@ -21,10 +21,11 @@ All components of the Fusion Runtime Core are now fully integrated and accessibl
 - Background Queue (Priority 3) - Idle-time tasks
 
 **Access**:
+
 ```rust
 let runtime = Runtime::new();
 let scheduler = runtime.scheduler();
-```
+```text
 
 **Key APIs**:
 - `spawn_task()` - Submit tasks with priority
@@ -46,6 +47,7 @@ let scheduler = runtime.scheduler();
 - Hardware-level synchronization
 
 **Access**:
+
 ```rust
 let runtime = Runtime::new();
 let vlc = runtime.vlc();
@@ -55,7 +57,7 @@ let result = vlc.execute_training_loop(config, |iteration| {
     // Your iteration logic
     loss_value
 });
-```
+```text
 
 **Key APIs**:
 - `execute_training_loop()` - AI/ML training
@@ -82,10 +84,11 @@ let result = vlc.execute_training_loop(config, |iteration| {
 - Tensor location caching
 
 **Access**:
+
 ```rust
 let runtime = Runtime::new();
 let mem_mgr = runtime.memory_manager();
-```
+```text
 
 **Key APIs**:
 - `allocate()` - Allocate device memory
@@ -112,10 +115,11 @@ let mem_mgr = runtime.memory_manager();
 - Fused I/O Reactor
 
 **Access**:
+
 ```rust
 let runtime = Runtime::new();
 let hal = runtime.hal();
-```
+```text
 
 **Key APIs**:
 - GPU: `launch_kernel()`, `create_stream()`
@@ -142,10 +146,11 @@ let hal = runtime.hal();
 - Task prioritization
 
 **Access**:
+
 ```rust
 let runtime = Runtime::new();
 let executor = runtime.executor();
-```
+```text
 
 **Key APIs**:
 - `spawn()` - Spawn async task
@@ -187,7 +192,7 @@ let executor = runtime.executor();
 │  └─────────────────────────────────────────┘                  │
 │                                                                │
 └───────────────────────────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -203,7 +208,7 @@ let runtime = Runtime::builder()
     .worker_threads(8)         // Sets executor thread count
     .memory_pool_size(2_000_000_000)  // 2GB memory pool
     .build();
-```
+```text
 
 **Initialization sequence**:
 1. **Scheduler** - Creates priority queues
@@ -222,6 +227,7 @@ use fusion_runtime_core::{Runtime, QoSMode};
 use fusion_runtime_scheduler::VlcConfig;
 
 #[tokio::main]
+
 async fn main() {
     // Initialize runtime with all components
     let runtime = Runtime::builder()
@@ -230,10 +236,10 @@ async fn main() {
         .enable_qos(QoSMode::HighThroughput)
         .worker_threads(16)
         .build();
-    
+
     println!("✅ Runtime initialized with {} threads",
              runtime.config().worker_threads);
-    
+
     // 1. Use VLC for training loop
     let vlc_config = VlcConfig {
         max_iterations: 1000,
@@ -241,7 +247,7 @@ async fn main() {
         epsilon: 1e-4,
         ..Default::default()
     };
-    
+
     let training_result = runtime.vlc().execute_training_loop(
         vlc_config,
         |iteration| {
@@ -249,38 +255,38 @@ async fn main() {
             simulate_training_iteration(iteration)
         }
     );
-    
+
     println!("Training complete: loss={:.6}, iterations={}",
              training_result.final_loss,
              training_result.iterations);
-    
+
     // 2. Submit high-priority task via executor
     let task_handle = runtime.spawn_high_priority(async {
         // Critical trading logic
         process_market_data().await
     });
-    
+
     // 3. Access memory manager for zero-copy transfer
     let mem_mgr = runtime.memory_manager();
     // Transfer tensor to GPU (zero-copy DMA)
-    
+
     // 4. Access HAL for direct kernel launch
     let hal = runtime.hal();
     // Launch custom GPU kernel
-    
+
     // 5. Get scheduler statistics
     let sched_stats = runtime.scheduler().stats();
-    println!("Scheduler: high_priority={}, normal={}", 
+    println!("Scheduler: high_priority={}, normal={}",
              sched_stats.high_priority_len,
              sched_stats.normal_priority_len);
-    
+
     // 6. Get runtime metrics
     let metrics = runtime.metrics();
     println!("Runtime metrics:");
     println!("  Tasks spawned: {}", metrics.tasks_spawned);
     println!("  GPU launches: {}", metrics.gpu_kernel_launches);
     println!("  Total latency: {}μs", metrics.total_latency_us);
-    
+
     // Cleanup
     runtime.shutdown();
 }
@@ -294,7 +300,7 @@ async fn process_market_data() -> String {
     // Simulated market data processing
     "Order executed".to_string()
 }
-```
+```text
 
 ---
 
@@ -324,7 +330,7 @@ async fn process_market_data() -> String {
 7. VLC signals Scheduler ONCE after all iterations
    ↓
 8. Executor resumes caller with final result
-```
+```text
 
 ---
 
@@ -356,7 +362,7 @@ impl Runtime {
     pub fn block_on<F>(&self, future: F) -> F::Output;
     pub fn spawn<F>(&self, future: F) -> TaskHandle<F::Output>;
     pub fn spawn_high_priority<F>(&self, future: F) -> TaskHandle<F::Output>;
-    
+
     // Component accessors
     pub fn vlc(&self) -> &VariationalLoopController;
     pub fn scheduler(&self) -> &Scheduler;
@@ -365,10 +371,10 @@ impl Runtime {
     pub fn executor(&self) -> &Executor;
     pub fn config(&self) -> &RuntimeConfig;
     pub fn metrics(&self) -> RuntimeMetrics;
-    
+
     pub fn shutdown(self);
 }
-```
+```text
 
 ---
 
@@ -390,6 +396,6 @@ impl Runtime {
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
 **Related**: See `docs/design/ExecutionFlow.md` and `docs/design/Architecture.md`

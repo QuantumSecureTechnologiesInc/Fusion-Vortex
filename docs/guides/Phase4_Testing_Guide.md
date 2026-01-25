@@ -25,7 +25,7 @@
 
 ### Package Manager Tests
 
-```
+```text
 
 # Run all package manager tests
 
@@ -38,7 +38,7 @@ cargo test test_version_parsing
 # Run with output
 
 cargo test test_package_manager -- --nocapture
-```
+```text
 
 ### Expected Results
 
@@ -57,7 +57,7 @@ test package_manager_tests::test_manifest_generation ... ok
 test package_manager_tests::test_cli_create_project ... ok
 
 test result: ok. 10 passed; 0 failed
-```
+```text
 
 ---
 
@@ -88,7 +88,7 @@ test result: ok. 10 passed; 0 failed
 
 ### Package Manager CLI
 
-```
+```text
 
 # Create new project
 
@@ -130,11 +130,11 @@ fusion run
 # Publish package
 
 fusion publish
-```
+```text
 
 ### ML Examples
 
-```
+```text
 
 # Neural network demo
 
@@ -147,7 +147,7 @@ fusion_lang -i examples/ml_demo/linear_regression.fu
 # Fibonacci ML demo
 
 fusion_lang -i examples/advanced/fibonacci_ml.fu
-```
+```text
 
 ---
 
@@ -171,7 +171,7 @@ fusion_lang -i examples/advanced/fibonacci_ml.fu
 Project depends on: A ^1.0
 Available: A 1.0.0
 Result: A 1.0.0
-```
+```text
 
 **Transitive**:
 
@@ -180,7 +180,7 @@ Project depends on: A ^1.0
 A depends on: B ^1.0
 Available: A 1.0.0, B 1.0.0
 Result: A 1.0.0, B 1.0.0
-```
+```text
 
 **Conflict** (should error):
 
@@ -188,7 +188,7 @@ Result: A 1.0.0, B 1.0.0
 A depends on: C ^1.0
 B depends on: C ^2.0
 Result: Version conflict error
-```
+```text
 
 ---
 
@@ -196,7 +196,7 @@ Result: Version conflict error
 
 ### Recommended CI Setup
 
-```
+```text
 
 # .github/workflows/test.yml
 
@@ -216,7 +216,7 @@ jobs:
 
       - run: cargo test
       - run: cargo test --package fusion_lang
-```
+```text
 
 ---
 
@@ -324,7 +324,7 @@ jobs:
 
 ### Coverage Report
 
-```
+```text
 
 # Generate coverage report (requires tarpaulin)
 
@@ -333,7 +333,7 @@ cargo tarpaulin --out Html
 # View report
 
 open tarpaulin-report.html
-```
+```text
 
 ### Expected Coverage
 

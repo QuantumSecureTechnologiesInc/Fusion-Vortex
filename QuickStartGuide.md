@@ -1,201 +1,163 @@
-# Fusion v1.0 Quick Start Guide
+<!-- doc-type: tutorial -->
+<!-- audience: user -->
+<!-- product: FusionVisualCompiler -->
 
-**Get up and running in 5 minutes!**
+# Quick Start Guide - Fusion Visual Compiler
 
----
+**Get started in 5 minutes**
+
+## What You'll Build
+
+By the end of this guide, you'll have:
+- ✅ Fusion Visual Compiler running locally
+- ✅ Generated your first project from an intent
+- ✅ Compiled and run the generated code
 
 ## Prerequisites
 
-- **Operating System**: Linux, macOS, or Windows
-- **Rust Toolchain**: Latest stable (for building from source)
-- **LLVM 18+**: Required for code generation
-- **Optional**: CUDA 12+ (for GPU-accelerated AI)
+- Windows 10/11 (64-bit)
+- 4GB RAM minimum
+- 500MB free disk space
 
----
+## Step 1: Installation
 
-## Installation
+### Option A: MSI Installer (Recommended)
 
-### Option 1: Cargo Install (Recommended)
+1. Download `Fusion-Visual-Compiler-1.0.0-x64.msi`
+2. Double-click to install
+3. Follow the installation wizard
+4. Launch from Start Menu
 
-```bash
-cargo install fusion-lang --version 1.0.0
-```
+### Option B: From Source
 
-### Option 2: Build from Source
+```powershell
 
-```bash
-# Clone the repository
-git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language.git
-cd Fusion-Programming-Language
+# Clone repository
 
-# Build the compiler
-cargo build --release
+git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
+cd "Fusion - Programming Language"
 
-# Add to PATH
-export PATH="$PATH:$(pwd)/target/release"
-```
+# Build desktop app
 
-### Verify Installation
+cd cmd/fusion-visual-desktop
+cargo tauri build
 
-```bash
-fusion --version
-# Output: Fusion 1.0.0
-```
+# Or run web version
 
----
+cd ../fusion-visual
+cargo run --release
+```text
 
-## Your First Program
+## Step 2: First Launch
 
-### Hello, World!
+1. Open **Fusion Visual Compiler** from Start Menu
+2. You'll see the main interface with:
+   - **Project Explorer** (left sidebar)
+   - **Intent Input** (center)
+   - **Terminal/Logs** (bottom)
 
-Create `hello.fu`:
-```fusion
-fn main():
-    print("Hello, Fusion v1.0!")
-```
+## Step 3: Create Your First Project
 
-Run it:
-```bash
-fusion run hello.fu
-# Output: Hello, Fusion v1.0!
-```
+1. In the **Intent Input** field, type:
 
----
+```text
+   Create a simple web server with a hello world endpoint
+```text
 
-## Quick Examples
+2. Press **EXECUTE** or hit `Enter`
 
-### Variables & Types
+3. Watch the magic happen:
+   - 🧠 **Analyzing** - AI parses your intent
+   - 🔧 **Resolving** - Dependencies optimized
+   - 📝 **Generating** - Code created
+   - ✅ **Complete** - Project ready!
 
-```fusion
-let x = 42              // Inferred: int
-let y: float = 3.14     // Explicit: float
-let mut counter = 0     // Mutable variable
-counter += 1
-```
+4. Find your project in `fusion_build_<timestamp>/`
 
-### Functions
+## Step 4: Explore the Generated Project
 
-```fusion
-fn add(a: int, b: int) -> int:
-    return a + b
+```powershell
+cd fusion_build_<timestamp>
+dir
+```text
 
-fn main():
-    print(add(2, 3))  // Output: 5
-```
+You'll see:
 
-### Quantum Computing (⚛️)
-
-```fusion
-import quantum.circuits
-
-fn main():
-    // Create qubit in superposition
-    let q = Qubit::new()
-    h(q)  // Hadamard gate
-    
-    // Measure and print result
-    let result = measure(q)
-    print("Quantum result: " + result)
-```
-
-### AI/ML (🧠)
-
-```fusion
-import ai.models.llama
-
-fn main():
-    let model = Llama3::load("7b-chat")
-    let response = model.generate("What is quantum computing?")
-    print(response)
-```
-
----
-
-## Project Structure
-
-Create a new project:
-```bash
-fusion new my_project
-cd my_project
-```
-
-Project structure:
-```
-my_project/
-├── fusion.toml       # Project configuration
+```text
+fusion_build_123456/
+├── Fusion.toml      # Project manifest
+├── Flux.lock        # Dependency lock
 ├── src/
-│   └── main.fu       # Entry point
-└── tests/
-    └── test_main.fu  # Tests
-```
+│   └── main.fsn     # Your code!
+└── README.md        # Documentation
+```text
 
----
+## Step 5: Build and Run
 
-## Building & Running
+```powershell
 
-```bash
-# Run directly
-fusion run src/main.fu
+# Build the project
 
-# Build optimized binary
 fusion build --release
 
-# Run tests
-fusion test
-```
+# Run it
 
----
+fusion run
+```text
 
-## Compilation Targets
+You should see:
 
-### Native (Default)
-```bash
-fusion build src/main.fu
-```
+```text
+🚀 Server listening on http://0.0.0.0:3000
+```text
 
-### WebAssembly
-```bash
-fusion build src/main.fu --target wasm -o app.wasm
-```
-
----
-
-## IDE Setup
-
-### VS Code
-
-Install the Fusion extension:
-```bash
-code --install-extension fusion-language-1.0.0.vsix
-```
-
-Features:
-- ✅ Syntax highlighting
-- ✅ Auto-completion
-- ✅ Error diagnostics
-- ✅ Go to definition
-- ✅ Code formatting
-
----
-
-## Getting Help
-
-- **Documentation**: [docs/guides/User_Guide.md](docs/guides/User_Guide.md)
-- **Examples**: [examples/](examples/)
-- **GitHub Issues**: Report bugs and request features
-- **Discord**: Join the community chat
-
----
+Open `http://localhost:3000` in your browser!
 
 ## What's Next?
 
-1. 📘 Read the [User Guide](docs/guides/User_Guide.md) for comprehensive coverage
-2. ⚛️ Try [Quantum Examples](examples/quantum/) for quantum computing
-3. 🧠 Explore [AI Examples](examples/ai/) for machine learning
-4. 🏢 Check out [Enterprise Examples](examples/enterprise/) for cloud deployment
+### Try More Intents
+
+```text
+"Create a machine learning pipeline for image classification"
+"Build a quantum circuit simulator"
+"Generate a CLI tool for file processing"
+```text
+
+### Explore Features
+
+- **GPU Acceleration**: Add "with GPU support" to your intent
+- **Quantum Computing**: Try "quantum" keywords
+- **Distributed Systems**: Request "distributed" or "cluster"
+
+### Learn More
+
+- [User Guide](docs/guides/UserGuide.md) - Complete feature reference
+- [Examples](examples/) - Sample projects
+- [API Reference](docs/api/) - Detailed API docs
+
+## Troubleshooting
+
+### "Server failed to start"
+
+- Check if port 3000 is already in use
+- Run: `netstat -ano | findstr :3000`
+
+### "Build failed"
+
+- Ensure Fusion compiler is installed
+- Run: `fusion --version`
+
+### "Intent not recognized"
+
+- Try being more specific
+- Use keywords like "web", "ML", "quantum", "CLI"
+
+## Get Help
+
+- 📧 Email: support@quantumsecuretechnologies.co.uk
+- 💬 Discord: [Join our community](https://discord.gg/fusion)
+- 🐛 Issues: [GitHub Issues](https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language/issues)
 
 ---
 
-**Welcome to Fusion v1.0!** 🚀
-
-*One language. All of computing.*
+**Congratulations!** You've created your first Fusion project. 🎉

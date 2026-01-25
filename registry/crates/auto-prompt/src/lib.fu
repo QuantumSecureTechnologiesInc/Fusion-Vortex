@@ -1,0 +1,22 @@
+use fusion_ai_core::optim::{Optimizer, SGD};
+use fusion_ai_core::Tensor;
+use fusion_std::error::StdResult;
+struct PromptOptimizer {
+    optimizer: SGD,
+    pub soft_prompt_vector: Tensor,
+}
+impl PromptOptimizer {
+    pub fn new(prompt_len: FSize, embed_dim: FSize, learning_rate: f64) -> Self {
+        let soft_prompt_vector = Tensor::zeros(&[prompt_len, embed_dim]);
+        let optimizer = SGD::new(vec![soft_prompt_vector.clone()], learning_rate);
+        Self {
+            optimizer,
+            soft_prompt_vector,
+        }
+    }
+    /// Runs a single optimization step to tune the prompt vector towards a target metric.
+    pub fn optimize_step(&mut self) -> StdResult<()> {
+        self.optimizer.step();
+        Ok(())
+    }
+}

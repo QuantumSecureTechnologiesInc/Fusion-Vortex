@@ -1,0 +1,11 @@
+// SOURCE: crates/tensorweave/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod config;
+mod core;
+mod flow;
+mod processors;
+
+// Re-export commonly used types
+pub use config::Settings;
+pub use core::TensorData;
+pub use flow::{FlowProcessor, TensorWeaveEngine};

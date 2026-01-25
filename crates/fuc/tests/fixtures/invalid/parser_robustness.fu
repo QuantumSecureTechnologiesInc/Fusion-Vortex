@@ -1,0 +1,16 @@
+struct Point {
+    x: int,
+    y: int,
+}
+
+struct BadStruct {
+    x: int,
+    y int,
+    z: int,
+    w: int
+}
+
+fn main() -> void {
+    let p: Point = [10, 20,];
+    foo(p.x, p.y,);
+}

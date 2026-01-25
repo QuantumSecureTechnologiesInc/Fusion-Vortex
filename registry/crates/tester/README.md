@@ -1,7 +1,7 @@
 # Fusion Tester
 
-**Version:** Workspace  
-**Type:** Dev Tool  
+**Version:** Workspace
+**Type:** Dev Tool
 **License:** MIT
 
 ## Overview
@@ -19,7 +19,7 @@ Fusion Tester (`fusion-tester`) is the unified testing framework for the Fusion 
 
 ```bash
 fusion test
-```
+```text
 
 Or programmatically:
 
@@ -28,7 +28,7 @@ use fusion_tester::Runner;
 
 let runner = Runner::new();
 runner.run_tests("src/")?;
-```
+```text
 
 ## Dependencies
 

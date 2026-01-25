@@ -1,0 +1,147 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Classical Type System.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// /// The Classical Type System implementation.
+// /// Covers primitives, compound types, and collections.
+// 
+// #[derive(Debug, Clone, PartialEq)]
+// pub enum ClassicalType {
+//     // Primitives
+//     Int(IntType),
+//     Float(FloatType),
+//     Bool,
+//     Char,
+//     String,
+//     
+//     // Compound
+//     Struct(StructType),
+//     Enum(EnumType),
+//     Tuple(Vec<ClassicalType>),
+//     
+//     // Collections
+//     Vector(Box<ClassicalType>),
+//     HashMap(Box<ClassicalType>, Box<ClassicalType>),
+//     HashSet(Box<ClassicalType>),
+//     
+//     // References (for borrowing analysis in Semantic Analysis)
+//     Reference(Box<ClassicalType>),
+//     MutReference(Box<ClassicalType>),
+//     
+//     // Unit type (void)
+//     Unit,
+// }
+// 
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub enum IntType {
+//     I8, I16, I32, I64, I128,
+//     U8, U16, U32, U64, U128,
+// }
+// 
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub enum FloatType {
+//     F32, F64,
+// }
+// 
+// #[derive(Debug, Clone, PartialEq)]
+// pub struct StructType {
+//     pub name: String,
+//     pub fields: Vec<(String, ClassicalType)>,
+// }
+// 
+// #[derive(Debug, Clone, PartialEq)]
+// pub struct EnumType {
+//     pub name: String,
+//     pub variants: Vec<EnumVariant>,
+// }
+// 
+// #[derive(Debug, Clone, PartialEq)]
+// pub struct EnumVariant {
+//     pub name: String,
+//     pub data: Option<ClassicalType>,
+// }
+// 
+// // --- Implementation Helpers ---
+// 
+// impl ClassicalType {
+//     /// Returns true if the type is a primitive (scalar) value.
+//     pub fn is_primitive(&self) -> bool {
+//         matches!(self, 
+//             ClassicalType::Int(_) | 
+//             ClassicalType::Float(_) | 
+//             ClassicalType::Bool | 
+//             ClassicalType::Char
+//         )
+//     }
+// 
+//     /// Returns true if the type is heap-allocated (e.g., String, Vector).
+//     pub fn is_heap_allocated(&self) -> bool {
+//         matches!(self,
+//             ClassicalType::String |
+//             ClassicalType::Vector(_) |
+//             ClassicalType::HashMap(_, _) |
+//             ClassicalType::HashSet(_)
+//         )
+//     }
+// }
+// 
+// // --- Unit Tests ---
+// 
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+// 
+//     #[test]
+//     fn test_primitive_types() {
+//         let i64_t = ClassicalType::Int(IntType::I64);
+//         assert!(i64_t.is_primitive());
+//         
+//         let bool_t = ClassicalType::Bool;
+//         assert!(bool_t.is_primitive());
+//     }
+// 
+//     #[test]
+//     fn test_vector_type_creation() {
+//         // Create type: Vector<Int64>
+//         let int_type = ClassicalType::Int(IntType::I64);
+//         let vec_type = ClassicalType::Vector(Box::new(int_type.clone()));
+//         
+//         // Assert structure matches
+//         if let ClassicalType::Vector(inner) = vec_type {
+//             assert_eq!(*inner, ClassicalType::Int(IntType::I64));
+//         } else {
+//             panic!("Expected Vector type");
+//         }
+//     }
+// 
+//     #[test]
+//     fn test_struct_definition() {
+//         // struct Point { x: f64, y: f64 }
+//         let point_struct = ClassicalType::Struct(StructType {
+//             name: "Point".to_string(),
+//             fields: vec![
+//                 ("x".to_string(), ClassicalType::Float(FloatType::F64)),
+//                 ("y".to_string(), ClassicalType::Float(FloatType::F64)),
+//             ],
+//         });
+// 
+//         if let ClassicalType::Struct(s) = point_struct {
+//             assert_eq!(s.name, "Point");
+//             assert_eq!(s.fields.len(), 2);
+//         } else {
+//             panic!("Expected Struct type");
+//         }
+//     }
+//     
+//     #[test]
+//     fn test_complex_nesting() {
+//         // HashMap<String, Vector<i32>>
+//         let complex_type = ClassicalType::HashMap(
+//             Box::new(ClassicalType::String),
+//             Box::new(ClassicalType::Vector(
+//                 Box::new(ClassicalType::Int(IntType::I32))
+//             ))
+//         );
+//         
+//         assert!(complex_type.is_heap_allocated());
+//     }
+// }

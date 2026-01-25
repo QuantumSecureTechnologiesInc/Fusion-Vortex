@@ -1,7 +1,7 @@
 # Fusion GPU Scheduler
 
-**Version:** 0.2.0  
-**Type:** Core Service  
+**Version:** 0.2.0
+**Type:** Core Service
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ let request = AllocationRequest::new("model-70b", 40 * 1024 * 1024 * 1024); // 4
 if let Ok(handle) = scheduler.allocate(request).await {
     // Run GPU kernel
 }
-```
+```text
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 # Fusion Solver
 
-**Version:** 0.2.0  
-**Type:** Mathematical Solver  
+**Version:** 0.2.0
+**Type:** Mathematical Solver
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ solver.add(Constraint::gt("x", 5));
 
 let solution = solver.solve()?;
 println!("x = {}, y = {}", solution["x"], solution["y"]);
-```
+```text
 
 ## Dependencies
 

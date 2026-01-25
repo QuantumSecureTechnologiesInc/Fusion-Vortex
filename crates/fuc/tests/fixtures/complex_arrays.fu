@@ -1,0 +1,13 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn main() -> int {
+    let x: int = 10;
+    let y: int = 20;
+    let arr: [int; 3] = [x, x + y, y * 2];
+
+    printf("arr[0] = %d\n", arr[0]);
+    printf("arr[1] = %d\n", arr[1]);
+    printf("arr[2] = %d\n", arr[2]);
+
+    return 0;
+}

@@ -1,0 +1,261 @@
+//! Quantum Processing Unit (QPU) interface
+use fusion_core::types::quantum::{QuantumCircuit, QuantumState};
+use fusion_q_aws_backend::AWSBraketBackend;
+use fusion_q_ibm_backend::IBMQuantumBackend;
+use serde::{Deserialize, Serialize};
+use tracing::{debug, trace, warn};
+const DEFAULT_SHOTS: FU32 = 1024;
+fn resolve_shots() -> FU32 {
+    std::env::var("FUSION_QPU_SHOTS")
+        .ok()
+        .and_then(|v| v.parse::<FU32>().ok())
+        .unwrap_or(DEFAULT_SHOTS)
+}
+/// QPU provider
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+enum QpuProvider {
+    IbmQuantum,
+    AwsBraket,
+    Rigetti,
+    IonQ,
+    Simulator,
+}
+impl QpuProvider {
+    pub fn from_env() -> Option<Self> {
+        let raw = std::env::var("FUSION_QPU_PROVIDER").ok()?;
+        let provider = raw.to_lowercase();
+        match provider.as_str() {
+            "ibm-quantum" | "ibm" => Some(Self::IbmQuantum),
+            "aws-braket" | "aws" | "braket" => Some(Self::AwsBraket),
+            "rigetti" => Some(Self::Rigetti),
+            "ionq" => Some(Self::IonQ),
+            "simulator" | "sim" => Some(Self::Simulator),
+            _ => None,
+        }
+    }
+}
+/// QPU interface for quantum hardware
+struct QpuInterface {
+    provider: QpuProvider,
+    api_key: Option<FString>,
+    ibm_backend: Option<FString>,
+    aws_region: Option<FString>,
+    aws_device_arn: Option<FString>,
+    aws_access_key_id: Option<FString>,
+    aws_secret_access_key: Option<FString>,
+}
+impl QpuInterface {
+    pub fn new(provider: QpuProvider) -> Self {
+        debug!("Initialising QPU interface with provider: {:?}", provider);
+        let api_key = std::env::var("FUSION_QPU_API_KEY").ok();
+        let ibm_backend = std::env::var("FUSION_IBM_BACKEND").ok();
+        let aws_region = std::env::var("FUSION_AWS_REGION").ok();
+        let aws_device_arn = std::env::var("FUSION_AWS_BRAKET_DEVICE_ARN").ok();
+        let aws_access_key_id = std::env::var("FUSION_AWS_ACCESS_KEY_ID").ok();
+        let aws_secret_access_key = std::env::var("FUSION_AWS_SECRET_ACCESS_KEY").ok();
+        match provider {
+            QpuProvider::Simulator => {}
+            QpuProvider::IbmQuantum => {
+                if std::env::var("FUSION_IBM_TOKEN").is_err() {
+                    warn!("Missing IBM token (FUSION_IBM_TOKEN)");
+                }
+                if ibm_backend.is_none() {
+                    warn!("Missing IBM backend (FUSION_IBM_BACKEND)");
+                }
+            }
+            QpuProvider::AwsBraket => {
+                if aws_region.is_none() {
+                    warn!("Missing AWS region (FUSION_AWS_REGION)");
+                }
+                if aws_device_arn.is_none() {
+                    warn!("Missing AWS device ARN (FUSION_AWS_BRAKET_DEVICE_ARN)");
+                }
+                if aws_access_key_id.is_none() {
+                    warn!("Missing AWS access key id (FUSION_AWS_ACCESS_KEY_ID)");
+                }
+            }
+            _ => {
+                if api_key.is_none() {
+                    warn!("No QPU API key found in FUSION_QPU_API_KEY environment variable");
+                }
+            }
+        }
+        Self {
+            provider,
+            api_key,
+            ibm_backend,
+            aws_region,
+            aws_device_arn,
+            aws_access_key_id,
+            aws_secret_access_key,
+        }
+    }
+    pub fn from_env() -> Self {
+        let provider = QpuProvider::from_env().unwrap_or(QpuProvider::Simulator);
+        Self::new(provider)
+    }
+    /// Submit a quantum circuit for execution
+    pub async fn submit_circuit(
+        &self,
+        circuit: QuantumCircuit,
+    ) -> Result<FString, QpuError> {
+        trace!(
+            "Submitting circuit with {} qubits to {:?}", circuit.num_qubits, self
+            .provider
+        );
+        match self.provider {
+            QpuProvider::Simulator => Ok("sim-job-12345".to_string()),
+            QpuProvider::IbmQuantum => {
+                let token = std::env::var("FUSION_IBM_TOKEN").ok();
+                let backend_name = self
+                    .ibm_backend
+                    .clone()
+                    .or_else(|| std::env::var("FUSION_IBM_BACKEND").ok())
+                    .unwrap_or_else(|| "ibmq_qasm_simulator".to_string());
+                let token = token.ok_or_else(|| QpuError::MissingConfig("FUSION_IBM_TOKEN".to_string()))?;
+                let backend = IBMQuantumBackend::new(token, backend_name);
+                backend
+                    .submit_circuit(&circuit, resolve_shots())
+                    .await
+                    .map_err(|_| QpuError::SubmissionFailed)
+            }
+            QpuProvider::AwsBraket => {
+                let region = self
+                    .aws_region
+                    .clone()
+                    .ok_or_else(|| QpuError::MissingConfig("FUSION_AWS_REGION".to_string()))?;
+                let device = self
+                    .aws_device_arn
+                    .clone()
+                    .ok_or_else(|| {
+                        QpuError::MissingConfig(
+                            "FUSION_AWS_BRAKET_DEVICE_ARN".to_string(),
+                        )
+                    })?;
+                let access_key = self
+                    .aws_access_key_id
+                    .clone()
+                    .ok_or_else(|| {
+                        QpuError::MissingConfig(
+                            "FUSION_AWS_ACCESS_KEY_ID".to_string(),
+                        )
+                    })?;
+                let _secret = self.aws_secret_access_key.clone();
+                let backend = AWSBraketBackend::new(access_key, region, device);
+                backend
+                    .submit_circuit(&circuit, resolve_shots())
+                    .await
+                    .map_err(|_| QpuError::SubmissionFailed)
+            }
+            _ => {
+                if self.api_key.is_none() {
+                    return Err(QpuError::NoApiKey);
+                }
+                Ok(format!("{:?}-job-67890", self.provider))
+            }
+        }
+    }
+    /// Poll for job results
+    pub async fn poll_results(&self, job_id: &str) -> Result<QuantumResults, QpuError> {
+        trace!("Polling results for job {}", job_id);
+        match self.provider {
+            QpuProvider::Simulator => Ok(QuantumResults {
+                job_id: job_id.to_string(),
+                counts: vec![(vec![0, 0], 512), (vec![1, 1], 488),],
+            }),
+            QpuProvider::IbmQuantum => {
+                let token = std::env::var("FUSION_IBM_TOKEN")
+                    .map_err(|_| QpuError::MissingConfig("FUSION_IBM_TOKEN".to_string()))?;
+                let backend_name = self
+                    .ibm_backend
+                    .clone()
+                    .or_else(|| std::env::var("FUSION_IBM_BACKEND").ok())
+                    .unwrap_or_else(|| "ibmq_qasm_simulator".to_string());
+                let backend = IBMQuantumBackend::new(token, backend_name);
+                let state = backend
+                    .get_results(job_id)
+                    .await
+                    .map_err(|_| QpuError::JobNotFound)?;
+                Ok(QuantumResults {
+                    job_id: job_id.to_string(),
+                    counts: state_to_counts(state),
+                })
+            }
+            QpuProvider::AwsBraket => {
+                let region = self
+                    .aws_region
+                    .clone()
+                    .ok_or_else(|| QpuError::MissingConfig("FUSION_AWS_REGION".to_string()))?;
+                let device = self
+                    .aws_device_arn
+                    .clone()
+                    .ok_or_else(|| {
+                        QpuError::MissingConfig(
+                            "FUSION_AWS_BRAKET_DEVICE_ARN".to_string(),
+                        )
+                    })?;
+                let access_key = self
+                    .aws_access_key_id
+                    .clone()
+                    .ok_or_else(|| {
+                        QpuError::MissingConfig(
+                            "FUSION_AWS_ACCESS_KEY_ID".to_string(),
+                        )
+                    })?;
+                let backend = AWSBraketBackend::new(access_key, region, device);
+                let state = backend
+                    .get_results(job_id)
+                    .await
+                    .map_err(|_| QpuError::JobNotFound)?;
+                Ok(QuantumResults {
+                    job_id: job_id.to_string(),
+                    counts: state_to_counts(state),
+                })
+            }
+            _ => Err(QpuError::JobNotFound),
+        }
+    }
+}
+/// Quantum execution results
+struct QuantumResults {
+    pub job_id: FString,
+    pub counts: FVec<(FVec<u8>, FU32)>,
+}
+fn state_to_counts(state: QuantumState) -> FVec<(FVec<u8>, FU32)> {
+    match state {
+        QuantumState::Real(bits) => vec![(bits, resolve_shots())],
+        QuantumState::Simulated(_) => Vec::new(),
+    }
+}
+/// QPU error types
+#[derive(Debug)]
+enum QpuError {
+    NoApiKey,
+    MissingConfig(FString),
+    SubmissionFailed,
+    JobNotFound,
+    InvalidCircuit,
+}
+impl std::fmt::Display for QpuError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            QpuError::NoApiKey => write!(f, "No QPU API key provided"),
+            QpuError::MissingConfig(name) => {
+                write!(f, "Missing QPU configuration: {}", name)
+            }
+            QpuError::SubmissionFailed => write!(f, "Circuit submission failed"),
+            QpuError::JobNotFound => write!(f, "Job not found"),
+            QpuError::InvalidCircuit => write!(f, "Invalid quantum circuit"),
+        }
+    }
+}
+impl std::error::Error for QpuError {}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_qpu_interface_creation() {
+        let qpu = QpuInterface::new(QpuProvider::Simulator);
+        assert_eq!(qpu.provider, QpuProvider::Simulator);
+    }
+}

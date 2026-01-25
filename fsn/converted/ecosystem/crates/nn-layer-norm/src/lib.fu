@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/nn-layer-norm/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing nn-layer-norm...");
+}

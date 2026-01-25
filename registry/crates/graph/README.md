@@ -1,7 +1,7 @@
 # Fusion Graph
 
-**Version:** 0.2.0  
-**Type:** Data Structure  
+**Version:** 0.2.0
+**Type:** Data Structure
 **License:** MIT
 
 ## Overview
@@ -28,7 +28,7 @@ deps.add_edge(a, b, "depends_on");
 for neighbor in deps.neighbors(a) {
     println!("{:?}", neighbor);
 }
-```
+```text
 
 ## Dependencies
 

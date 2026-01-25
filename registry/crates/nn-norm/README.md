@@ -7,9 +7,10 @@ Normalization layers and utilities.
 ```toml
 [dependencies]
 nn-norm = "0.1.0"
-```
+```text
 
 ## Features
+
 - Batch Normalization
 - Instance Normalization
 - Group Normalization

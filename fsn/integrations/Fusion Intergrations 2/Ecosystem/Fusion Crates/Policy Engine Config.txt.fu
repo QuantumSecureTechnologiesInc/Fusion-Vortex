@@ -1,0 +1,15 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Policy Engine Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_sec_policy_engine"
+// version = "0.1.0"
+// edition = "2021"
+// description = "OPA/Rego-style security policy enforcement engine"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_std = { path = "../std", version = "0.1.0" }
+// serde_json = { workspace = true }
+// thiserror = { workspace = true }

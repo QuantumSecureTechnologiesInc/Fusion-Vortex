@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/fusion-mail/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn hello() {
+    println!("Hello from fusion-mail!");
+}

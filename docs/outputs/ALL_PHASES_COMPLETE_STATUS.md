@@ -401,7 +401,7 @@ fusion build              # Build with deps
 fusion test               # Run tests
 fusion run                # Run project
 fusion publish            # Publish package
-```
+```text
 
 **Status**: ✅ **100% COMPLETE**
 

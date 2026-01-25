@@ -41,13 +41,13 @@ CompileFlags:
     - "-Wno-unknown-cuda-version"
     - "-nocudalib"
     - "-nocudainc"
-  
+
 Diagnostics:
   Suppress:
     - "libdevice"
     - "cuda_runtime.h"
     - "CUDA installation"
-```
+```text
 
 ### For Developers
 
@@ -56,9 +56,10 @@ Diagnostics:
 1. Install CUDA Toolkit 11.0 or later from [NVIDIA's website](https://developer.nvidia.com/cuda-downloads)
 2. Add the CUDA `bin` directory to your PATH
 3. Enable the `gpu` feature when building:
+
    ```bash
    cargo build --features gpu -p flux-resolve-v2-hive-mind
-   ```
+```text
 
 **If you don't need GPU acceleration:**
 
@@ -105,11 +106,13 @@ Created a comprehensive Python SDK setup with automatic protobuf code generation
 cd registry/crates/fusion-runtime-core-v2-nebula/sdk/python
 
 # Install dependencies
+
 pip install -r requirements.txt
 
 # Generate protobuf stubs
+
 python generate_proto.py
-```
+```text
 
 **After modifying the proto file:**
 
@@ -117,7 +120,7 @@ If you update `proto/fusion_core_v2.proto`, regenerate the Python stubs:
 
 ```bash
 python generate_proto.py
-```
+```text
 
 ## IDE Configuration
 
@@ -154,12 +157,15 @@ If errors persist:
 The Fusion project should build successfully regardless of whether CUDA is installed:
 
 ```bash
+
 # Full workspace check (CPU-only)
+
 cargo check --workspace
 
 # With GPU acceleration (requires CUDA)
+
 cargo check --workspace --features flux-resolve-v2-hive-mind/gpu
-```
+```text
 
 ### Generated Files Policy
 

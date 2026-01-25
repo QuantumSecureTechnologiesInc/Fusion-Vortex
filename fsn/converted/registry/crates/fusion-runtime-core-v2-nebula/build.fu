@@ -1,0 +1,6 @@
+// SOURCE: registry/crates/fusion-runtime-core-v2-nebula/build.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tonic_build::compile_protos("proto/fusion_core_v2.proto")?;
+    Ok(())
+}

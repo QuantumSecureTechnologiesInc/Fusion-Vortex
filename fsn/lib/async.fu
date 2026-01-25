@@ -1,0 +1,21 @@
+// lib/async.fsn
+// Secure asynchronous runtime.
+
+struct FusionFuture<T> {
+    inner: Task<T>,
+}
+
+impl<T> FusionFuture<T> {
+    fn await(self) -> T {
+        fusion_loop!({
+            match self.inner.poll() {
+                Ready(val) => break val,
+                Pending => Kernel::yield_now(),
+            }
+        })
+    }
+}
+
+fn sleep(ms: u64) {
+    Kernel::constant_time_delay(ms);
+}

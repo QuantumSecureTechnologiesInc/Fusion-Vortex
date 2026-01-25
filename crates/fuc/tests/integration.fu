@@ -1,0 +1,71 @@
+use tempfile::TempDir;
+test_generator::test_expand_paths! {
+    test_compile_and_run; "tests/fixtures/*.fu"
+}
+fn test_compile_and_run(source_path: &str) {
+    let temp_dir = TempDir::new().unwrap();
+    let obj_path = temp_dir.path().join("output.o");
+    let panic_obj = temp_dir.path().join("panic.o");
+    let exe_path = temp_dir.path().join("program");
+    let status = Command::new(env!("CARGO_BIN_EXE_fuc"))
+        .arg(source_path)
+        .arg("-o")
+        .arg(&obj_path)
+        .arg("-O")
+        .arg("1")
+        .status()
+        .expect("Failed to run compiler");
+    assert!(status.success(), "Compilation failed for {}", source_path);
+    let panic_src = temp_dir.path().join("panic.c");
+    fs::write(
+            &panic_src,
+            "#include <stdio.h>\nvoid panic(const char* msg) { (void)msg; fflush(NULL); __builtin_trap(); }\n",
+        )
+        .unwrap();
+    let status = Command::new("cc")
+        .arg("-c")
+        .arg(&panic_src)
+        .arg("-o")
+        .arg(&panic_obj)
+        .status()
+        .expect("Failed to compile panic runtime");
+    assert!(status.success(), "Panic runtime compile failed for {}", source_path);
+    let status = Command::new("cc")
+        .arg(&obj_path)
+        .arg(&panic_obj)
+        .arg("-o")
+        .arg(&exe_path)
+        .arg("-no-pie")
+        .arg("-lc")
+        .status()
+        .expect("Failed to run linker");
+    assert!(status.success(), "Linking failed for {}", source_path);
+    let output = Command::new(&exe_path)
+        .output()
+        .expect("Failed to run generated program");
+    let expected_exit_path = Path::new(source_path).with_extension("exit");
+    if expected_exit_path.exists() {
+        let expected_exit = fs::read_to_string(expected_exit_path).unwrap();
+        let expected_exit = expected_exit.trim();
+        if expected_exit.eq_ignore_ascii_case("nonzero") {
+            assert!(
+                ! output.status.success(), "Program unexpectedly succeeded for {}",
+                source_path
+            );
+        } else {
+            let expected_code: FInt = expected_exit.parse().expect("Invalid .exit file");
+            let actual_code = output.status.code().unwrap_or(-1);
+            assert_eq!(
+                actual_code, expected_code, "Exit code mismatch for {}", source_path
+            );
+        }
+    } else {
+        assert!(output.status.success(), "Program execution failed for {}", source_path);
+    }
+    let expected_output_path = Path::new(source_path).with_extension("out");
+    if expected_output_path.exists() {
+        let expected = fs::read_to_string(expected_output_path).unwrap();
+        let actual = String::from_utf8_lossy(&output.stdout);
+        assert_eq!(actual, expected, "Output mismatch for {}", source_path);
+    }
+}

@@ -1,0 +1,123 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Integration Test Suite.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// /// Integration tests for the Fusion Core crate.
+// /// These tests verify that Classical, Tensor, and Quantum modules interact correctly.
+// 
+// use fusion_core::types::classical::{ClassicalType, IntType};
+// use fusion_core::types::tensor::{Tensor, Matrix, DataType};
+// use fusion_core::types::quantum::{Qubit, QuantumGate, QuantumCircuit};
+// use fusion_core::types::hybrid::{FusionType, TensorTypeMeta, QuantumTypeMeta};
+// use fusion_core::ops::conversions::{ToQuantumState, ToTensor};
+// use fusion_core::compiler::{SemanticAnalyzer, Expr, TypeError};
+// use num_complex::Complex64;
+// 
+// #[test]
+// fn test_classical_tensor_interaction() {
+//     // 1. Define a Classical Integer
+//     let scalar_val = 42;
+//     
+//     // 2. Convert to Tensor (Scalar)
+//     let tensor: Tensor<i64, 0> = Tensor::from_vec(vec![scalar_val], []);
+//     
+//     assert_eq!(tensor.get([]), 42);
+//     assert_eq!(tensor.shape, []);
+// }
+// 
+// #[test]
+// fn test_quantum_simulation_flow() {
+//     // 1. Create a Bell State Circuit (Entanglement)
+//     // |00> -> H -> |+0> -> CNOT -> (|00> + |11>)/sqrt(2)
+//     let mut circuit = QuantumCircuit::new(2);
+//     
+//     circuit.apply_gate(QuantumGate::hadamard(), vec![0]);
+//     circuit.apply_gate(QuantumGate::cnot(), vec![0, 1]);
+//     
+//     // 2. Simulate to get Quantum State
+//     let state = circuit.simulate();
+//     
+//     // 3. Verify State Vector (Tensor representation)
+//     // Expect approx: [0.707, 0, 0, 0.707]
+//     let amplitudes = state.amplitudes;
+//     let inv_sqrt2 = 1.0 / 2.0f64.sqrt();
+//     
+//     assert!((amplitudes[0].re - inv_sqrt2).abs() < 1e-6); // |00>
+//     assert!(amplitudes[1].norm() < 1e-6);                 // |01>
+//     assert!(amplitudes[2].norm() < 1e-6);                 // |10>
+//     assert!((amplitudes[3].re - inv_sqrt2).abs() < 1e-6); // |11>
+// }
+// 
+// #[test]
+// fn test_compiler_semantic_analysis() {
+//     let mut analyzer = SemanticAnalyzer::new();
+//     
+//     // 1. Define inputs in symbol table
+//     // A: 2x2 Matrix
+//     analyzer.check(&Expr::Let {
+//         name: "A".to_string(),
+//         value: Box::new(Expr::TensorCreation { 
+//             shape: vec![2, 2], 
+//             dtype: DataType::Float64 
+//         })
+//     }).unwrap();
+//     
+//     // B: 2x2 Matrix
+//     analyzer.check(&Expr::Let {
+//         name: "B".to_string(),
+//         value: Box::new(Expr::TensorCreation { 
+//             shape: vec![2, 2], 
+//             dtype: DataType::Float64 
+//         })
+//     }).unwrap();
+//     
+//     // q: Qubit
+//     analyzer.check(&Expr::Let {
+//         name: "q".to_string(),
+//         value: Box::new(Expr::QubitAlloc(1)) // Allocates 1 register, simplified to qubit check
+//     }).unwrap();
+// 
+//     // 2. Valid Operation: MatMul(A, B)
+//     let matmul_res = analyzer.check(&Expr::MatMul(
+//         Box::new(Expr::Variable("A".to_string())),
+//         Box::new(Expr::Variable("B".to_string()))
+//     ));
+//     assert!(matches!(matmul_res, Ok(FusionType::Tensor(_))));
+// 
+//     // 3. Valid Operation: Measure(q) -> Bool
+//     let measure_res = analyzer.check(&Expr::Measure(
+//         Box::new(Expr::Variable("q".to_string()))
+//     ));
+//     assert!(matches!(measure_res, Ok(FusionType::Classical(ClassicalType::Bool))));
+// 
+//     // 4. Invalid Operation: MatMul(A, q) -> TypeError
+//     let error_res = analyzer.check(&Expr::MatMul(
+//         Box::new(Expr::Variable("A".to_string())),
+//         Box::new(Expr::Variable("q".to_string()))
+//     ));
+//     
+//     match error_res {
+//         Err(TypeError::TypeMismatch { expected, found }) => {
+//             assert_eq!(expected, "Two Tensors");
+//         },
+//         _ => panic!("Expected TypeMismatch error"),
+//     }
+// }
+// 
+// #[test]
+// fn test_hybrid_conversion_traits() {
+//     // 1. Create a state vector manually
+//     let data = vec![
+//         Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0),
+//         Complex64::new(0.0, 0.0), Complex64::new(0.0, 0.0)
+//     ]; // |00>
+//     
+//     // 2. Convert Tensor -> QuantumState
+//     let vector = fusion_core::types::tensor::Vector1D::from_vec(data.clone(), [4]);
+//     let state = vector.to_state();
+//     
+//     assert_eq!(state.num_qubits, 2);
+//     
+//     // 3. Convert QuantumState -> Tensor
+//     let back_to_tensor = state.to_tensor();
+//     assert_eq!(back_to_tensor.data, data);
+// }

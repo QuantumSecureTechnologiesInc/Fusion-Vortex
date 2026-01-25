@@ -1,0 +1,14 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Quantum Vis Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_ui_quantum_vis"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Visualization toolkit for Quantum Circuits and State Vectors (Bloch Sphere, Qubit Histogram)"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.1.0" }
+// serde_json = { workspace = true }

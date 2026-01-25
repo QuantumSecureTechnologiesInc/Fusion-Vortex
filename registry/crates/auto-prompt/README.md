@@ -1,7 +1,7 @@
 # Auto Prompt
 
-**Version:** 0.2.0  
-**Type:** AI Utility  
+**Version:** 0.2.0
+**Type:** AI Utility
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let raw_prompt = "Make code for a calculator";
 let optimized = optimizer.optimize(raw_prompt, "claude-3-opus")?;
 
 println!("Optimized Prompt: {}", optimized);
-```
+```text
 
 ## Dependencies
 

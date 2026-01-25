@@ -1,7 +1,7 @@
 # Fusion Toolchain Ext
 
-**Version:** 0.2.0  
-**Type:** Compiler Plugins  
+**Version:** 0.2.0
+**Type:** Compiler Plugins
 **License:** MIT
 
 ## Overview
@@ -27,7 +27,7 @@ impl Plugin for MyLinter {
         Ok(())
     }
 }
-```
+```text
 
 ## Dependencies
 

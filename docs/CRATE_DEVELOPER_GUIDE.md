@@ -1,6 +1,6 @@
 # Fusion Crate Ecosystem - Developer Guide
 
-**Version**: 0.2.0  
+**Version**: 0.2.0
 **Last Updated**: 2025-12-17
 
 ## Introduction
@@ -11,7 +11,7 @@ Welcome to the Fusion Programming Language crate ecosystem. This guide provides 
 
 The Fusion ecosystem follows a layered architecture organized into six archetypes:
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │                   Applications                       │
 │                 (Your Projects)                      │
@@ -46,7 +46,7 @@ The Fusion ecosystem follows a layered architecture organized into six archetype
 │     FOUNDATION (core, std, primitives)              │
 │      Core types, minimal dependencies               │
 └─────────────────────────────────────────────────────┘
-```
+```text
 
 ## Archetype Guide
 
@@ -145,7 +145,7 @@ fusion_quantum = { workspace = true }
 fusion_runtime_core = { workspace = true, features = ["full"] }
 q-sim = { workspace = true }
 qaoa = { workspace = true }
-```
+```text
 
 ```rust
 use fusion_core::Tensor;
@@ -159,7 +159,7 @@ fn main() -> anyhow::Result<()> {
     println!("Optimal solution: {:?}", result);
     Ok(())
 }
-```
+```text
 
 ### LLM Inference Pipeline
 
@@ -169,7 +169,7 @@ fusion_ai_core = { workspace = true, features = ["full"] }
 llm-tokenizers = { workspace = true }
 llm-quantization = { workspace = true }
 llm-beam-search = { workspace = true }
-```
+```text
 
 ```rust
 use llm_tokenizers::BPETokenizer;
@@ -181,7 +181,7 @@ fn inference_pipeline(model_path: &str, prompt: &str) {
     let tokens = tokenizer.encode(prompt);
     // ... model inference with quantization
 }
-```
+```text
 
 ### Cloud-Native Microservice
 
@@ -191,7 +191,7 @@ fusion_http = { workspace = true, features = ["server", "tls"] }
 cloud-aws = { workspace = true, features = ["s3", "lambda"] }
 fusion_runtime_core = { workspace = true }
 sec-policy-engine = { workspace = true }
-```
+```text
 
 ## Dependency Management
 
@@ -203,8 +203,10 @@ All Fusion crates use workspace dependencies for consistency:
 [workspace.dependencies]
 fusion_core = { path = "registry/crates/fusion_core" }
 fusion_ai_core = { path = "registry/crates/fusion_ai_core" }
+
 # ... etc
-```
+
+```text
 
 ### Version Compatibility
 
@@ -225,27 +227,33 @@ fusion_ai_core = { path = "registry/crates/fusion_ai_core" }
 
 ```bash
 cargo build --workspace --release
-```
+```text
 
 ### Targeted Testing
 
 ```bash
+
 # Test specific archetype
+
 cargo test -p fusion_core -p fusion_std
 
 # Test all quantum crates
+
 cargo test -p q-sim -p qaoa -p q-error-correction
-```
+```text
 
 ### Benchmarking
 
 ```bash
+
 # Run all benchmarks
+
 cargo bench --workspace
 
 # Specific crate benchmarks
+
 cargo bench -p fusion_attention
-```
+```text
 
 ## Documentation Standards
 

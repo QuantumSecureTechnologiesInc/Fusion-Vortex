@@ -61,7 +61,7 @@ fusion build              # ✅ Build with deps
 fusion test               # ✅ Run tests
 fusion run                # ✅ Run project
 fusion publish            # ✅ Publish package
-```
+```text
 
 **Achievement**: **100%** - Fully production-ready package manager
 

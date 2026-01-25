@@ -1,0 +1,131 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (Rust)/HAFT Vault Node Rust.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+// //! PROJECT: FUSION HAFT (High Availability Flux Tensor)
+// //! MODULE:  VAULT NODE (Storage) - RUST EDITION
+// ======================================================================
+// 
+// use std::collections::HashMap;
+// use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
+// use std::{thread, time};
+// 
+// ======================================================================
+// // INFRASTRUCTURE
+// ======================================================================
+// 
+// struct Infra;
+// impl Infra {
+//     fn log(tag: &amp;str, msg: &amp;str) {
+//         println!(&quot;[{}] {}&quot;, tag, msg);
+//     }
+// }
+// 
+// ======================================================================
+// // LOGIC
+// ======================================================================
+// 
+// #[derive(Clone)]
+// struct FluxTensorStub {
+//     id: String,
+//     size_bytes: usize,
+//     _is_dirty: bool,
+// }
+// 
+// struct VaultLogic {
+//     memory_shard: Mutex&lt;HashMap&lt;String, Arc&lt;FluxTensorStub&gt;&gt;&gt;,
+//     max_capacity: usize,
+//     current_usage: Mutex&lt;usize&gt;,
+// }
+// 
+// impl VaultLogic {
+//     fn new(capacity: usize) -&gt; Self {
+//         Self {
+//             memory_shard: Mutex::new(HashMap::new()),
+//             max_capacity: capacity,
+//             current_usage: Mutex::new(0),
+//         }
+//     }
+// 
+//     fn store(&amp;self, key: &amp;str, bytes: usize) -&gt; bool {
+//         let mut usage = self.current_usage.lock().unwrap();
+//         let mut shard = self.memory_shard.lock().unwrap();
+// 
+//         // Eviction Logic (Random)
+//         if *usage + bytes &gt; self.max_capacity {
+//             Infra::log(&quot;Vault&quot;, &quot;Capacity pressure. Attempting eviction...&quot;);
+//             if let Some(victim_key) = shard.keys().next().cloned() {
+//                  if let Some(victim) = shard.remove(&amp;victim_key) {
+//                      *usage -= victim.size_bytes;
+//                      Infra::log(&quot;Vault&quot;, &amp;format!(&quot;Evicted {}&quot;, victim.id));
+//                  }
+//             }
+//         }
+// 
+//         // Final Check
+//         if *usage + bytes &gt; self.max_capacity {
+//             Infra::log(&quot;Vault&quot;, &quot;Store Failed: OOM&quot;);
+//             return false;
+//         }
+// 
+//         // Store
+//         shard.insert(key.to_string(), Arc::new(FluxTensorStub {
+//             id: key.to_string(),
+//             size_bytes: bytes,
+//             _is_dirty: true,
+//         }));
+//         *usage += bytes;
+//         
+//         Infra::log(&quot;Vault&quot;, &amp;format!(&quot;Stored: {} ({} B)&quot;, key, bytes));
+//         true
+//     }
+// 
+//     fn sync_dirty(&amp;self) {
+//         let shard = self.memory_shard.lock().unwrap();
+//         if !shard.is_empty() {
+//             Infra::log(&quot;Vault&quot;, &amp;format!(&quot;Syncing {} records to persistence layer...&quot;, shard.len()));
+//         }
+//     }
+// }
+// 
+// ======================================================================
+// // ENTRY POINT
+// ======================================================================
+// 
+// fn main() {
+//     let args: Vec&lt;String&gt; = std::env::args().collect();
+//     let capacity_arg = args.iter().position(|x| x == &quot;--cap&quot;)
+//         .map(|i| args[i + 1].clone())
+//         .unwrap_or_else(|| &quot;1048576&quot;.to_string()); // 1MB default
+// 
+//     let capacity: usize = capacity_arg.parse().expect(&quot;Invalid capacity&quot;);
+// 
+//     let running = Arc::new(AtomicBool::new(true));
+//     let r = running.clone();
+// 
+//     ctrlc::set_handler(move || {
+//         r.store(false, Ordering::SeqCst);
+//     }).expect(&quot;Error setting Ctrl-C handler&quot;);
+// 
+//     Infra::log(&quot;System&quot;, &amp;format!(&quot;Starting VAULT-01 with capacity {} B&quot;, capacity));
+//     
+//     let vault = Arc::new(VaultLogic::new(capacity));
+//     let mut ticks = 0;
+// 
+//     while running.load(Ordering::SeqCst) &amp;&amp; ticks &lt; 20 {
+//         ticks += 1;
+//         
+//         if ticks % 5 == 0 {
+//             vault.sync_dirty();
+//         }
+// 
+//         let key = format!(&quot;Tensor-{}&quot;, ticks);
+//         vault.store(&amp;key, 100_000);
+// 
+//         thread::sleep(time::Duration::from_millis(250));
+//     }
+// 
+//     Infra::log(&quot;System&quot;, &quot;Shutdown complete.&quot;);
+// }
+// 

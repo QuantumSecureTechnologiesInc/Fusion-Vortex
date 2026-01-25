@@ -1,7 +1,7 @@
 # Fusion LLM Mixtral Routing
 
-**Version:** 0.2.0  
-**Type:** Inference Logic  
+**Version:** 0.2.0
+**Type:** Inference Logic
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_llm_mixtral_routing::Router;
 
 let router = Router::new(num_experts, hidden_dim);
 let (expert_weights, expert_indices) = router.route(hidden_states)?;
-```
+```text
 
 ## Dependencies
 

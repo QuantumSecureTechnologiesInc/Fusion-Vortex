@@ -1,0 +1,29 @@
+// SOURCE: registry/crates/fusion-core/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Fusion Core - Unified Type System and Compiler Infrastructure
+//
+// This crate combines:
+// 1. Tri-brid Type System (Classical, Tensor, Quantum)
+// 2. Compiler Infrastructure (Lexer, Parser, AST, VM)
+//
+// The fusion of these allows the compiler to understand and manipulate
+// all three computational paradigms within a single framework.
+
+mod compiler;
+mod ops;
+mod traits;
+mod types;
+mod vm;
+
+// Re-export commonly used types
+pub use types::classical::ClassicalType;
+pub use types::hybrid::{FusionType, TensorDType, TensorType};
+pub use types::quantum::{QuantumCircuit, QuantumGate, QuantumState, Qubit};
+pub use types::tensor::{Matrix, Tensor};
+
+// Re-export compiler infrastructure
+pub use compiler::{Compiler, CompilerError, Lexer, Parser};
+pub use vm::VM;
+
+mod error;
+pub use error::{FusionError, FusionResult};

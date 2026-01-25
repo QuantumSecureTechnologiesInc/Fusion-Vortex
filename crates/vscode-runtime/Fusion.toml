@@ -1,0 +1,41 @@
+[package]
+name = "fusion-vscode-runtime"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+walkdir = { workspace = true }
+fusion-policy = { workspace = true }
+dirs = { workspace = true }
+
+# For VS Code extension protocol
+jsonrpc-core = { workspace = true }
+jsonrpc-derive = { workspace = true }
+tower-lsp = { workspace = true }
+
+# For extension execution - external crates
+# wasmer = "4.3"
+# wasmer-compiler-cranelift = "4.3"
+# wasmtime = "14.0"
+reqwest = { workspace = true, features = ["stream"] }
+
+# For Node.js bridge
+boa_engine = { workspace = true, optional = true }
+zip = { workspace = true }
+parking_lot = { workspace = true }
+fusion_std = "1.0.0"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+[features]
+default = []
+js = ["boa_engine"]

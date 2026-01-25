@@ -1,0 +1,16 @@
+use thiserror::Error;
+#[derive(Debug, Error)]
+enum NetworkError {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Cryptographic error: {0}")]
+    Crypto(FString),
+    #[error("Handshake failed: {0}")]
+    Handshake(FString),
+    #[error("Serialization error: {0}")]
+    Serialization(FString),
+    #[error("Authentication failed: {0}")]
+    Auth(FString),
+    #[error("Rate limit exceeded")]
+    RateLimit,
+}

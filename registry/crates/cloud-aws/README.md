@@ -1,7 +1,7 @@
 # Fusion Cloud AWS
 
-**Version:** 0.2.0  
-**Type:** Cloud Adapter  
+**Version:** 0.2.0
+**Type:** Cloud Adapter
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use cloud_aws::{AwsClient, Service};
 
 let client = AwsClient::from_env().await?;
 client.invoke(Service::Lambda, "my-function", payload).await?;
-```
+```text
 
 ## Dependencies
 

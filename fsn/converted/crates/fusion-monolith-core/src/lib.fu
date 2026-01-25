@@ -1,0 +1,128 @@
+// SOURCE: crates/fusion-monolith-core/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! # Fusion Monolith Core v3.4.1
+//!
+//! **The Monolithic Toolchain for Fusion & Rust**
+//!
+//! This crate combines Check, Build, Security (Audit), Intelligence (LSP), and
+//! Execution (Run) into a single shared-memory process.
+//!
+//! ## Features
+//!
+//! - **Polyglot Core**: Native support for Fusion language with zero-overhead Rust compatibility
+//! - **Flux-Resolve**: GPU-accelerated dependency resolution using CUDA for massive graphs
+//! - **Shift-Left Security**: Vulnerability checks during resolution, before download
+//! - **Zero-Copy Intelligence**: IDE diagnostics directly from compiler memory
+//! - **Self-Optimizing LSP**: Adaptive L1 caching for frequently queried symbols
+//! - **Unified TUI**: Single terminal window for all build and runtime information
+//!
+//! ## Architecture
+//!
+//! The system is built on four pillars interacting via a central `Arc<RwLock<FusionState>>`:
+//!
+//! 1. **Orchestrator**: Manages lifecycle state machine
+//! 2. **Flux-Resolve**: GPU-accelerated SAT solver for dependency resolution
+//! 3. **Auditor**: Real-time security scanning with RustSec integration
+//! 4. **Intelligence Server**: Zero-copy LSP with adaptive caching
+//!
+//! ## Quick Start
+//!
+//! ```rust,ignore
+//! use fusion_monolith_core::prelude::*;
+//!
+//! fn main() {
+//!     let config = MonolithConfig::default();
+//!     let monolith = FusionMonolith::new(config);
+//!     monolith.run_command(&["fusion", "build"]);
+//! }
+//! ```
+
+#![warn(missing_docs)]
+#![warn(rustdoc::missing_crate_level_docs)]
+
+mod agents;
+mod auditor;
+mod cli;
+mod config;
+mod error;
+mod lsp;
+mod orchestrator;
+mod resolver;
+mod state;
+mod tui;
+
+/// Prelude module for convenient imports
+mod prelude {
+    pub use crate::agents::{AgentRole, FusionAgent};
+    pub use crate::auditor::Auditor;
+    pub use crate::cli::FusionCli;
+    pub use crate::config::MonolithConfig;
+    pub use crate::error::{MonolithError, MonolithResult};
+    pub use crate::lsp::LspServer;
+    pub use crate::orchestrator::FusionOrchestrator;
+    pub use crate::state::{Artifact, BuildStatus, FusionState, LspDiagnostic, PackageId};
+    pub use crate::tui::Dashboard;
+}
+
+/// The core version of the Fusion Monolith
+pub const VERSION: &str = "3.4.1";
+
+/// The Fusion Monolith - main entry point for the unified toolchain
+struct FusionMonolith {
+    config: config::MonolithConfig,
+    orchestrator: orchestrator::FusionOrchestrator,
+}
+
+impl FusionMonolith {
+    /// Creates a new Fusion Monolith instance with the given configuration
+    fn new(config: config::MonolithConfig) -> Self {
+        let orchestrator = orchestrator::FusionOrchestrator::new(config.clone());
+        Self {
+            config,
+            orchestrator,
+        }
+    }
+
+    /// Runs the specified command through the monolith
+    fn run_command(&self, args: &[&str]) {
+        let args: FVec<FString> = args.iter().map(|s| s.to_string()).collect();
+        cli::FusionCli::run_command(&self.orchestrator, args);
+    }
+
+    /// Starts the monolith in daemon/watch mode
+    fn start_daemon(&self) {
+        self.orchestrator.watch_mode();
+    }
+
+    /// Returns a reference to the orchestrator
+    fn orchestrator(&self) -> &orchestrator::FusionOrchestrator {
+        &self.orchestrator
+    }
+
+    /// Returns the current configuration
+    fn config(&self) -> &config::MonolithConfig {
+        &self.config
+    }
+}
+
+impl Default for FusionMonolith {
+    fn default() -> Self {
+        Self::new(config::MonolithConfig::default())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_monolith_creation() {
+        let monolith = FusionMonolith::default();
+        assert_eq!(monolith.config().version, VERSION);
+    }
+
+    #[test]
+    fn test_version() {
+        assert_eq!(VERSION, "3.4.1");
+    }
+}

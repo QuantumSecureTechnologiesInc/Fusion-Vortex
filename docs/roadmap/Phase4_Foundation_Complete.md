@@ -108,7 +108,7 @@ PackageManager
 └── downloader.rs (TODO)
     ├── HTTP client
     └── Checksum verification
-```
+```text
 
 ### ML Library
 
@@ -134,7 +134,7 @@ ML Library
 └── Optimizers
     ├── SGD, Adam
     └── RMSprop (TODO)
-```
+```text
 
 ### Enhanced LSP
 
@@ -154,7 +154,7 @@ Enhanced LSP
 └── Inlay Hints
     ├── Type annotations
     └── Parameter names
-```
+```text
 
 ---
 
@@ -253,7 +253,7 @@ use package_manager::PackageManager;
 // Load dependencies before compilation
 let pm = PackageManager::new(cache_dir);
 pm.install_dependencies()?;
-```
+```text
 
 **ML Library**:
 
@@ -265,7 +265,7 @@ mod ml_codegen;
 if has_gpu_annotation(func) {
     ml_codegen::generate_kernel(func)?;
 }
-```
+```text
 
 **Enhanced LSP**:
 
@@ -281,7 +281,7 @@ pub struct FusionLanguageServer {
     code_actions: CodeActionProvider,
     // ...
 }
-```
+```text
 
 ---
 

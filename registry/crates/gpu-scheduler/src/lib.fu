@@ -1,0 +1,2 @@
+/// gpu-scheduler implementation
+struct GpuSchedulerModule;

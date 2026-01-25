@@ -1,0 +1,100 @@
+// SOURCE: crates/fusionc/src/main.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use clap::{Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(name = "fusionc")]
+#[command(about = "Fusion compiler bootstrap", version = "1.0")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Compile a single .fsn file.
+    Compile {
+        input: PathBuf,
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Compile all .fsn files in a directory.
+    CompileDir {
+        input: PathBuf,
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+}
+
+fn main() {
+    let cli = Cli::parse();
+    let result = match cli.command {
+        Commands::Compile { input, output } => compile_file(&input, output.as_ref()),
+        Commands::CompileDir { input, output } => compile_dir(&input, output.as_ref()),
+    };
+
+    if let Err(err) = result {
+        eprintln!("fusionc error: {}", err);
+        exit(1);
+    }
+}
+
+fn compile_dir(input: &Path, output: Option<&PathBuf>) -> Result<(), FString> {
+    let entries = fs::read_dir(input).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("fsn") {
+            compile_file(&path, output)?;
+        }
+    }
+    Ok(())
+}
+
+fn compile_file(input: &Path, output: Option<&PathBuf>) -> Result<(), FString> {
+    let src = fs::read_to_string(input).map_err(|e| e.to_string())?;
+    let rust_src = to_rust(&src);
+
+    let tmp_dir = tempfile::Builder::new()
+        .prefix("fusionc")
+        .tempdir()
+        .map_err(|e| e.to_string())?;
+    let src_path = tmp_dir.path().join("main.rs");
+    fs::write(&src_path, rust_src).map_err(|e| e.to_string())?;
+
+    let out_path = if let Some(out) = output {
+        out.to_path_buf()
+    } else {
+        let stem = input
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .ok_or("invalid input filename")?;
+        PathBuf::from(stem)
+    };
+
+    let status = Command::new("rustc")
+        .arg(&src_path)
+        .arg("-o")
+        .arg(&out_path)
+        .status()
+        .map_err(|e| e.to_string())?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err("rustc failed".to_string())
+    }
+}
+
+fn to_rust(src: &str) -> FString {
+    let mut out = FString::new();
+    if !src.contains("use fusion_std::prelude::*;") {
+        out.push_str("use fusion_std::prelude::*;\n");
+    }
+    if src.contains("fn main") && !src.contains("#[fusion_main]") {
+        out.push_str(&src.replace("fn main", "#[fusion_main]\nfn main"));
+    } else {
+        out.push_str(src);
+    }
+    out
+}

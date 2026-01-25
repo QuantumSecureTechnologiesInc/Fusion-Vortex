@@ -1,0 +1,88 @@
+// SOURCE: crates/tensorweave/src/processors/secure.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use anyhow::Result;
+use tracing::info;
+
+use crate::{core::TensorData, flow::FlowProcessor};
+
+/// SecureProcessor performs integrity checks on tensor data
+/// to ensure data consistency and detect corruption or tampering.
+struct SecureProcessor;
+
+impl FlowProcessor for SecureProcessor {
+    fn name(&self) -> &str {
+        "SECURE (Integrity Check)"
+    }
+
+    fn process_sync(&self, tensor: TensorData) -> Result<TensorData> {
+        info!("Securing tensor {}", tensor.id);
+
+        // Integrity Check 1: Ensure data length matches shape product
+        let expected_len: usize = tensor.shape.iter().product();
+        if tensor.data.len() != expected_len {
+            return Err(anyhow::anyhow!(
+                "Integrity check failed: Data length {} does not match shape product {}",
+                tensor.data.len(),
+                expected_len
+            ));
+        }
+
+        // Integrity Check 2: Verify no dimensions are zero
+        if tensor.shape.iter().any(|&dim| dim == 0) {
+            return Err(anyhow::anyhow!(
+                "Integrity check failed: Tensor {} has zero dimension in shape {:?}",
+                tensor.id,
+                tensor.shape
+            ));
+        }
+
+        // Integrity Check 3: Verify all values are finite
+        let has_invalid = tensor.data.iter().any(|&val| !val.is_finite());
+        if has_invalid {
+            return Err(anyhow::anyhow!(
+                "Integrity check failed: Tensor {} contains non-finite values (NaN or Inf)",
+                tensor.id
+            ));
+        }
+
+        info!("Tensor {} passed all security checks", tensor.id);
+        Ok(tensor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_secure_processor_valid_tensor() {
+        let tensor = TensorData::new("test", vec![2, 3], vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let processor = SecureProcessor;
+        let result = processor.process_sync(tensor);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_secure_processor_shape_mismatch() {
+        let tensor = TensorData::new("test", vec![2, 3], vec![1.0, 2.0, 3.0]); // Only 3 elements instead of 6
+        let processor = SecureProcessor;
+        let result = processor.process_sync(tensor);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_secure_processor_zero_dimension() {
+        let tensor = TensorData::new("test", vec![0, 3], vec![]);
+        let processor = SecureProcessor;
+        let result = processor.process_sync(tensor);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_secure_processor_nan_values() {
+        let tensor = TensorData::new("test", vec![2], vec![1.0, f64::NAN]);
+        let processor = SecureProcessor;
+        let result = processor.process_sync(tensor);
+        assert!(result.is_err());
+    }
+}

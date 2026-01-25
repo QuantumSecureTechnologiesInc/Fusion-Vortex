@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 math-sparse = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use math_sparse::Matrix;
 fn main() {
     let m = Matrix::new();
 }
-```
+```text
 
 ## License
 

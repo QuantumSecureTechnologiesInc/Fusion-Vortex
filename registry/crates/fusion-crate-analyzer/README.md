@@ -7,9 +7,10 @@ Static analysis and metadata extraction for Fusion crates.
 ```toml
 [dependencies]
 fusion-crate-analyzer = "0.1.0"
-```
+```text
 
 ## Features
+
 - Crate dependency graphing
 - API surface analysis
 - Metadata validation

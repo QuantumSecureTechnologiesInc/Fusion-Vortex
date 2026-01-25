@@ -1,0 +1,69 @@
+// SOURCE: registry/crates/fusion-web-server/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use axum::Router as AxumRouter;
+use tokio::net::TcpListener;
+
+// Re-export specific axum types that we expose
+pub use axum::extract;
+pub use axum::response::Json;
+
+/// Production-ready Web Server wrapper around Axum
+struct Server {
+    addr: SocketAddr,
+}
+
+impl Server {
+    /// Bind to a specific address
+    fn bind(addr: &str) -> Self {
+        let addr: SocketAddr = addr.parse().expect("Invalid address format");
+        Self { addr }
+    }
+
+    /// Run the server with the given router
+    pub async fn serve(self, app: Router) -> Result<(), std::io::Error> {
+        let listener = TcpListener::bind(self.addr).await?;
+        tracing::info!("Server listening on {}", self.addr);
+        axum::serve(listener, app.0).await?;
+        Ok(())
+    }
+}
+
+/// Router wrapper to verify proper Fusion compilation flow
+struct Router(AxumRouter);
+
+impl Router {
+    fn new() -> Self {
+        Self(AxumRouter::new())
+    }
+
+    fn route(self, path: &str, method_router: axum::routing::MethodRouter) -> Self {
+        Self(self.0.route(path, method_router))
+    }
+
+    fn into_make_service(self) -> AxumRouter {
+        self.0
+    }
+}
+
+impl Default for Router {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// Re-export HTTP method helpers
+fn post<H, T>(handler: H) -> axum::routing::MethodRouter
+where
+    H: axum::handler::Handler<T, ()>,
+    T: 'static,
+{
+    axum::routing::post(handler)
+}
+
+fn get<H, T>(handler: H) -> axum::routing::MethodRouter
+where
+    H: axum::handler::Handler<T, ()>,
+    T: 'static,
+{
+    axum::routing::get(handler)
+}

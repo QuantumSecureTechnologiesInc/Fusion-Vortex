@@ -1,8 +1,8 @@
 # Fusion Runtime Core v2.0 (Nebula) - Complete Reference
 
-**Dataset Category**: Core Libraries  
-**Training Level**: Advanced  
-**Last Updated**: December 2025 (v0.2.0-beta.1)  
+**Dataset Category**: Core Libraries
+**Training Level**: Advanced
+**Last Updated**: December 2025 (v1.0.0) (v1.0.0)
 **Source**: FUSION_COMPLETE_GUIDEBOOK.md
 
 ---
@@ -32,7 +32,7 @@ fn process_data(input: FluxTensor<f32>) -> FluxTensor<f32> {
     // QEM optimizes memory layout
     input.map(|x| x * 2.0 + 1.0)
 }
-```
+```text
 
 ## 2. Fusion Cortex - AI Task Scheduler
 
@@ -54,21 +54,21 @@ use fusion::runtime::nebula::Cortex
 async fn main() {
     // Cortex activates automatically
     let cortex = Cortex::global()
-    
+
     // Spawn many tasks
     for i in 0..1000 {
         cortex.spawn(async move {
             expensive_computation(i).await
         })
     }
-    
+
     // Cortex learns:
     // - Task execution times
     // - Resource usage patterns
     // - Dependency relationships
     // - Optimal parallelism levels
 }
-```
+```text
 
 ### 2.3 Cortex Learning Phases
 
@@ -90,7 +90,9 @@ async fn main() {
 ### 2.4 Configuration
 
 ```toml
+
 # fusion.toml
+
 [runtime.cortex]
 enabled = true
 warmup_samples = 1000          # Tasks before learning phase
@@ -100,9 +102,10 @@ cpu_affinity = true            # Pin tasks to CPU cores
 preemption = true              # Allow task preemption
 
 # Performance tuning
+
 scheduler_tick_ms = 10         # How often to reschedule
 steal_threshold = 0.8          # Work-stealing threshold
-```
+```text
 
 ### 2.5 Saving and Loading Profiles
 
@@ -121,7 +124,7 @@ async fn load_profile() {
     cortex.load_profile("production.cortex").await?
     // Now already optimized!
 }
-```
+```text
 
 ## 3. Fusion HAL - Hardware Abstraction Layer
 
@@ -150,7 +153,7 @@ fn gpu_only_operation(data: Tensor<f32>) -> Tensor<f32> {
     // Guaranteed to run on GPU
     data.fft()
 }
-```
+```text
 
 ### 3.3 Available Devices
 
@@ -174,7 +177,7 @@ Device::Auto          // HAL decides (default)
 Device::GPU(0)        // First GPU
 Device::GPU(1)        // Second GPU
 Device::CPUCore(4)    // Specific CPU core
-```
+```text
 
 ### 3.4 Memory Management Across Devices
 
@@ -193,7 +196,7 @@ let cpu_data = gpu_data.to_cpu()?
 
 // Zero-copy memory mapping (when supported)
 let mapped = data.map_device(Device::GPU)?
-```
+```text
 
 ### 3.5 HAL Compilation
 
@@ -208,10 +211,10 @@ fn custom_kernel(input: Tensor<f32>) -> Tensor<f32> {
     // - SPIR-V for Vulkan-compatible devices
     // - Metal for Apple GPUs
     // - Quantum circuits for QPUs
-    
+
     input.map(|x| x.exp().log() * 2.0)
 }
-```
+```text
 
 ## 4. Fusion QEM - Quantum Error Mitigation
 
@@ -230,21 +233,21 @@ use fusion::runtime::nebula::QEM
 // QEM manages memory automatically
 async fn memory_intensive_task() {
     let qem = QEM::global()
-    
+
     // QEM observes:
     // - Allocation patterns
     // - Object lifetimes
     // - Access patterns
     // - Cache miss rates
-    
+
     let mut large_buffer = vec![0u8; 1_000_000_000]
-    
+
     // QEM optimizes:
     // - Memory layout for cache efficiency
     // - Compaction to reduce fragmentation
     // - Prefetching for predictable access
 }
-```
+```text
 
 ### 4.3 QEM Configuration
 
@@ -255,7 +258,7 @@ compaction_mode = "aggressive"     # conservative, balanced, aggressive
 compaction_interval_ms = 100       # How often to compact
 cache_line_alignment = 64          # Align to cache lines
 huge_pages = true                  // Use huge pages on Linux
-```
+```text
 
 ### 4.4 QEM Metrics
 
@@ -270,7 +273,7 @@ println("Fragmentation: {}%", stats.fragmentation_percent)
 println("Cache hit rate: {}%", stats.cache_hit_rate)
 println("Avg allocation time: {}μs", stats.avg_alloc_time_us)
 println("Total compactions: {}", stats.compaction_count)
-```
+```text
 
 ## 5. Runtime Profiles
 
@@ -281,11 +284,20 @@ println("Total compactions: {}", stats.compaction_count)
 profile = "default"
 
 # Uses:
+
+
 # - Standard async executor
+
+
 # - Basic work-stealing scheduler
+
+
 # - No AI optimization
+
+
 # - Compatible with all platforms
-```
+
+```text
 
 ### 5.2 Nebula Profile (Recommended)
 
@@ -294,11 +306,20 @@ profile = "default"
 profile = "nebula"
 
 # Enables:
+
+
 # - Fusion Cortex AI scheduler
+
+
 # - Fusion HAL device abstraction
+
+
 # - Fusion QEM memory optimization
+
+
 # - Requires: Modern CPU, optional GPU
-```
+
+```text
 
 ### 5.3 Legacy Profile
 
@@ -307,10 +328,17 @@ profile = "nebula"
 profile = "legacy"
 
 # For compatibility with older systems
+
+
 # - Single-threaded executor
+
+
 # - No special hardware requirements
+
+
 # - Reduced performance
-```
+
+```text
 
 ## 6. Performance Characteristics
 
@@ -353,10 +381,10 @@ use fusion::runtime::nebula::{Cortex, QEM}
 async fn trading_engine() {
     let cortex = Cortex::global()
     cortex.load_profile("hft.cortex").await?
-    
+
     loop {
         let market_data = receive_market_data().await?
-        
+
         // Cortex schedules optimally for low latency
         cortex.spawn_priority(Priority::Critical, async move {
             let signal = analyze_market_data(market_data)
@@ -366,7 +394,7 @@ async fn trading_engine() {
         })
     }
 }
-```
+```text
 
 ### 7.2 Multi-GPU Deep Learning with HAL
 
@@ -383,9 +411,9 @@ async fn train_llm() {
             Device::GPU(2),
             Device::GPU(3)
         ])
-    
+
     let dataset = load_dataset().await?
-    
+
     for epoch in 0..10 {
         for batch in dataset.batches(32) {
             // HAL coordinates cross-GPU communication
@@ -395,7 +423,7 @@ async fn train_llm() {
         }
     }
 }
-```
+```text
 
 ### 7.3 Heterogeneous Computing
 
@@ -404,17 +432,17 @@ async fn train_llm() {
 fn hybrid_pipeline(data: Tensor<f32>) -> Tensor<f32> {
     // Preprocessing on CPU (I/O-bound)
     let normalized = data.normalize()
-    
+
     // Heavy computation on GPU
     let features = extract_features_gpu(normalized)
-    
+
     // Post-processing back on CPU
     let result = postprocess_cpu(features)
-    
+
     // HAL manages all data transfers automatically
     return result
 }
-```
+```text
 
 ## 8. Troubleshooting
 
@@ -423,7 +451,7 @@ fn hybrid_pipeline(data: Tensor<f32>) -> Tensor<f32> {
 **Symptoms**: Performance doesn't improve over time
 
 **Solutions**:
-1. Ensure adequate warmup samples  
+1. Ensure adequate warmup samples
 2. Check task diversity (too uniform = nothing to learn)
 3. Verify profile saving/loading works
 4. Increase learning_samples if workload is complex
@@ -433,16 +461,21 @@ fn hybrid_pipeline(data: Tensor<f32>) -> Tensor<f32> {
 **Symptoms**: `Device::GPU` returns None
 
 **Solutions**:
+
 ```bash
+
 # Check available devices
+
 fusion hal list-devices
 
 # Verify driver installation
+
 fusion diagnostics --check-gpu
 
 # Check device permissions
+
 fusion hal test --device gpu
-```
+```text
 
 ### 8.3 QEM High Memory Usage
 

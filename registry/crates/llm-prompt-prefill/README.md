@@ -1,7 +1,7 @@
 # Fusion LLM Prompt Prefill
 
-**Version:** 0.2.0  
-**Type:** Optimization  
+**Version:** 0.2.0
+**Type:** Optimization
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let system_prompt = Prompt::from_text(LONG_SYSTEM_PROMPT);
 let cache_id = manager.prefill(&system_prompt).await?;
 
 // Use cache_id for subsequent requests
-```
+```text
 
 ## Dependencies
 

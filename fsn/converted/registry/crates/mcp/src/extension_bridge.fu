@@ -1,0 +1,15 @@
+// SOURCE: registry/crates/mcp/src/extension_bridge.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use fusion_vscode_runtime::ExtensionHost;
+
+/// Bridge between MCP and VS Code extensions
+struct ExtensionMcpBridge {
+    host: Arc<ExtensionHost>,
+}
+
+impl ExtensionMcpBridge {
+    /// Create a new bridge with the given extension host
+    fn new(host: Arc<ExtensionHost>) -> Self {
+        Self { host }
+    }
+}

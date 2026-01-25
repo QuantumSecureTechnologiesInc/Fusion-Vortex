@@ -1,0 +1,14 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 1 - The Foundation/fusion_toolchain/Toolchain Crate Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_toolchain"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Build system and project management for Fusion"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { workspace = true }
+// anyhow = { workspace = true }
+// tokio = { workspace = true }

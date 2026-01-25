@@ -23,7 +23,7 @@ This implementation establishes the complete foundation for a production-ready l
 
 ### Mono-Repository Structure
 
-```
+```text
 fusion-cli/
 ├── cmd/fusion (1 crate)        # CLI entry point
 ├── crates/ (15 crates)          # Core functionality
@@ -50,7 +50,7 @@ fusion-cli/
 ├── examples/                    # Example projects
 ├── tests/e2e/                  # End-to-end tests
 └── templates/                   # Project templates
-```
+```text
 
 ## Key Achievements
 

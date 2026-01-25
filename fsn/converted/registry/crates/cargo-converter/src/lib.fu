@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/cargo-converter/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// cargo-converter implementation
+
+struct CargoConverterModule;

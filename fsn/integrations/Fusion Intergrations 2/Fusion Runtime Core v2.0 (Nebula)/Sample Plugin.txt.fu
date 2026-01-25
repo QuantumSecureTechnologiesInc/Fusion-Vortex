@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Fusion Runtime Core v2.0 (Nebula)/Sample Plugin.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// // Compile this with: rustc --target wasm32-unknown-unknown -O --crate-type=cdylib lib.rs
+// 
+// #[no_mangle]
+// pub extern "C" fn fusion_entry() -> i32 {
+//     // Logic goes here. 
+//     // Return 0 for success, 1 for error.
+//     
+//     // In v2.1 we will add host function calls here to log data back to Core.
+//     0
+// }

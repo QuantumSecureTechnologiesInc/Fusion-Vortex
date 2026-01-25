@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/embeddings/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// embeddings implementation
+struct EmbeddingsModule;

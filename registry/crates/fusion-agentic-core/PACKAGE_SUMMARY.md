@@ -17,24 +17,28 @@ AI-enhanced crate providing in-depth agentic reasoning, vibe coding capabilities
 ## Key Features
 
 ### 🧠 Agentic Reasoning
+
 - Multi-layer reasoning with self-reflection
 - Confidence tracking and adaptive iteration
 - Context-aware problem decomposition
 - Up to 10 reasoning iterations with 0.8 confidence threshold
 
 ### 🔗 Chain of Thought
+
 - Structured problem decomposition into thought nodes
 - Hierarchical reasoning chains
 - Iterative refinement capabilities
 - Insight extraction and visualisation
 
 ### 🎯 Vibe Coding
+
 - Pattern-based code generation from natural language
 - Pre-built library of common programming patterns
 - Support for custom domain-specific patterns
 - 8 pattern categories covering all major paradigms
 
 ### ✨ Code Excellence
+
 - Comprehensive quality analysis (6 dimensions)
 - Automated security scanning
 - Performance evaluation
@@ -80,7 +84,7 @@ let core = AgenticCore::new();
 let solution = core.process_problem(problem)?;
 let code = core.vibe_code(intent)?;
 let metrics = core.check_excellence(code)?;
-```
+```text
 
 ### Pattern Categories
 
@@ -106,7 +110,7 @@ let metrics = core.check_excellence(code)?;
 
 ## File Structure
 
-```
+```text
 fusion-agentic-core/
 ├── Cargo.toml                   # Package manifest
 ├── README.md                    # Project overview
@@ -129,7 +133,7 @@ fusion-agentic-core/
     ├── UserGuide.md             # User documentation
     ├── DeveloperGuide.md        # Developer documentation
     └── PUBLISHING.md            # Publication guide
-```
+```text
 
 ## Usage Examples
 
@@ -140,7 +144,7 @@ let core = AgenticCore::new();
 let solution = core.process_problem(
     "Design a high-performance distributed caching system"
 )?;
-```
+```text
 
 ### Code Generation
 
@@ -148,15 +152,15 @@ let solution = core.process_problem(
 let code = core.vibe_code(
     "parallel map transformation of collection"
 )?;
-```
+```text
 
 ### Quality Analysis
 
 ```rust
 let metrics = core.check_excellence(source_code)?;
-println!("Overall: {:.1}, Security: {:.1}", 
+println!("Overall: {:.1}, Security: {:.1}",
     metrics.overall_score, metrics.security);
-```
+```text
 
 ### Iterative Refinement
 
@@ -164,7 +168,7 @@ println!("Overall: {:.1}, Security: {:.1}",
 let v1 = core.process_problem(problem)?;
 let v2 = core.iterate_solution(&v1, "add error handling")?;
 let v3 = core.iterate_solution(&v2, "optimize performance")?;
-```
+```text
 
 ## Performance Characteristics
 
@@ -217,7 +221,7 @@ Minimum supported Rust version (MSRV): **1.80**
 ```toml
 [dependencies]
 fusion-agentic-core = "0.1.0"
-```
+```text
 
 ### With Fusion Runtime
 
@@ -254,18 +258,21 @@ Can be used independently in any Rust project.
 ## Roadmap
 
 ### Version 0.2.0
+
 - Advanced pattern learning
 - Machine learning integration
 - Real-time streaming reasoning
 - Pattern marketplace
 
 ### Version 0.3.0
+
 - Multi-language support
 - Cloud-based reasoning
 - Distributed chain processing
 - Advanced analytics
 
 ### Version 1.0.0
+
 - Production-ready release
 - Full API stabilisation
 - Enterprise features
@@ -289,7 +296,7 @@ Choose whichever licence suits your needs.
   version = {0.1.0},
   url = {https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language}
 }
-```
+```text
 
 ## Acknowledgements
 
@@ -299,7 +306,7 @@ Special thanks to the Rust community for the excellent tooling and crate ecosyst
 
 ---
 
-**Status**: ✅ Ready for Publication  
-**Version**: 0.1.0  
-**Date**: 2025-12-12  
+**Status**: ✅ Ready for Publication
+**Version**: 0.1.0
+**Date**: 2025-12-12
 **Maintainer**: Quantum Secure Technologies Inc.

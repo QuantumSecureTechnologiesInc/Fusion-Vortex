@@ -37,19 +37,21 @@ Fusion adopts a **Unified Monolith** architecture, consolidating compiler, runti
 ### Engine Systems
 
 #### AI Engine
+
 - **Inference**: LLM serving with `fusion_llm_inference_engine`
 - **Training**: Distributed training via `fusion_llm_distributed_training`
 - **Auto-Prompting**: Automatic prompt optimization
 - **Model Serving**: Production-ready model server (`fusion_llm_model_server`)
 
 #### Quantum Engine
+
 - **Simulators**: Classical and GPU-accelerated quantum simulators
 - **Transpilers**: Circuit optimization and hardware backend translation
 - **Algorithms**: QAOA, VQE, Shor's algorithm implementations
 
 ## Project Organization
 
-```
+```text
 fusion/
 ├── cmd/                    # Application entry points
 │   ├── fusion/            # Main CLI (`fusion build`, `fusion run`)
@@ -71,7 +73,7 @@ fusion/
 │   └── references/       # API references
 ├── runtime/              # Runtime implementations
 └── tests/                # Integration and E2E tests
-```
+```text
 
 ### Key Directories
 
@@ -89,18 +91,23 @@ Fusion uses a massive Cargo workspace structure defined in the root `Cargo.toml`
 **Build Commands:**
 
 ```bash
+
 # Full workspace build
+
 cargo build --workspace --release
 
 # Build specific crate
+
 cargo build -p fusion-core
 
 # Build CLI only
+
 cargo build --bin fusion --release
 
 # Check without building
+
 cargo check --workspace
-```
+```text
 
 ### Build Profiles
 
@@ -111,82 +118,102 @@ Defined in `Cargo.toml`:
 - **dist**: Release + LTO + thin LTO for distribution
 
 ```bash
+
 # Use distribution profile
+
 cargo build --profile dist
-```
+```text
 
 ### Fusion Build Tool
 
 The `fusion-build` binary provides enhanced build capabilities:
 
 ```bash
+
 # Build with Fusion-specific optimizations
+
 fusion build --optimize-ai
 
 # Build with quantum backend support
+
 fusion build --features quantum-hardware
-```
+```text
 
 ## Development Workflow
 
 ### Initial Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/QuantumSecureTechnologies/Fusion-Programming-Language.git
    cd Fusion-Programming-Language
-   ```
+```text
 
 2. **Set environment variables:**
+
    ```bash
    export FUSION_HOME=$(pwd)
    export PATH="$FUSION_HOME/target/release:$PATH"
-   ```
+```text
 
 3. **Build the project:**
+
    ```bash
    cargo build --workspace
-   ```
+```text
 
 ### Running Tests
 
 **Unit Tests:**
+
 ```bash
+
 # All workspace tests
+
 cargo test --workspace
 
 # Specific crate
+
 cargo test -p fusion-compiler
 
 # With output
+
 cargo test -- --nocapture
-```
+```text
 
 **Integration Tests:**
+
 ```bash
+
 # Using Fusion test harness
+
 fusion test integration
 
 # E2E compiler tests
+
 cargo test --test compiler_e2e
-```
+```text
 
 **Performance Tests:**
+
 ```bash
 cargo bench --workspace
-```
+```text
 
 ### Code Formatting & Linting
 
 **Format code:**
+
 ```bash
 cargo fmt --all
-```
+```text
 
 **Lint with Clippy:**
+
 ```bash
 cargo clippy --workspace -- -D warnings
-```
+```text
 
 **Custom lint profiles** are defined in `.lint-profiles/`.
 
@@ -251,6 +278,7 @@ Every crate in `registry/crates/` must have:
 ### Runtime System
 
 **Core Loop:**
+
 ```rust
 // Simplified runtime pseudocode
 loop {
@@ -260,7 +288,7 @@ loop {
     }
     handle_io_events();
 }
-```
+```text
 
 **Key Traits:**
 - `Future`: Async computation primitive
@@ -292,11 +320,13 @@ loop {
 4. **Lint**: Run `cargo clippy` and `cargo fmt`
 5. **Document**: Update relevant documentation
 6. **Commit**: Use conventional commit messages:
-   ```
+
+```text
    feat(compiler): add trait specialization
    fix(runtime): resolve memory leak in scheduler
    docs(guide): update contributing section
-   ```
+```text
+
 7. **Push and PR**: Submit pull request with clear description
 
 ### Feature Flags
@@ -309,7 +339,7 @@ default = ["std"]
 std = []
 gpu = ["cuda", "metal"]
 quantum-hardware = ["q-ibm-backend", "q-aws-backend"]
-```
+```text
 
 ### Code Review Guidelines
 

@@ -1,0 +1,28 @@
+#![allow(dead_code)]
+use super::{PackageMetadata, RegistryError};
+/// Database connection
+struct Database {
+    connection_string: FString,
+}
+impl Database {
+    pub fn new(connection_string: FString) -> Self {
+        Self { connection_string }
+    }
+    pub fn connect(&self) -> Result<(), RegistryError> {
+        println!("Connecting to database: {}", self.connection_string);
+        Ok(())
+    }
+    pub fn store_package(
+        &self,
+        _metadata: &PackageMetadata,
+    ) -> Result<(), RegistryError> {
+        Ok(())
+    }
+    pub fn get_package(
+        &self,
+        name: &str,
+        _version: &str,
+    ) -> Result<PackageMetadata, RegistryError> {
+        Err(RegistryError::PackageNotFound(name.to_string()))
+    }
+}

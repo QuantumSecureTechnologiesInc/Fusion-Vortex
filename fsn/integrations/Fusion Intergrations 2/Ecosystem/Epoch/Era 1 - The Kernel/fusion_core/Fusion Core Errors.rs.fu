@@ -1,0 +1,46 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Fusion Core Errors.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// /// Centralized Error Handling for the Fusion Core Runtime.
+// /// 
+// /// This module defines a unified `FusionError` type that covers all failure modes
+// /// across Classical, Tensor, and Quantum paradigms, ensuring no panics occur in production.
+// 
+// use thiserror::Error; // Assuming 'thiserror' crate is added to Cargo.toml
+// 
+// #[derive(Error, Debug, Clone, PartialEq)]
+// pub enum FusionError {
+//     // --- Classical Errors ---
+//     #[error("Type Mismatch: expected {expected}, found {found}")]
+//     TypeMismatch { expected: String, found: String },
+//     
+//     #[error("Variable not found: {0}")]
+//     UnknownVariable(String),
+// 
+//     // --- Tensor Errors ---
+//     #[error("Shape Mismatch in operation '{op}': LHS {lhs:?} vs RHS {rhs:?}")]
+//     ShapeMismatch { op: String, lhs: Vec<usize>, rhs: Vec<usize> },
+//     
+//     #[error("Index out of bounds: indices {indices:?} are invalid for shape {shape:?}")]
+//     IndexOutOfBounds { indices: Vec<usize>, shape: Vec<usize> },
+//     
+//     #[error("Invalid Dimension: {0}")]
+//     InvalidDimension(String),
+// 
+//     // --- Quantum Errors ---
+//     #[error("Quantum Cloning Violation: Qubit {0} cannot be copied")]
+//     QuantumCloningAttempt(usize),
+//     
+//     #[error("Gate Arity Mismatch: Gate '{gate}' requires {required} qubits, provided {provided}")]
+//     GateArityMismatch { gate: String, required: usize, provided: usize },
+//     
+//     #[error("Invalid Qubit Access: Qubit {0} does not exist or has been measured")]
+//     InvalidQubitAccess(usize),
+// 
+//     // --- Compiler/System Errors ---
+//     #[error("Compilation Error: {0}")]
+//     CompilationError(String),
+// }
+// 
+// /// Helper result type for Fusion operations
+// pub type FusionResult<T> = Result<T, FusionError>;

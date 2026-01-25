@@ -1,0 +1,34 @@
+// tools/cli.fsn
+// Fusion session manager.
+
+fn main() {
+    let args = env::args();
+
+    fusion_match!(args.get(1), {
+        "new" => create_project(args.get(2)),
+        "run" => run_secure_session(args.rest()),
+        "sentinel" => run_sentinel(),
+        _ => println!("Usage: fusion [new|run|sentinel]"),
+    });
+}
+
+fn run_secure_session(args: FVec<FString>) {
+    println!("Bootstrapping 50/50 Security Kernel...");
+
+    let c_key = Crypto::generate_ecc();
+    let pq_key = Crypto::generate_kyber();
+
+    println!("Identity Generation: COMPLETE");
+
+    let cmd = Process::new("cargo");
+    cmd.arg("run");
+    cmd.env("FUSION_CLASSICAL_KEY", c_key);
+    cmd.env("FUSION_PQ_KEY", pq_key);
+
+    let status = cmd.execute();
+
+    fusion_if!(!status.success(), {
+        println!("Fusion Kernel Integrity Failure");
+        exit(1);
+    });
+}

@@ -1,0 +1,14 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 1 - The Foundation/fusion_bridge_c/C-Bridge Configuration.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_bridge_c"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Foreign Function Interface (FFI) bridge for C interoperability"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// libc = "0.2" # Standard C types
+// thiserror = "1.0"

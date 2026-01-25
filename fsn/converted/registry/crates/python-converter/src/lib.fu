@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/python-converter/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// python-converter implementation
+
+struct PythonConverterModule;

@@ -1,7 +1,7 @@
 # Fusion LLM Inference Graph
 
-**Version:** 0.2.0  
-**Type:** Visualization/Debug  
+**Version:** 0.2.0
+**Type:** Visualization/Debug
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ let tracer = Tracer::new();
 tracer.attach(model);
 // Run inference
 tracer.export("trace.json")?;
-```
+```text
 
 ## Dependencies
 

@@ -1,0 +1,227 @@
+// SOURCE: runtime/crates/fusion_hal/src/unified_allocator.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! # Unified Allocator
+//!
+//! A CUDA-aware global allocator that provides unified memory addressing
+//! between CPU and GPU. Uses CUDA pinned memory for zero-copy transfers.
+//!
+//! ## Memory Model: "Entangled Pools"
+//!
+//! - **Unified Bridge**: Shared memory segment mapped to both GPU VRAM (via CUDA UVA) and Host RAM
+//! - **Safety**: Rust's ownership rules are enforced via Arc<T> wrappers that track device residency
+//! - **Zero-Allocation**: No malloc during runtime execution after initialization
+
+
+// FFI declarations for CUDA runtime memory management
+#[cfg(feature = "gpu")]
+extern "C" {
+    fn cudaHostAlloc(ptr: *mut *mut std::ffi::c_void, size: usize, flags: u32) -> FInt;
+    fn cudaFreeHost(ptr: *mut std::ffi::c_void) -> FInt;
+}
+
+/// CUDA host allocation flags
+#[allow(dead_code)]
+mod cuda_flags {
+    /// Memory is pinned and mapped for device access
+    pub const CUDA_HOST_ALLOC_PORTABLE: u32 = 1;
+    /// Memory is mapped into device address space
+    pub const CUDA_HOST_ALLOC_MAPPED: u32 = 2;
+    /// Memory is write-combined (good for CPU writes, GPU reads)
+    pub const CUDA_HOST_ALLOC_WRITECOMBINED: u32 = 4;
+
+    /// Combined flags for optimal zero-copy access
+    pub const DEFAULT_FLAGS: u32 = CUDA_HOST_ALLOC_PORTABLE | CUDA_HOST_ALLOC_MAPPED;
+}
+
+/// A CUDA-aware global allocator.
+///
+/// When CUDA is available, allocations are made using pinned host memory
+/// that can be accessed directly by the GPU without explicit copies.
+/// Falls back to the system allocator when CUDA is unavailable.
+///
+/// ## Usage
+///
+/// To use as the global allocator (not recommended for general use):
+///
+/// ```rust,ignore
+/// #[global_allocator]
+/// static ALLOCATOR: UnifiedAllocator = UnifiedAllocator::new();
+/// ```
+///
+/// ## Performance Notes
+///
+/// - Pinned allocations are slower than regular allocations
+/// - Use for large buffers that need GPU access
+/// - Not suitable for small, frequent allocations
+struct UnifiedAllocator;
+
+impl UnifiedAllocator {
+    /// Create a new unified allocator.
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
+unsafe impl GlobalAlloc for UnifiedAllocator {
+    /// Allocate memory using CUDA pinned allocation when available.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it returns raw memory.
+    /// The caller must ensure proper initialization before use.
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        #[cfg(feature = "gpu")]
+        {
+            let mut ptr: *mut std::ffi::c_void = ptr::null_mut();
+
+            // Attempt CUDA pinned allocation
+            // Flags: Portable (accessible from any device) | Mapped (visible to device)
+            let result = cudaHostAlloc(&mut ptr, layout.size(), cuda_flags::DEFAULT_FLAGS);
+
+            if result == 0 && !ptr.is_null() {
+                return ptr as *mut u8;
+            }
+
+            // Fall back to system allocator on failure
+            System.alloc(layout)
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            // No GPU support - use system allocator
+            System.alloc(layout)
+        }
+    }
+
+    /// Deallocate memory, using CUDA free for pinned memory.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it frees raw memory.
+    /// The caller must ensure the pointer was allocated by this allocator.
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        #[cfg(feature = "gpu")]
+        {
+            // Attempt CUDA pinned free
+            let result = cudaFreeHost(ptr as *mut std::ffi::c_void);
+
+            if result != 0 {
+                // If CUDA free fails, try system deallocator
+                // This handles the case where we fell back during allocation
+                System.dealloc(ptr, layout);
+            }
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            System.dealloc(ptr, layout);
+        }
+    }
+
+    /// Reallocate memory with a new size.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it involves raw memory operations.
+    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        // For now, use the default realloc implementation
+        // which allocates new memory, copies, and frees old
+        let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+        let new_ptr = self.alloc(new_layout);
+
+        if !new_ptr.is_null() {
+            ptr::copy_nonoverlapping(ptr, new_ptr, layout.size().min(new_size));
+            self.dealloc(ptr, layout);
+        }
+
+        new_ptr
+    }
+}
+
+// SAFETY: The allocator is stateless and thread-safe
+unsafe impl Send for UnifiedAllocator {}
+unsafe impl Sync for UnifiedAllocator {}
+
+/// Managed buffer allocated with the unified allocator.
+///
+/// Provides a safe wrapper around unified memory allocations
+/// with automatic deallocation.
+struct UnifiedBuffer {
+    ptr: *mut u8,
+    layout: Layout,
+}
+
+impl UnifiedBuffer {
+    /// Create a new unified buffer of the specified size.
+    ///
+    /// # Arguments
+    ///
+    /// * `size` - Size in bytes
+    /// * `align` - Alignment requirement (typically 16 for SIMD)
+    fn new(size: usize, align: usize) -> Option<Self> {
+        let layout = Layout::from_size_align(size, align).ok()?;
+        let allocator = UnifiedAllocator::new();
+
+        let ptr = { allocator.alloc(layout) };
+
+        if ptr.is_null() {
+            None
+        } else {
+            Some(Self { ptr, layout })
+        }
+    }
+
+    /// Get a pointer to the buffer's data.
+    fn as_ptr(&self) -> *const u8 {
+        self.ptr
+    }
+
+    /// Get a mutable pointer to the buffer's data.
+    fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.ptr
+    }
+
+    /// Get the size of the buffer.
+    fn size(&self) -> usize {
+        self.layout.size()
+    }
+}
+
+impl Drop for UnifiedBuffer {
+    fn drop(&mut self) {
+        let allocator = UnifiedAllocator::new();
+unsafe {
+            allocator.dealloc(self.ptr, self.layout);
+        }
+    }
+}
+
+// SAFETY: The buffer owns its memory and can be safely sent between threads
+unsafe impl Send for UnifiedBuffer {}
+unsafe impl Sync for UnifiedBuffer {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_allocator_creation() {
+        let _allocator = UnifiedAllocator::new();
+    }
+
+    #[test]
+    fn test_unified_buffer() {
+        let buffer = UnifiedBuffer::new(1024, 16);
+        assert!(buffer.is_some());
+
+        let buffer = buffer.unwrap();
+        assert_eq!(buffer.size(), 1024);
+        assert!(!buffer.as_ptr().is_null());
+    }
+
+    #[test]
+    fn test_buffer_drop() {
+        // Just ensure no panic on drop
+        let _buffer = UnifiedBuffer::new(1024, 16);
+    }
+}

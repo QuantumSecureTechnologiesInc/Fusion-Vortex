@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 retry = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -28,7 +28,7 @@ fn main() {
         Ok(())
     });
 }
-```
+```text
 
 ## License
 

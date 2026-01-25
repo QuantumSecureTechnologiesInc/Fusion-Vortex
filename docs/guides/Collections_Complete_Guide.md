@@ -40,7 +40,7 @@ HashMap
       ├─ size: int
       ├─ capacity: int
       └─ load_factor_percent: int
-```
+```text
 
 ### Features
 
@@ -66,7 +66,7 @@ let removed = map.remove(1);    // Returns Option<string>
 let size = map.len();           // Get number of entries
 let empty = map.is_empty();     // Check if empty
 map.clear();                    // Remove all entries
-```
+```text
 
 #### Advanced Features
 
@@ -90,7 +90,7 @@ while keys.has_next() {
     let key = keys.next();
     // Process key
 }
-```
+```text
 
 ### Implementation Highlights
 
@@ -117,7 +117,7 @@ fn insert(mut self, key: K, value: V) -> Option<V> {
 
     return old_value;
 }
-```
+```text
 
 **Resize with Rehashing**:
 
@@ -137,7 +137,7 @@ fn resize(mut self) {
     self.buckets = new_buckets;
     self.capacity = new_capacity;
 }
-```
+```text
 
 ---
 
@@ -152,7 +152,7 @@ fn resize(mut self) {
 ```text
 HashSetT
   └─ HashMap<T, bool>  // Internal storage
-```
+```text
 
 ### Features
 
@@ -175,7 +175,7 @@ set.remove(1);                  // Returns true if present
 let size = set.len();
 let empty = set.is_empty();
 set.clear();
-```
+```text
 
 #### Set Operations
 
@@ -192,32 +192,32 @@ evens.insert(2);
 evens.insert(4);
 
 let union = primes.union(evens);  // {2, 3, 4, 5}
-```
+```text
 
 **Intersection** - O(min(n, m)):
 
 ```fusion
 let intersection = primes.intersection(evens);  // {2}
-```
+```text
 
 **Difference** - O(n):
 
 ```fusion
 let difference = primes.difference(evens);  // {3, 5}
-```
+```text
 
 **Subset/Superset** - O(n):
 
 ```fusion
 let is_sub = set1.is_subset(set2);
 let is_super = set1.is_superset(set2);
-```
+```text
 
 **Disjoint** - O(n):
 
 ```fusion
 let disjoint = set1.is_disjoint(set2);
-```
+```text
 
 ### Iterator Support
 
@@ -227,7 +227,7 @@ while iter.has_next() {
     let value = iter.next();
     // Process value
 }
-```
+```text
 
 ---
 
@@ -327,7 +327,7 @@ fn count_words(words: Vector<string>) -> HashMap<string, int> {
 
     return counts;
 }
-```
+```text
 
 ### Unique Elements
 
@@ -343,7 +343,7 @@ fn find_unique(numbers: Vector<int>) -> HashSet<int> {
 
     return unique;
 }
-```
+```text
 
 ### Set Intersection
 
@@ -357,7 +357,7 @@ fn common_elements(a: Vector<int>, b: Vector<int>) -> HashSet<int> {
 
     return set_a.intersection(set_b);
 }
-```
+```text
 
 ---
 
@@ -377,7 +377,7 @@ fn hash_string(s: string) -> int {
 
     return hash;
 }
-```
+```text
 
 ### Load Factor
 
@@ -395,7 +395,7 @@ fn bucket_index(self, hash: int) -> int {
     }
     return index;
 }
-```
+```text
 
 ---
 

@@ -1,7 +1,7 @@
 # Fusion Runtime Core v2.1 "Nebula Enhanced"
 
-**Version:** 2.1.0  
-**Codename:** Nebula Enhanced  
+**Version:** 2.1.0
+**Codename:** Nebula Enhanced
 **Status:** 🚀 Production Ready
 
 ---
@@ -22,6 +22,7 @@ Fusion Runtime Core v2.1 "Nebula Enhanced" is an advanced **WASM plugin executio
 ## ✨ Features
 
 ### Core Capabilities
+
 - ✅ **WASM Plugin Execution** - Sandboxed execution of WebAssembly plugins
 - ✅ **gRPC API** - Production-ready RPC interface for remote execution
 - ✅ **Fuel-Based Limits** - Prevent infinite loops and resource exhaustion
@@ -29,6 +30,7 @@ Fusion Runtime Core v2.1 "Nebula Enhanced" is an advanced **WASM plugin executio
 - ✅ **Health Monitoring** - Built-in health check endpoint
 
 ### v2.1 Enhancements
+
 - ✅ **Intelligent Caching** - Modules cached by plugin name with RwLock for thread-safe access
 - ✅ **Epoch-Based Timeouts** - More reliable than fuel-only approach
 - ✅ **Increased Capacity** - Handle more complex plugins with 100K fuel
@@ -43,13 +45,13 @@ Fusion Runtime Core v2.1 "Nebula Enhanced" is an advanced **WASM plugin executio
 ```bash
 cd registry/crates/fusion-runtime-core-v2-nebula
 cargo build --release
-```
+```text
 
 ### Running the Server
 
 ```bash
 cargo run --release --bin fusion-runtime-server
-```
+```text
 
 The server will start on `0.0.0.0:50051`.
 
@@ -58,7 +60,7 @@ The server will start on `0.0.0.0:50051`.
 ```toml
 [dependencies]
 fusion-runtime-core-v2-nebula = { path = "../fusion-runtime-core-v2-nebula" }
-```
+```text
 
 ```rust
 use fusion_runtime_core_v2_nebula::WasmEngine;
@@ -69,7 +71,7 @@ let (exit_code, output, duration) = engine.execute(
     &wasm_bytes,
     "input_data"
 )?;
-```
+```text
 
 ---
 
@@ -79,33 +81,36 @@ let (exit_code, output, duration) = engine.execute(
 
 ```protobuf
 rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
-```
+```text
 
 **Response:**
+
 ```json
 {
   "status": "OPERATIONAL",
   "version": "2.1.0-Nebula-Enhanced",
   "load_index": 0.12
 }
-```
+```text
 
 ### Execute Plugin
 
 ```protobuf
 rpc ExecutePlugin (PluginRequest) returns (PluginResponse);
-```
+```text
 
 **Request:**
+
 ```json
 {
   "plugin_name": "my_plugin",
   "wasm_binary": "<bytes>",
   "input_data": "..."
 }
-```
+```text
 
 **Response:**
+
 ```json
 {
   "exit_code": 0,
@@ -113,13 +118,13 @@ rpc ExecutePlugin (PluginRequest) returns (PluginResponse);
   "error_message": "",
   "execution_time_ms": 12.5
 }
-```
+```text
 
 ---
 
 ## 🏗️ Architecture
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │   gRPC Server (Tonic)                   │
 │   Port: 50051                           │
@@ -136,7 +141,7 @@ rpc ExecutePlugin (PluginRequest) returns (PluginResponse);
 │   Wasmtime Runtime                      │
 │   └─ Sandboxed WASM Execution           │
 └─────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -146,14 +151,14 @@ rpc ExecutePlugin (PluginRequest) returns (PluginResponse);
 
 ```rust
 store.set_fuel(100_000)?; // v2.1: Increased from 10,000
-```
+```text
 
 ### Epoch Deadlines
 
 ```rust
 config.epoch_interruption(true);
 store.set_epoch_deadline(1);
-```
+```text
 
 ### Module Caching
 
@@ -184,23 +189,27 @@ Modules are automatically cached by `plugin_name`. To clear cache, restart the s
 ## 📝 Example WASM Plugin
 
 ```rust
+
 #[no_mangle]
+
 pub extern "C" fn fusion_entry() -> i32 {
     // Your plugin logic here
     0 // Return 0 for success
 }
-```
+```text
 
 Compile to WASM:
+
 ```bash
 cargo build --target wasm32-unknown-unknown --release
-```
+```text
 
 ---
 
 ## 🔄 Changelog
 
 ### v2.1.0 (2025-12-22)
+
 - ✨ Added module caching for faster repeat executions
 - ✨ Enabled epoch interruption for reliable timeouts
 - ✨ Increased fuel limit from 10K to 100K
@@ -208,6 +217,7 @@ cargo build --target wasm32-unknown-unknown --release
 - ✨ Updated health check to show v2.1.0-Nebula-Enhanced
 
 ### v2.0.0 (Initial Release)
+
 - 🎉 Initial Nebula runtime with WASM support
 - 🎉 gRPC API with health check and plugin execution
 - 🎉 Fuel-based resource limits

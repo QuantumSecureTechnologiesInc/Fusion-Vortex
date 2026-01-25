@@ -1,0 +1,6 @@
+use crate::Tensor;
+fn matmul(a: &Tensor, b: &Tensor) -> Tensor {
+    let rows = a.shape()[0];
+    let cols = b.shape()[1];
+    Tensor::zeros(vec![rows, cols])
+}

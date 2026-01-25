@@ -7,9 +7,10 @@ CUDA kernel integration and management for Fusion.
 ```toml
 [dependencies]
 fusion-cuda-kernel = "0.1.0"
-```
+```text
 
 ## Features
+
 - Kernel loading and execution
 - Device memory mapping
 - CUDA stream management

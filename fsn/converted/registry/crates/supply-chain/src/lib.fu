@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/supply-chain/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// supply-chain implementation
+struct SupplyChainModule;

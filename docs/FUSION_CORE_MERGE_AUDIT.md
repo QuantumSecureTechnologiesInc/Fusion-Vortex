@@ -1,6 +1,6 @@
 # Fusion Core Merge Audit
 
-**Date**: 2025-12-15  
+**Date**: 2025-12-15
 **Purpose**: Audit all dependencies on `fusion-core` and `fusion_core` before merging into single `fusion-core` crate
 
 ---
@@ -8,10 +8,11 @@
 ## Current State
 
 ### Two Crates Exist:
+
 1. **`fusion_core`** (underscore) at `registry/crates/fusion_core`
    - NEW: Tri-brid type system (Classical, Tensor, Quantum)
    - Contains: types/, ops/, compiler/semantic, traits
-   
+
 2. **`fusion-core`** (hyphen) at `registry/crates/core`
    - OLD: Compiler infrastructure (package name: `fusion-compiler`)
    - Contains: lexer, parser, AST, VM, type_checker
@@ -23,6 +24,7 @@
 ### 🟢 Crates Using `fusion_core` (Underscore) - 131+ instances
 
 #### Registry Crates (using workspace = true):
+
 - wasm-server
 - vram-scheduler
 - webasm-renderer
@@ -120,6 +122,7 @@
 - (81+ more in registry/crates not shown)
 
 #### Runtime Crates (path dependencies):
+
 - runtime/crates/fusion_runtime_scheduler → `../../../registry/crates/fusion_core/`
 - runtime/crates/fusion_runtime_core → `../../../registry/crates/fusion_core/`
 - runtime/crates/fusion_runtime_hal → `../../../registry/crates/fusion_core/`
@@ -131,6 +134,7 @@
 - runtime/crates/fusion_ai_core → `../../../registry/crates/fusion_core/`
 
 #### Special Cases:
+
 - registry/crates/std → `path = "../fusion_core"` (relative path)
 
 ---
@@ -138,12 +142,14 @@
 ### 🔵 Crates Using `fusion-core` (Hyphen) - 48+ instances
 
 #### Registry Crates (using workspace = true):
+
 - tester
 - formatter
 - docgen
 - ai-cli
 
 #### Ecosystem Crates:
+
 - ecosystem/crates/fusion_finance
 - ecosystem/crates/tester
 - ecosystem/crates/nn-rbf
@@ -179,6 +185,7 @@
 - ecosystem/crates/ai-core
 
 #### Direct Path Dependencies:
+
 - crates/toolchain → `../../registry/crates/core/`
 - crates/analyzer → `../../registry/crates/core`
 - cmd/fusion → workspace (after recent fix)
@@ -186,6 +193,7 @@
 - cmd/fusion/fusion/fusion → `../../../../registry/crates/core/`
 
 #### Antigravity Playground (testing/old):
+
 - antigravity/playground/nodal-whirlpool/cmd/fusion
 - antigravity/playground/Fusion VSC CLi/* (multiple)
 
@@ -194,28 +202,37 @@
 ## Merge Strategy
 
 ### Phase 1: Create Merged `fusion-core` Crate
+
 1. Keep `registry/crates/fusion_core` as location
 2. Rename package to `fusion-core` (hyphen)
 3. Merge compiler modules from `registry/crates/core`
 4. Update Cargo.toml with all necessary dependencies
 
 ### Phase 2: Update Workspace Dependencies
+
 Update root `Cargo.toml`:
+
 ```toml
 [workspace.dependencies]
 fusion-core = { path = "registry/crates/fusion_core", version = "0.2.0" }
+
 # REMOVE: fusion_core (old reference)
+
+
 # REMOVE: fusion-compiler (alias)
-```
+
+```text
 
 ### Phase 3: Update All Dependents
 
 #### Auto-Fix (workspace = true users):
+
 These will automatically resolve once workspace.dependencies is updated:
 - All 131+ `fusion_core = { workspace = true }` references
 - All 48+ `fusion-core = { workspace = true }` references
 
 #### Manual Fix Required:
+
 1. **Runtime crates**: Update paths from `../../../registry/crates/fusion_core/` → kept (still valid)
 2. **std crate**: Update `path = "../fusion_core"` → stays (relative path still works)
 3. **Toolchain**: Change path `../../registry/crates/core/` → `../../registry/crates/fusion_core/`
@@ -223,6 +240,7 @@ These will automatically resolve once workspace.dependencies is updated:
 5. **cmd/fusion variants**: Already using workspace = true (fixed)
 
 ### Phase 4: Remove Old Crate
+
 Delete `registry/crates/core` directory entirely
 
 ---
@@ -230,42 +248,51 @@ Delete `registry/crates/core` directory entirely
 ## Import Statement Changes
 
 ### For Code Using `fusion_core`:
+
 **BEFORE:**
+
 ```rust
 use fusion_core::types::Tensor;
-```
+```text
 
 **AFTER (no change needed if using underscore):**
+
 ```rust
 use fusion_core::types::Tensor;
-```
+```text
 
 ### For Code Using `fusion-core`:
+
 **BEFORE:**
+
 ```rust
 use fusion_core_compiler::lexer::Lexer;
 use fusion_core_compiler::parser::Parser;
-```
+```text
 
 **AFTER:**
+
 ```rust
 use fusion_core::compiler::lexer::Lexer;
 use fusion_core::compiler::parser::Parser;
-```
+```text
 
 ---
 
 ## Risk Assessment
 
 ### Low Risk:
+
 - ✅ Workspace-based dependencies (auto-resolve)
 - ✅ Path-based that point to fusion_core (unchanged location)
 
 ### Medium Risk:
+
 - ⚠️ Path-based pointing to `core/` directory (need manual update)
 - ⚠️ Import statements in .rs files (need grep + replace)
 
 ### Safe to Ignore:
+
 - 🔶 antigravity/playground/* (test/development sandboxes)
 - 🔶 Source Files/Ecosystem/Epoch (external/reference)
 

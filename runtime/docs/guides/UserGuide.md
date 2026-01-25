@@ -28,30 +28,37 @@ Fusion is a revolutionary programming language runtime designed for hybrid Quant
 ### Prerequisites
 
 ```bash
+
 # Rust 1.75+
+
 rustc --version
 
 # LLVM (for quantum compilation)
+
 llvm-config --version
 
 # Optional: CUDA for NVIDIA GPUs
+
 nvidia-smi
 
 # Optional: Metal for Apple Silicon
+
+
 # (Pre-installed on macOS)
-```
+
+```text
 
 ### Quick Install
 
 ```bash
 cargo add fusion_runtime_core fusion_core
-```
+```text
 
 ### Full Ecosystem
 
 ```bash
 cargo add fusion_runtime_core fusion_core fusion_ai_core fusion_finance fusion_quantum fusion_net
-```
+```text
 
 ## Core Concepts
 
@@ -65,7 +72,7 @@ use fusion_core::FusionType;
 let classical = FusionType::int(42);
 let tensor = Tensor::zeros([1024, 1024]).into();
 let quantum = Qubit::new().into();
-```
+```text
 
 ### Heterogeneous Scheduler
 
@@ -85,7 +92,7 @@ let tensor = Tensor::zeros([1024, 1024])
 
 // No copy when computing
 let result = tensor.matmul(&tensor).await;
-```
+```text
 
 ## Getting Started
 
@@ -96,12 +103,12 @@ use fusion_runtime_core::Runtime;
 
 fn main() {
     let runtime = Runtime::new();
-    
+
     runtime.block_on(async {
         println!("Hello from Fusion Runtime!");
     });
 }
-```
+```text
 
 ### Using the Macro
 
@@ -109,10 +116,11 @@ fn main() {
 use fusion_runtime_core;
 
 #[fusion_runtime_core::main]
+
 async fn main() {
     println!("Async main with Fusion!");
 }
-```
+```text
 
 ### Custom Configuration
 
@@ -126,7 +134,7 @@ let runtime = Runtime::builder()
     .worker_threads(16)
     .memory_pool_size(2 * 1024 * 1024 * 1024)  // 2GB
     .build();
-```
+```text
 
 ## Working with Tensors
 
@@ -146,7 +154,7 @@ let gpu_tensor = Tensor::zeros([1024, 1024])
 // With gradient tracking
 let trainable = Tensor::ones([100, 100])
     .requires_grad(true);
-```
+```text
 
 ### Matrix Operations
 
@@ -157,7 +165,7 @@ let b = Tensor::zeros([512, 1024]);
 // Zero-copy matmul on GPU
 let c = a.matmul(&b).await;
 println!("Result shape: {:?}", c.shape());
-```
+```text
 
 ### Automatic Differentiation
 
@@ -174,7 +182,7 @@ let y = x.matmul(&w).await;
 
 // Backward pass
 autodiff.backward(&y);
-```
+```text
 
 ## Quantum Computing
 
@@ -184,15 +192,16 @@ autodiff.backward(&y);
 use fusion_quantum::Qubit;
 
 #[fusion_runtime_core::main]
+
 async fn main() {
     let mut qubit = Qubit::new();  // |0⟩
-    
+
     qubit.hadamard();  // |+⟩ superposition
-    
+
     let result = qubit.measure().await;
     println!("Measured: {}", result);  // 0 or 1 with 50% probability
 }
-```
+```text
 
 ### Quantum Circuits
 
@@ -209,7 +218,7 @@ circuit
 
 let result = circuit.execute().await;
 println!("Counts: {:?}", result.counts);
-```
+```text
 
 ### Bell State
 
@@ -220,7 +229,7 @@ circuit.h(0).cx(0, 1).measure(0).measure(1);
 
 let result = circuit.execute().await;
 // Expected: |00⟩ and |11⟩ with equal probability
-```
+```text
 
 ## High-Frequency Trading
 
@@ -230,18 +239,19 @@ let result = circuit.execute().await;
 use fusion_finance::{OrderBook, Order};
 
 #[fusion_runtime_core::main(qos = "ultra_low_latency")]
+
 async fn main() {
     let book = OrderBook::new("BTC/USD");
-    
+
     // Place orders (scheduled on low-jitter queue)
     let buy_order = Order::limit_buy(50000.0, 1.0);
     let order_id = book.place_order(buy_order).await;
-    
+
     // Query best prices
     println!("Best bid: {:?}", book.best_bid());
     println!("Best ask: {:?}", book.best_ask());
 }
-```
+```text
 
 ### Market Making
 
@@ -254,14 +264,14 @@ let book = OrderBook::new("ETH/USD");
 loop {
     let mid_price = (book.best_bid().unwrap() + book.best_ask().unwrap()) / 2.0;
     let spread = 0.01;
-    
+
     let buy = Order::limit_buy(mid_price - spread, 10.0);
     let sell = Order::limit_sell(mid_price + spread, 10.0);
-    
+
     book.place_order(buy).await;
     book.place_order(sell).await;
 }
-```
+```text
 
 ## Performance Optimisation
 
@@ -275,7 +285,7 @@ let runtime = Runtime::builder()
     .enable_gpu()
     .gpu_backend(GpuBackend::Cuda)  // Force CUDA
     .build();
-```
+```text
 
 ### QoS Modes
 
@@ -291,7 +301,7 @@ let hft_runtime = Runtime::builder()
 let ml_runtime = Runtime::builder()
     .enable_qos(QoSMode::HighThroughput)
     .build();
-```
+```text
 
 ### Memory Pool Sizing
 
@@ -299,7 +309,7 @@ let ml_runtime = Runtime::builder()
 let runtime = Runtime::builder()
     .memory_pool_size(4 * 1024 * 1024 * 1024)  // 4GB pool
     .build();
-```
+```text
 
 ## Troubleshooting
 
@@ -310,15 +320,19 @@ let runtime = Runtime::builder()
 **Solution**:
 
 ```bash
+
 # Check CUDA
+
 nvidia-smi
 
 # Check Metal (macOS)
+
 system_profiler SPDisplaysDataType
 
 # Verify Fusion detection
+
 cargo run --example check_gpu
-```
+```text
 
 ### QPU Authentication Failed
 
@@ -327,12 +341,15 @@ cargo run --example check_gpu
 **Solution**:
 
 ```bash
+
 # Set API key
+
 export FUSION_QPU_API_KEY="your_ibm_quantum_api_key"
 
 # Or use .env file
+
 echo "FUSION_QPU_API_KEY=your_key" >> .env
-```
+```text
 
 ### High Latency in HFT
 
@@ -346,7 +363,7 @@ let runtime = Runtime::builder()
     .enable_qos(QoSMode::UltraLowLatency)
     .worker_threads(1)  // Dedicated thread
     .build();
-```
+```text
 
 ### Memory Pool Exhausted
 
@@ -358,7 +375,7 @@ let runtime = Runtime::builder()
 let runtime = Runtime::builder()
     .memory_pool_size(8 * 1024 * 1024 * 1024)  // Increase to 8GB
     .build();
-```
+```text
 
 ## Next Steps
 

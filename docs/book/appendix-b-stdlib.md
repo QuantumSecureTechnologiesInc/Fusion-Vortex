@@ -36,7 +36,7 @@ let f: bool = false
 // Character
 let c: char = 'A'
 let emoji: char = '🦀'
-```
+```text
 
 ### String Types
 
@@ -62,7 +62,7 @@ s.split(" ")               // Split by delimiter
 s.replace("l", "L")        // Replace substring
 s.push_str(" World")       // Append (mut)
 s.push('!')                // Append char (mut)
-```
+```text
 
 ---
 
@@ -92,7 +92,7 @@ v.sort()                   // Sort in place
 v.reverse()                // Reverse in place
 v.contains(&2)             // Check membership
 v.clear()                  // Remove all elements
-```
+```text
 
 ### HashMap<K, V>
 
@@ -115,7 +115,7 @@ map.entry("key").or_insert(0)     // Insert if missing
 
 // From iterators
 let map: HashMap<_, _> = vec![("a", 1), ("b", 2)].into_iter().collect()
-```
+```text
 
 ### HashSet<T>
 
@@ -136,7 +136,7 @@ set1.union(&set2)                 // Elements in either
 set1.intersection(&set2)          // Elements in both
 set1.difference(&set2)            // Elements in set1 only
 set1.symmetric_difference(&set2)  // Elements in one but not both
-```
+```text
 
 ### VecDeque<T>
 
@@ -151,7 +151,7 @@ deque.pop_back()                  // Remove from back
 deque.pop_front()                 // Remove from front
 deque.front()                     // Peek front
 deque.back()                      // Peek back
-```
+```text
 
 ### BinaryHeap<T>
 
@@ -163,7 +163,7 @@ let mut heap: BinaryHeap<int> = BinaryHeap::new()
 heap.push(3)                      // Add element
 heap.pop()                        // Remove max
 heap.peek()                       // View max
-```
+```text
 
 ---
 
@@ -196,7 +196,7 @@ opt.replace(value)                // Replace value
 
 // Pattern matching
 if let Some(x) = opt { /* use x */ }
-```
+```text
 
 ---
 
@@ -227,7 +227,7 @@ res.err()                         // Convert to Option<E>
 
 // Error propagation
 let value = operation()?          // Return Err if failed
-```
+```text
 
 ---
 
@@ -257,7 +257,7 @@ use std::io::BufWriter
 let mut writer = BufWriter::new(file)
 writer.write_all(b"Hello")?
 writer.flush()?
-```
+```text
 
 ---
 
@@ -299,7 +299,7 @@ for entry in fs::read_dir(".")? {
     let entry = entry?
     println("{:?}", entry.path())
 }
-```
+```text
 
 ---
 
@@ -324,7 +324,7 @@ path.canonicalize()               // Absolute path
 path_buf.push("file.txt")         // Append to path
 path_buf.pop()                    // Remove last component
 path_buf.set_extension("md")      // Change extension
-```
+```text
 
 ---
 
@@ -353,7 +353,7 @@ thread::scope(|s| {
     s.spawn(|| { /* access local variables */ })
     s.spawn(|| { /* access local variables */ })
 })
-```
+```text
 
 ---
 
@@ -393,7 +393,7 @@ let pair = Arc::new((Mutex::new(false), Condvar::new()))
 let (lock, cvar) = &*pair
 cvar.notify_one()
 cvar.wait(lock)
-```
+```text
 
 ---
 
@@ -420,7 +420,7 @@ let elapsed = start.elapsed()
 // SystemTime (wall clock)
 let now = SystemTime::now()
 let since_epoch = now.duration_since(SystemTime::UNIX_EPOCH)?
-```
+```text
 
 ---
 
@@ -446,7 +446,7 @@ env::set_current_dir("path")?     // Change directory
 
 // Executable path
 env::current_exe()?               // Path to current executable
-```
+```text
 
 ---
 
@@ -468,7 +468,7 @@ println("status: {}", output.status)
 // Exit program
 exit(0)  // Success
 exit(1)  // Error
-```
+```text
 
 ---
 

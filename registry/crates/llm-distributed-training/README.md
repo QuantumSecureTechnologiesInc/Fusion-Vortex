@@ -1,7 +1,7 @@
 # Fusion LLM Distributed Training
 
-**Version:** 0.2.0  
-**Type:** Training System  
+**Version:** 0.2.0
+**Type:** Training System
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ let world_size = std::env::var("WORLD_SIZE")?.parse()?;
 
 let trainer = Trainer::new(model, optimizer, rank, world_size);
 trainer.train(dataset).await?;
-```
+```text
 
 ## Dependencies
 

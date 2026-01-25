@@ -1,0 +1,85 @@
+mod error;
+mod executor;
+mod fs;
+mod reactor;
+mod sync;
+mod task;
+#[cfg(feature = "wasm")]
+mod wasm;
+#[cfg(feature = "distributed")]
+mod cluster;
+use crate::executor::Runtime;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Device {
+    Cpu,
+    Gpu(FU32),
+    Qpu(FU32),
+}
+struct JoinHandle<T> {
+    pub(crate) result_receiver: futures::channel::oneshot::Receiver<T>,
+}
+impl<T> Future for JoinHandle<T> {
+    type Output = T;
+    fn poll(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        std::pin::Pin::new(&mut self.result_receiver)
+            .poll(cx)
+            .map(|res| res.expect("Task panicked"))
+    }
+}
+struct Builder {
+    workers: FSize,
+    gpu_enabled: FBool,
+    wasm_enabled: FBool,
+    dist_enabled: FBool,
+}
+impl Builder {
+    pub fn new() -> Self {
+        Self {
+            workers: num_cpus::get(),
+            gpu_enabled: false,
+            wasm_enabled: false,
+            dist_enabled: false,
+        }
+    }
+    pub fn enable_gpu(mut self) -> Self {
+        self.gpu_enabled = true;
+        self
+    }
+    pub fn enable_wasm(mut self) -> Self {
+        self.wasm_enabled = true;
+        self
+    }
+    pub fn enable_distributed(mut self) -> Self {
+        self.dist_enabled = true;
+        self
+    }
+    pub fn worker_threads(mut self, val: FSize) -> Self {
+        self.workers = val;
+        self
+    }
+    pub fn build(self) -> Runtime {
+        Runtime::new(self.workers)
+    }
+}
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+fn spawn<F>(future: F) -> JoinHandle<F::Output>
+where
+    F: Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    executor::GLOBAL_RUNTIME
+        .with(|rt| {
+            rt.borrow().as_ref().expect("Runtime not initialized").spawn(future)
+        })
+}
+mod device;
+mod host_functions;
+mod metrics;
+mod shared_memory;

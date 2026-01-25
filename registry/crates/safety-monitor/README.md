@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 safety-monitor = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use safety_monitor::Watchdog;
 fn main() {
     let wd = Watchdog::new();
 }
-```
+```text
 
 ## License
 

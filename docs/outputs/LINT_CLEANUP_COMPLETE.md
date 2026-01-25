@@ -42,7 +42,7 @@ Each file was restored using the `write_to_file` or `replace_file_content` tools
    #![allow(dead_code)]
    #![allow(unused_variables)]
 
-```
+```text
 
 2. **Correct imports** for each module's specific needs
 
@@ -56,7 +56,7 @@ Each file was restored using the `write_to_file` or `replace_file_content` tools
 Compiling fusion_lang v0.1.0
 Finished `dev` profile [unoptimized + debuginfo]
 warning: `fusion_lang` (lib) generated 4 warnings
-```
+```text
 
 Only **4 minor warnings remain** (unused imports), which are acceptable for v0.1.0 architectural stubs.
 

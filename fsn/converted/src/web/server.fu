@@ -1,0 +1,39 @@
+// SOURCE: src/web/server.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/web/server.rs - HTTP Server Implementation
+#![allow(dead_code)]
+
+use super::router::Router;
+use super::WebError;
+
+struct Server {
+    router: Router,
+    port: u16,
+}
+
+impl Server {
+    fn new(port: u16) -> Self {
+        Self {
+            router: Router::new(),
+            port,
+        }
+    }
+
+    fn get<F>(&mut self, path: &str, handler: F)
+    where
+        F: Fn(super::http::Request) -> super::http::Response + Send + Sync + 'static,
+    {
+        self.router
+            .add_route(super::http::Method::GET, path, handler);
+    }
+
+    fn start(&self) -> Result<(), WebError> {
+        println!("Starting Web Server on port {}", self.port);
+        // In a real implementation:
+        // 1. Bind TCP listener
+        // 2. Loop accept connections
+        // 3. Parse HTTP request
+        // 4. Delegate to self.router.handle(req)
+        Ok(())
+    }
+}

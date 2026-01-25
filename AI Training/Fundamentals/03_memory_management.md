@@ -1,8 +1,8 @@
 # Fusion Memory Management and Effect System
 
-**Dataset Category**: Fundamentals  
-**Training Level**: Intermediate to Advanced  
-**Last Updated**: December 2025 (v0.2.0-beta.1)
+**Dataset Category**: Fundamentals
+**Training Level**: Intermediate to Advanced
+**Last Updated**: December 2025 (v1.0.0) (v1.0.0)
 
 ---
 
@@ -28,7 +28,7 @@ fn process_data() {
     let processed = transform(data)  // Old data becomes garbage
     save_results(processed)          // New data saved
 }  // All memory automatically collected when no longer reachable
-```
+```text
 
 **GC Implementation**:
 - **Algorithm**: Generational garbage collection with concurrent marking
@@ -53,7 +53,7 @@ fn process_audio_buffer(buffer: &mut [f32]) {
         *sample *= 0.5  // In-place modification, no allocations
     }
 }  // Compile-time guarantees no memory leaks
-```
+```text
 
 ## 2. Ownership and Borrowing
 
@@ -73,7 +73,7 @@ fn ownership_example() {
     // println(s1)                  // ERROR: s1 no longer valid
     println(s2)                     // OK: s2 owns the string
 }  // s2 dropped here, memory freed
-```
+```text
 
 ### 2.2 Borrowing (References)
 
@@ -83,11 +83,11 @@ Instead of transferring ownership, you can borrow a reference:
 @borrowed
 fn borrowing_example() {
     let s1 = String::from("hello")
-    
+
     // Immutable borrow
     let len = calculate_length(&s1)  // s1 borrowed, not moved
     println("Length of '{}' is {}", s1, len)  // s1 still valid
-    
+
     // Mutable borrow
     let mut s2 = String::from("world")
     append_exclamation(&mut s2)
@@ -103,7 +103,7 @@ fn calculate_length(s: &String) -> int {
 fn append_exclamation(s: &mut String) {
     s.push_str("!")
 }
-```
+```text
 
 ### 2.3 Borrowing Rules
 
@@ -114,22 +114,22 @@ fn append_exclamation(s: &mut String) {
 @borrowed
 fn borrowing_rules() {
     let mut s = String::from("hello")
-    
+
     // Multiple immutable borrows - OK
     let r1 = &s
     let r2 = &s
     println("{} and {}", r1, r2)
-    
+
     // Mutable borrow after immutable borrows - OK (r1, r2 no longer used)
     let r3 = &mut s
     r3.push_str(" world")
     println(r3)
-    
+
     // ERROR: Cannot have mutable and immutable borrows simultaneously
     // let r4 = &s
     // r3.push_str("!")  // ERROR: r3 still in scope
 }
-```
+```text
 
 ## 3. The Effect System
 
@@ -149,7 +149,7 @@ fn zero_alloc_function(data: &[u8]) -> u64 {
     }
     return sum
 }  // Guaranteed zero allocations
-```
+```text
 
 #### @gc - Explicit GC Mode
 
@@ -160,7 +160,7 @@ fn flexible_function(data: Vec<int>) {
     let processed = complex_transform(data)
     // GC handles cleanup
 }
-```
+```text
 
 ### 3.2 Performance Effects
 
@@ -174,7 +174,7 @@ use fusion::hal::Tensor
 fn matrix_multiply(a: Tensor<f32>, b: Tensor<f32>) -> Tensor<f32> {
     return a.matmul(b)
 }  // Executes on GPU if available, falls back to CPU
-```
+```text
 
 #### @inline - Inline Hint
 
@@ -184,7 +184,7 @@ fn matrix_multiply(a: Tensor<f32>, b: Tensor<f32>) -> Tensor<f32> {
 fn fast_add(a: int, b: int) -> int {
     return a + b
 }
-```
+```text
 
 #### @inline(always) - Force Inlining
 
@@ -194,7 +194,7 @@ fn fast_add(a: int, b: int) -> int {
 fn critical_operation(x: int) -> int {
     return x * 2 + 1
 }
-```
+```text
 
 ### 3.3 Security Effects
 
@@ -215,7 +215,7 @@ fn secure_compare(a: &[u8], b: &[u8]) -> bool {
     }
     return diff == 0
 }  // Execution time independent of input values
-```
+```text
 
 #### @trusted - Unsafe Code Boundary
 
@@ -229,7 +229,7 @@ fn raw_pointer_manipulation(ptr: *mut u8, len: int) {
         }
     }
 }  // Requires security audit
-```
+```text
 
 ### 3.4 Concurrency Effects
 
@@ -242,7 +242,7 @@ use std::sync::AtomicInt
 fn lockfree_increment(counter: &AtomicInt) {
     counter.fetch_add(1)
 }  // Guaranteed atomic access
-```
+```text
 
 #### @parallel - Parallel Execution
 
@@ -256,7 +256,7 @@ fn parallel_sum(numbers: &[int]) -> int {
     }
     return sum
 }  // Executes in parallel across CPU cores
-```
+```text
 
 ### 3.5 AI/ML Effects
 
@@ -273,7 +273,7 @@ fn train_model(data: FluxTensor<f32>, labels: FluxTensor<f32>) {
     gradients = loss.backward()
     optimizer.step(gradients)
 }
-```
+```text
 
 ## 4 Lifetimes (Borrow Checker Mode)
 
@@ -290,7 +290,7 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
         return y
     }
 }  // Return value's lifetime tied to inputs
-```
+```text
 
 ### 4.2 Lifetime Elision Rules
 
@@ -308,7 +308,7 @@ fn first_word(s: &str) -> &str {
     }
     return s
 }
-```
+```text
 
 ### 4.3 Struct Lifetimes
 
@@ -325,7 +325,7 @@ fn excerpt_example() {
     let excerpt = ImportantExcerpt { part: first_sentence }
     // excerpt and novel must have compatible lifetimes
 }  // novel dropped, then excerpt
-```
+```text
 
 ### 4.4 Static Lifetime
 
@@ -334,7 +334,7 @@ fn excerpt_example() {
 let s: &'static str = "I have a static lifetime"
 
 const GREETING: &'static str = "Hello, World!"
-```
+```text
 
 ## 5. Smart Pointers
 
@@ -355,7 +355,7 @@ enum List {
     Cons(int, Box<List>),
     Nil
 }
-```
+```text
 
 ### 5.2 Rc<T> - Reference Counted
 
@@ -367,10 +367,10 @@ fn rc_example() {
     let a = Rc::new(42)
     let b = Rc::clone(&a)  // Increment reference count
     let c = Rc::clone(&a)
-    
+
     println("Reference count: {}", Rc::strong_count(&a))  // 3
 }  // All references dropped, memory freed
-```
+```text
 
 ### 5.3 Arc<T> - Atomic Reference Counted
 
@@ -380,7 +380,7 @@ use std::thread
 
 fn arc_example() {
     let data = Arc::new(vec![1, 2, 3, 4, 5])
-    
+
     let mut handles = vec![]
     for i in 0..5 {
         let data_clone = Arc::clone(&data)
@@ -389,12 +389,12 @@ fn arc_example() {
         })
         handles.push(handle)
     }
-    
+
     for handle in handles {
         handle.join().unwrap()
     }
 }  // data freed when last Arc dropped
-```
+```text
 
 ### 5.4 RefCell<T> - Interior Mutability
 
@@ -404,13 +404,13 @@ use std::cell::RefCell
 @borrowed
 fn refcell_example() {
     let x = RefCell::new(42)
-    
+
     // Borrow mutably at runtime
     *x.borrow_mut() += 1
-    
+
     println("Value: {}", *x.borrow())  // 43
 }  // Runtime borrow checking
-```
+```text
 
 ## 6. Memory Layout and Optimization
 
@@ -422,34 +422,38 @@ fn stack_vs_heap() {
     // Stack allocation (fast, fixed size)
     let x: int = 42
     let array: [int; 100] = [0; 100]
-    
+
     // Heap allocation (flexible size, slower)
     let vec: Vec<int> = vec![1, 2, 3]
     let boxed: Box<int> = Box::new(42)
 }
-```
+```text
 
 ### 6.2 Memory Alignment
 
 ```fusion
 // Control memory layout
+
 #[repr(C)]  // C-compatible layout
+
 class Point {
     x: f64
     y: f64
 }
 
 #[repr(packed)]  // Remove padding
+
 class PackedStruct {
     a: u8
     b: u32
 }
 
 #[repr(align(64))]  // Cache line alignment
+
 class CacheAligned {
     data: [u8; 64]
 }
-```
+```text
 
 ## 7. Mixing GC and Borrow Checker Modes
 
@@ -473,7 +477,7 @@ fn process_critical_section(data: &[f32]) -> f64 {
     }
     return sum / data.len() as f64
 }
-```
+```text
 
 ## 8. Memory Management Best Practices
 
@@ -511,7 +515,7 @@ fn process_batch_optimized(items: &[Item], results: &mut [Result]) {
         results[i] = expensive_operation(item)
     }
 }
-```
+```text
 
 ## 9. Training Examples
 
@@ -522,10 +526,10 @@ fn process_batch_optimized(items: &[Item], results: &mut [Result]) {
 fn main() -> int {
     let config = load_configuration()
     let data = fetch_data(&config.source)
-    
+
     // Switch to borrow checker for processing
     let processed = process_samples(&data)
-    
+
     save_results(&config.destination, processed)
     return 0
 }
@@ -547,7 +551,7 @@ fn transform_sample(sample: &Sample) -> ProcessedSample {
         timestamp: sample.timestamp
     }
 }
-```
+```text
 
 ---
 

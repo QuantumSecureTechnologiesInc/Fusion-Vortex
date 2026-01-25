@@ -1,0 +1,26 @@
+use fusion_net::pqc::{EncryptionParam, SecurityPolicy};
+use fusion_std::error::StdResult;
+struct PqcTransport {
+    policy: SecurityPolicy,
+    #[allow(dead_code)]
+    handshake_complete: FBool,
+}
+impl PqcTransport {
+    pub fn new(policy: SecurityPolicy) -> Self {
+        Self {
+            policy,
+            handshake_complete: false,
+        }
+    }
+    pub async fn handshake(&mut self) -> StdResult<()> {
+        self.handshake_complete = true;
+        Ok(())
+    }
+    pub fn cipher_suite(&self) -> &str {
+        match self.policy.param {
+            EncryptionParam::Kyber512 => "KYBER-512-AES-GCM",
+            EncryptionParam::Kyber768 => "KYBER-768-AES-GCM",
+            EncryptionParam::Kyber1024 => "KYBER-1024-AES-GCM",
+        }
+    }
+}

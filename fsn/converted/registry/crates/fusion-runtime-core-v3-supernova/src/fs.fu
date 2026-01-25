@@ -1,0 +1,88 @@
+// SOURCE: registry/crates/fusion-runtime-core-v3-supernova/src/fs.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/fs.rs
+// Production Async File System
+
+use crate::reactor::{HyperRing, RingOp};
+
+struct File {
+    fd: u32,
+    reactor: Arc<HyperRing>,
+}
+
+impl File {
+    pub async fn open(path: impl Into<FString>) -> Self {
+        let path = path.into();
+        let reactor = crate::executor::get_reactor();
+
+        // Async Open Future
+        struct OpenFuture {
+            path: FString,
+            reactor: Arc<HyperRing>,
+            state: Option<FU64>,
+        }
+        impl Future for OpenFuture {
+            type Output = u32;
+            fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+                if self.state.is_some() {
+                    // In production, we'd check the CQ result here
+                    Poll::Ready(101)
+                } else {
+                    let id = self.reactor.submit(
+                        RingOp::FileOpen {
+                            path: self.path.clone(),
+                        },
+                        cx.waker().clone(),
+                    );
+                    self.state = Some(id);
+                    Poll::Pending
+                }
+            }
+        }
+
+        let fd = OpenFuture {
+            path,
+            reactor: reactor.clone(),
+            state: None,
+        }
+        .await;
+        File { fd, reactor }
+    }
+
+    pub async fn read(&self, len: usize) -> FVec<u8> {
+        // Async Read Future
+        struct ReadFuture {
+            fd: u32,
+            len: usize,
+            reactor: Arc<HyperRing>,
+            state: Option<FU64>,
+        }
+        impl Future for ReadFuture {
+            type Output = FVec<u8>;
+            fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+                if self.state.is_some() {
+                    // In production, we'd retrieve actual data from CQ
+                    Poll::Ready(vec![0u8; self.len])
+                } else {
+                    let id = self.reactor.submit(
+                        RingOp::FileRead {
+                            fd: self.fd,
+                            len: self.len,
+                        },
+                        cx.waker().clone(),
+                    );
+                    self.state = Some(id);
+                    Poll::Pending
+                }
+            }
+        }
+
+        ReadFuture {
+            fd: self.fd,
+            len,
+            reactor: self.reactor.clone(),
+            state: None,
+        }
+        .await
+    }
+}

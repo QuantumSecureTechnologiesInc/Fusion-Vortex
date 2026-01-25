@@ -1,0 +1,38 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (Rust)/Rust Workspace Config.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// Rust Workspace Config
+// 
+// [package]
+// name = &quot;fusion-haft&quot;
+// version = &quot;1.0.0&quot;
+// edition = &quot;2021&quot;
+// 
+// [dependencies]
+// rand = &quot;0.8&quot;
+// ctrlc = &quot;3.4&quot;
+// crossbeam = &quot;0.8&quot;
+// 
+// # Map standalone files to binaries to preserve flat structure
+// [[bin]]
+// name = &quot;haft_solver&quot;
+// path = &quot;haft_solver.rs&quot;
+// 
+// [[bin]]
+// name = &quot;haft_vault&quot;
+// path = &quot;haft_vault.rs&quot;
+// 
+// [[bin]]
+// name = &quot;haft_nexus&quot;
+// path = &quot;haft_nexus.rs&quot;
+// 
+// [[bin]]
+// name = &quot;haft_warden&quot;
+// path = &quot;haft_warden.rs&quot;
+// 
+// [profile.release]
+// lto = true
+// codegen-units = 1
+// panic = 'abort'
+// 

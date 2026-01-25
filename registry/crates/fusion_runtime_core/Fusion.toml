@@ -1,0 +1,52 @@
+[package]
+name = "fusion_runtime_core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Framework: Opinionated heterogeneous runtime for Quantum/AI/Classical hybrid workloads"
+keywords = ["runtime", "framework", "quantum", "ai", "fusion"]
+categories = ["development-tools::build-utils", "concurrency"]
+readme = "README.md"
+
+[features]
+default = ["full"]
+full = ["scheduler", "memory", "hal", "metrics", "llm"]
+scheduler = ["fusion_runtime_scheduler"]
+memory = ["fusion_runtime_mem_mgr"]
+hal = ["fusion_runtime_hal"]
+metrics = ["dep:metrics"]
+profiling = ["dep:tracing-subscriber"]
+llm = ["fusion_llm_inference_engine", "fusion_llm_tokenizers"]
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_runtime_scheduler = { path = "../fusion_runtime_scheduler/", optional = true }
+fusion_runtime_mem_mgr = { path = "../fusion_runtime_mem_mgr/", optional = true }
+fusion_runtime_hal = { path = "../fusion_runtime_hal/", optional = true }
+fusion_llm_inference_engine = { path = "../llm-inference", optional = true }
+fusion_llm_tokenizers = { path = "../llm-tokenizers", optional = true }
+
+parking_lot = { workspace = true }
+crossbeam = { workspace = true }
+dashmap = { workspace = true }
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
+tracing = { workspace = true, optional = false }
+tracing-subscriber = { workspace = true, optional = true }
+metrics = { workspace = true, optional = true }
+serde = { workspace = true }
+fusion_std = "1.0.0"
+
+[dev-dependencies]
+criterion = { workspace = true }
+proptest = { workspace = true }
+
+[[bench]]
+name = "runtime_benchmarks"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

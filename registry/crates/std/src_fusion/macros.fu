@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: macros (stub)
+fn _macros_stub() -> void { }

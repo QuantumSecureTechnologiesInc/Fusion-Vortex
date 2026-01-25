@@ -7,6 +7,7 @@
 ## 📍 r/programming
 
 ### Post 1: Main Announcement
+
 **Title**: `[Release] Fusion v1.0 – A quantum-native programming language with built-in AI/ML and 141 packages at launch`
 
 ```markdown
@@ -36,21 +37,25 @@ After an intensive development cycle, we've released Fusion v1.0 — a programmi
 
 **Quantum Hello World:**
 ```fusion
+
 import quantum.circuits
 
 fn main():
     let q = Qubit::new()
     h(q)  // Superposition
     print(measure(q))
-```
+
+```text
 
 **AI Model Loading:**
 ```fusion
+
 import ai.models.llama
 
 let model = Llama3::load("7b-chat")
 print(model.generate("Hello!"))
-```
+
+```text
 
 ## Technical Details
 
@@ -67,11 +72,12 @@ print(model.generate("Hello!"))
 - Install: `cargo install fusion-lang --version 1.0.0`
 
 We'd love feedback from the community. What would you build with quantum + AI + enterprise in one language?
-```
+```text
 
 ---
 
 ### Post 2: Discussion - Why Another Language
+
 **Title**: `Why we built yet another programming language (and why it's different)`
 
 ```markdown
@@ -125,11 +131,12 @@ But if you're building at the intersection of quantum, AI, and enterprise — it
 GitHub: [link]
 
 What do you think? Overengineered solution? Or something you'd actually use?
-```
+```text
 
 ---
 
 ### Post 3: Show HN Style
+
 **Title**: `Show r/programming: Our quantum algorithm running on real IBM hardware (code in comments)`
 
 ```markdown
@@ -138,6 +145,7 @@ Just ran Grover's search algorithm on a real IBM quantum computer using Fusion.
 Here's the actual code:
 
 ```fusion
+
 import quantum.circuits
 import quantum.algo.grover
 import quantum.backends.ibm
@@ -146,14 +154,15 @@ fn main():
     // Search for |1010⟩ in a 4-qubit space
     let target = 0b1010
     let circuit = grover.search(target, qubits=4)
-    
+
     // Execute on real hardware
     let backend = IBMBackend::new("ibmq_quito")
     let result = backend.run(circuit, shots=1024)
-    
+
     print(result.histogram())
     // {1010: 892, others: 132}
-```
+
+```text
 
 The result shows the target state |1010⟩ was found with ~87% probability, which matches the theoretical prediction for 4 qubits.
 
@@ -162,13 +171,14 @@ What's cool about Fusion is this same codebase also includes AI capabilities —
 GitHub: [link]
 
 Has anyone else been experimenting with practical quantum algorithms?
-```
+```text
 
 ---
 
 ## 📍 r/rust
 
 ### Post 4: Rust Community Announcement
+
 **Title**: `Fusion v1.0 — A Rust-powered quantum-native language with 141 packages (seeking Rustacean feedback)`
 
 ```markdown
@@ -213,11 +223,12 @@ We'd especially appreciate Rustacean perspective on:
 GitHub: [link]
 
 Happy to answer technical questions!
-```
+```text
 
 ---
 
 ### Post 5: Technical Discussion
+
 **Title**: `How we handle the quantum no-cloning theorem in a compiled language`
 
 ```markdown
@@ -239,6 +250,7 @@ How do you enforce physics in a type system?
 **Example**
 
 ```fusion
+
 let q = Qubit::new()
 h(q)  // q is moved here
 
@@ -246,20 +258,23 @@ h(q)  // q is moved here
 // cnot(q, other)  // Error: q already moved
 
 // After measurement, result is classical (copyable)
-let result = measure(q)  
+let result = measure(q)
 let copy = result  // Fine - result is i32
-```
+
+```text
 
 **Implementation**
 
 We added a `Quantum` trait that marks types as non-copyable:
 
 ```rust
+
 // In the compiler (Rust)
 trait Quantum: !Copy + !Clone {
     fn is_measured(&self) -> bool;
 }
-```
+
+```text
 
 The borrow checker then enforces single-use semantics.
 
@@ -270,11 +285,12 @@ Quantum computing bugs from double-use are notoriously hard to debug. By catchin
 Has anyone else worked on affine type systems? Would love to compare approaches.
 
 GitHub: [link]
-```
+```text
 
 ---
 
 ### Post 6: Rust Integration
+
 **Title**: `Using Fusion libraries from Rust (and vice versa)`
 
 ```markdown
@@ -283,6 +299,7 @@ Since Fusion's toolchain is Rust, we have seamless FFI in both directions.
 ## Calling Fusion from Rust
 
 ```rust
+
 use fusion_quantum::Circuit;
 
 fn main() {
@@ -290,19 +307,22 @@ fn main() {
     let result = circuit.simulate(1000);
     println!("{:?}", result.histogram);
 }
-```
+
+```text
 
 The `fusion_quantum` crate is a pure Rust library — no Fusion compiler needed.
 
 ## Calling Rust from Fusion
 
 ```fusion
+
 extern "rust" crate some_rust_lib
 
 fn main():
     let result = some_rust_lib::compute(42)
     print(result)
-```
+
+```text
 
 The Fusion compiler handles the FFI automatically.
 
@@ -323,13 +343,14 @@ All 141 Fusion packages are also usable as Rust crates:
 Thoughts on the FFI design? We borrowed heavily from PyO3's approach.
 
 GitHub: [link]
-```
+```text
 
 ---
 
 ## 📍 r/QuantumComputing
 
 ### Post 7: Quantum Community Announcement
+
 **Title**: `[Release] Fusion — A programming language with native quantum computing support (multi-backend, not a library)`
 
 ```markdown
@@ -339,6 +360,7 @@ Quantum computing folks — we just released Fusion v1.0, a programming language
 
 **Language-Level Integration**
 ```fusion
+
 // Qubit is a native type
 let q: Qubit = Qubit::new()
 
@@ -348,7 +370,8 @@ cnot(q, q2)
 
 // Measurement is a language construct
 let result = measure(q)
-```
+
+```text
 
 **Compiler-Enforced Quantum Semantics**
 - No-cloning theorem enforced at compile time
@@ -357,13 +380,15 @@ let result = measure(q)
 
 **Multi-Backend Execution**
 ```fusion
+
 import quantum.backends.ibm
 import quantum.backends.aws
 
 // Same circuit, different backends
 let ibm_result = ibm.run(circuit)
 let aws_result = aws.run(circuit)
-```
+
+```text
 
 ## Hardware Support
 
@@ -385,6 +410,7 @@ Built-in implementations:
 What makes Fusion unique is quantum + AI + classical integration:
 
 ```fusion
+
 import quantum.algo.vqe
 import ai.optimizers
 
@@ -399,7 +425,8 @@ for epoch in 0..100:
     let energy = vqe.evaluate(ansatz, hamiltonian)
     let gradients = parameter_shift(ansatz)
     ansatz.params = optimizer.step(gradients)
-```
+
+```text
 
 ## Links
 
@@ -407,11 +434,12 @@ for epoch in 0..100:
 - Install: `cargo install fusion-lang --version 1.0.0`
 
 Would love feedback from the QC community. What algorithms would you like to see implemented?
-```
+```text
 
 ---
 
 ### Post 8: Technical Discussion
+
 **Title**: `Implementing VQE with automatic parameter-shift gradients in Fusion`
 
 ```markdown
@@ -432,6 +460,7 @@ Typically this spans multiple libraries and languages.
 Everything in one language:
 
 ```fusion
+
 import quantum.circuits
 import quantum.algo.vqe
 import quantum.gradients
@@ -444,10 +473,10 @@ fn vqe_h2_molecule():
         -0.40 * Z1 +
          0.17 * Z0Z1
     ")
-    
+
     // Parameterised ansatz
     let ansatz = RealAmplitudes(qubits=2, reps=2)
-    
+
     // VQE optimisation
     let (energy, params) = vqe.minimise(
         hamiltonian: H,
@@ -455,18 +484,21 @@ fn vqe_h2_molecule():
         optimizer: COBYLA(),
         shots: 1024
     )
-    
+
     print("Ground state energy: " + energy)
     // Expected: ~-1.85 Hartree
-```
+
+```text
 
 ## Automatic Gradient Computation
 
 The `quantum.gradients` module implements parameter-shift rule automatically:
 
 ```fusion
+
 let gradients = parameter_shift(circuit, params)
-```
+
+```text
 
 This generates 2N additional circuit evaluations (where N = number of parameters) and computes analytic gradients.
 
@@ -492,11 +524,12 @@ Full implementation in `registry/crates/q-algo/src/vqe.rs`
 GitHub: [link]
 
 Questions about the implementation? Happy to dive deeper.
-```
+```text
 
 ---
 
 ### Post 9: Educational
+
 **Title**: `ELI5: What does "quantum-native programming language" actually mean?`
 
 ```markdown
@@ -507,6 +540,7 @@ Saw some confusion about what makes a language "quantum-native" vs just having q
 Python is a classical language. Quantum is added via libraries:
 
 ```python
+
 from qiskit import QuantumCircuit
 
 qc = QuantumCircuit(2)  # Object creation
@@ -514,7 +548,8 @@ qc.h(0)                 # Method call
 qc.measure_all()        # Method call
 
 # Circuit is just data until you send it somewhere
-```
+
+```text
 
 The language has no idea what a qubit is. It's all objects and methods.
 
@@ -523,10 +558,12 @@ The language has no idea what a qubit is. It's all objects and methods.
 Quantum concepts are part of the language itself:
 
 ```fusion
+
 let q: Qubit = Qubit::new()  // Qubit is a primitive TYPE
 h(q)                          // h is a built-in OPERATOR
 let result = measure(q)       // measure is a LANGUAGE CONSTRUCT
-```
+
+```text
 
 ## Why Does This Matter?
 
@@ -536,9 +573,11 @@ The Fusion compiler understands quantum semantics. It can optimise across classi
 **2. Type Safety**
 You can't accidentally copy a qubit (physics forbids it). The compiler catches this:
 ```fusion
+
 let q = Qubit::new()
 let copy = q  // COMPILE ERROR: Qubit not copyable
-```
+
+```text
 
 **3. IDE Support**
 Your IDE understands quantum types, offers quantum-specific autocomplete, and shows meaningful error messages.
@@ -557,13 +596,14 @@ Both can do async. But Rust's version is safer, more ergonomic, and better optim
 Same idea for quantum computing.
 
 Does this help clarify?
-```
+```text
 
 ---
 
 ## 📍 r/MachineLearning
 
 ### Post 10: ML Community Post
+
 **Title**: `[P] Fusion v1.0 — A compiled language with native LLM training (Llama 3, Mistral, BERT built-in)`
 
 ```markdown
@@ -581,22 +621,24 @@ Don't get me wrong — Python is great for experimentation. But for production:
 AI/ML is native to the language:
 
 ```fusion
+
 import ai.models.llama
 import ai.training
 
 fn main():
     // Load model
     let model = Llama3::load("7b-chat")
-    
+
     // Fine-tune
     let trainer = Trainer::new(model)
     trainer.set_learning_rate(1e-4)
     trainer.enable_rlhf(reward_model)
     trainer.fit("dataset.jsonl", epochs=3)
-    
+
     // Deploy (same binary!)
     model.serve(port=8080)
-```
+
+```text
 
 No pip. No Docker (unless you want it). No separate serving framework.
 
@@ -631,13 +673,14 @@ Native code compilation (LLVM) + CUDA kernels = PyTorch-level performance withou
 [link]
 
 Would love feedback from the ML community. What capabilities would you need to try this for a real project?
-```
+```text
 
 ---
 
 ## 📍 r/opensource
 
 ### Post 11: Open Source Community
+
 **Title**: `We just open-sourced a complete programming language with 141 packages (Apache 2.0 / MIT)`
 
 ```markdown
@@ -682,13 +725,14 @@ Not VC-backed. No commercial entity behind it. Just people building tools we wan
 - Contributing Guide: [link]
 
 Thoughts on governance models for new open source projects? Would love recommendations from projects that got this right.
-```
+```text
 
 ---
 
 ## 📍 r/ProgrammingLanguages
 
 ### Post 12: Language Design Discussion
+
 **Title**: `Design choices in Fusion: Integrating quantum semantics into a statically-typed imperative language`
 
 ```markdown
@@ -711,10 +755,12 @@ How do you express these in a statically-typed language?
 `Qubit` is affine (can be used at most once):
 
 ```fusion
+
 let q = Qubit::new()
 h(q)       // q moved here
 h(q)       // COMPILE ERROR: use of moved value
-```
+
+```text
 
 Similar to Rust's ownership, but stricter (no borrowing for qubits).
 
@@ -723,9 +769,11 @@ Similar to Rust's ownership, but stricter (no borrowing for qubits).
 Measurement transforms the type:
 
 ```fusion
+
 let q: Qubit = Qubit::new()
 let r: int = measure(q)  // q consumed, r is classical
-```
+
+```text
 
 Post-measurement, you have a classical value.
 
@@ -734,12 +782,14 @@ Post-measurement, you have a classical value.
 For complex circuits, we support a builder pattern:
 
 ```fusion
+
 let circuit = Circuit::new(4)
     .h(0)
     .cnot(0, 1)
     .cnot(1, 2)
     .measure_all()
-```
+
+```text
 
 This delays execution until `.run()`.
 
@@ -748,6 +798,7 @@ This delays execution until `.run()`.
 Circuits are backend-agnostic:
 
 ```fusion
+
 trait Backend {
     fn run(circuit: Circuit, shots: int) -> Results;
 }
@@ -755,20 +806,23 @@ trait Backend {
 impl Backend for Simulator { ... }
 impl Backend for IBMBackend { ... }
 impl Backend for AWSBackend { ... }
-```
+
+```text
 
 ### 5. Classical-Quantum Bridging
 
 Mid-circuit measurement with classical feedback:
 
 ```fusion
+
 let q = Qubit::new()
 h(q)
 if measure(q) == 1 {
     // Classical condition
     x(other_qubit)  // Conditional quantum operation
 }
-```
+
+```text
 
 ## Open Questions
 
@@ -780,13 +834,14 @@ Would love to hear from other PL designers working on quantum or other domain-sp
 
 GitHub: [link]
 Paper (if any): N/A yet, but we're considering writing one
-```
+```text
 
 ---
 
 ## 📊 POSTING SCHEDULE
 
 ### Week 1 (Launch)
+
 | Day  | Subreddit              | Post          |
 | :--- | :--------------------- | :------------ |
 | Mon  | r/programming          | Post 1 (Main) |
@@ -798,6 +853,7 @@ Paper (if any): N/A yet, but we're considering writing one
 | Fri  | r/ProgrammingLanguages | Post 12       |
 
 ### Week 2 (Follow-up)
+
 | Day  | Subreddit          | Post          |
 | :--- | :----------------- | :------------ |
 | Mon  | r/programming      | Post 3 (Show) |
@@ -808,6 +864,6 @@ Paper (if any): N/A yet, but we're considering writing one
 
 ---
 
-*Document Version: 1.0.0*  
-*Total Posts: 12*  
+*Document Version: 1.0.0*
+*Total Posts: 12*
 *Last Updated: December 11, 2025*

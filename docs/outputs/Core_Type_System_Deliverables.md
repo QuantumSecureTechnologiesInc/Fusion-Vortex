@@ -123,7 +123,7 @@ fn hybrid_algorithm() {
 
     // All three paradigms, type-safe!
 }
-```
+```text
 
 🔮 **World's First Quantum-Native Language**:
 
@@ -164,7 +164,7 @@ docs/
 └── DocumentIndex.md                         ✅ Updated
 
     - Added references to all new documents
-```
+```text
 
 ---
 
@@ -179,7 +179,7 @@ FusionType
 ├── ClassicalType  (int, bool, struct, Vector, HashMap)
 ├── TensorType     (Tensor<T, RANK>, Matrix, etc.)
 └── QuantumType    (Qubit, QuantumGate, QuantumCircuit)
-```
+```text
 
 ### 2. Type Safety Enforced
 
@@ -213,7 +213,7 @@ fn bell_state() -> (bool, bool) {
 
     return (q1.measure(), q2.measure());
 }
-```
+```text
 
 **VQE** (hybrid quantum-classical):
 
@@ -229,7 +229,7 @@ fn vqe(hamiltonian: Matrix<complex>, iterations: int) -> float {
 
     return energy;
 }
-```
+```text
 
 ---
 

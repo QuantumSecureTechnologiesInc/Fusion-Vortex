@@ -12,24 +12,28 @@
 ## Features
 
 ### 🧠 Agentic Reasoning
+
 - **Multi-layer reasoning** with self-reflection and iteration
 - **Confidence tracking** across reasoning steps
 - **Adaptive learning** from previous solutions
 - **Context-aware** problem decomposition
 
 ### 🔗 Chain of Thought
+
 - **Structured problem decomposition** into thought nodes
 - **Hierarchical reasoning chains** with parent-child relationships
 - **Iterative refinement** of solutions
 - **Insight extraction** from reasoning processes
 
 ### 🎯 Vibe Coding
+
 - **Pattern-based code generation** from natural language intent
 - **Intuitive intent-to-code** translation
 - **Pre-built pattern library** for common programming paradigms
 - **Custom pattern support** for domain-specific needs
 
 ### ✨ Code Excellence
+
 - **Automated quality analysis** across multiple dimensions
 - **Security scanning** and best practice enforcement
 - **Performance optimization** recommendations
@@ -42,7 +46,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-agentic-core = "0.1.0"
-```
+```text
 
 ## Quick Start
 
@@ -52,25 +56,25 @@ use fusion_agentic_core::{AgenticCore, Result};
 fn main() -> Result<()> {
     // Create the agentic core
     let core = AgenticCore::new();
-    
+
     // Process a problem with full agentic reasoning
     let solution = core.process_problem(
         "Create a function that efficiently processes large datasets"
     )?;
-    
+
     println!("Solution: {}", solution);
-    
+
     // Use vibe coding for intuitive code generation
     let code = core.vibe_code("filter even numbers from a list")?;
     println!("Generated code: {}", code);
-    
+
     // Check code excellence
     let metrics = core.check_excellence(&code)?;
     println!("Quality score: {:.1}", metrics.overall_score);
-    
+
     Ok(())
 }
-```
+```text
 
 ## Architecture
 
@@ -89,7 +93,7 @@ use fusion_agentic_core::{AgenticEngine, AgenticContext};
 let mut engine = AgenticEngine::new();
 let context = AgenticContext::new("Optimise database queries".to_string());
 let solution = engine.reason(&context, &reasoning_chain)?;
-```
+```text
 
 ### Chain of Thought
 
@@ -103,7 +107,7 @@ let chain = cot.decompose("Implement a caching strategy")?;
 
 // Visualise the reasoning chain
 println!("{}", cot.visualise(&chain));
-```
+```text
 
 ### Vibe Coding
 
@@ -119,7 +123,7 @@ let patterns = vibe.detect_patterns("transform all items in parallel")?;
 
 // Generate code
 let code = vibe.generate_from_patterns(&patterns)?;
-```
+```text
 
 ### Code Excellence
 
@@ -139,7 +143,7 @@ println!("Overall: {:.1}", metrics.overall_score);
 
 // Validate against standards
 enforcer.validate(source_code)?;
-```
+```text
 
 ## Pattern Categories
 
@@ -184,7 +188,7 @@ vibe.add_pattern(CodePattern {
     confidence: 0.9,
     examples: vec!["example".to_string()],
 });
-```
+```text
 
 ### Iterative Solution Refinement
 
@@ -196,7 +200,7 @@ let refined_solution = core.iterate_solution(
     &initial_solution,
     "Make it more efficient"
 )?;
-```
+```text
 
 ### Configurable Excellence Standards
 
@@ -208,7 +212,7 @@ enforcer.set_min_score(85.0);
 
 // Enable/disable strict mode
 enforcer.set_strict_mode(true);
-```
+```text
 
 ## Feature Flags
 
@@ -247,7 +251,7 @@ at your option.
   year = {2025},
   url = {https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language}
 }
-```
+```text
 
 ## Acknowledgements
 

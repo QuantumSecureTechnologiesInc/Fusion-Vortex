@@ -92,5 +92,5 @@ Training: RLHF, PPO, Distributed
 
 ---
 
-**Version**: 1.0.0  
+**Version**: 1.0.0
 **Release**: December 11, 2025

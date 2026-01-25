@@ -1,0 +1,15 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Rate Limiter Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_api_rate_limiter"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Distributed rate limiting (Token Bucket/Sliding Window) service"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_net = { path = "../net", version = "0.1.0" }
+// fusion_std = { path = "../std", version = "0.1.0" }
+// tokio = { workspace = true }
+// thiserror = { workspace = true }

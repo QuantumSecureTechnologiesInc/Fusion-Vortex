@@ -1,0 +1,78 @@
+// SOURCE: crates/fusion_std/src/collections.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use crate::security::verify_current_context;
+
+/// Fusion replacement for `Vec`.
+#[derive(Clone, Debug, Default)]
+struct FFVec<T> {
+    inner: FVec<T>,
+}
+
+impl<T> FFVec<T> {
+    fn new() -> Self {
+        Self { inner: Vec::new() }
+    }
+
+    fn push(&mut self, value: T) {
+        if !verify_current_context() {
+            panic!("Write denied: FVec");
+        }
+        self.inner.push(value);
+    }
+
+    fn get(&self, index: usize) -> Option<&T> {
+        if !verify_current_context() {
+            return None;
+        }
+        self.inner.get(index)
+    }
+
+    fn len(&self) -> usize {
+        if !verify_current_context() {
+            panic!("Read denied: FVec");
+        }
+        self.inner.len()
+    }
+
+    fn is_empty(&self) -> FBool {
+        if !verify_current_context() {
+            panic!("Read denied: FVec");
+        }
+        self.inner.is_empty()
+    }
+
+    fn iter(&self) -> FusionIter<'_, T> {
+        if !verify_current_context() {
+            panic!("Access denied: FVec iter");
+        }
+        FusionIter {
+            inner: self.inner.iter(),
+        }
+    }
+}
+
+struct FusionIter<'a, T> {
+    inner: std::slice::Iter<'a, T>,
+}
+
+impl<'a, T> Iterator for FusionIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if !verify_current_context() {
+            return None;
+        }
+        self.inner.next()
+    }
+}
+
+#[macro_export]
+macro_rules! fvec {
+    ($($x:expr),* $(,)?) => {{
+        let mut temp = $crate::collections::FVec::new();
+        $(
+            temp.push($x);
+        )*
+        temp
+    }};
+}

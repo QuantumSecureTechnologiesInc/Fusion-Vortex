@@ -1,0 +1,187 @@
+//! IR optimization passes.
+use crate::ast;
+use crate::ir::{Address, BasicBlock, Function, Instruction, Module, TypedValue, Value};
+use generational_arena::Index;
+/// Applies optimization passes to the module.
+fn optimize(mut module: Module) -> Module {
+    for func in &mut module.functions {
+        optimize_function(func);
+    }
+    module
+}
+fn resolve_address(addr: &Address, consts: &FMap<Value, TypedValue>) -> Address {
+    let resolve = |v: &TypedValue, consts: &FMap<Value, TypedValue>| -> TypedValue {
+        consts.get(&v.val).cloned().unwrap_or_else(|| v.clone())
+    };
+    match addr {
+        Address::Variable { name, ty } => {
+            Address::Variable {
+                name: name.clone(),
+                ty: ty.clone(),
+            }
+        }
+        Address::Pointer { val, pointed_to_ty } => {
+            Address::Pointer {
+                val: resolve(val, consts),
+                pointed_to_ty: pointed_to_ty.clone(),
+            }
+        }
+        Address::Element { base, index, element_ty } => {
+            Address::Element {
+                base: Box::new(resolve_address(base, consts)),
+                index: resolve(index, consts),
+                element_ty: element_ty.clone(),
+            }
+        }
+        Address::Field { base, field_index, field_ty, struct_name } => {
+            Address::Field {
+                base: Box::new(resolve_address(base, consts)),
+                field_index: *field_index,
+                field_ty: field_ty.clone(),
+                struct_name: struct_name.clone(),
+            }
+        }
+    }
+}
+fn optimize_function(func: &mut Function) {
+    let mut changed = true;
+    while changed {
+        changed = false;
+        let block_indices: FVec<Index> = func.blocks.iter().map(|(i, _)| i).collect();
+        for block_idx in block_indices {
+            if let Some(block) = func.blocks.get_mut(block_idx) {
+                if constant_fold_block(block) {
+                    changed = true;
+                }
+            }
+        }
+    }
+}
+fn constant_fold_block(block: &mut BasicBlock) -> FBool {
+    let mut changed = false;
+    let mut const_values: FMap<Value, TypedValue> = HashMap::new();
+    let resolve = |v: &TypedValue, consts: &FMap<Value, TypedValue>| -> TypedValue {
+        consts.get(&v.val).cloned().unwrap_or_else(|| v.clone())
+    };
+    let mut new_instrs = Vec::new();
+    for instr in block.instrs.drain(..) {
+        match instr {
+            Instruction::BinaryOperation { dest, op, op1, op2 } => {
+                let val1 = resolve(&op1, &const_values);
+                let val2 = resolve(&op2, &const_values);
+                let folded = match (val1.val.clone(), val2.val.clone()) {
+                    (Value::IntConst(i1), Value::IntConst(i2)) => {
+                        match op {
+                            ast::BinaryOp::Add => Some(Value::IntConst(i1 + i2)),
+                            ast::BinaryOp::Sub => Some(Value::IntConst(i1 - i2)),
+                            ast::BinaryOp::Mul => Some(Value::IntConst(i1 * i2)),
+                            ast::BinaryOp::Div => {
+                                if i2 != 0 { Some(Value::IntConst(i1 / i2)) } else { None }
+                            }
+                            ast::BinaryOp::Eq => Some(Value::BoolConst(i1 == i2)),
+                            ast::BinaryOp::Neq => Some(Value::BoolConst(i1 != i2)),
+                            ast::BinaryOp::Lt => Some(Value::BoolConst(i1 < i2)),
+                            ast::BinaryOp::Gt => Some(Value::BoolConst(i1 > i2)),
+                            _ => None,
+                        }
+                    }
+                    (Value::BoolConst(b1), Value::BoolConst(b2)) => {
+                        match op {
+                            ast::BinaryOp::Or => Some(Value::BoolConst(b1 || b2)),
+                            ast::BinaryOp::Eq => Some(Value::BoolConst(b1 == b2)),
+                            ast::BinaryOp::Neq => Some(Value::BoolConst(b1 != b2)),
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                };
+                if let Some(v) = folded {
+                    const_values
+                        .insert(
+                            dest.val.clone(),
+                            TypedValue {
+                                val: v,
+                                ty: dest.ty.clone(),
+                            },
+                        );
+                    changed = true;
+                    continue;
+                }
+                new_instrs
+                    .push(Instruction::BinaryOperation {
+                        dest,
+                        op,
+                        op1: val1,
+                        op2: val2,
+                    });
+            }
+            Instruction::Call { dest, func_name, args } => {
+                let resolved_args = args
+                    .into_iter()
+                    .map(|a| resolve(&a, &const_values))
+                    .collect();
+                new_instrs
+                    .push(Instruction::Call {
+                        dest,
+                        func_name,
+                        args: resolved_args,
+                    });
+            }
+            Instruction::Load { dest, src } => {
+                let resolved_src = resolve_address(&src, &const_values);
+                new_instrs
+                    .push(Instruction::Load {
+                        dest,
+                        src: resolved_src,
+                    });
+            }
+            Instruction::Store { dest, val } => {
+                let resolved_dest = resolve_address(&dest, &const_values);
+                let resolved_val = resolve(&val, &const_values);
+                new_instrs
+                    .push(Instruction::Store {
+                        dest: resolved_dest,
+                        val: resolved_val,
+                    });
+            }
+            Instruction::GetElementPtr { dest, base_ptr, index, element_ty } => {
+                let resolved_base = resolve(&base_ptr, &const_values);
+                let resolved_index = resolve(&index, &const_values);
+                new_instrs
+                    .push(Instruction::GetElementPtr {
+                        dest,
+                        base_ptr: resolved_base,
+                        index: resolved_index,
+                        element_ty,
+                    });
+            }
+            Instruction::GetFieldPtr {
+                dest,
+                base_ptr,
+                field_index,
+                field_ty,
+                struct_name,
+            } => {
+                let resolved_base = resolve(&base_ptr, &const_values);
+                new_instrs
+                    .push(Instruction::GetFieldPtr {
+                        dest,
+                        base_ptr: resolved_base,
+                        field_index,
+                        field_ty,
+                        struct_name,
+                    });
+            }
+            other => new_instrs.push(other),
+        }
+    }
+    block.instrs = new_instrs;
+    match &mut block.terminator {
+        crate::ir::Terminator::Return(Some(ref mut v)) => *v = resolve(v, &const_values),
+        crate::ir::Terminator::ConditionalJump { ref mut cond, .. } => {
+            *cond = resolve(cond, &const_values);
+        }
+        _ => {}
+    }
+    changed
+}

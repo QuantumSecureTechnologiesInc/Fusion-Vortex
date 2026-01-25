@@ -1,0 +1,96 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/HAFT Sentinel Node.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+//  * PROJECT: FUSION HAFT (High Availability Flux Tensor)
+//  * MODULE:  WARDEN NODE (Sentinel) - PRODUCTION RELEASE 1.0
+//  * STANDARD: C++20
+// ======================================================================
+// 
+// #include &lt;iostream&gt;
+// #include &lt;vector&gt;
+// #include &lt;string&gt;
+// #include &lt;chrono&gt;
+// #include &lt;thread&gt;
+// #include &lt;atomic&gt;
+// #include &lt;mutex&gt;
+// #include &lt;random&gt;
+// #include &lt;csignal&gt;
+// 
+// namespace Infra {
+//     std::atomic&lt;bool&gt; shutdown_requested{false};
+//     std::mutex log_mutex;
+//     void signal_handler(int) { shutdown_requested.store(true); }
+//     void log(const std::string&amp; msg) {
+//         std::lock_guard&lt;std::mutex&gt; lock(log_mutex);
+//         std::cout &lt;&lt; &quot;[Warden] &quot; &lt;&lt; msg &lt;&lt; std::endl;
+//     }
+// }
+// 
+// struct RemoteAgent {
+//     std::string id;
+//     int missed_heartbeats = 0;
+//     bool is_isolated = false;
+// 
+//     bool ping() {
+//         static std::mt19937 gen(std::random_device{}());
+//         static std::uniform_int_distribution&lt;&gt; d(1, 100);
+//         return d(gen) &gt; 20; // 80% Success Rate
+//     }
+// };
+// 
+// class WardenLogic {
+//     std::vector&lt;RemoteAgent&gt; fleet;
+// public:
+//     WardenLogic() {
+//         fleet = { {&quot;SOLVER-01&quot;}, {&quot;SOLVER-02&quot;}, {&quot;VAULT-01&quot;}, {&quot;NEXUS-01&quot;} };
+//     }
+// 
+//     void scan() {
+//         for (auto&amp; node : fleet) {
+//             if (node.is_isolated) continue;
+// 
+//             if (node.ping()) {
+//                 if (node.missed_heartbeats &gt; 0) {
+//                     Infra::log(node.id + &quot; recovered.&quot;);
+//                     node.missed_heartbeats = 0;
+//                 }
+//             } else {
+//                 node.missed_heartbeats++;
+//                 Infra::log(node.id + &quot; unresponsive (&quot; + std::to_string(node.missed_heartbeats) + &quot;/3)&quot;);
+//                 if (node.missed_heartbeats &gt;= 3) isolate_and_heal(node);
+//             }
+//         }
+//     }
+// 
+// private:
+//     void isolate_and_heal(RemoteAgent&amp; node) {
+//         Infra::log(&quot;CRITICAL: Isolating &quot; + node.id);
+//         node.is_isolated = true;
+// 
+//         // Detach recovery thread
+//         std::thread([&amp;node]() {
+//             std::this_thread::sleep_for(std::chrono::seconds(1));
+//             Infra::log(&quot;[Auto-Heal] Rebooting &quot; + node.id);
+//             node.missed_heartbeats = 0;
+//             node.is_isolated = false;
+//         }).detach();
+//     }
+// };
+// 
+// int main() {
+//     std::signal(SIGINT, Infra::signal_handler);
+//     WardenLogic warden;
+// 
+//     Infra::log(&quot;Sentinel Online. Monitoring Mesh...&quot;);
+// 
+//     while (!Infra::shutdown_requested.load()) {
+//         warden.scan();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//     }
+// 
+//     Infra::log(&quot;Sentinel Offline.&quot;);
+//     return 0;
+// }
+// 

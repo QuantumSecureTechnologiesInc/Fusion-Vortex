@@ -12,13 +12,13 @@ When something goes badly wrong—a bug that shouldn't be recovered from—use `
 fn main() {
     panic!("crash and burn")
 }
-```
+```text
 
 Output:
 
-```
+```text
 thread 'main' panicked at 'crash and burn', src/main.fu:2:5
-```
+```text
 
 ### When to Panic
 
@@ -34,7 +34,7 @@ fn divide(a: int, b: int) -> int {
     }
     a / b
 }
-```
+```text
 
 ### Using `panic!` in Development
 
@@ -49,7 +49,7 @@ fn coming_soon() {
 fn also_coming() {
     todo!("implement this later")
 }
-```
+```text
 
 ---
 
@@ -62,7 +62,7 @@ enum Result<T, E> {
     Ok(T),   // Success with value of type T
     Err(E),  // Failure with error of type E
 }
-```
+```text
 
 ### Basic Usage
 
@@ -71,13 +71,13 @@ use std::fs::File
 
 fn main() {
     let file_result = File::open("hello.txt")
-    
+
     let file = match file_result {
         Ok(f) => f,
         Err(error) => panic!("Problem opening file: {:?}", error),
     }
 }
-```
+```text
 
 ### Matching on Different Errors
 
@@ -97,7 +97,7 @@ fn main() {
         },
     }
 }
-```
+```text
 
 ### `unwrap` and `expect`
 
@@ -105,14 +105,14 @@ For quick prototyping, `unwrap` extracts the value or panics:
 
 ```fusion
 let file = File::open("hello.txt").unwrap()  // Panics if Err
-```
+```text
 
 `expect` lets you specify the panic message:
 
 ```fusion
 let file = File::open("hello.txt")
     .expect("hello.txt should be included with this project")
-```
+```text
 
 In production code, prefer explicit error handling.
 
@@ -128,20 +128,20 @@ use std::io::{self, Read}
 
 fn read_username_from_file() -> Result<String, io::Error> {
     let file_result = File::open("username.txt")
-    
+
     let mut file = match file_result {
         Ok(f) => f,
         Err(e) => return Err(e),  // Return the error to caller
     }
-    
+
     let mut username = String::new()
-    
+
     match file.read_to_string(&mut username) {
         Ok(_) => Ok(username),
         Err(e) => Err(e),
     }
 }
-```
+```text
 
 ### The `?` Operator
 
@@ -154,7 +154,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
     file.read_to_string(&mut username)?
     Ok(username)
 }
-```
+```text
 
 `?` does:
 1. If `Ok`: Extract the value
@@ -168,7 +168,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
     File::open("username.txt")?.read_to_string(&mut username)?
     Ok(username)
 }
-```
+```text
 
 Or use the standard library:
 
@@ -176,7 +176,7 @@ Or use the standard library:
 fn read_username_from_file() -> Result<String, io::Error> {
     std::fs::read_to_string("username.txt")
 }
-```
+```text
 
 ### `?` in `main`
 
@@ -189,7 +189,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let file = File::open("hello.txt")?
     Ok(())
 }
-```
+```text
 
 ---
 
@@ -198,7 +198,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 For complex applications, define your own error types:
 
 ```fusion
+
 #[derive(Debug)]
+
 enum AppError {
     IoError(std::io::Error),
     ParseError(String),
@@ -223,7 +225,7 @@ impl From<std::io::Error> for AppError {
         AppError::IoError(error)
     }
 }
-```
+```text
 
 Now you can use `?` with automatic conversion:
 
@@ -233,7 +235,7 @@ fn process_file() -> Result<(), AppError> {
     // ... validate content
     Ok(())
 }
-```
+```text
 
 ---
 
@@ -278,7 +280,7 @@ fn process_data(data: &[int]) {
     assert!(!data.is_empty(), "data cannot be empty")  // Bug if violated
     // ...
 }
-```
+```text
 
 ---
 
@@ -294,11 +296,11 @@ use anyhow::{Context, Result}
 fn main() -> Result<()> {
     let config = std::fs::read_to_string("config.toml")
         .context("Failed to read config file")?
-    
+
     println("Config: {}", config)
     Ok(())
 }
-```
+```text
 
 ### `thiserror` for Libraries
 
@@ -306,17 +308,18 @@ fn main() -> Result<()> {
 use thiserror::Error
 
 #[derive(Error, Debug)]
+
 pub enum DataError {
     #[error("file not found: {0}")]
     NotFound(String),
-    
+
     #[error("invalid data format")]
     InvalidFormat,
-    
+
     #[error("io error")]
     Io(#[from] std::io::Error),
 }
-```
+```text
 
 ---
 

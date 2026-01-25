@@ -1,7 +1,7 @@
 # Fusion GitHub
 
-**Version:** Workspace  
-**Type:** Service Integration  
+**Version:** Workspace
+**Type:** Service Integration
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -27,7 +27,7 @@ println!("PR Title: {}", pr.title);
 
 // Post a comment
 client.post_comment(pr.number, "Reviewed by Fusion AI").await?;
-```
+```text
 
 ## Dependencies
 

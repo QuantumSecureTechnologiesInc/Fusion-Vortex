@@ -8,7 +8,7 @@ Fusion supports first-class function calls. Functions are defined using the `fn`
 fn add(a: Int, b: Int) : Int {
     return a + b;
 }
-```
+```text
 
 ## Compilation & Execution
 
@@ -31,7 +31,7 @@ fn add(a: Int, b: Int) : Int {
 
 ```fusion
 let x = add(10, 20);
-```
+```text
 
 1. Main pushes `add` (Function).
 2. Main pushes `10`.

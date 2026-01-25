@@ -1,7 +1,7 @@
 # Fusion Vault
 
-**Version:** 0.2.0  
-**Type:** Security  
+**Version:** 0.2.0
+**Type:** Security
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_vault::Vault;
 let vault = Vault::open("my-app")?;
 vault.set("api_key", "secret_value")?;
 let key = vault.get("api_key")?;
-```
+```text
 
 ## Dependencies
 

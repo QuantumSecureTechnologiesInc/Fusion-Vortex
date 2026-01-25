@@ -1,0 +1,47 @@
+// SOURCE: src/stdlib/fs.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/stdlib/fs.rs - Filesystem Module
+#![allow(dead_code)]
+
+
+/// Secure Filesystem Operations
+struct FileSystem;
+
+impl FileSystem {
+    /// Read entire file to string
+    fn read_to_string<P: AsRef<Path>>(path: P) -> io::Result<FString> {
+        // In a real secure FS, we would check permissions/sandbox here
+        fs::read_to_string(path)
+    }
+
+    /// Write string to file (overwriting)
+    fn write_str<P: AsRef<Path>>(path: P, contents: &str) -> io::Result<()> {
+        let mut file = fs::File::create(path)?;
+        file.write_all(contents.as_bytes())
+    }
+
+    /// Append string to file
+    fn append_str<P: AsRef<Path>>(path: P, contents: &str) -> io::Result<()> {
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .append(true)
+            .create(true)
+            .open(path)?;
+        file.write_all(contents.as_bytes())
+    }
+
+    /// Check if file exists
+    fn exists<P: AsRef<Path>>(path: P) -> FBool {
+        path.as_ref().exists()
+    }
+
+    /// Create directory
+    fn create_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
+        fs::create_dir_all(path)
+    }
+
+    /// Remove file
+    fn remove_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
+        fs::remove_file(path)
+    }
+}

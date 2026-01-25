@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/gpu-scheduler/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// gpu-scheduler implementation
+
+struct GpuSchedulerModule;

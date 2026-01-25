@@ -1,0 +1,11 @@
+// SOURCE: registry/crates/fusion-core/src/types/classical.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+enum ClassicalType {
+    Int(i64),
+    Float(f64),
+    Boolean(FBool),
+    FString(FString),
+}

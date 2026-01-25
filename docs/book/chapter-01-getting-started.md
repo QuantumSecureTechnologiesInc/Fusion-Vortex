@@ -96,7 +96,7 @@ Open a terminal and run the official installation script:
 
 ```bash
 curl -fsSL https://sh.fusion-lang.org | sh
-```
+```text
 
 This script downloads the latest stable release and installs it to `~/.fusion`. It also adds the Fusion binaries to your PATH by modifying your shell configuration file (`.bashrc`, `.zshrc`, or similar).
 
@@ -104,19 +104,19 @@ After installation, restart your shell or run:
 
 ```bash
 source ~/.fusion/env
-```
+```text
 
 Verify the installation:
 
 ```bash
 fusion --version
-```
+```text
 
 You should see output like:
 
-```
+```text
 fusion 1.0.0 (stable)
-```
+```text
 
 ### 1.2.3 Installing on Windows
 
@@ -132,24 +132,27 @@ After installation, open a new PowerShell or Command Prompt window and verify:
 
 ```powershell
 fusion --version
-```
+```text
 
 ### 1.2.4 Installing with Package Managers
 
 **macOS (Homebrew)**:
+
 ```bash
 brew install fusion-lang
-```
+```text
 
 **Linux (Arch)**:
+
 ```bash
 pacman -S fusion
-```
+```text
 
 **Linux (Fedora)**:
+
 ```bash
 dnf install fusion-lang
-```
+```text
 
 ### 1.2.5 Updating Fusion
 
@@ -157,7 +160,7 @@ To update to the latest version:
 
 ```bash
 fusion self update
-```
+```text
 
 This downloads the latest release and replaces your current installation whilst preserving configuration.
 
@@ -167,7 +170,7 @@ This downloads the latest release and replaces your current installation whilst 
 
 ```bash
 code --install-extension fusion-lang.fusion-language
-```
+```text
 
 The extension provides:
 - Syntax highlighting
@@ -192,18 +195,18 @@ Fusion uses a project-based structure. Create a new project with:
 ```bash
 fusion new hello_world
 cd hello_world
-```
+```text
 
 This creates the following structure:
 
-```
+```text
 hello_world/
 ├── fusion.toml        # Project manifest
 ├── src/
 │   └── main.fu        # Entry point
 └── tests/
     └── integration.fu # Test file
-```
+```text
 
 The `fusion.toml` file defines your project's metadata and dependencies:
 
@@ -215,8 +218,10 @@ edition = "2025"
 authors = ["Your Name <you@example.com>"]
 
 [dependencies]
+
 # Add dependencies here
-```
+
+```text
 
 ### 1.3.2 Writing the Program
 
@@ -226,7 +231,7 @@ Open `src/main.fu` in your editor. You'll see a template:
 fn main() {
     println("Hello, Fusion!")
 }
-```
+```text
 
 Let's examine this line by line:
 
@@ -244,16 +249,16 @@ From your project directory, compile and run with a single command:
 
 ```bash
 fusion run
-```
+```text
 
 You should see:
 
-```
+```text
    Compiling hello_world v0.1.0
     Finished dev [unoptimised + debuginfo] in 0.23s
      Running `target/debug/hello_world`
 Hello, Fusion!
-```
+```text
 
 Congratulations! You've just compiled and executed your first Fusion program.
 
@@ -273,23 +278,26 @@ The result is a native executable comparable in performance to C or Rust.
 ### 1.3.5 Build Modes
 
 **Development Build** (default):
+
 ```bash
 fusion build
-```
+```text
 
 Fast compilation, includes debug symbols, minimal optimisation. Use during development.
 
 **Release Build**:
+
 ```bash
 fusion build --release
-```
+```text
 
 Slower compilation, aggressive optimisation (LTO, inlining), smaller binaries. Use for deployment.
 
 **WebAssembly Target**:
+
 ```bash
 fusion build --target wasm32-unknown-unknown
-```
+```text
 
 Outputs a `.wasm` file for browser or edge deployment.
 
@@ -307,7 +315,7 @@ Functions are the building blocks of Fusion programs. A function declaration con
 fn function_name(parameter1: Type1, parameter2: Type2) -> ReturnType {
     // body
 }
-```
+```text
 
 For example:
 
@@ -320,7 +328,7 @@ fn main() {
     let result = add(5, 3)
     println("5 + 3 = {}", result)
 }
-```
+```text
 
 Key points:
 - Parameters require type annotations
@@ -335,14 +343,14 @@ Fusion variables are **immutable by default**—once assigned, they cannot chang
 ```fusion
 let x = 10
 x = 20  // Error: cannot assign to immutable variable `x`
-```
+```text
 
 To create a mutable variable, use `mut`:
 
 ```fusion
 let mut x = 10
 x = 20  // OK
-```
+```text
 
 This design prevents accidental modification and makes code easier to reason about. When you see `mut`, you know the value will change—it's an explicit signal in the code.
 
@@ -355,14 +363,14 @@ let name = "Fusion"      // Inferred: String
 let count = 42           // Inferred: int
 let pi = 3.14159         // Inferred: float
 let enabled = true       // Inferred: bool
-```
+```text
 
 But you can always specify types explicitly:
 
 ```fusion
 let name: String = "Fusion"
 let count: i32 = 42
-```
+```text
 
 ### 1.4.4 Comments
 
@@ -378,7 +386,7 @@ let count: i32 = 42
 fn documented_function() {
     // Implementation
 }
-```
+```text
 
 Documentation comments (starting with `///` or `/** */`) are extracted by the `fusion doc` command to generate API documentation.
 
@@ -413,14 +421,14 @@ Add a dependency to your project:
 
 ```bash
 fusion add serde
-```
+```text
 
 This modifies `fusion.toml`:
 
 ```toml
 [dependencies]
 serde = "1.0"
-```
+```text
 
 ### 1.5.3 The Standard Library
 

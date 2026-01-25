@@ -26,7 +26,7 @@ Welcome to Fusion! This tutorial will guide you through the basics of the Fusion
 
 ### Building Fusion
 
-```
+```text
 
 # Clone the repository
 
@@ -40,13 +40,13 @@ cargo build --release
 # Verify installation
 
 ./target/release/fusion_lang --version
-```
+```text
 
 ### Installing the VS Code Extension
 
 ```bash
 code --install-extension editors/vscode-fusion/fusion-language-0.1.0.vsix
-```
+```text
 
 ---
 
@@ -61,13 +61,13 @@ fn main() -> int {
     println("Hello, Fusion!");
     return 0;
 }
-```
+```text
 
 Compile and run:
 
 ```bash
 fusion_lang -i hello.fu
-```
+```text
 
 ### Understanding the Code
 
@@ -93,7 +93,7 @@ fn variables_demo() -> int {
 
     return counter;
 }
-```
+```text
 
 ### Types
 
@@ -104,7 +104,7 @@ fn types_demo() {
     let active: bool = true;     // Boolean
     let message: string = "Hi";  // String
 }
-```
+```text
 
 ### Functions
 
@@ -116,7 +116,7 @@ fn add(a: int, b: int) -> int {
 fn greet(name: string) -> string {
     return "Hello, " + name;
 }
-```
+```text
 
 ### Control Flow
 
@@ -132,7 +132,7 @@ fn check_number(x: int) -> string {
         return "zero";
     }
 }
-```
+```text
 
 **While Loops**:
 
@@ -145,7 +145,7 @@ fn count_to_five() -> int {
     }
     return i;
 }
-```
+```text
 
 **For Loops** (with iterator):
 
@@ -165,7 +165,7 @@ fn sum_to_ten() -> int {
 
     return total;  // 55
 }
-```
+```text
 
 ### Classes
 
@@ -197,7 +197,7 @@ fn use_person() {
     person.birthday();
     println(person.greet());
 }
-```
+```text
 
 ### Traits
 
@@ -211,7 +211,7 @@ impl Printable for Person {
         return self.name + " (age " + self.age + ")";
     }
 }
-```
+```text
 
 ---
 
@@ -223,7 +223,7 @@ impl Printable for Person {
 my-project/
 ├── main.fu
 └── utils.fu
-```
+```text
 
 ### utils.fu
 
@@ -242,7 +242,7 @@ pub fn factorial(n: int) -> int {
     }
     return n * factorial(n - 1);
 }
-```
+```text
 
 ### main.fu
 
@@ -259,13 +259,13 @@ fn main() -> int {
 
     return 0;
 }
-```
+```text
 
 ### Compile Multi-file Project
 
 ```bash
 fusion_lang -i main.fu --multi-file
-```
+```text
 
 ---
 
@@ -296,7 +296,7 @@ fn hashmap_example() {
     // Get size
     let count = scores.len();
 }
-```
+```text
 
 ### Using HashSet
 
@@ -325,7 +325,7 @@ fn hashset_example() {
     let intersection = primes.intersection(evens);  // {2}
     let union = primes.union(evens);                // {2, 3, 4, 5, 6}
 }
-```
+```text
 
 ### Using Iterators
 
@@ -347,7 +347,7 @@ fn iterator_example() -> int {
 
     return total;
 }
-```
+```text
 
 ---
 
@@ -376,13 +376,13 @@ fn divide(a: int, b: int) -> int {
     }
     return a / b;
 }
-```
+```text
 
 ### Compile to WebAssembly
 
 ```bash
 fusion_lang -i calculator.fu --target wasm -o calculator.wasm
-```
+```text
 
 ### Using in the Browser
 
@@ -453,11 +453,11 @@ fusion_lang -i calculator.fu --target wasm -o calculator.wasm
     </script>
 </body>
 </html>
-```
+```text
 
 ### Run Locally
 
-```
+```text
 
 # Start a simple HTTP server
 
@@ -465,7 +465,7 @@ python3 -m http.server 8000
 
 # Open browser to http://localhost:8000
 
-```
+```text
 
 ---
 
@@ -478,7 +478,7 @@ python3 -m http.server 8000
    ```bash
    code --install-extension fusion-language-0.1.0.vsix
 
-```
+```text
 
 2. **Features Available**:
    - ✅ Syntax highlighting
@@ -495,13 +495,13 @@ python3 -m http.server 8000
 fn ${1:name}(${2:params}) -> ${3:type} {
     $0
 }
-```
+```text
 
 **Type `HashMap` for instant creation**:
 
 ```fusion
 HashMap<${1:K}, ${2:V}>::new()
-```
+```text
 
 **Type `class` for class template**:
 
@@ -509,7 +509,7 @@ HashMap<${1:K}, ${2:V}>::new()
 class ${1:Name} {
     $0
 }
-```
+```text
 
 ---
 

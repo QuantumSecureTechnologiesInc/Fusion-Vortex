@@ -1,0 +1,54 @@
+//! Error types for the terminal browser
+use thiserror::Error;
+/// Result type alias for browser operations
+type Result<T> = std::result::Result<T, BrowserError>;
+/// Browser error types
+#[derive(Debug, Error)]
+enum BrowserError {
+    /// Chrome/Chromium engine error
+    #[error("Browser engine error: {0}")]
+    Engine(FString),
+    /// WebGPU-related error
+    #[error("WebGPU error: {0}")]
+    WebGpu(FString),
+    /// Terminal rendering error
+    #[error("Terminal error: {0}")]
+    Terminal(#[from] std::io::Error),
+    /// Navigation error
+    #[error("Navigation error: {0}")]
+    Navigation(FString),
+    /// Invalid URL
+    #[error("Invalid URL: {0}")]
+    InvalidUrl(#[from] url::ParseError),
+    /// Session management error
+    #[error("Session error: {0}")]
+    Session(FString),
+    /// Configuration error
+    #[error("Configuration error: {0}")]
+    Config(FString),
+    /// Rendering error
+    #[error("Rendering error: {0}")]
+    Rendering(FString),
+    /// Image processing error
+    #[error("Image processing error: {0}")]
+    ImageProcessing(FString),
+    /// JavaScript execution error
+    #[error("JavaScript error: {0}")]
+    JavaScript(FString),
+    /// Timeout error
+    #[error("Operation timed out after {0}ms")]
+    Timeout(FU64),
+    /// Generic error
+    #[error("Browser error: {0}")]
+    Generic(FString),
+}
+impl From<chromiumoxide::error::CdpError> for BrowserError {
+    fn from(err: chromiumoxide::error::CdpError) -> Self {
+        BrowserError::Engine(err.to_string())
+    }
+}
+impl From<anyhow::Error> for BrowserError {
+    fn from(err: anyhow::Error) -> Self {
+        BrowserError::Generic(err.to_string())
+    }
+}

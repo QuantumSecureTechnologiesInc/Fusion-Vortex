@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: runtime (stub)
+fn _runtime_stub() -> void { }

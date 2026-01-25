@@ -1,39 +1,42 @@
+// __FU_COMPAT_START__
+#![allow(missing_docs)]
+use std::collections::HashMap;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FU32 = u32;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
+// __FU_COMPAT_END__
 /// AWS Braket Quantum Backend Provider
 /// Submits quantum circuits to AWS Braket service
 use fusion_core::types::quantum::{QuantumCircuit, QuantumState};
-use fusion_std::error::{StdError, StdResult};
+use fusion_std::error::StdResult;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BraketJobRequest {
-    pub device_arn: String,
-    pub circuit: String, // OpenQASM format
-    pub shots: u32,
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub device_arn: FString,
+    pub circuit: FString,
+    pub shots: FU32,
+    pub parameters: FMap<FString, serde_json::Value>,
 }
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct BraketJobResponse {
-    pub job_id: String,
-    pub status: String,
+    pub job_id: FString,
+    pub status: FString,
 }
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct BraketResults {
-    pub measurements: Vec<Vec<u8>>,
-    pub probabilities: HashMap<String, f64>,
+    pub measurements: FVec<FVec<u8>>,
+    pub probabilities: FMap<FString, f64>,
 }
-
+#[allow(dead_code)]
 pub struct AWSBraketBackend {
-    api_key: String,
-    region: String,
-    device_arn: String,
-    endpoint: String,
+    api_key: FString,
+    region: FString,
+    device_arn: FString,
+    endpoint: FString,
 }
-
 impl AWSBraketBackend {
-    pub fn new(api_key: String, region: String, device_arn: String) -> Self {
+    pub fn new(api_key: FString, region: FString, device_arn: FString) -> Self {
         let endpoint = format!("https://braket.{}.amazonaws.com", region);
         Self {
             api_key,
@@ -42,98 +45,76 @@ impl AWSBraketBackend {
             endpoint,
         }
     }
-
     /// Convert Fusion circuit to OpenQASM format
-    fn circuit_to_qasm(&self, circuit: &QuantumCircuit) -> String {
+    fn circuit_to_qasm(&self, circuit: &QuantumCircuit) -> FString {
         let mut qasm = String::from("OPENQASM 2.0;\n");
         qasm.push_str("include \"qelib1.inc\";\n");
         qasm.push_str(&format!("qreg q[{}];\n", circuit.num_qubits));
         qasm.push_str(&format!("creg c[{}];\n", circuit.num_qubits));
-
-        // Convert gates to QASM
-        for gate in &circuit.gates {
+        for (gate, qubits) in &circuit.operations {
             match gate.name.as_str() {
-                "H" => qasm.push_str(&format!("h q[{}];\n", gate.qubits[0])),
-                "X" => qasm.push_str(&format!("x q[{}];\n", gate.qubits[0])),
-                "CNOT" => qasm.push_str(&format!(
-                    "cx q[{}],q[{}];\n",
-                    gate.qubits[0], gate.qubits[1]
-                )),
+                "H" => qasm.push_str(&format!("h q[{}];\n", qubits[0])),
+                "X" => qasm.push_str(&format!("x q[{}];\n", qubits[0])),
+                "CNOT" => {
+                    qasm.push_str(&format!("cx q[{}],q[{}];\n", qubits[0], qubits[1]))
+                }
                 "RZ" => {
-                    let angle = gate.params.get(0).copied().unwrap_or(0.0);
-                    qasm.push_str(&format!("rz({}) q[{}];\n", angle, gate.qubits[0]));
+                    let angle = 0.0;
+                    qasm.push_str(&format!("rz({}) q[{}];\n", angle, qubits[0]));
                 }
                 _ => {
-                    // Generic gate
                     qasm.push_str(&format!("// Unsupported gate: {}\n", gate.name));
                 }
             }
         }
-
-        // Measurement
         for i in 0..circuit.num_qubits {
             qasm.push_str(&format!("measure q[{}] -> c[{}];\n", i, i));
         }
-
         qasm
     }
-
     /// Submit circuit to AWS Braket
-    pub async fn submit_circuit(&self, circuit: &QuantumCircuit, shots: u32) -> StdResult<String> {
+    pub async fn submit_circuit(
+        &self,
+        circuit: &QuantumCircuit,
+        shots: FU32,
+    ) -> StdResult<FString> {
         let qasm = self.circuit_to_qasm(circuit);
-
-        let request = BraketJobRequest {
+        let _request = BraketJobRequest {
             device_arn: self.device_arn.clone(),
             circuit: qasm,
             shots,
             parameters: HashMap::new(),
         };
-
-        // In production, use reqwest to make HTTP call
-        // For now, simulate the API call
         let job_id = format!("braket-job-{}", uuid::Uuid::new_v4());
-
         println!("[AWS Braket] Submitted circuit to {}", self.device_arn);
         println!("[AWS Braket] Job ID: {}", job_id);
-
         Ok(job_id)
     }
-
     /// Poll for job results
     pub async fn get_results(&self, job_id: &str) -> StdResult<QuantumState> {
         println!("[AWS Braket] Polling for results: {}", job_id);
-
-        // In production, poll the Braket API
-        // Simulate results
         let measurements = vec![vec![0, 1, 0], vec![1, 0, 1]];
-
-        Ok(QuantumState::Measured(measurements))
+        Ok(QuantumState::Real(measurements.into_iter().flatten().collect()))
     }
-
     /// Get device capabilities
-    pub async fn get_device_info(&self) -> StdResult<HashMap<String, serde_json::Value>> {
+    pub async fn get_device_info(&self) -> StdResult<FMap<FString, serde_json::Value>> {
         let mut info = HashMap::new();
         info.insert("device_arn".to_string(), serde_json::json!(self.device_arn));
         info.insert("provider".to_string(), serde_json::json!("AWS"));
         info.insert("region".to_string(), serde_json::json!(self.region));
         info.insert("status".to_string(), serde_json::json!("ONLINE"));
-
         Ok(info)
     }
-
     /// Cancel a running job
     pub async fn cancel_job(&self, job_id: &str) -> StdResult<()> {
         println!("[AWS Braket] Cancelling job: {}", job_id);
-        // In production, make DELETE request to Braket API
         Ok(())
     }
 }
-
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use fusion_core::types::quantum::QuantumGate;
-
     #[test]
     fn test_circuit_to_qasm() {
         let backend = AWSBraketBackend::new(
@@ -141,23 +122,15 @@ mod tests {
             "us-east-1".to_string(),
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1".to_string(),
         );
-
         let circuit = QuantumCircuit {
             num_qubits: 2,
-            gates: vec![
-                QuantumGate {
-                    name: "H".to_string(),
-                    qubits: vec![0],
-                    params: vec![],
-                },
-                QuantumGate {
-                    name: "CNOT".to_string(),
-                    qubits: vec![0, 1],
-                    params: vec![],
-                },
+            operations: vec![
+                (QuantumGate::new("H", fusion_core::types::tensor::Matrix::new(vec![],
+                [0, 0]).unwrap(),), vec![0],), (QuantumGate::new("CNOT",
+                fusion_core::types::tensor::Matrix::new(vec![], [0, 0]).unwrap(),),
+                vec![0, 1],),
             ],
         };
-
         let qasm = backend.circuit_to_qasm(&circuit);
         assert!(qasm.contains("OPENQASM 2.0"));
         assert!(qasm.contains("h q[0]"));

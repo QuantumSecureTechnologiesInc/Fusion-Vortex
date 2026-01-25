@@ -3,6 +3,7 @@
 ## Total: 269 Crates
 
 ### Distribution by Location
+
 - **registry/crates**: 251 crates (93%)
 - **crates**: 16 crates (6%)
 - **cmd**: 2 crates (1%)
@@ -14,6 +15,7 @@
 **Pattern**: `*std*`, `*core*`, `finite-fields`, `math-*`, `tensor-*`, crypto primitives
 
 #### Confirmed
+
 - `std` - Standard library extensions
 - `std-ext` - Extended standard utilities
 - `fusion_std` - Fusion standard primitives
@@ -22,6 +24,7 @@
 - `block` - Block primitives
 
 #### Math/Tensor Primitives (~10)
+
 - `finite-fields` - Finite field arithmetic
 - `math-finite-fields` - Mathematical fields
 - `math-sparse` - Sparse matrix primitives
@@ -32,6 +35,7 @@
 - `tensor-parallel` - Parallel tensor ops
 
 #### Crypto Primitives (~5)
+
 - `fusion-cryptography` - Crypto primitives
 - `pqc-proxy` - Post-quantum crypto
 - `q-pqc-proxy` - Quantum PQC
@@ -39,6 +43,7 @@
 - `sec-trusted-anchor` - Security anchor
 
 #### ID/Hash/Encoding (~5)
+
 - `fusion-id-provider` - ID generation
 - `fusion-compression` - Compression primitives
 - `fusion-regex` - Regex primitives
@@ -48,6 +53,7 @@
 **Pattern**: `nn-*`, `llm-*`, `q-*`, `rl-*`, clustering, optimization, training
 
 #### Neural Network Layers (~20)
+
 - `nn-3d-conv` - 3D convolution
 - `nn-attention-block` - Attention mechanisms
 - `nn-embed` - Embeddings
@@ -67,6 +73,7 @@
 - `resnet` - ResNet algorithm ✅ Pattern applies
 
 #### LLM Algorithms (~30)
+
 - `llm-attention-mask` - Attention masking
 - `llm-auto-prompt` - Prompt generation
 - `llm-beam-search` - Beam search
@@ -101,6 +108,7 @@
 - `llm-vision-adapter` - Vision adapter
 
 #### Quantum Algorithms (~15)
+
 - `q-algo` - Quantum algorithms
 - `q-error-correction` - Error correction
 - `q-gate-decomposition` - Gate decomposition
@@ -117,6 +125,7 @@
 - `error-correction` - Error correction
 
 #### ML/Optimization (~15)
+
 - `clustering` - K-Means clustering ✅ POLISHED
 - `fusion-clustering` - Clustering v2
 - `fusion-optimization` - Optimization
@@ -138,6 +147,7 @@
 **Pattern**: `cloud-*`, `interop-*`, protocol names (grpc, http, graphql), database, formatters
 
 #### Network/Protocol (~15)
+
 - `fusion_net` - Network abstraction
 - `http` - HTTP integration ✅ POLISHED
 - `grpc` - gRPC integration
@@ -154,6 +164,7 @@
 - `fusion-rate-limiter` - Rate limiter v2
 
 #### Cloud Integration (~12)
+
 - `cloud-agent` - Cloud agent
 - `cloud-aws` - AWS integration
 - `cloud-gcp` - GCP integration
@@ -168,6 +179,7 @@
 - `fusion-vram-scheduler` - VRAM v2
 
 #### Data Formats (~10)
+
 - `fusion-xml` - XML integration
 - `fusion-yaml` - YAML integration
 - `safetensors` - SafeTensors format
@@ -179,6 +191,7 @@
 - `carver` - Data carving
 
 #### Interop Bridges (~8)
+
 - `bridge_c` - C interop
 - `interop-java` - Java interop
 - `interop-js` - JavaScript interop
@@ -190,6 +203,7 @@
 - `python-pkg` - Python packaging
 
 #### Database/Storage (~8)
+
 - `fusion-database` - Database integration
 - `fusion-redis` - Redis integration
 - `vault` - Vault integration
@@ -197,6 +211,7 @@
 - `client` - Generic client
 
 #### Backend Services (~7)
+
 - `q-aws-backend` - AWS quantum backend
 - `q-ibm-backend` - IBM quantum backend
 - `fusion-iot` - IoT integration
@@ -211,6 +226,7 @@
 **Pattern**: `fusion_runtime*`, `*framework*`, `*-core` (application cores), orchestration
 
 #### Runtime Frameworks (~8)
+
 - `fusion_runtime_core` - Core runtime ✅ POLISHED
 - `fusion_runtime_hal` - Hardware abstraction
 - `fusion_runtime_mem_mgr` - Memory management
@@ -220,6 +236,7 @@
 - `fusion-wasm-runtime` - WASM runtime
 
 #### AI/ML Frameworks (~10)
+
 - `fusion_ai_core` - AI core framework
 - `ai-core` - AI core v2
 - `fusion-ai-cli-enhanced` - Enhanced AI CLI
@@ -232,6 +249,7 @@
 - `ai-models` - AI models framework
 
 #### Service Frameworks (~12)
+
 - `haft-fusion` - HAFT framework
 - `mcp` - MCP framework
 - `fusion-monolith-core` - Monolithic framework
@@ -246,6 +264,7 @@
 - `llm-auto-prompt` - LLM auto-prompt
 
 #### Specialized Frameworks (~10)
+
 - `fusion_quantum` - Quantum framework
 - `fusion_finance` - Finance framework
 - `fusion-blockchain` - Blockchain framework
@@ -262,6 +281,7 @@
 **Pattern**: CLIs, `*-analyzer`, `*-generator`, `debugger`, `profiler`, `sec-*` tools
 
 #### Main CLI Tools (~5)
+
 - `fusion` - Main CLI ✅ POLISHED
 - `fusion-coder` - Coder CLI
 - `ai-cli` - AI CLI
@@ -270,6 +290,7 @@
 - `toolchain-ext` - Toolchain extensions
 
 #### Development Tools (~12)
+
 - `compiler-passes` - Compiler passes
 - `debugger` - Debugger
 - `profiler` - Profiler
@@ -280,6 +301,7 @@
 - `fusion-fuzz-harness` - Fuzzing
 
 #### Analysis Tools (~10)
+
 - `crate-analyzer` - Crate analysis
 - `fusion-crate-analyzer` - Crate analyzer v2
 - `analyzer` - General analyzer
@@ -291,6 +313,7 @@
 - `supply-chain` - Supply chain v2
 
 #### Security Tools (~15)
+
 - `sec-penetration` - Penetration testing
 - `sec-forensics` - Security forensics
 - `sec-incident-response` - Incident response
@@ -308,6 +331,7 @@
 - `policy-engine` - Policy engine
 
 #### Build/Deploy Tools (~8)
+
 - `deploy` - Deployment
 - `cargo-converter` - Cargo conversion
 - `docgen` - Documentation generation
@@ -322,6 +346,7 @@
 **Pattern**: Novel/unproven tech, v2/v3 suffixes, bleeding-edge features
 
 #### Novel Algorithms
+
 - `flux-resolve-v2-hive-mind` - Experimental dependency resolver
 - `sentinel-tribrid` - Experimental security architecture
 - `llm-rerope` - Experimental RoPE
@@ -329,11 +354,13 @@
 - `llm-vision-adapter` - Vision adapter (early)
 
 #### Quantum Research
+
 - `q-optimizer-hybrid` - Hybrid quantum optimizer
 - `q-pulse-seq` - Pulse sequence research
 - `q-measurement-opt` - Measurement optimization
 
 #### Experimental Infrastructure
+
 - `fusion-terminal-browser` - Terminal browser
 - `fusion-webasm-renderer` - WASM renderer
 - `webasm-renderer` - WASM renderer v2
@@ -346,6 +373,7 @@
 **Need Manual Review**:
 
 #### UI/Component Libs (~8)
+
 - `component-lib` - Component library
 - `fusion-component-lib` - Components v2
 - `fusion-ui` - UI framework
@@ -356,6 +384,7 @@
 - `fusion-layout-builder` - Layout builder
 
 #### Media Processing (~5)
+
 - `fusion-audio` - Audio processing
 - `fusion-image` - Image processing
 - `fusion-video` - Video processing
@@ -363,6 +392,7 @@
 - `fusion-physics` - Physics simulation
 
 #### Misc (~7)
+
 - `fusion-geo` - Geospatial
 - `fusion-math` - Math utilities
 - `tree` - Tree structures

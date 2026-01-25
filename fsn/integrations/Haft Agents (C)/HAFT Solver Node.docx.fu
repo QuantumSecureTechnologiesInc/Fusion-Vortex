@@ -1,0 +1,245 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/HAFT Solver Node.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+//  * PROJECT: FUSION HAFT (High Availability Flux Tensor)
+//  * MODULE:  SOLVER NODE (Compute) - PRODUCTION RELEASE 1.0
+//  * AUTHOR:  Senior Systems Architect
+//  * STANDARD: C++20
+//  *
+//  * FEATURES:
+//  * - Graceful Shutdown (SIGINT/SIGTERM)
+//  * - Thread-Safe Logging
+//  * - CLI Configuration
+//  * - AVX-Ready Memory Layout
+//  *
+//  * COMPILE: make haft_solver
+//  * RUN:     ./haft_solver --id SOLVER-ALPHA --cycles 10
+//  ======================================================================
+// 
+// #include &lt;iostream&gt;
+// #include &lt;vector&gt;
+// #include &lt;random&gt;
+// #include &lt;memory&gt;
+// #include &lt;chrono&gt;
+// #include &lt;thread&gt;
+// #include &lt;mutex&gt;
+// #include &lt;atomic&gt;
+// #include &lt;cmath&gt;
+// #include &lt;numeric&gt;
+// #include &lt;string&gt;
+// #include &lt;functional&gt;
+// #include &lt;optional&gt;
+// #include &lt;iomanip&gt;
+// #include &lt;csignal&gt;
+// #include &lt;cstring&gt;
+// #include &lt;syncstream&gt; // C++20 sync output
+// 
+// ======================================================================
+// // INFRASTRUCTURE: LOGGING &amp; SIGNALS
+// ======================================================================
+// 
+// namespace Infra {
+//     std::atomic&lt;bool&gt; shutdown_requested{false};
+//     std::mutex log_mutex;
+// 
+//     void signal_handler(int) {
+//         shutdown_requested.store(true);
+//     }
+// 
+//     void log(const std::string&amp; component, const std::string&amp; msg) {
+//         std::lock_guard&lt;std::mutex&gt; lock(log_mutex);
+//         // ISO 8601 Timestamp could go here in a real logging lib
+//         std::cout &lt;&lt; &quot;[&quot; &lt;&lt; component &lt;&lt; &quot;] &quot; &lt;&lt; msg &lt;&lt; std::endl;
+//     }
+// }
+// 
+// ======================================================================
+// // CORE: FLUX TENSOR
+// ======================================================================
+// 
+// struct FluxTensor {
+//     std::string id;
+//     std::vector&lt;float&gt; data;
+//     std::vector&lt;size_t&gt; shape;
+//     std::vector&lt;size_t&gt; strides;
+// 
+//     FluxTensor(std::string name, std::vector&lt;size_t&gt; dims) : id(std::move(name)), shape(std::move(dims)) {
+//         size_t total_size = 1;
+//         strides.resize(shape.size());
+//         
+//         size_t running_stride = 1;
+//         for (int i = static_cast&lt;int&gt;(shape.size()) - 1; i &gt;= 0; --i) {
+//             strides[i] = running_stride;
+//             total_size *= shape[i];
+//             running_stride *= shape[i];
+//         }
+//         
+//         data.resize(total_size, 0.0f);
+//         randomise(); 
+//     }
+// 
+//     void randomise() {
+//         static std::mt19937 gen(std::random_device{}());
+//         std::uniform_real_distribution&lt;float&gt; dist(-1.0f, 1.0f);
+//         for (auto&amp; val : data) val = dist(gen);
+//     }
+// 
+//     [[nodiscard]] size_t size() const noexcept { return data.size(); }
+//     [[nodiscard]] std::string to_string() const {
+//         std::string s = &quot;FluxTensor[&quot; + id + &quot;] Shape(&quot;;
+//         for(size_t dim : shape) s += std::to_string(dim) + &quot; &quot;;
+//         s += &quot;)&quot;;
+//         return s;
+//     }
+// };
+// 
+// ======================================================================
+// // AGENTIC CORE
+// ======================================================================
+// 
+// enum class AgentState { BOOTSTRAP, IDLE, COMPUTING, COOLDOWN, ERROR_RECOVERY };
+// 
+// class AgenticCore {
+// private:
+//     std::string agent_id;
+//     std::atomic&lt;AgentState&gt; current_state;
+//     std::atomic&lt;double&gt; health_metric; 
+//     
+// public:
+//     explicit AgenticCore(std::string id) 
+//         : agent_id(std::move(id)), current_state(AgentState::BOOTSTRAP), health_metric(1.0) {
+//         Infra::log(&quot;Core&quot;, &quot;Initialising Agent: &quot; + agent_id);
+//     }
+// 
+//     [[nodiscard]] AgentState get_state() const { return current_state.load(); }
+// 
+//     void set_state(AgentState new_state) {
+//         if (current_state.load() == new_state) return;
+//         current_state.store(new_state);
+//         report_state_change(new_state);
+//     }
+// 
+//     [[nodiscard]] bool is_healthy() const { return health_metric.load() &gt; 0.8; }
+// 
+//     void degrade_health(double amount) {
+//         double current = health_metric.load();
+//         health_metric.store(std::max(0.0, current - amount));
+//     }
+// 
+//     void restore_health() {
+//         health_metric.store(1.0);
+//         Infra::log(&quot;Core&quot;, &quot;Health restored to 100%.&quot;);
+//     }
+// 
+//     void shutdown() {
+//         Infra::log(&quot;Core&quot;, &quot;Graceful shutdown sequence initiated.&quot;);
+//     }
+// 
+// private:
+//     void report_state_change(AgentState state) const {
+//         std::string state_str;
+//         switch(state) {
+//             case AgentState::BOOTSTRAP: state_str = &quot;BOOTSTRAP&quot;; break;
+//             case AgentState::IDLE: state_str = &quot;IDLE&quot;; break;
+//             case AgentState::COMPUTING: state_str = &quot;COMPUTING&quot;; break;
+//             case AgentState::COOLDOWN: state_str = &quot;COOLDOWN&quot;; break;
+//             case AgentState::ERROR_RECOVERY: state_str = &quot;ERROR_RECOVERY&quot;; break;
+//         }
+//         Infra::log(&quot;Core&quot;, &quot;Transitioned to: &quot; + state_str);
+//     }
+// };
+// 
+// ======================================================================
+// // SOLVER LOGIC
+// ======================================================================
+// 
+// class SolverLogic {
+//     std::shared_ptr&lt;AgenticCore&gt; core;
+// public:
+//     explicit SolverLogic(std::shared_ptr&lt;AgenticCore&gt; agent_core) : core(std::move(agent_core)) {}
+// 
+//     void perform_tensor_fusion(const FluxTensor&amp; a, const FluxTensor&amp; b) {
+//         if (Infra::shutdown_requested.load()) return;
+//         
+//         core-&gt;set_state(AgentState::COMPUTING);
+//         Infra::log(&quot;Logic&quot;, &quot;Fusing &quot; + a.to_string() + &quot; with &quot; + b.to_string());
+// 
+//         // Simulation: Sleep prop to size
+//         std::this_thread::sleep_for(std::chrono::milliseconds(150));
+// 
+//         // Actual math validation
+//         float fusion_energy = 0.0f;
+//         size_t limit = std::min(a.size(), b.size());
+//         for (size_t i = 0; i &lt; limit; ++i) fusion_energy += a.data[i] * b.data[i];
+// 
+//         core-&gt;degrade_health(0.05); 
+//         
+//         if (core-&gt;is_healthy()) {
+//             core-&gt;set_state(AgentState::IDLE);
+//         } else {
+//             Infra::log(&quot;Logic&quot;, &quot;Thermal throttling detected. Initiating cooldown.&quot;);
+//             core-&gt;set_state(AgentState::COOLDOWN);
+//         }
+//     }
+// 
+//     void cooldown_cycle() {
+//         Infra::log(&quot;Logic&quot;, &quot;Radiating heat...&quot;);
+//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//         core-&gt;restore_health();
+//         core-&gt;set_state(AgentState::IDLE);
+//     }
+// };
+// 
+// ======================================================================
+// // ENTRY POINT
+// ======================================================================
+// 
+// int main(int argc, char* argv[]) {
+//     // 1. Config
+//     std::string agent_id = &quot;SOLVER-DEFAULT&quot;;
+//     int max_cycles = 1000;
+// 
+//     for (int i = 1; i &lt; argc; ++i) {
+//         if (std::strcmp(argv[i], &quot;--id&quot;) == 0 &amp;&amp; i + 1 &lt; argc) agent_id = argv[++i];
+//         else if (std::strcmp(argv[i], &quot;--cycles&quot;) == 0 &amp;&amp; i + 1 &lt; argc) max_cycles = std::stoi(argv[++i]);
+//     }
+// 
+//     // 2. Signals
+//     std::signal(SIGINT, Infra::signal_handler);
+//     std::signal(SIGTERM, Infra::signal_handler);
+// 
+//     // 3. Boot
+//     Infra::log(&quot;System&quot;, &quot;Starting HAFT SOLVER Node...&quot;);
+//     auto agent = std::make_shared&lt;AgenticCore&gt;(agent_id);
+//     auto logic = std::make_unique&lt;SolverLogic&gt;(agent);
+// 
+//     std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//     agent-&gt;set_state(AgentState::IDLE);
+// 
+//     // 4. Loop
+//     int cycles = 0;
+//     while (!Infra::shutdown_requested.load() &amp;&amp; cycles &lt; max_cycles) {
+//         cycles++;
+//         
+//         if (agent-&gt;get_state() == AgentState::COOLDOWN) {
+//             logic-&gt;cooldown_cycle();
+//             continue;
+//         }
+// 
+//         if (agent-&gt;get_state() == AgentState::IDLE) {
+//             FluxTensor t1(&quot;TensorA&quot;, {128, 128});
+//             FluxTensor t2(&quot;TensorB&quot;, {128, 128});
+//             logic-&gt;perform_tensor_fusion(t1, t2);
+//         }
+//         
+//         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//     }
+// 
+//     // 5. Shutdown
+//     agent-&gt;shutdown();
+//     Infra::log(&quot;System&quot;, &quot;HAFT SOLVER Node halted gracefully.&quot;);
+//     return 0;
+// }
+// 

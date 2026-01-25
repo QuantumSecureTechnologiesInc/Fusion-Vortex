@@ -1,7 +1,7 @@
 # Fusion Auth
 
-**Version:** 0.2.0  
-**Type:** Security Library  
+**Version:** 0.2.0
+**Type:** Security Library
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let ctx = AuthContext::new("user_123", vec!["admin"]);
 
 // Generate token
 let token = Token::generate(&ctx, "secret_key")?;
-```
+```text
 
 ## Dependencies
 

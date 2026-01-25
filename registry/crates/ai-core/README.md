@@ -1,7 +1,7 @@
 # Fusion AI Core
 
-**Version:** Workspace  
-**Type:** Core Library  
+**Version:** Workspace
+**Type:** Core Library
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -23,14 +23,14 @@ use fusion_ai_core::{AiClient, ModelConfig, Prompt};
 
 async fn generate_text() -> Result<String, anyhow::Error> {
     let client = AiClient::new(ModelConfig::default());
-    
+
     let prompt = Prompt::new("Explain quantum entanglement")
         .with_system("You are a physics expert");
-        
+
     let response = client.complete(prompt).await?;
     Ok(response)
 }
-```
+```text
 
 ## Architecture
 

@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 nn-attention-block = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use nn_attention_block::Attention;
 fn main() {
     let block = Attention::new();
 }
-```
+```text
 
 ## License
 

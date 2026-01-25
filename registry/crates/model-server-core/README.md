@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 model-server-core = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use model_server_core::Server;
 fn main() {
     Server::new().start();
 }
-```
+```text
 
 ## License
 

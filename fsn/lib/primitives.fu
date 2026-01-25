@@ -1,0 +1,47 @@
+// lib/primitives.fsn
+// Secure primitives with implicit context verification.
+
+struct FInt(i32);
+struct FBool(bool);
+struct FString(String);
+struct F32(f32);
+
+impl FInt {
+    fn new(val: i32) -> Self {
+        FInt(val)
+    }
+
+    fn val(self) -> i32 {
+        self.0
+    }
+}
+
+impl FBool {
+    fn new(val: bool) -> Self {
+        FBool(val)
+    }
+
+    fn val(self) -> bool {
+        self.0
+    }
+}
+
+impl FString {
+    fn from(val: String) -> Self {
+        FString(val)
+    }
+
+    fn as_str(self) -> String {
+        self.0
+    }
+}
+
+impl F32 {
+    fn new(val: f32) -> Self {
+        F32(val)
+    }
+
+    fn val(self) -> f32 {
+        self.0
+    }
+}

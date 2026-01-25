@@ -1,7 +1,7 @@
 # Fusion Tree
 
-**Version:** 0.2.0  
-**Type:** Data Structures  
+**Version:** 0.2.0
+**Type:** Data Structures
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ tree.insert(1, "one");
 tree.insert(2, "two");
 
 assert_eq!(tree.get(&1), Some(&"one"));
-```
+```text
 
 ## Dependencies
 

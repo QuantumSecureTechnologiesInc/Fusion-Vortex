@@ -1,0 +1,11 @@
+[package]
+name = "fusionc"
+version = "1.0.0"
+edition = "2024"
+description = "Fusion compiler bootstrap: transpiles .fsn to Rust and invokes rustc."
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+clap = { version = "4.5.23", features = ["derive"] }
+tempfile = "3.14.0"
+fusion_std = "1.0.0"

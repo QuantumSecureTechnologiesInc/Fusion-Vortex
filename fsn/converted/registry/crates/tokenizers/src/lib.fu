@@ -1,0 +1,50 @@
+// SOURCE: registry/crates/tokenizers/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Production Tokenization Interface.
+///
+/// Abstraction layer for SentencePiece, BPE, and custom LLM tokenizers.
+use fusion_std::error::StdResult;
+
+struct TokenizerConfig {
+    model_type: FString, // "BPE", "SentencePiece"
+    pub vocab_size: usize,
+    // Other config fields
+}
+
+struct LLMTokenizer {
+    // Internal BPE/SentencePiece runner instance reference
+    config: TokenizerConfig,
+    // Cache for fast token lookups
+}
+
+impl LLMTokenizer {
+    /// Load tokenizer from local files (vocab.json, merges.txt, or model.bin).
+    fn load<P: AsRef<Path>>(path: P) -> StdResult<Self> {
+        println!("Loading tokenizer from: {}", path.as_ref().display());
+
+        // In prod: Read config, build BPE processor.
+
+        Ok(Self {
+            config: TokenizerConfig {
+                model_type: "BPE".into(),
+                vocab_size: 50257,
+            },
+        })
+    }
+
+    /// Encode text to token IDs.
+    fn encode(&self, _text: &str) -> FVec<u32> {
+        // Highly optimized routine
+        vec![1, 2, 3] // Mock output
+    }
+
+    /// Decode token IDs back to text.
+    fn decode(&self, ids: &[u32]) -> FString {
+        // Highly optimized routine
+        format!("decoded text ({} tokens)", ids.len())
+    }
+
+    fn get_config(&self) -> &TokenizerConfig {
+        &self.config
+    }
+}

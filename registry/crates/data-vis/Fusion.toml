@@ -1,0 +1,18 @@
+[package]
+name = "fusion_ui_data_vis"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: High-performance data visualization (charts, graphs)."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm", "visualization", "charts", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { path = "../std", version = "0.2.0" }
+serde_json = { workspace = true }
+# In prod: plotly.js / d3.js bindings via WebAssembly
+
+

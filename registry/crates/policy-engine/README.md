@@ -7,9 +7,10 @@ Policy enforcement and management engine.
 ```toml
 [dependencies]
 policy-engine = "0.1.0"
-```
+```text
 
 ## Features
+
 - Rule definitions
 - Access control
 - Policy validation

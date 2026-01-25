@@ -1,0 +1,94 @@
+/// Production Port Scanner.
+///
+/// Features:
+/// - Semaphore-based concurrency control (prevents fd exhaustion).
+/// - Precise error categorization (Open, Closed, Filtered).
+/// - Robust Timeout handling via Tokio.
+use fusion_net::FusionTcpStream;
+use futures::stream::{self, StreamExt};
+use thiserror::Error;
+use tokio::sync::Semaphore;
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum PortStatus {
+    Open,
+    Closed,
+    Filtered,
+}
+#[derive(Debug)]
+struct ScanResult {
+    pub port: u16,
+    pub status: PortStatus,
+}
+#[derive(Error, Debug)]
+enum ScannerError {
+    #[error("Invalid IP Address")]
+    InvalidTarget,
+    #[error("System Resource Exhaustion")]
+    ResourceLimit,
+}
+struct PortScanner {
+    target: IpAddr,
+    timeout: Duration,
+    concurrency: Arc<Semaphore>,
+}
+impl PortScanner {
+    pub fn new(target: IpAddr) -> Self {
+        Self {
+            target,
+            timeout: Duration::from_millis(1000),
+            concurrency: Arc::new(Semaphore::new(1000)),
+        }
+    }
+    pub fn set_concurrency(mut self, limit: FSize) -> Self {
+        self.concurrency = Arc::new(Semaphore::new(limit));
+        self
+    }
+    pub async fn scan_range(&self, start_port: u16, end_port: u16) -> FVec<ScanResult> {
+        let ports: FVec<u16> = (start_port..=end_port).collect();
+        let results = stream::iter(ports)
+            .map(|port| {
+                let target = self.target;
+                let timeout_duration = self.timeout;
+                let sem = self.concurrency.clone();
+                async move {
+                    let _permit = sem.acquire().await.expect("Semaphore closed");
+                    let addr = SocketAddr::new(target, port);
+                    let connect_fut = FusionTcpStream::connect(addr);
+                    match tokio::time::timeout(timeout_duration, connect_fut).await {
+                        Ok(Ok(_stream)) => {
+                            ScanResult {
+                                port,
+                                status: PortStatus::Open,
+                            }
+                        }
+                        Ok(Err(e)) => {
+                            match e.kind() {
+                                std::io::ErrorKind::ConnectionRefused => {
+                                    ScanResult {
+                                        port,
+                                        status: PortStatus::Closed,
+                                    }
+                                }
+                                _ => {
+                                    ScanResult {
+                                        port,
+                                        status: PortStatus::Filtered,
+                                    }
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            ScanResult {
+                                port,
+                                status: PortStatus::Filtered,
+                            }
+                        }
+                    }
+                }
+            })
+            .buffer_unordered(1000)
+            .collect::<FVec<_>>()
+            .await;
+        results
+    }
+}

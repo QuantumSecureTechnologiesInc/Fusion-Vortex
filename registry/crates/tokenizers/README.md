@@ -1,7 +1,7 @@
 # Fusion Tokenizers
 
-**Version:** 0.2.0  
-**Type:** Text Processing  
+**Version:** 0.2.0
+**Type:** Text Processing
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ let enc = Tokenizer::from_file("tokenizer.json")?;
 let tokens = enc.encode("Hello Fusion", false)?;
 
 println!("IDs: {:?}", tokens.get_ids());
-```
+```text
 
 ## Dependencies
 

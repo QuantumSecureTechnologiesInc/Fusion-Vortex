@@ -1,0 +1,17 @@
+// SOURCE: src/ml/gpu/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/ml/gpu/mod.rs - GPU Acceleration Support
+#![allow(dead_code)]
+
+mod backend;
+
+/// GPU Context
+struct GPUContext {
+    device_id: usize,
+}
+
+impl GPUContext {
+    fn new(device_id: usize) -> Self {
+        Self { device_id }
+    }
+}

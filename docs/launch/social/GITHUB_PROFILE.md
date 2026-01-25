@@ -8,7 +8,7 @@
 
 ```markdown
 <div align="center">
-  
+
 # ⚛️ Fusion Programming Language
 
 **The World's First Quantum-Native Programming Language**
@@ -46,42 +46,53 @@ Fusion unifies **Classical Computing**, **Quantum Computing**, and **Artificial 
 ### Installation
 
 ```bash
+
 cargo install fusion-lang --version 1.0.0
 fusion --version
+
 # Fusion 1.0.0
-```
+
+```text
 
 ### Hello, World!
 
 ```fusion
+
 fn main():
     print("Hello, Fusion!")
-```
+
+```text
 
 ```bash
+
 fusion run hello.fu
-```
+
+```text
 
 ### Quantum Hello World
 
 ```fusion
+
 import quantum.circuits
 
 fn main():
     let q = Qubit::new()
     h(q)  // Hadamard gate -> superposition
     print(measure(q))  // 0 or 1
-```
+
+```text
 
 ### AI Hello World
 
 ```fusion
+
 import ai.models.llama
 
 fn main():
     let model = Llama3::load("7b-chat")
     print(model.generate("What is quantum computing?"))
-```
+
+```text
 
 ---
 
@@ -116,7 +127,8 @@ fn main():
 
 ## 🗂️ Project Structure
 
-```
+```text
+
 fusion/
 ├── crates/              # Core language crates
 │   ├── fusion_core/     # Type system & primitives
@@ -130,7 +142,8 @@ fusion/
 ├── docs/                # Documentation
 ├── examples/            # Example projects
 └── tests/               # Integration tests
-```
+
+```text
 
 ---
 
@@ -139,43 +152,49 @@ fusion/
 ### Quantum: Bell State (Entanglement)
 
 ```fusion
+
 import quantum.circuits
 
 fn bell_state():
     let q0 = Qubit::new()
     let q1 = Qubit::new()
-    
+
     h(q0)        // Superposition
     cnot(q0, q1) // Entangle
-    
+
     let r0 = measure(q0)
     let r1 = measure(q1)
-    
+
     // r0 and r1 always match!
     print(r0, r1)
-```
+
+```text
 
 ### AI: Fine-Tune LLM
 
 ```fusion
+
 import ai.models.llama
 import ai.training
 
 fn fine_tune():
     let model = Llama3::load("7b-chat")
     let trainer = Trainer::new(model)
-    
+
     trainer.set_learning_rate(1e-4)
     trainer.enable_rlhf(reward_fn)
     trainer.fit("data.jsonl", epochs=3)
-    
+
     model.save("my-fine-tuned-model")
-```
+
+```text
 
 ### Enterprise: Deploy to Kubernetes
 
 ```yaml
+
 # fusion-app.yaml
+
 apiVersion: fusion.dev/v1
 kind: FusionApp
 metadata:
@@ -186,11 +205,14 @@ spec:
     backend: ibm
   security:
     pqc: enabled
-```
+
+```text
 
 ```bash
+
 fusion deploy --k8s production
-```
+
+```text
 
 ---
 
@@ -249,11 +271,13 @@ We welcome contributions! See [CONTRIBUTING.md](docs/guides/CONTRIBUTING.md) for
 ### Quick Start for Contributors
 
 ```bash
+
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language.git
 cd Fusion-Programming-Language
 cargo build --workspace
 cargo test --workspace
-```
+
+```text
 
 ---
 
@@ -296,36 +320,40 @@ Fusion v1.0 was developed using **Google DeepMind's Advanced Agentic Coding** sy
 **One language. All of computing. 🚀**
 
 </div>
-```
+```text
 
 ---
 
 ## Repository Settings
 
 ### Description
-```
+
+```text
 The world's first quantum-native programming language with built-in AI/ML and enterprise infrastructure. 141 packages at launch.
-```
+```text
 
 ### Website
-```
+
+```text
 https://fusion-lang.org (or GitHub Pages URL)
-```
+```text
 
 ### Topics
-```
+
+```text
 quantum-computing, programming-language, ai, machine-learning, rust, llvm, post-quantum-cryptography, kubernetes, open-source, llama, llm, compiler, systems-programming, webassembly
-```
+```text
 
 ### Social Preview Image Description
-```
+
+```text
 1280x640 image with:
 - Fusion logo prominent
 - "The Quantum-Native Programming Language" tagline
 - Three icons: ⚛️ 🧠 🏢
 - "v1.0 | 141 Packages | Open Source"
 - Dark gradient background (purple to blue)
-```
+```text
 
 ---
 
@@ -335,13 +363,14 @@ quantum-computing, programming-language, ai, machine-learning, rust, llvm, post-
 ![Build](https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language/actions/workflows/build.yml/badge.svg)
 ![Tests](https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language/actions/workflows/test.yml/badge.svg)
 ![Docs](https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language/actions/workflows/docs.yml/badge.svg)
-```
+```text
 
 ---
 
 ## Issue Templates
 
 ### Bug Report Template (`.github/ISSUE_TEMPLATE/bug_report.md`)
+
 ```markdown
 ---
 name: Bug Report
@@ -352,9 +381,11 @@ assignees: ''
 ---
 
 ## Describe the Bug
+
 A clear description of what the bug is.
 
 ## To Reproduce
+
 Steps to reproduce the behaviour:
 1. Install Fusion with '...'
 2. Create file with '...'
@@ -362,21 +393,26 @@ Steps to reproduce the behaviour:
 4. See error
 
 ## Expected Behaviour
+
 What you expected to happen.
 
 ## Actual Behaviour
+
 What actually happened.
 
 ## Environment
+
 - OS: [e.g., macOS 14.1]
 - Fusion Version: [e.g., 1.0.0]
 - Rust Version: [e.g., 1.75.0]
 
 ## Additional Context
+
 Add any other context, screenshots, or logs.
-```
+```text
 
 ### Feature Request Template (`.github/ISSUE_TEMPLATE/feature_request.md`)
+
 ```markdown
 ---
 name: Feature Request
@@ -387,35 +423,40 @@ assignees: ''
 ---
 
 ## Problem Statement
+
 What problem does this feature solve?
 
 ## Proposed Solution
+
 How would you like this to work?
 
 ## Alternatives Considered
+
 Other approaches you've thought about.
 
 ## Use Case
+
 Describe how you would use this feature.
 
 ## Additional Context
+
 Any other information or examples.
-```
+```text
 
 ---
 
 ## Discussion Categories
 
-```
+```text
 📣 Announcements (read-only)
 💬 General
 ❓ Q&A
 💡 Ideas
 🎉 Show and Tell
 📖 Resources
-```
+```text
 
 ---
 
-*Document Version: 1.0.0*  
+*Document Version: 1.0.0*
 *Last Updated: December 11, 2025*

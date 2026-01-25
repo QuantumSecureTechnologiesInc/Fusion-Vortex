@@ -108,7 +108,7 @@ fn analyze(data):  // type unknown initially
 @strict_types
 fn production_code(data: List<int>) -> Result<int>:
     return sum(data)
-```
+```text
 
 ### Type System
 
@@ -138,7 +138,7 @@ fn legacy_function(x, y):  // Types unknown
 @strict_types
 fn calling_code():
     let result: int = legacy_function(5, 3)  // Type-checked at boundary
-```
+```text
 
 ### Paradigm Support
 
@@ -199,7 +199,7 @@ actor DataCache:
 
     fn set(self, key: String, data: Data):
         self.cache.insert(key, data)
-```
+```text
 
 ---
 
@@ -311,7 +311,7 @@ fn establish_hybrid_tls(host: String, port: u16) -> Result<SecureConnection>:
         .use_hybrid_kem()      // X25519 + ML-KEM
         .use_hybrid_signatures()  // ECDSA + ML-DSA
         .connect(host, port)?
-```
+```text
 
 ---
 
@@ -377,7 +377,7 @@ fn auto_tune_hyperparameters(model: Sequential, train_data: Dataset) -> AutoTune
     )
 
     return best_config
-```
+```text
 
 ### 2. AI & Neural Networks Library (`fusion::ai`)
 
@@ -455,7 +455,7 @@ fn generate_text_constrained(
     )?
 
     return Ok(generated)
-```
+```text
 
 ### 3. Quantum Computing Library (`fusion::quantum`)
 
@@ -569,7 +569,7 @@ fn simulate_with_noise(circuit: QuantumCircuit) -> Result<QuantumResult>:
         .with_noise_model(noise_model)
 
     return simulator.run(circuit, shots: 1024)
-```
+```text
 
 ### 4. Zero-Knowledge Proof Library (`fusion::zkp`)
 
@@ -669,7 +669,7 @@ fn verify_correct_sum(inputs: &[i64]) -> Circuit:
     Constraint::equal(sum, total)
 
     return Circuit::new()
-```
+```text
 
 ### 5. Cybersecurity & Security Hardening Library (`fusion::security`)
 
@@ -872,7 +872,7 @@ fn harden_system(system: &mut SystemConfiguration) -> Result<HardeningReport>:
     let report = hardener.verify_compliance(system)?
 
     return Ok(report)
-```
+```text
 
 ### 6. Additional Core Libraries
 
@@ -978,7 +978,7 @@ Optimized LLVM IR
     ├→ [RISC-V Code Gen] → RISC-V Binary
     ├→ [WebAssembly Code Gen] → .wasm Module
     └→ [LLVM Linker] → Executable
-```
+```text
 
 ### LLVM Integration
 
@@ -1019,7 +1019,7 @@ fn use_llvm_intrinsics():
 
     // Cryptographic operations
     llvm::bitshift_circular_left(x, n)
-```
+```text
 
 ### Target Platform Support
 
@@ -1084,7 +1084,7 @@ struct MemoryManager:
     fn allocate_gc(size: usize) -> *mut u8:
         // GC-tracked allocation
         return self.gc.allocate(size)
-```
+```text
 
 ### 2. Type Checker & Borrow Checker
 
@@ -1124,7 +1124,7 @@ struct BorrowChecker:
             self.immutable_borrows.insert(value_id)
 
         return Ok(())
-```
+```text
 
 ### 3. Language Server Protocol (LSP)
 
@@ -1171,7 +1171,7 @@ struct FusionLanguageServer:
         let position = params.text_document_position_params.position
         let symbol = self.workspace.get_symbol_at(position)?
         return Ok(symbol.definition_location)
-```
+```text
 
 ### 4. Testing Framework
 
@@ -1215,7 +1215,7 @@ fn kdf_deterministic(seed: [u8; 32]):
 fn fuzz_parse_message(data: &[u8]):
     if let Ok(msg) = Message::parse(data):
         let _ = msg.validate()
-```
+```text
 
 ### 5. Package Manager
 
@@ -1240,11 +1240,11 @@ $ fusion add dependency_name@version
 $ fusion build --target wasm
 $ fusion publish
 $ fusion search cryptography
-```
+```text
 
 ### 6. Build System (Bazel)
 
-```
+```text
 
 # BUILD file for Fusion project
 
@@ -1277,7 +1277,7 @@ fusion_wasm_binary(
     srcs = ["web/main.fu"],
     deps = ["//ml:ml_library"],
 )
-```
+```text
 
 ---
 
@@ -1502,7 +1502,7 @@ fn compile_fusion(input_file: &str, output_file: &str) -> Result<(), String> {
 
     Ok(())
 }
-```
+```text
 
 ### 2. ANTLR Grammar (`grammar/Fusion.g4`)
 
@@ -1662,7 +1662,7 @@ STRING_LIT: '"' (~["\\\r\n])* '"';
 
 WS: [ \t\n\r]+ -> skip;
 COMMENT: '//' ~[\r\n]* -> skip;
-```
+```text
 
 ### 3. AST Definition (`src/ast/mod.rs`)
 
@@ -1834,7 +1834,7 @@ pub enum Type {
         return_type: Box<Type>,
     },
 }
-```
+```text
 
 ### 4. Semantic Analyzer Skeleton (`src/semantic_analyzer/mod.rs`)
 
@@ -2053,7 +2053,7 @@ impl SymbolTable {
         None
     }
 }
-```
+```text
 
 ### 5. LLVM Code Generator Skeleton (`src/codegen/mod.rs`)
 
@@ -2184,7 +2184,7 @@ impl LLVMCodeGenerator {
         Ok(())
     }
 }
-```
+```text
 
 ### 6. Cryptography Module Skeleton (`src/crypto/hybrid.rs`)
 
@@ -2313,7 +2313,7 @@ fn ml_dsa_verify(message: &[u8], sig: &[u8], pk: &[u8]) -> Result<bool, String> 
     // Placeholder implementation
     Ok(true)
 }
-```
+```text
 
 ---
 

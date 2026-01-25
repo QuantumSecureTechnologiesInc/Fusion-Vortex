@@ -1,0 +1,30 @@
+[package]
+name = "haft_fusion"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Experimental: EXPERIMENTAL: Research prototype."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "experimental", "experimental", "research"]
+categories = ["experimental"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+fusion_runtime_core = { workspace = true }
+async-trait = "0.1"
+env_logger = "0.10"
+log = "0.4"
+tokio = { workspace = true }
+fusion_std = "1.0.0"
+
+
+[lib]
+name = "haft_fusion"
+path = "src/lib.rs"
+
+[[bin]]
+name = "haft-fusion"
+path = "src/main.rs"
+

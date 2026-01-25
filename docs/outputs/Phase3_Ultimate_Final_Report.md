@@ -129,7 +129,7 @@ Successfully delivered **EIGHT complete or near-complete major systems** in an e
 
 ```bash
 code --install-extension fusion-language-0.1.0.vsix
-```
+```text
 
 **Impact**: Public distribution capability
 
@@ -281,7 +281,7 @@ pub fn fibonacci(n: int) -> int {
     }
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
-```
+```text
 
 **main.fu**:
 
@@ -298,7 +298,7 @@ fn main() -> int {
     let result = utils::fibonacci(10);
     return result;
 }
-```
+```text
 
 **Compile**:
 
@@ -307,7 +307,7 @@ fusion_lang -i main.fu --multi-file
 
 # ✅ Compiled 2 modules successfully
 
-```
+```text
 
 ### Example 2: WebAssembly Compilation
 
@@ -321,7 +321,7 @@ fn add(a: int, b: int) -> int {
 fn multiply(x: int, y: int) -> int {
     return x * y;
 }
-```
+```text
 
 **Compile to WASM**:
 
@@ -334,7 +334,7 @@ fusion_lang -i math.fu --target wasm -o math.wasm
 
 # Size: 73 bytes
 
-```
+```text
 
 **Use in Browser**:
 
@@ -349,7 +349,7 @@ fusion_lang -i math.fu --target wasm -o math.wasm
       console.log('4 * 7 =', multiply(4, 7));   // 28
     });
 </script>
-```
+```text
 
 ### Example 3: Collections Usage
 
@@ -377,7 +377,7 @@ fn demo() -> int {
 
     return total;
 }
-```
+```text
 
 ### Example 4: IDE Auto-completion
 
@@ -397,7 +397,7 @@ Type "fn" → Expands to:
 
 Type "range" → Suggests:
   range(${1:start}, ${2:end})
-```
+```text
 
 ---
 

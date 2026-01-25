@@ -1,0 +1,81 @@
+use crate::error::{FusionError, Result};
+use crate::executor::RuntimeHandle;
+use crate::host_functions::{register_host_functions, HostState};
+use crate::shared_memory::SharedMemoryManager;
+#[cfg(feature = "wasm")]
+use wasmtime::{Config, Engine, Linker, Module, Store};
+#[cfg(feature = "wasm")]
+struct PluginEngine {
+    engine: Engine,
+    linker: Linker<HostState>,
+    runtime: RuntimeHandle,
+    shared_memory: Arc<SharedMemoryManager>,
+}
+#[cfg(feature = "wasm")]
+impl PluginEngine {
+    pub fn new(runtime: RuntimeHandle) -> Result<Self> {
+        let mut config = Config::new();
+        config.async_support(true);
+        config.consume_fuel(true);
+        config.cranelift_opt_level(wasmtime::OptLevel::Speed);
+        let engine = Engine::new(&config)
+            .map_err(|e| FusionError::ReactorError(e.to_string()))?;
+        let mut linker = Linker::new(&engine);
+        register_host_functions(&mut linker)?;
+        let shared_memory = Arc::new(SharedMemoryManager::new());
+        Ok(Self {
+            engine,
+            linker,
+            runtime,
+            shared_memory,
+        })
+    }
+    pub async fn load(&self, wasm_bytes: &[u8]) -> Result<Plugin> {
+        let module = Module::new(&self.engine, wasm_bytes)
+            .map_err(|e| FusionError::WasmTrap(e.to_string()))?;
+        Ok(Plugin { module })
+    }
+    pub async fn call(
+        &self,
+        plugin: &Plugin,
+        func_name: &str,
+        _args: FVec<FInt>,
+    ) -> Result<()> {
+        let host_state = HostState {
+            runtime_handle: self.runtime.clone(),
+            shared_memory: self.shared_memory.clone(),
+        };
+        let mut store = Store::new(&self.engine, host_state);
+        store.set_fuel(100_000).map_err(|e| FusionError::WasmTrap(e.to_string()))?;
+        let instance = self
+            .linker
+            .instantiate_async(&mut store, &plugin.module)
+            .await
+            .map_err(|e| FusionError::WasmTrap(e.to_string()))?;
+        let entry = instance
+            .get_typed_func::<(), ()>(&mut store, func_name)
+            .map_err(|_| FusionError::WasmTrap(
+                format!("Function {} not found", func_name),
+            ))?;
+        entry
+            .call_async(&mut store, ())
+            .await
+            .map_err(|e| FusionError::WasmTrap(e.to_string()))?;
+        Ok(())
+    }
+    pub fn shared_memory(&self) -> &Arc<SharedMemoryManager> {
+        &self.shared_memory
+    }
+}
+#[cfg(feature = "wasm")]
+struct Plugin {
+    module: Module,
+}
+#[cfg(not(feature = "wasm"))]
+struct PluginEngine;
+#[cfg(not(feature = "wasm"))]
+impl PluginEngine {
+    pub fn new(_runtime: crate::executor::RuntimeHandle) -> Result<Self> {
+        Err(FusionError::WasmTrap("WASM support not enabled".into()))
+    }
+}

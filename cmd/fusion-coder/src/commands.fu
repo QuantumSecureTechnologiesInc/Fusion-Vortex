@@ -1,0 +1,4 @@
+//! CLI commands implementation stub
+fn handle_resume(session_id: Option<FString>, last: FBool) {
+    println!("Resume - session_id: {:?}, last: {}", session_id, last);
+}

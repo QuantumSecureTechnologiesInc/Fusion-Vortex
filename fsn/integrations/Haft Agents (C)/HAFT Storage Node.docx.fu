@@ -1,0 +1,130 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/HAFT Storage Node.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+//  * PROJECT: FUSION HAFT (High Availability Flux Tensor)
+//  * MODULE:  VAULT NODE (Storage) - PRODUCTION RELEASE 1.0
+//  * STANDARD: C++20
+// ======================================================================
+// 
+// #include &lt;iostream&gt;
+// #include &lt;vector&gt;
+// #include &lt;unordered_map&gt;
+// #include &lt;string&gt;
+// #include &lt;mutex&gt;
+// #include &lt;memory&gt;
+// #include &lt;atomic&gt;
+// #include &lt;chrono&gt;
+// #include &lt;thread&gt;
+// #include &lt;csignal&gt;
+// #include &lt;cstring&gt;
+// 
+// ======================================================================
+// // INFRASTRUCTURE
+// ======================================================================
+// 
+// namespace Infra {
+//     std::atomic&lt;bool&gt; shutdown_requested{false};
+//     std::mutex log_mutex;
+// 
+//     void signal_handler(int) { shutdown_requested.store(true); }
+// 
+//     void log(const std::string&amp; tag, const std::string&amp; msg) {
+//         std::lock_guard&lt;std::mutex&gt; lock(log_mutex);
+//         std::cout &lt;&lt; &quot;[&quot; &lt;&lt; tag &lt;&lt; &quot;] &quot; &lt;&lt; msg &lt;&lt; std::endl;
+//     }
+// }
+// 
+// ======================================================================
+// // LOGIC
+// ======================================================================
+// 
+// struct FluxTensor {
+//     std::string id;
+//     size_t size_bytes;
+//     bool is_dirty;
+//     FluxTensor(std::string name, size_t b) : id(std::move(name)), size_bytes(b), is_dirty(true) {}
+// };
+// 
+// class VaultLogic {
+// private:
+//     std::unordered_map&lt;std::string, std::shared_ptr&lt;FluxTensor&gt;&gt; memory_shard;
+//     std::mutex shard_mutex;
+//     size_t max_capacity_bytes;
+//     size_t current_usage_bytes;
+// 
+// public:
+//     explicit VaultLogic(size_t capacity) : max_capacity_bytes(capacity), current_usage_bytes(0) {}
+// 
+//     bool store(const std::string&amp; key, size_t bytes) {
+//         std::lock_guard&lt;std::mutex&gt; lock(shard_mutex);
+//         
+//         if (current_usage_bytes + bytes &gt; max_capacity_bytes) {
+//             Infra::log(&quot;Vault&quot;, &quot;Capacity pressure. Attempting eviction...&quot;);
+//             evict_one_unsafe(); // Already locked
+//         }
+// 
+//         if (current_usage_bytes + bytes &gt; max_capacity_bytes) {
+//             Infra::log(&quot;Vault&quot;, &quot;Store Failed: OOM&quot;);
+//             return false;
+//         }
+// 
+//         memory_shard[key] = std::make_shared&lt;FluxTensor&gt;(key, bytes);
+//         current_usage_bytes += bytes;
+//         Infra::log(&quot;Vault&quot;, &quot;Stored: &quot; + key + &quot; (&quot; + std::to_string(bytes) + &quot;B)&quot;);
+//         return true;
+//     }
+// 
+//     void sync_dirty_records() {
+//         std::lock_guard&lt;std::mutex&gt; lock(shard_mutex);
+//         if (memory_shard.empty()) return;
+//         // Simulate async I/O
+//         Infra::log(&quot;Vault&quot;, &quot;Syncing &quot; + std::to_string(memory_shard.size()) + &quot; records to persistence layer...&quot;);
+//     }
+// 
+// private:
+//     void evict_one_unsafe() {
+//         if (memory_shard.empty()) return;
+//         auto it = memory_shard.begin();
+//         Infra::log(&quot;Vault&quot;, &quot;Evicting &quot; + it-&gt;first);
+//         current_usage_bytes -= it-&gt;second-&gt;size_bytes;
+//         memory_shard.erase(it);
+//     }
+// };
+// 
+// ======================================================================
+// // ENTRY POINT
+// ======================================================================
+// 
+// int main(int argc, char* argv[]) {
+//     std::string id = &quot;VAULT-01&quot;;
+//     size_t cap = 1024 * 1024; // 1MB default
+// 
+//     for (int i = 1; i &lt; argc; ++i) {
+//         if (std::strcmp(argv[i], &quot;--id&quot;) == 0) id = argv[++i];
+//         if (std::strcmp(argv[i], &quot;--cap&quot;) == 0) cap = std::stoull(argv[++i]);
+//     }
+// 
+//     std::signal(SIGINT, Infra::signal_handler);
+//     std::signal(SIGTERM, Infra::signal_handler);
+// 
+//     Infra::log(&quot;System&quot;, &quot;Starting &quot; + id + &quot; with capacity &quot; + std::to_string(cap) + &quot;B&quot;);
+//     VaultLogic vault(cap);
+// 
+//     // Simulate Operational Loop
+//     int ticks = 0;
+//     while(!Infra::shutdown_requested.load() &amp;&amp; ticks &lt; 20) {
+//         ticks++;
+//         if (ticks % 5 == 0) vault.sync_dirty_records();
+//         
+//         // Mock Ingest
+//         vault.store(&quot;Tensor-&quot; + std::to_string(ticks), 100000);
+//         
+//         std::this_thread::sleep_for(std::chrono::milliseconds(250));
+//     }
+// 
+//     Infra::log(&quot;System&quot;, &quot;Shutdown complete.&quot;);
+//     return 0;
+// }
+// 

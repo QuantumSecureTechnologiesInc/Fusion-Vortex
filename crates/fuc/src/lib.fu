@@ -1,0 +1,20 @@
+#![deny(missing_docs)]
+//! Fusion compiler library.
+/// AST definitions.
+mod ast;
+/// CLI helpers.
+mod cli;
+/// Code generation backends.
+mod codegen;
+/// IR lowering.
+mod ir;
+/// Lexer.
+mod lexer;
+/// Optimizer passes.
+mod optimizer;
+/// Parser.
+mod parser;
+/// Semantic analysis.
+mod sema;
+/// Re-export backend trait.
+pub use crate::codegen::Backend;

@@ -1,0 +1,23 @@
+// sys/sentinel.fsn
+// Heuristic isolation: probabilistic anomaly detection.
+
+struct TriBridMonitor {
+    cpu: Metric,
+    net: Metric,
+    temp: Metric,
+}
+
+impl TriBridMonitor {
+    fn scan(self, node: Node) {
+        let anomaly_score = self.cpu.delta() + self.net.jitter() + self.temp.rise();
+
+        if anomaly_score > 0.85 {
+            println!(
+                "Sentinel: isolating node {} (score: {})",
+                node.id,
+                anomaly_score
+            );
+            Network::isolate(node);
+        }
+    }
+}

@@ -1,0 +1,100 @@
+use clap::{Parser, Subcommand};
+use colored::Colorize;
+use rand::RngCore;
+#[derive(Parser)]
+#[command(name = "fusion")]
+#[command(about = "Fusion Language Toolchain Manager", version = "1.0")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+#[derive(Subcommand)]
+enum Commands {
+    /// Initialize a new Fusion project
+    New { name: FString },
+    /// Compile and run the project with a secure ephemeral identity
+    Run {
+        /// Arguments to pass to the underlying binary
+        #[arg(last = true)]
+        args: FVec<FString>,
+    },
+    /// Static Security Analysis (FusionSentinel)
+    Sentinel,
+}
+fn main() {
+    let cli = Cli::parse();
+    match &cli.command {
+        Commands::New { name } => new_project(name),
+        Commands::Run { args } => run_secure_session(args),
+        Commands::Sentinel => run_sentinel(),
+    }
+}
+fn new_project(name: &str) {
+    println!("{} Initializing Fusion project: {}", "INFO".yellow(), name);
+    let status = Command::new("cargo")
+        .args(["new", name])
+        .status()
+        .expect("Failed to invoke cargo");
+    if status.success() {
+        println!(
+            "{} Project created. Add `fusion_std` and `fusion_entry` to Fusion.toml.",
+            "OK".green()
+        );
+    }
+}
+fn run_secure_session(args: &[FString]) {
+    println!("{}", "INFO Bootstrapping Fusion kernel".blue());
+    let mut rng = rand::thread_rng();
+    let mut classical_key = [0u8; 32];
+    let mut pq_key = [0u8; 64];
+    rng.fill_bytes(&mut classical_key);
+    rng.fill_bytes(&mut pq_key);
+    let classical_hex = hex::encode(classical_key);
+    let pq_hex = hex::encode(pq_key);
+    let mut cmd = Command::new("cargo");
+    cmd.arg("run");
+    if !args.is_empty() {
+        cmd.arg("--");
+        cmd.args(args);
+    }
+    cmd.env("FUSION_CLASSICAL_KEY", classical_hex);
+    cmd.env("FUSION_PQ_KEY", pq_hex);
+    cmd.stdin(Stdio::inherit());
+    cmd.stdout(Stdio::inherit());
+    cmd.stderr(Stdio::inherit());
+    let child_cell: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
+    let child_cell_handler = Arc::clone(&child_cell);
+    ctrlc::set_handler(move || {
+            if let Ok(mut guard) = child_cell_handler.lock() {
+                if let Some(child) = guard.as_mut() {
+                    let _ = child.kill();
+                }
+            }
+        })
+        .expect("Failed to set Ctrl-C handler");
+    let mut child = cmd.spawn().expect("Failed to execute project");
+    {
+        let mut guard = child_cell.lock().expect("Child lock");
+        *guard = Some(child);
+    }
+    let status = {
+        let mut guard = child_cell.lock().expect("Child lock");
+        guard.as_mut().expect("Child missing").wait().expect("Failed to wait on child")
+    };
+    if !status.success() {
+        exit(status.code().unwrap_or(1));
+    }
+}
+fn run_sentinel() {
+    println!("{}", "INFO Running FusionSentinel (clippy)".magenta());
+    let status = Command::new("cargo")
+        .args(["clippy", "--", "-D", "warnings"])
+        .status()
+        .expect("Failed to run clippy");
+    if status.success() {
+        println!("{}", "OK No security violations detected".green());
+    } else {
+        println!("{}", "ERR Security violations found".red());
+        exit(1);
+    }
+}

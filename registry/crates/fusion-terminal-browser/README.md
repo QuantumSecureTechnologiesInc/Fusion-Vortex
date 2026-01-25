@@ -13,7 +13,7 @@ A powerful terminal-based web browser using **Chromiumoxide** (superior CDP impl
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │         Browser (Orchestration)         │
 ├─────────────────────────────────────────┤
@@ -25,7 +25,7 @@ A powerful terminal-based web browser using **Chromiumoxide** (superior CDP impl
 │        chromiumoxide (not headless_     │
 │        chrome - better CDP!)            │
 └─────────────────────────────────────────┘
-```
+```text
 
 ## Key Improvements
 
@@ -73,47 +73,55 @@ A powerful terminal-based web browser using **Chromiumoxide** (superior CDP impl
 ```bash
 cd crates/fusion-terminal-browser
 cargo build --release
-```
+```text
 
 ## Usage
 
 ### Interactive Browser
 
 ```bash
+
 # Start with default URL
+
 fusion-browser
 
 # Navigate to specific URL
+
 fusion-browser --url https://webgpu.github.io/webgpu-samples/
 
 # Custom viewport and FPS
+
 fusion-browser --url https://example.com --width 1920 --height 1080 --fps 30
-```
+```text
 
 ### Screenshot Capture
 
 ```bash
 fusion-browser screenshot https://example.com --output screenshot.png
-```
+```text
 
 ### Execute JavaScript
 
 ```bash
 fusion-browser exec https://example.com --script "document.title"
-```
+```text
 
 ### Configuration
 
 ```bash
+
 # Disable WebGPU
+
 fusion-browser --url https://example.com --no-webgpu
 
 # ASCII mode for compatibility
+
 fusion-browser --url https://example.com --render-mode ascii
 
 # Custom quality
+
 fusion-browser --url https://example.com --quality 80
-```
+```text
 
 ## Library Usage
 
@@ -123,23 +131,23 @@ use fusion_terminal_browser::{Browser, BrowserConfig};
 fn main() ->Result<(), Box<dyn std::error::Error>> {
     // Configuration
     let config = BrowserConfig::default();
-    
+
     // Create browser (uses Fusion Runtime Core internally)
     let mut browser = Browser::new(config)?;
-    
+
     // Navigate
     browser.navigate("https://example.com")?;
-    
+
     // Execute JavaScript
     let title = browser.execute_script("document.title")?;
     println!("Title: {}", title);
-    
+
     // Screenshot
     browser.screenshot_to_file("screenshot.png".as_ref())?;
-    
+
     Ok(())
 }
-```
+```text
 
 ## Keyboard Shortcuts
 
@@ -163,7 +171,7 @@ The browser natively supports WebGPU content:
 
 ```bash
 fusion-browser https://webgpu.github.io/webgpu-samples/ --fps 30
-```
+```text
 
 ### Custom Chrome Args
 
@@ -171,7 +179,7 @@ fusion-browser https://webgpu.github.io/webgpu-samples/ --fps 30
 let mut config = BrowserConfig::default();
 config.chrome_args.push("--use-angle=vulkan".to_string());
 config.chrome_args.push("--force-device-scale-factor=2".to_string());
-```
+```text
 
 ### Fusion Runtime Integration
 
@@ -183,7 +191,7 @@ let runtime = Arc::new(Runtime::builder()
     .enable_qpu()  // Quantum processing
     .worker_threads(8)
     .build());
-```
+```text
 
 ## Performance
 
@@ -198,6 +206,7 @@ Typical performance (1920x1080 → 120x40 terminal):
 ## Dependencies
 
 ### Core
+
 - `chromiumoxide`: Chrome DevTools Protocol
 - `fusion_runtime_core`: Custom async runtime
 - `wgpu`: WebGPU API
@@ -221,18 +230,24 @@ Fusion Runtime Core provides:
 Set the `CHROME_PATH` environment variable or run setup scripts:
 
 **Windows:**
+
 ```powershell
+
 # Download Chrome for Testing
+
 irm https://googlechromelabs.github.io/chrome-for-testing/latest-win64.json | ConvertFrom-Json | %{ $_.channels.Stable.downloads.chrome[0].url } | %{ iwr $_ -OutFile chrome.zip }
 Expand-Archive chrome.zip ./bin/
-```
+```text
 
 **Linux:**
+
 ```bash
+
 # Download Chrome for Testing
+
 wget -O chrome.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/latest/linux64/chrome-linux64.zip
 unzip chrome.zip -d ./bin/
-```
+```text
 
 ### WebGPU Errors
 
@@ -251,6 +266,7 @@ WebGPU requires specific Chrome flags. The browser automatically adds:
 ## Roadmap
 
 ### v0.3.0
+
 - [ ] Multiple tabs
 - [ ] Better input handling
 - [ ] Form auto-fill
@@ -258,6 +274,7 @@ WebGPU requires specific Chrome flags. The browser automatically adds:
 - [ ] Network throttling
 
 ### v1.0.0
+
 - [ ] Stable API
 - [ ] Production-ready
 - [ ] Full automation suite

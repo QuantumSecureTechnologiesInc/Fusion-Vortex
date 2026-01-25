@@ -1,14 +1,30 @@
 [package]
 name = "fusion-mcp"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
 description = "Framework: Opinionated Model Context Protocol (MCP) framework for AI agent orchestration"
 keywords = ["mcp", "ai", "framework", "agent", "orchestration"]
 categories = ["development-tools", "web-programming"]
 readme = "README.md"
+metadata = { docs = { rs = { all-features = true, rustdoc-args = ["--cfg", "docsrs"] } } }
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+
+[dependencies]
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = { version = "1.0.133" }
+fusion_runtime_core = { path = "/mnt/c/Projects/Fusion - Programming Language/registry/crates/fusion_runtime_core", version = "0.2.0" }
+async-trait = { version = "0.1.83" }
+tracing = { version = "0.1.41" }
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"], optional = true }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+fusion-vscode-runtime = { path = "../../../crates/vscode-runtime" }
+fusion-policy = { path = "/mnt/c/Projects/Fusion - Programming Language/crates/policy", version = "0.1.0", optional = true }
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }
 
 [features]
 default = ["full"]
@@ -16,21 +32,3 @@ full = ["server", "client", "policy"]
 server = []
 client = ["reqwest"]
 policy = ["fusion-policy"]
-
-[dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-fusion_runtime_core = { workspace = true }
-async-trait = { workspace = true }
-tracing = { workspace = true }
-reqwest = { workspace = true, optional = true }
-uuid = { version = "1.0", features = ["v4", "serde"] }
-fusion-vscode-runtime = { path = "../../../crates/vscode-runtime" }
-fusion-policy = { workspace = true, optional = true }
-tokio = { workspace = true }
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]

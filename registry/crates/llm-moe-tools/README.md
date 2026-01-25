@@ -1,7 +1,7 @@
 # Fusion MoE Tools
 
-**Version:** 0.2.0  
-**Type:** Diagnostics  
+**Version:** 0.2.0
+**Type:** Diagnostics
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_moe_diagnostics::Analyzer;
 
 let analyzer = Analyzer::from_logs("training.log");
 analyzer.report_imbalance();
-```
+```text
 
 ## Dependencies
 

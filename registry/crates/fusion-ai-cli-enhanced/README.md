@@ -12,30 +12,35 @@
 ## Features
 
 ### 🧠 Smart Command Parsing
+
 - AI-powered command interpretation
 - Automatic typo correction
 - Intent detection from partial commands
 - Context-aware parsing
 
 ### 💡 Intelligent Suggestions
+
 - Real-time command suggestions as you type
 - History-based recommendations
 - Fuzzy matching for commands
 - Context-aware completions
 
 ### 🗣️ Natural Language Interface
+
 - Execute commands using natural language
 - "build the project in release mode" → `build --release`
 - "run my application" → `run`
 - No need to memorize exact syntax
 
 ### ❌ Enhanced Error Messages
+
 - AI-generated error explanations
 - Helpful suggestions for fixing issues
 - Related documentation links
 - Correct usage examples
 
 ### 🎯 Agentic Integration
+
 - Deep reasoning for complex operations
 - Learns from your patterns
 - Suggests optimizations
@@ -46,7 +51,7 @@
 ```toml
 [dependencies]
 fusion-ai-cli-enhanced = "0.1.0"
-```
+```text
 
 ## Quick Start
 
@@ -55,24 +60,24 @@ use fusion_ai_cli_enhanced::AiCli;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = AiCli::new();
-    
+
     // Parse a command
     let cmd = cli.parse_command("build --release")?;
     println!("Command: {}", cmd.command);
-    
+
     // Get suggestions
     let suggestions = cli.suggest("bui")?;
     for sug in suggestions {
         println!("  - {} ({})", sug.command, sug.description);
     }
-    
+
     // Natural language parsing
     let nl_cmd = cli.parse_natural_language("compile the project")?;
     println!("Interpreted as: {}", nl_cmd.command);
-    
+
     Ok(())
 }
-```
+```text
 
 ## Usage Examples
 
@@ -89,7 +94,7 @@ assert!(cmd.bool_flags.contains(&"all".to_string()));
 // Natural language
 let cmd = cli.parse_natural_language("run my application in release mode")?;
 assert_eq!(cmd.command, "run");
-```
+```text
 
 ### Intelligent Suggestions
 
@@ -103,7 +108,7 @@ let suggestions = cli.suggest("bu")?;
 // Get completions for tab completion
 let completions = cli.complete("build --rel", 11)?;
 // Returns: ["--release", ...]
-```
+```text
 
 ### Error Explanations
 
@@ -121,23 +126,25 @@ for suggestion in &explanation.suggestions {
 }
 // "Check the spelling of your command"
 // "Run 'help' to see available commands"
-```
+```text
 
 ### Agentic Execution
 
 ```rust
+
 #[cfg(feature = "agentic-integration")]
+
 {
     let cli = AiCli::new();
-    
+
     // Execute with deep reasoning
     let result = cli.execute_with_reasoning(
         "optimize the build process for production"
     )?;
-    
+
     println!("{}", result);
 }
-```
+```text
 
 ## Features
 
@@ -148,7 +155,7 @@ Enable/disable features as needed:
 version = "0.1.0"
 default-features = false
 features = ["smart-suggestions", "natural-language"]
-```
+```text
 
 Available features:
 - `agentic-integration` - Enable deep reasoning (default)
@@ -158,7 +165,7 @@ Available features:
 
 ## Architecture
 
-```
+```text
 AiCli
 ├── CommandParser        - Parse and interpret commands
 ├── SuggestionEngine     - Generate intelligent suggestions
@@ -166,7 +173,7 @@ AiCli
 ├── ErrorHandler         - Enhanced error explanations
 ├── CompletionEngine     - Tab completion system
 └── AgenticCli          - Agentic reasoning integration
-```
+```text
 
 ## Natural Language Examples
 
@@ -189,7 +196,7 @@ let cli = AiCliBuilder::new()
     .with_completions(true)
     .with_agentic(true)
     .build();
-```
+```text
 
 ## Integration with Fusion CLI
 
@@ -211,7 +218,7 @@ match ai_cli.parse_command(&user_input) {
         print_error_help(explanation);
     }
 }
-```
+```text
 
 ## Performance
 
@@ -253,7 +260,7 @@ Dual-licensed under MIT OR Apache-2.0.
   year = {2025},
   url = {https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language}
 }
-```
+```text
 
 ## Acknowledgements
 
@@ -261,6 +268,6 @@ Built for the Fusion Programming Language ecosystem by Quantum Secure Technologi
 
 ---
 
-**Version**: 0.1.0  
-**Status**: Production Ready  
+**Version**: 0.1.0
+**Status**: Production Ready
 **Licence**: MIT OR Apache-2.0

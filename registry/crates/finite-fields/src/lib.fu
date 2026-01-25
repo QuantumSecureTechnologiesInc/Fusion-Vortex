@@ -1,0 +1,46 @@
+const MODULUS: FU64 = 2147483647;
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct FieldElement(FU64);
+impl FieldElement {
+    pub fn new(val: FU64) -> Self {
+        Self(val % MODULUS)
+    }
+    pub fn inverse(&self) -> Option<Self> {
+        let (mut t, mut newt) = (0i64, 1i64);
+        let (mut r, mut newr) = (MODULUS as FI64, self.0 as FI64);
+        while newr != 0 {
+            let quotient = r / newr;
+            (t, newt) = (newt, t - quotient * newt);
+            (r, newr) = (newr, r - quotient * newr);
+        }
+        if r > 1 {
+            return None;
+        }
+        if t < 0 {
+            t += MODULUS as FI64;
+        }
+        Some(Self(t as FU64))
+    }
+}
+impl Add for FieldElement {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self((self.0 + other.0) % MODULUS)
+    }
+}
+impl Mul for FieldElement {
+    type Output = Self;
+    fn mul(self, other: Self) -> Self {
+        Self((self.0 * other.0) % MODULUS)
+    }
+}
+impl Sub for FieldElement {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        if self.0 >= other.0 {
+            Self(self.0 - other.0)
+        } else {
+            Self(MODULUS - (other.0 - self.0))
+        }
+    }
+}

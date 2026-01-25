@@ -1,0 +1,14 @@
+// SOURCE: src/lsp/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/lsp/mod.rs - Updated LSP module with all components
+
+mod diagnostics;
+mod enhanced;
+mod inlay_hints;
+mod navigation;
+mod refactoring;
+mod semantic_tokens;
+mod server;
+
+// Re-export main types
+// Note: Re-exports currently unused but available for future LSP server implementation

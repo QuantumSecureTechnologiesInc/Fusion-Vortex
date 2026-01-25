@@ -1,0 +1,627 @@
+//! Parser for the Fusion compiler.
+use crate::ast::{self, Spanned};
+use crate::lexer::Token;
+use chumsky::prelude::*;
+/// Parser error type.
+type ParserError = Simple<Token>;
+fn type_parser() -> impl Parser<Token, ast::Type, Error = ParserError> + Clone {
+    recursive(|ty| {
+        let ident = select! {
+            Token::Identifier(name) => name
+        };
+        let path = ident
+            .clone()
+            .then(
+                just(Token::Colon)
+                    .then(just(Token::Colon))
+                    .ignore_then(ident.clone())
+                    .repeated(),
+            )
+            .map(|(head, tail)| {
+                let mut name = head;
+                for seg in tail {
+                    name = format!("{}::{}", name, seg);
+                }
+                name
+            });
+        let generics = just(Token::Less)
+            .ignore_then(
+                any()
+                    .try_map(|t, span| {
+                        if t == Token::Greater {
+                            Err(Simple::custom(span, "end of generics"))
+                        } else {
+                            Ok(t)
+                        }
+                    })
+                    .repeated()
+                    .then_ignore(just(Token::Greater)),
+            )
+            .or_not();
+        let base = select! {
+            Token::TypeInt => ast::Type::Int, Token::TypeBool => ast::Type::Bool,
+            Token::TypeString => ast::Type::String, Token::TypeVoid => ast::Type::Void,
+        }
+        .or(
+            path.then(generics)
+                .map(|(name, _)| ast::Type::Struct(name)),
+        )
+        .then(just(Token::Greater).repeated())
+        .map(|(ty, _)| ty);
+        let array = just(Token::LBracket)
+            .ignore_then(ty.clone())
+            .then_ignore(just(Token::Semicolon))
+            .then(
+                select! {
+                    Token::IntLiteral(i) => i as usize
+                },
+            )
+            .then_ignore(just(Token::RBracket))
+            .map(|(elem, len)| ast::Type::Array(Box::new(elem), len));
+        let pointer = just(Token::Star)
+            .repeated()
+            .then(base.or(array))
+            .foldr(|_, inner_ty| ast::Type::Pointer(Box::new(inner_ty)));
+        pointer
+    })
+}
+enum PostfixOp {
+    Index(Spanned<ast::Expression>),
+    Member(FString),
+    MethodCall { method: FString, args: FVec<Spanned<ast::Expression>> },
+}
+#[derive(Clone, Copy)]
+enum UnaryOp {
+    Deref,
+    AddrOf,
+    Await,
+}
+fn expr_parser() -> impl Parser<
+    Token,
+    Spanned<ast::Expression>,
+    Error = ParserError,
+> + Clone {
+    let ident = select! {
+        Token::Identifier(id) => id
+    };
+    recursive(|expr| {
+        let atom = select! {
+            Token::IntLiteral(i) => ast::Expression::IntLiteral(i), Token::True =>
+            ast::Expression::BoolLiteral(true), Token::False =>
+            ast::Expression::BoolLiteral(false), Token::StringLiteral(s) =>
+            ast::Expression::StringLiteral(s),
+        }
+            .map_with_span(|node, span| Spanned { node, span });
+        let array_list = expr
+            .clone()
+            .separated_by(just(Token::Comma))
+            .allow_trailing()
+            .map(ast::Expression::ArrayLiteral);
+        let array_repeat = expr
+            .clone()
+            .then_ignore(just(Token::Semicolon))
+            .then(
+                select! {
+                    Token::IntLiteral(i) => i as usize
+                },
+            )
+            .map(|(value, size)| ast::Expression::ArrayRepeat {
+                value: Box::new(value),
+                size,
+            });
+        let array_literal = array_repeat
+            .or(array_list)
+            .delimited_by(just(Token::LBracket), just(Token::RBracket))
+            .map_with_span(|node, span| Spanned { node, span });
+        let field_longhand = ident
+            .clone()
+            .then_ignore(just(Token::Colon))
+            .then(expr.clone());
+        let field_shorthand = ident
+            .clone()
+            .map_with_span(|name, span| {
+                let var_expr = Spanned {
+                    node: ast::Expression::Variable(name.clone()),
+                    span,
+                };
+                (name, var_expr)
+            });
+        let field_init = field_longhand.or(field_shorthand);
+        let struct_literal = ident
+            .clone()
+            .then(
+                field_init
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
+                    .delimited_by(just(Token::LBrace), just(Token::RBrace)),
+            )
+            .map(|(name, fields)| ast::Expression::StructLiteral {
+                name,
+                fields,
+            })
+            .map_with_span(|node, span| Spanned { node, span });
+        let variable = ident
+            .clone()
+            .map_with_span(|id, span| Spanned {
+                node: ast::Expression::Variable(id),
+                span,
+            });
+        let parenthesized = expr
+            .clone()
+            .delimited_by(just(Token::LParen), just(Token::RParen));
+        let call = ident
+            .then(
+                expr
+                    .clone()
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
+                    .delimited_by(just(Token::LParen), just(Token::RParen)),
+            )
+            .map(|(name, args)| ast::Expression::FunctionCall {
+                name,
+                args,
+            });
+        let primary = atom
+            .or(struct_literal)
+            .or(array_literal)
+            .or(call.map_with_span(|node, span| Spanned { node, span }))
+            .or(variable)
+            .or(parenthesized);
+        let postfix = primary
+            .clone()
+            .then(
+                expr
+                    .clone()
+                    .delimited_by(just(Token::LBracket), just(Token::RBracket))
+                    .map(PostfixOp::Index)
+                    .or(
+                        just(Token::Dot)
+                            .ignore_then(ident.clone())
+                            .then(
+                                expr
+                                    .clone()
+                                    .separated_by(just(Token::Comma))
+                                    .allow_trailing()
+                                    .delimited_by(just(Token::LParen), just(Token::RParen))
+                                    .or_not(),
+                            )
+                            .map(|(method, args)| {
+                                match args {
+                                    Some(args) => PostfixOp::MethodCall {
+                                        method,
+                                        args: args.into_iter().collect(),
+                                    },
+                                    None => PostfixOp::Member(method),
+                                }
+                            }),
+                    )
+                    .map_with_span(|op, span: std::ops::Range<FSize>| (op, span))
+                    .repeated(),
+            )
+            .foldl(|base, (op, span)| {
+                let span = base.span.start..span.end;
+                let node = match op {
+                    PostfixOp::Index(index) => {
+                        ast::Expression::Index {
+                            array: Box::new(base),
+                            index: Box::new(index),
+                        }
+                    }
+                    PostfixOp::Member(field) => {
+                        ast::Expression::MemberAccess {
+                            base: Box::new(base),
+                            field,
+                        }
+                    }
+                    PostfixOp::MethodCall { method, args } => {
+                        ast::Expression::MethodCall {
+                            base: Box::new(base),
+                            method,
+                            args,
+                        }
+                    }
+                };
+                Spanned { node, span }
+            });
+        let unary = just(Token::Star)
+            .to(UnaryOp::Deref)
+            .or(just(Token::Ampersand).to(UnaryOp::AddrOf))
+            .or(just(Token::KwAwait).to(UnaryOp::Await))
+            .repeated()
+            .then(postfix)
+            .foldr(|op, rhs| {
+                let span = rhs.span.start..rhs.span.end;
+                Spanned {
+                    node: match op {
+                        UnaryOp::Deref => ast::Expression::Dereference(Box::new(rhs)),
+                        UnaryOp::AddrOf => ast::Expression::AddressOf(Box::new(rhs)),
+                        UnaryOp::Await => rhs.node,
+                    },
+                    span,
+                }
+            });
+        let op = |token, op| just(token).to(op);
+        let product = unary
+            .clone()
+            .then(
+                op(Token::Star, ast::BinaryOp::Mul)
+                    .or(op(Token::Slash, ast::BinaryOp::Div))
+                    .then(unary)
+                    .repeated(),
+            )
+            .foldl(|lhs, (op, rhs)| {
+                let span = lhs.span.start..rhs.span.end;
+                Spanned {
+                    node: ast::Expression::BinaryOperation {
+                        op,
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                    },
+                    span,
+                }
+            });
+        let sum = product
+            .clone()
+            .then(
+                op(Token::Plus, ast::BinaryOp::Add)
+                    .or(op(Token::Minus, ast::BinaryOp::Sub))
+                    .then(product)
+                    .repeated(),
+            )
+            .foldl(|lhs, (op, rhs)| {
+                let span = lhs.span.start..rhs.span.end;
+                Spanned {
+                    node: ast::Expression::BinaryOperation {
+                        op,
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                    },
+                    span,
+                }
+            });
+        let compare = sum
+            .clone()
+            .then(
+                op(Token::Equals, ast::BinaryOp::Eq)
+                    .or(op(Token::NotEquals, ast::BinaryOp::Neq))
+                    .or(op(Token::Less, ast::BinaryOp::Lt))
+                    .or(op(Token::Greater, ast::BinaryOp::Gt))
+                    .then(sum)
+                    .repeated(),
+            )
+            .foldl(|lhs, (op, rhs)| {
+                let span = lhs.span.start..rhs.span.end;
+                Spanned {
+                    node: ast::Expression::BinaryOperation {
+                        op,
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                    },
+                    span,
+                }
+            });
+        compare
+            .clone()
+            .then(op(Token::Or, ast::BinaryOp::Or).then(compare).repeated())
+            .foldl(|lhs, (op, rhs)| {
+                let span = lhs.span.start..rhs.span.end;
+                Spanned {
+                    node: ast::Expression::BinaryOperation {
+                        op,
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                    },
+                    span,
+                }
+            })
+    })
+}
+fn stmt_parser() -> impl Parser<
+    Token,
+    Spanned<ast::Statement>,
+    Error = ParserError,
+> + Clone {
+    let ident = select! {
+        Token::Identifier(id) => id
+    };
+    let expr = expr_parser();
+    recursive(|stmt| {
+        let block = stmt
+            .clone()
+            .repeated()
+            .delimited_by(just(Token::LBrace), just(Token::RBrace));
+        let let_decl = just(Token::KwLet)
+            .ignore_then(ident.clone())
+            .then_ignore(just(Token::Colon))
+            .then(type_parser())
+            .then_ignore(just(Token::Assign))
+            .then(expr.clone())
+            .then_ignore(just(Token::Semicolon))
+            .map(|((name, ty), value)| ast::Statement::Let {
+                name,
+                ty,
+                value,
+            });
+        let assignment = expr
+            .clone()
+            .then_ignore(just(Token::Assign))
+            .then(expr.clone())
+            .then_ignore(just(Token::Semicolon))
+            .map(|(target, value)| ast::Statement::Assignment {
+                target,
+                value,
+            });
+        let ret = just(Token::KwReturn)
+            .ignore_then(expr.clone().or_not())
+            .then_ignore(just(Token::Semicolon))
+            .map(ast::Statement::Return);
+        let if_stmt = just(Token::KwIf)
+            .ignore_then(
+                expr.clone().delimited_by(just(Token::LParen), just(Token::RParen)),
+            )
+            .then(block.clone())
+            .then(just(Token::KwElse).ignore_then(block.clone()).or_not())
+            .map(|((cond, then_block), else_block)| ast::Statement::If {
+                cond,
+                then_block,
+                else_block,
+            });
+        let while_stmt = just(Token::KwWhile)
+            .ignore_then(
+                expr.clone().delimited_by(just(Token::LParen), just(Token::RParen)),
+            )
+            .then(block)
+            .map(|(cond, body)| ast::Statement::While {
+                cond,
+                body,
+            });
+        let expr_stmt = expr
+            .clone()
+            .then_ignore(just(Token::Semicolon))
+            .map(ast::Statement::Expression);
+        let_decl
+            .or(assignment)
+            .or(ret)
+            .or(if_stmt)
+            .or(while_stmt)
+            .or(expr_stmt)
+            .map_with_span(|node, span| Spanned { node, span })
+    })
+}
+enum TopLevel {
+    Function(ast::Function),
+    Extern(ast::ExternFunction),
+    Struct(ast::StructDefinition),
+    Use,
+    Mod,
+}
+fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
+    let ident = select! {
+        Token::Identifier(id) => id
+    };
+    let brace_block = recursive(|block| {
+        let non_brace = any().try_map(|t, span| {
+            if t == Token::LBrace || t == Token::RBrace {
+                Err(Simple::custom(span, "brace boundary"))
+            } else {
+                Ok(())
+            }
+        });
+        let inner = block.clone().map(|_| ()).or(non_brace);
+        just(Token::LBrace)
+            .ignore_then(inner.repeated())
+            .then_ignore(just(Token::RBrace))
+            .map(|_| ())
+    });
+    let visibility = just(Token::KwPub)
+        .ignore_then(
+            just(Token::LParen)
+                .ignore_then(any().repeated())
+                .then_ignore(just(Token::RParen))
+                .or_not(),
+        )
+        .or_not();
+    let stmt = stmt_parser();
+    let block = stmt.repeated().delimited_by(just(Token::LBrace), just(Token::RBrace));
+    let field_or_param = visibility
+        .clone()
+        .ignore_then(ident.clone())
+        .then_ignore(just(Token::Colon))
+        .then(type_parser());
+    let fields_or_params_list = field_or_param
+        .clone()
+        .separated_by(just(Token::Comma))
+        .allow_trailing()
+        .map(|fields| fields.into_iter().collect::<FVec<_>>());
+    let struct_def = visibility.clone()
+        .ignore_then(just(Token::KwStruct))
+        .ignore_then(ident.clone())
+        .then(
+            fields_or_params_list
+                .clone()
+                .delimited_by(just(Token::LBrace), just(Token::RBrace)),
+        )
+        .map(|(name, fields)| ast::StructDefinition { name, fields });
+    let return_type = just(Token::Colon)
+        .or(just(Token::Arrow))
+        .ignore_then(type_parser())
+        .or_not()
+        .map(|t| t.unwrap_or(ast::Type::Void));
+    let params_list = field_or_param
+        .clone()
+        .separated_by(just(Token::Comma))
+        .map(|fields| fields.into_iter().collect::<FVec<_>>());
+    let params_list_trailing = field_or_param
+        .separated_by(just(Token::Comma))
+        .allow_trailing()
+        .map(|fields| fields.into_iter().collect::<FVec<_>>());
+    let params_then_variadic = params_list
+        .then_ignore(just(Token::Comma))
+        .then_ignore(just(Token::Ellipsis))
+        .map(|params| (params, true));
+    let params_ellipsis_only = just(Token::Ellipsis).map(|_| (Vec::new(), true));
+    let params_no_variadic = params_list_trailing.map(|params| (params, false));
+    let params_with_variadic = params_then_variadic
+        .or(params_ellipsis_only)
+        .or(params_no_variadic)
+        .or_not()
+        .map(|opt| opt.unwrap_or_else(|| (Vec::new(), false)));
+    let extern_func = visibility.clone()
+        .ignore_then(just(Token::KwExtern))
+        .ignore_then(just(Token::KwFn))
+        .ignore_then(ident.clone())
+        .then(
+            params_with_variadic.delimited_by(just(Token::LParen), just(Token::RParen)),
+        )
+        .then(return_type.clone())
+        .then_ignore(just(Token::Semicolon))
+        .map(|((name, (params, is_variadic)), return_type)| ast::ExternFunction {
+            name,
+            params,
+            return_type,
+            is_variadic,
+        });
+    let function = visibility.clone()
+        .ignore_then(just(Token::KwAsync).or_not())
+        .ignore_then(just(Token::KwFn))
+        .ignore_then(ident.clone())
+        .then(
+            fields_or_params_list.delimited_by(just(Token::LParen), just(Token::RParen)),
+        )
+        .then(return_type)
+        .then(
+            just(Token::KwWhere)
+                .ignore_then(
+                    any()
+                        .try_map(|t, span| {
+                            if t == Token::LBrace {
+                                Err(Simple::custom(span, "where clause ended"))
+                            } else {
+                                Ok(t)
+                            }
+                        })
+                        .repeated(),
+                )
+                .or_not(),
+        )
+        .then(block)
+        .map(|((((name, params), return_type), _), body)| ast::Function {
+            name,
+            params,
+            return_type,
+            body,
+        });
+    let use_decl = visibility.clone()
+        .ignore_then(just(Token::KwUse))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::Semicolon {
+                        Err(Simple::custom(span, "end of use"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(just(Token::Semicolon)),
+        )
+        .map(|_| TopLevel::Use);
+    let mod_decl = visibility.clone()
+        .ignore_then(just(Token::KwMod))
+        .ignore_then(ident.clone())
+        .then_ignore(just(Token::Semicolon))
+        .map(|_| TopLevel::Mod);
+    let mod_block = visibility.clone()
+        .ignore_then(just(Token::KwMod))
+        .ignore_then(ident.clone())
+        .then_ignore(brace_block.clone())
+        .map(|_| TopLevel::Mod);
+    let impl_decl = visibility
+        .clone()
+        .ignore_then(just(Token::KwImpl))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "end of impl header"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(brace_block.clone()),
+        )
+        .map(|_| TopLevel::Mod);
+    let trait_decl = visibility
+        .clone()
+        .ignore_then(just(Token::KwTrait))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "end of trait header"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(brace_block.clone()),
+        )
+        .map(|_| TopLevel::Mod);
+    let attributes = just(Token::Hash)
+        .ignore_then(just(Token::LBracket))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::RBracket {
+                        Err(Simple::custom(span, "end of attribute"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(just(Token::RBracket)),
+        )
+        .repeated();
+    let top_level_item = extern_func
+        .map(TopLevel::Extern)
+        .or(function.map(TopLevel::Function))
+        .or(struct_def.map(TopLevel::Struct))
+        .or(use_decl)
+        .or(mod_decl)
+        .or(mod_block)
+        .or(impl_decl)
+        .or(trait_decl);
+    let top_level_item = attributes.ignore_then(top_level_item);
+    top_level_item
+        .repeated()
+        .map(|items| {
+            let mut functions = Vec::new();
+            let mut externs = Vec::new();
+            let mut structs = Vec::new();
+            for item in items {
+                match item {
+                    TopLevel::Function(f) => functions.push(f),
+                    TopLevel::Extern(e) => externs.push(e),
+                    TopLevel::Struct(s) => structs.push(s),
+                    TopLevel::Use => {}
+                    TopLevel::Mod => {}
+                }
+            }
+            ast::Program {
+                functions,
+                externs,
+                structs,
+            }
+        })
+        .then_ignore(end())
+}
+/// Parses source text into an AST program.
+fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
+    let tokens = crate::lexer::lex(input);
+    let token_stream = chumsky::Stream::from_iter(
+        tokens.len()..tokens.len(),
+        tokens.into_iter(),
+    );
+    program_parser().parse_recovery(token_stream)
+}

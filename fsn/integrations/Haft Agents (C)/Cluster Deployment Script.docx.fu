@@ -1,0 +1,39 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/Cluster Deployment Script.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// #!/bin/bash
+// 
+// # FUSION HAFT CLUSTER DEPLOYMENT
+// # Usage: ./deploy.sh
+// 
+// # 1. Build
+// echo &quot;[Deploy] Building Production Binaries...&quot;
+// make -j4
+// 
+// # 2. Trap Signals for Cleanup
+// trap &quot;echo '[Deploy] Stopping Cluster...'; kill 0&quot; SIGINT SIGTERM EXIT
+// 
+// # 3. Launch Nodes in Background
+// echo &quot;[Deploy] Launching Nexus (Router)...&quot;
+// ./haft_nexus &amp;
+// NEXUS_PID=$!
+// sleep 1
+// 
+// echo &quot;[Deploy] Launching Vault (Storage)...&quot;
+// ./haft_vault --cap 2097152 &amp; # 2MB
+// VAULT_PID=$!
+// sleep 1
+// 
+// echo &quot;[Deploy] Launching Solver Swarm (2 Nodes)...&quot;
+// ./haft_solver --id SOLVER-ALPHA --cycles 1000 &amp;
+// ./haft_solver --id SOLVER-BETA  --cycles 1000 &amp;
+// sleep 1
+// 
+// echo &quot;[Deploy] Launching Sentinel (Warden)...&quot;
+// ./haft_sentinel &amp;
+// 
+// # 4. Wait
+// echo &quot;[Deploy] Cluster Active. Press Ctrl+C to shutdown.&quot;
+// wait
+// 

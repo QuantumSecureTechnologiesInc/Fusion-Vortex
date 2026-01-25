@@ -1,0 +1,14 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Sandbox Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_sec_sandbox"
+// version = "0.1.0"
+// edition = "2021"
+// description = "OS-level sandboxing (Seccomp/AppArmor) and capability management"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// thiserror = { workspace = true }
+// # In prod: syscalls/seccomp bindings

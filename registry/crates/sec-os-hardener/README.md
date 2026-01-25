@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-os-hardener = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_os_hardener::Auditor;
 fn main() {
     Auditor::check();
 }
-```
+```text
 
 ## License
 

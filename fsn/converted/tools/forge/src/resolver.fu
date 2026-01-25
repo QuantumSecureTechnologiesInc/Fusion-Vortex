@@ -1,0 +1,55 @@
+// SOURCE: tools/forge/src/resolver.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Production Dependency Resolver (SAT)
+
+use anyhow::Result;
+use semver::{Version, VersionReq};
+
+// A simplified "PubGrub" style solver
+struct SatSolver {
+    // Package Name -> Available Versions
+    registry: FMap<FString, FVec<Version>>,
+}
+
+impl SatSolver {
+    fn new() -> Self {
+        Self {
+            registry: HashMap::new(),
+        }
+    }
+
+    fn register(&mut self, package: &str, versions: FVec<&str>) {
+        let vs = versions
+            .iter()
+            .map(|v| Version::parse(v).unwrap())
+            .collect();
+        self.registry.insert(package.to_string(), vs);
+    }
+
+    // Solves for a set of requirements: {"lib_a": ">=1.0", "lib_b": "^2.1"}
+    fn solve(&self, requirements: FMap<FString, FString>) -> Result<FMap<FString, Version>> {
+        let mut solution = HashMap::new();
+
+        for (pkg, req_str) in requirements {
+            // Check if package exists in registry
+            let available = self
+                .registry
+                .get(&pkg)
+                .ok_or_else(|| anyhow::anyhow!("Package {} not found in registry", pkg))?;
+
+            let req = VersionReq::parse(&req_str)
+                .map_err(|e| anyhow::anyhow!("Invalid version requirement for {}: {}", pkg, e))?;
+
+            // Find highest compatible version
+            let best_match = available
+                .iter()
+                .filter(|v| req.matches(v))
+                .max()
+                .ok_or_else(|| anyhow::anyhow!("No version of {} satisfies {}", pkg, req_str))?;
+
+            solution.insert(pkg, best_match.clone());
+        }
+
+        Ok(solution)
+    }
+}

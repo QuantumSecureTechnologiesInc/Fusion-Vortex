@@ -1,0 +1,15 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn main() -> int {
+    let arr: [int; 5] = [10, 20, 30, 40, 50];
+    let val: int = arr[2];
+    printf("arr[2] = %d\n", val);
+
+    arr[3] = 100;
+    printf("arr[3] after write = %d\n", arr[3]);
+
+    let ptr: *int = &arr[0];
+    printf("Value at start of array: %d\n", *ptr);
+
+    return 0;
+}

@@ -1,7 +1,7 @@
 # Fusion Java Interop
 
-**Version:** 0.2.0  
-**Type:** Language Bridge  
+**Version:** 0.2.0
+**Type:** Language Bridge
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let jvm = Jvm::new()?;
 let string_class = jvm.find_class("java/util/ArrayList")?;
 let list = string_class.new_object()?;
 list.call_method("add", &["Hello from Fusion".into()])?;
-```
+```text
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 # Fusion LLM Logits Processor
 
-**Version:** 0.2.0  
-**Type:** Generation Pipeline  
+**Version:** 0.2.0
+**Type:** Generation Pipeline
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let mut processor = LogitsProcessor::new();
 processor.push(RepetitionPenalty::new(1.1));
 
 let processed_logits = processor.apply(logits, &input_ids);
-```
+```text
 
 ## Dependencies
 

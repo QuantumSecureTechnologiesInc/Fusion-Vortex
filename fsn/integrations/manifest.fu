@@ -1,0 +1,10 @@
+// integrations/manifest.fsn
+// Integration inventory for Source Files/Intergrations.
+
+const SOURCE_ROOT: FString = "Source Files/Intergrations";
+const FSN_MIRROR: FString = "fsn/integrations";
+const CONVERTED_FILES: FInt = 563;
+
+fn note() -> FString {
+    FString::from("Each file is mirrored into FSN with content preserved as comments for traceability.")
+}

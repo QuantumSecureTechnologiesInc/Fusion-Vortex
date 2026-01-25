@@ -34,15 +34,19 @@ We are committed to providing a welcoming and inclusive environment for all cont
    - Add tests for new functionality
    - Update documentation
 4. **Test your changes**:
+
    ```bash
    cargo test --workspace
    cargo clippy --workspace -- -D warnings
    cargo fmt --all --check
-   ```
+```text
+
 5. **Commit with clear messages**:
+
    ```bash
    git commit -m "feat: Add amazing feature"
-   ```
+```text
+
 6. **Push to your fork**: `git push origin feature/amazing-feature`
 7. **Open a Pull Request**
 
@@ -60,30 +64,37 @@ We are committed to providing a welcoming and inclusive environment for all cont
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion.git
 cd Fusion
 cargo build --workspace --release
-```
+```text
 
 ### Running Tests
 
 ```bash
+
 # All tests
+
 cargo test --workspace
 
 # Specific crate
+
 cargo test --package fusion_runtime_core
 
 # With output
+
 cargo test --workspace -- --nocapture
-```
+```text
 
 ### Running Benchmarks
 
 ```bash
+
 # All benchmarks
+
 cargo bench --workspace
 
 # Specific benchmark
+
 cargo bench --package fusion_runtime_core
-```
+```text
 
 ## Code Style
 
@@ -128,7 +139,7 @@ cargo bench --package fusion_runtime_core
 pub fn allocate(&self, size: usize, device: DeviceType) -> DeviceMemory {
     // Implementation
 }
-```
+```text
 
 ## Testing Guidelines
 
@@ -139,10 +150,12 @@ pub fn allocate(&self, size: usize, device: DeviceType) -> DeviceMemory {
 - Name tests descriptively: `test_feature_behavior`
 
 ```rust
+
 #[cfg(test)]
+
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_memory_allocation() {
         let mem_mgr = MemoryManager::new(&config);
@@ -150,7 +163,7 @@ mod tests {
         assert_eq!(allocation.size, 1024);
     }
 }
-```
+```text
 
 ### Integration Tests
 
@@ -161,14 +174,16 @@ mod tests {
 ### Async Tests
 
 ```rust
+
 #[tokio::test]
+
 async fn test_task_spawn() {
     let runtime = Runtime::new();
     let handle = runtime.spawn(async { 42 });
     let result = handle.await;
     assert_eq!(result, Ok(42));
 }
-```
+```text
 
 ## Commit Message Format
 
@@ -180,7 +195,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 <body>
 
 <footer>
-```
+```text
 
 **Types**:
 - `feat`: New feature
@@ -201,7 +216,7 @@ Implemented three-tier priority queue system for
 heterogeneous scheduling across CPU/GPU/QPU devices.
 
 Closes #123
-```
+```text
 
 ```text
 fix(memory): Prevent buffer pool exhaustion
@@ -210,7 +225,7 @@ Added bounds checking to buddy allocator to prevent
 allocation failures when pool is near capacity.
 
 Fixes #456
-```
+```text
 
 ## Pull Request Checklist
 
@@ -248,7 +263,7 @@ docs/
 ├── design/          # Architecture documents
 ├── references/      # API references
 └── roadmap/         # Planning documents
-```
+```text
 
 ## Release Process
 

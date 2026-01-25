@@ -1,0 +1,171 @@
+use super::Module;
+use crate::ml::tensor::Tensor;
+use crate::ml::MLError;
+use crate::quantum::circuit::CircuitBuilder;
+use crate::quantum::simulator::QuantumSimulator;
+/// Linear (Dense) Layer
+/// y = xW + b
+struct Linear {
+    /// Weights matrix (in_features, out_features)
+    pub weights: Tensor,
+    /// Bias vector (1, out_features)
+    pub bias: Option<Tensor>,
+    /// Training mode
+    training: FBool,
+}
+impl Linear {
+    /// Create new linear layer
+    pub fn new(in_features: FSize, out_features: FSize, bias: FBool) -> Self {
+        let weights = Tensor::ones(vec![in_features, out_features]);
+        let bias_tensor = if bias {
+            Some(Tensor::zeros(vec![1, out_features]))
+        } else {
+            None
+        };
+        Self {
+            weights,
+            bias: bias_tensor,
+            training: true,
+        }
+    }
+}
+impl Module for Linear {
+    fn forward(&self, input: &Tensor) -> Result<Tensor, MLError> {
+        let output = input.matmul(&self.weights)?;
+        if let Some(ref b) = self.bias {
+            if b.shape[1] != output.shape[1] {
+                return Err(MLError::DimensionMismatch {
+                    expected: output.shape.clone(),
+                    actual: b.shape.clone(),
+                });
+            }
+            let batch_size = output.shape[0];
+            let out_features = output.shape[1];
+            let mut new_data = Vec::with_capacity(batch_size * out_features);
+            for i in 0..batch_size {
+                for j in 0..out_features {
+                    let val = output.get(&[i, j]).unwrap();
+                    let bias_val = b.get(&[0, j]).unwrap();
+                    new_data.push(val + bias_val);
+                }
+            }
+            return Tensor::new(new_data, output.shape.clone());
+        }
+        Ok(output)
+    }
+    fn parameters(&self) -> FVec<&Tensor> {
+        let mut params = vec![& self.weights];
+        if let Some(ref b) = self.bias {
+            params.push(b);
+        }
+        params
+    }
+    fn train(&mut self, mode: FBool) {
+        self.training = mode;
+    }
+}
+/// Rectified Linear Unit (ReLU) Activation
+struct ReLU;
+impl Module for ReLU {
+    fn forward(&self, input: &Tensor) -> Result<Tensor, MLError> {
+        Ok(input.map(|x| x.max(0.0)))
+    }
+    fn parameters(&self) -> FVec<&Tensor> {
+        Vec::new()
+    }
+    fn train(&mut self, _mode: FBool) {}
+}
+/// Interwoven Hybrid Quantum Layer
+///
+/// This layer demonstrates the Fusion interwoven philosophy.
+/// It takes classical data, encodes it into a quantum state,
+/// processes it with a Variational Quantum Circuit (VQC),
+/// and measures the result back into classical data.
+///
+/// Pipeline: `Input Tensor -> Angle Encoding -> PQC -> Measurement -> Output Tensor`
+struct HybridQuantumLayer {
+    /// Number of qubits (determines input/output size)
+    num_qubits: FSize,
+    /// Variational parameters (classical optimization variables)
+    pub params: Tensor,
+    /// Quantum QuantumSimulator
+    simulator: QuantumSimulator,
+    /// Training mode
+    training: FBool,
+}
+impl HybridQuantumLayer {
+    pub fn new(num_qubits: FSize) -> Self {
+        Self {
+            num_qubits,
+            params: Tensor::ones(vec![num_qubits]),
+            simulator: QuantumSimulator::new(num_qubits),
+            training: true,
+        }
+    }
+}
+impl Module for HybridQuantumLayer {
+    fn forward(&self, input: &Tensor) -> Result<Tensor, MLError> {
+        let batch_size = input.shape()[0];
+        let features = input.shape()[1];
+        if features != self.num_qubits {
+            return Err(
+                MLError::InvalidShape(
+                    format!(
+                        "Input features {} must match qubit count {}", features, self
+                        .num_qubits
+                    ),
+                ),
+            );
+        }
+        let mut output_data = Vec::with_capacity(batch_size * self.num_qubits);
+        for b in 0..batch_size {
+            let _start = b * features;
+            let mut circuit = CircuitBuilder::new(self.num_qubits);
+            for q in 0..self.num_qubits {
+                if let Some(val) = input.get(&[b, q]) {
+                    let angle = *val as f64;
+                    let _ = circuit.ry(q, angle);
+                }
+            }
+            for q in 0..self.num_qubits {
+                if q < self.num_qubits - 1 {
+                    let _ = circuit.cnot(q, q + 1);
+                }
+                if let Some(p_val) = self.params.get(&[q]) {
+                    let _ = circuit.rx(q, *p_val as f64);
+                }
+            }
+            let mut sim = QuantumSimulator::new(self.num_qubits);
+            let _ = sim.run(&circuit);
+            let probs = sim.measure();
+            for bit in probs {
+                output_data.push(bit as f32);
+            }
+        }
+        Tensor::new(output_data, vec![batch_size, self.num_qubits])
+    }
+    fn parameters(&self) -> FVec<&Tensor> {
+        vec![& self.params]
+    }
+    fn train(&mut self, mode: FBool) {
+        self.training = mode;
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_linear_forward() {
+        let linear = Linear::new(2, 2, false);
+        let input = Tensor::ones(vec![1, 2]);
+        let output = linear.forward(&input).unwrap();
+        assert_eq!(output.shape(), & vec![1, 2]);
+    }
+    #[test]
+    fn test_hybrid_quantum_layer() {
+        let layer = HybridQuantumLayer::new(2);
+        let input = Tensor::zeros(vec![1, 2]);
+        let output = layer.forward(&input).unwrap();
+        assert_eq!(output.shape(), & vec![1, 2]);
+    }
+}

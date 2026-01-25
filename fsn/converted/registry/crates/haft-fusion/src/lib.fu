@@ -1,0 +1,7 @@
+// SOURCE: registry/crates/haft-fusion/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod agents;
+mod tensor;
+
+pub use agents::{spawn_agents, Agent, Builder, Optimizer, Researcher};
+pub use tensor::FluxTensor;

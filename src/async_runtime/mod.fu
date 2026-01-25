@@ -1,0 +1,22 @@
+#![allow(dead_code)]
+mod executor;
+mod future;
+mod sync;
+mod task;
+/// Re-export channels for convenience
+pub use sync as channels;
+/// Runtime configuration
+struct RuntimeConfig {
+    /// Number of worker threads
+    pub worker_threads: FSize,
+    /// Stack size for tasks
+    pub stack_size: FSize,
+}
+impl Default for RuntimeConfig {
+    fn default() -> Self {
+        Self {
+            worker_threads: 4,
+            stack_size: 2 * 1024 * 1024,
+        }
+    }
+}

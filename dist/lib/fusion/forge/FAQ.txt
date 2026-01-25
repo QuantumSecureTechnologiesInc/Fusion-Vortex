@@ -1,0 +1,138 @@
+FUSION FORGE - FREQUENTLY ASKED QUESTIONS (FAQ)
+===============================================
+
+INSTALLATION & SETUP
+--------------------
+
+1. Q: What is Fusion Forge?
+   A: Fusion Forge is a polyglot build system and package manager for the Fusion programming language ecosystem. It allows you to build projects that combine Rust, C++, Python, JavaScript, and TypeScript in a single unified workflow.
+
+2. Q: How do I install Fusion Forge?
+   A: Navigate to the forge directory and run:
+      cd "C:\Projects\Fusion - Programming Language\tools\forge"
+      cargo build --release
+      The compiled binary will be at target/release/forge.exe
+
+3. Q: What are the system requirements?
+   A: You need Windows/Linux/macOS, Rust toolchain (rustc/cargo), and at least 4GB RAM (8GB recommended). Specific language toolchains (clang++, python3, bun/npm) are only required if you use those languages.
+
+4. Q: Do I need all language toolchains installed?
+   A: No, only install the toolchains for languages you plan to use. Rust is recommended as the primary language for all Fusion projects.
+
+5. Q: How do I verify my installation?
+   A: Run `forge --version` or `forge --help` to confirm the binary is working correctly.
+
+GETTING STARTED
+---------------
+
+6. Q: How do I create a new project?
+   A: Use: forge new my-project --target supernova
+      This creates a new project directory with a Fusion.toml manifest and basic structure.
+
+7. Q: What are the available runtime targets?
+   A: Four targets are available:
+      - v1: Native-only builds (Rust + C++)
+      - nebula: Strict WASM sandbox (Rust only)
+      - nebula_2_1: WASM with host access (Rust + C++)
+      - supernova: Full hybrid mesh (all languages)
+
+8. Q: How do I build my project?
+   A: Navigate to your project directory and run: forge build
+      Add --release flag for optimized builds: forge build --release
+
+9. Q: What is Fusion.toml?
+   A: It's the manifest file that defines your project configuration, including package metadata, dependencies, runtime target, and language-specific settings.
+
+10. Q: Can I use multiple languages in one project?
+    A: Yes! That's the core feature of Forge. You can combine Rust, C++, Python, JavaScript, and TypeScript in a single project.
+
+CONFIGURATION
+-------------
+
+11. Q: How do I add C++ code to my project?
+    A: Add a [languages.cpp] section to Fusion.toml:
+       [languages.cpp]
+       standard = "c++20"
+       sources = ["src/native/physics.cpp"]
+       include_dirs = ["include/"]
+
+12. Q: How do I add Python dependencies?
+    A: Add a [languages.python] section:
+       [languages.python]
+       requirements = ["numpy", "pytorch"]
+       entry_point = "src/ai/model.py"
+
+13. Q: How do I configure TypeScript?
+    A: Add a [languages.typescript] section:
+       [languages.typescript]
+       manager = "bun"
+       packages = { typescript = "^5.0" }
+       config_file = "tsconfig.json"
+
+14. Q: What package managers are supported for JavaScript/TypeScript?
+    A: npm, bun, and pnpm are supported. Specify via the "manager" field in your config.
+
+15. Q: Can I specify different build targets for different environments?
+    A: Yes, modify the runtime_target field in Fusion.toml or create separate manifest files for different environments.
+
+LANGUAGE SUPPORT
+----------------
+
+16. Q: Which languages does Forge support?
+    A: Rust, C++, Python, JavaScript, and TypeScript.
+
+17. Q: Can I use C++ in all runtime targets?
+    A: No, C++ is blocked in Nebula v2.0 (strict sandbox) but works in v1, Nebula 2.1, and Supernova.
+
+18. Q: Is Python supported in all targets?
+    A: No, Python is ONLY supported in Supernova (v3.0) due to runtime requirements.
+
+19. Q: What about JavaScript and TypeScript?
+    A: Both are blocked in v1 but work in Nebula v2.0+, Nebula 2.1, and Supernova.
+
+20. Q: Does Forge handle cross-language dependencies?
+    A: Yes, Forge automatically determines the correct build order: C++ → Rust → Python/JS/TS.
+
+TROUBLESHOOTING
+---------------
+
+21. Q: I get "Fusion.toml not found" error. What's wrong?
+    A: Make sure you're running `forge build` from your project root directory where Fusion.toml is located.
+
+22. Q: Build fails with "Cargo not found". How do I fix this?
+    A: Install Rust via rustup: https://rustup.rs/
+
+23. Q: I get "Clang++ not found" when building C++ code.
+    A: Install LLVM/Clang toolchain for your platform.
+
+24. Q: Build fails with "paging file too small" error.
+    A: Increase Windows virtual memory: System Properties → Advanced → Performance Settings → Advanced → Virtual Memory. Set initial size to 8192 MB and maximum to 16384 MB.
+
+25. Q: Can I build with fewer parallel jobs to save memory?
+    A: Yes, use: cargo build -j 1
+       This reduces memory usage but increases build time.
+
+ADVANCED USAGE
+--------------
+
+26. Q: How does Forge handle FFI (Foreign Function Interface)?
+    A: Forge uses bindgen for C++→Rust bindings and generates Python stubs for type hints. FFI generation is automatic when cross-language dependencies are detected.
+
+27. Q: Does Forge support build caching?
+    A: Yes, Forge uses SHA256-based file hashing to detect changes and skip unnecessary rebuilds. Cache is stored in .forge/cache/.
+
+28. Q: How does dependency resolution work?
+    A: Forge uses a SAT solver (similar to PubGrub) for version constraint resolution, ensuring compatible versions across all dependencies.
+
+29. Q: Can I customize the build pipeline?
+    A: Currently, the build pipeline follows a fixed order (C++ → Rust → Scripts). Custom build steps can be added via pre/post-build hooks (planned feature).
+
+30. Q: Where can I find more documentation?
+    A: Check the README.md in the forge directory, or visit the Fusion language documentation at the project repository.
+
+SUPPORT
+-------
+For issues, feature requests, or contributions, visit:
+https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
+
+Last Updated: January 2026

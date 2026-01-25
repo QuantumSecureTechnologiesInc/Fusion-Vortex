@@ -1,0 +1,43 @@
+// SOURCE: cmd/reactor-cli/src/schema.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// reactor_cli/src/schema.rs
+use clap::Command;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct CliSchema {
+    pub name: FString,
+    pub args: FVec<ArgSchema>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ArgSchema {
+    pub name: FString,
+    pub help: FString,
+    pub required: FBool,
+    pub short: Option<char>,
+    pub long: Option<FString>,
+}
+
+impl CliSchema {
+    fn from_command(cmd: &Command) -> Self {
+        let args = cmd
+            .get_arguments()
+            .map(|a| ArgSchema {
+                name: a.get_id().to_string(),
+                help: a
+                    .get_help()
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| FString::new()),
+                required: a.is_required_set(),
+                short: a.get_short(),
+                long: a.get_long().map(|s| s.to_string()),
+            })
+            .collect();
+
+        Self {
+            name: cmd.get_name().to_string(),
+            args,
+        }
+    }
+}

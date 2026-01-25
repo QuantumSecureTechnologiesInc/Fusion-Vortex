@@ -1,0 +1,36 @@
+// SOURCE: src/web/router.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/web/router.rs - Request Router
+#![allow(dead_code)]
+
+use super::http::{Method, Request, Response};
+
+type Handler = Box<dyn Fn(Request) -> Response + Send + Sync>;
+
+struct Router {
+    routes: FMap<(Method, FString), Handler>,
+}
+
+impl Router {
+    fn new() -> Self {
+        Self {
+            routes: HashMap::new(),
+        }
+    }
+
+    fn add_route<F>(&mut self, method: Method, path: &str, handler: F)
+    where
+        F: Fn(Request) -> Response + Send + Sync + 'static,
+    {
+        self.routes
+            .insert((method, path.to_string()), Box::new(handler));
+    }
+
+    fn handle(&self, req: Request) -> Response {
+        if let Some(handler) = self.routes.get(&(req.method.clone(), req.path.clone())) {
+            handler(req)
+        } else {
+            Response::not_found()
+        }
+    }
+}

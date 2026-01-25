@@ -119,7 +119,7 @@ Found existing foundation files:
 
 Updated `Cargo.toml` with LSP framework:
 
-```
+```text
 
 # Phase 3: Language Server Protocol (LSP)
 
@@ -128,7 +128,7 @@ tokio = { version = "1.35", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 async-trait = "0.1"
-```
+```text
 
 **Result**: All dependencies fetched successfully
 
@@ -140,7 +140,7 @@ Created `src/lsp/` module:
 src/lsp/
 ├── mod.rs       (Module exports)
 └── server.rs    (LSP server implementation - 326 lines)
-```
+```text
 
 **Exported**: `pub use server::FusionLanguageServer;`
 
@@ -205,7 +205,7 @@ pub async fn run_server() {
 
     Server::new(stdin, stdout, socket).serve(service).await;
 }
-```
+```text
 
 **Capabilities Reported**:
 
@@ -219,7 +219,7 @@ pub async fn run_server() {
 
 **Test Suite**: `src/lsp/server.rs::tests`
 
-```
+```text
 
 #[tokio::test]
 
@@ -229,7 +229,7 @@ async fn test_lsp_creation() {
     ).finish();
     drop(service);
 }
-```
+```text
 
 **Result**: ✅ `cargo test` passes
 
@@ -246,7 +246,7 @@ async fn test_lsp_creation() {
 ```text
    Compiling fusion_lang v0.1.0
    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.76s
-```
+```text
 
 **Warnings**: 1 (unused `symbol_index` field - reserved for future symbol navigation)
 

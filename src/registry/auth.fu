@@ -1,0 +1,23 @@
+#![allow(dead_code)]
+use super::RegistryError;
+struct AuthManager;
+impl AuthManager {
+    pub fn new() -> Self {
+        Self
+    }
+    pub fn authenticate(&self, _token: &str) -> Result<FString, RegistryError> {
+        Ok("user_id".to_string())
+    }
+    pub fn authorize(
+        &self,
+        _user_id: &str,
+        _action: &str,
+    ) -> Result<FBool, RegistryError> {
+        Ok(true)
+    }
+}
+impl Default for AuthManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

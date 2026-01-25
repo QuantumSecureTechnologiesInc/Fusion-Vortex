@@ -27,7 +27,7 @@ struct User {
     email: String,
     sign_in_count: u64,
 }
-```
+```text
 
 This definition creates a blueprint. It tells the compiler what a `User` looks like, but doesn't create any actual data yet.
 
@@ -44,7 +44,7 @@ fn main() {
         sign_in_count: 1,
     }
 }
-```
+```text
 
 The order of fields doesn't matter.
 
@@ -54,7 +54,7 @@ We use **dot notation** to read specific values from a struct instance.
 
 ```fusion
     println!("User email: {}", user1.email)
-```
+```text
 
 If the instance is mutable, we can change a value by using the dot notation and assigning into a particular field.
 
@@ -69,7 +69,7 @@ fn main() {
 
     user1.email = String::from("another@example.com")
 }
-```
+```text
 
 **Note**: The entire instance must be mutable. Fusion doesn't allow you to mark only certain fields as mutable.
 
@@ -86,7 +86,7 @@ fn build_user(email: String, username: String) -> User {
         sign_in_count: 1,
     }
 }
-```
+```text
 
 Fusion provides the **field init shorthand** syntax:
 
@@ -99,7 +99,7 @@ fn build_user(email: String, username: String) -> User {
         sign_in_count: 1,
     }
 }
-```
+```text
 
 ### 5.1.5 Struct Update Syntax
 
@@ -108,13 +108,13 @@ Often, you want to create a new instance of a struct that includes most of the v
 ```fusion
 fn main() {
     let user1 = build_user(String::from("a@b.com"), String::from("user1"))
-    
+
     let user2 = User {
         email: String::from("another@example.com"),
         ..user1 // "Fill the rest of the fields from user1"
     }
 }
-```
+```text
 
 Note that the struct update syntax *moves* data. `user1.username` is moved into `user2`. If `user1` contained fields implementing `Copy` (like `bool` or `u64`), those would be copied. But since `String` is not `Copy`, `user1` can no longer be used as a whole after this operation (though `user1.email` is still valid).
 
@@ -133,11 +133,11 @@ struct Point(i32, i32, i32)
 fn main() {
     let black = Color(0, 0, 0)
     let origin = Point(0, 0, 0)
-    
+
     // Access by index
     let r = black.0
 }
-```
+```text
 
 Even though `black` and `origin` are made of the same types (`i32` x 3), they are **different types**. A function taking a `Color` parameter cannot accept a `Point`.
 
@@ -147,7 +147,7 @@ You can define structs without any fields! These are called **unit-like structs*
 
 ```fusion
 struct TypeCheckPass
-```
+```text
 
 ---
 
@@ -169,12 +169,12 @@ impl Rectangle {
     fn area(&self) -> u32 {
         self.width * self.height
     }
-    
+
     fn can_hold(&self, other: &Rectangle) -> bool {
         self.width > other.width && self.height > other.height
     }
 }
-```
+```text
 
 The `impl` (implementation) block tells the compiler "these functions belong to Rectangle".
 
@@ -188,14 +188,14 @@ The `impl` (implementation) block tells the compiler "these functions belong to 
 fn main() {
     let rect1 = Rectangle { width: 30, height: 50 };
     let rect2 = Rectangle { width: 10, height: 40 };
-    
+
     println!("The area is {}", rect1.area())
-    
+
     if rect1.can_hold(&rect2) {
         println!("Rect1 can hold Rect2")
     }
 }
-```
+```text
 
 Fusion simplifies method calling with **automatic referencing and dereferencing**. You don't need to write `(&rect1).area()`. Fusion automatically adds `&`, `&mut`, or `*` so that `object` matches the signature of the method.
 
@@ -212,18 +212,18 @@ impl Rectangle {
     fn new(width: u32, height: u32) -> Rectangle {
         Rectangle { width, height }
     }
-    
+
     fn square(size: u32) -> Rectangle {
         Rectangle { width: size, height: size }
     }
 }
-```
+```text
 
 To call this, we use the `::` syntax with the struct name:
 
 ```fusion
 let sq = Rectangle::square(3)
-```
+```text
 
 ---
 
@@ -254,9 +254,9 @@ Structs are the backbone of data modeling in Fusion. In the next chapter, we'll 
 
 ## 5.7 Exercises
 
-1.  **Person Struct**: Define a `Person` struct with `name`, `age`, and `address`. Add a method `is_adult(&self)` returning true if age >= 18.
-2.  **Constructor**: Implement a `new` associated function for `Person`.
-3.  **Tuple Structs**: Create a `Vector3` tuple struct (x, y, z) and implement a method to calculate its magnitude.
+1. **Person Struct**: Define a `Person` struct with `name`, `age`, and `address`. Add a method `is_adult(&self)` returning true if age >= 18.
+2. **Constructor**: Implement a `new` associated function for `Person`.
+3. **Tuple Structs**: Create a `Vector3` tuple struct (x, y, z) and implement a method to calculate its magnitude.
 
 ---
 

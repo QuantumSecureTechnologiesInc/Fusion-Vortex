@@ -1,0 +1,23 @@
+[package]
+name = "fusion-web-server"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Fusion tool: fusion-web-server. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+fusion_core = { workspace = true }
+axum = "0.7"
+fusion_runtime_core = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+tokio = { workspace = true }
+fusion_std = "1.0.0"
+
+

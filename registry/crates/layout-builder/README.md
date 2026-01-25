@@ -1,7 +1,7 @@
 # Fusion Layout Builder
 
-**Version:** 0.2.0  
-**Type:** Developer Tool  
+**Version:** 0.2.0
+**Type:** Developer Tool
 **License:** MIT
 
 ## Overview
@@ -23,7 +23,7 @@ use fusion_ui_layout_builder::{Builder, Element};
 let mut builder = Builder::new();
 builder.add(Element::new("Button").at(10, 10));
 let layout = builder.build();
-```
+```text
 
 ## Dependencies
 

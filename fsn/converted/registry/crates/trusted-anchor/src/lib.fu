@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/trusted-anchor/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// trusted-anchor implementation
+
+struct TrustedAnchorModule;

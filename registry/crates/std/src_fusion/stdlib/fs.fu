@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: stdlib/fs (stub)
+fn _stdlib_fs_stub() -> void { }

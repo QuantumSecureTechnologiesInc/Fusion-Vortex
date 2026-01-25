@@ -1,0 +1,15 @@
+// kernel.fsn
+// The 50/50 consensus mechanism.
+
+struct Proof {
+    sig_classical: Vec<u8>,
+    sig_pq: Vec<u8>,
+}
+
+fn verify_pulse(proof: Proof) -> bool {
+    fusion_if!(!proof.sig_classical.is_empty() && !proof.sig_pq.is_empty(), {
+        true
+    } else {
+        false
+    })
+}

@@ -1,0 +1,11 @@
+[package]
+name = "fusion-plugin-example"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"] # Critical for WASM generation
+
+[dependencies]
+fusion_std = "1.0.0"
+# No heavy dependencies! Keep plugins lightweight.

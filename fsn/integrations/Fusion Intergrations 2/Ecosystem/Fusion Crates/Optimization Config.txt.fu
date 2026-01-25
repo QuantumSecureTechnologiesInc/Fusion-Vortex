@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Optimization Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_q_optimizer_hybrid"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Hybrid Quantum-Classical variational optimization loops"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_ai_core = { path = "../ai-core", version = "0.1.0" } # Classical optimizer
+// fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.1.0" }

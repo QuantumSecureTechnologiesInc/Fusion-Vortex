@@ -20,12 +20,13 @@ When the `panic!` macro executes, your program will print a failure message, unw
 fn main() {
     panic!("crash and burn")
 }
-```
+```text
 
 Running this:
+
 ```text
 thread 'main' panicked at 'crash and burn', src/main.fu:2:5
-```
+```text
 
 ### 9.1.1 Using a panic! Backtrace
 
@@ -33,7 +34,7 @@ When a `panic!` call comes from a library deep in your code, you need to know *w
 
 ```bash
 FUSION_BACKTRACE=1 fusion run
-```
+```text
 
 This will print the stack trace, showing the sequence of function calls that led to the panic.
 
@@ -50,7 +51,7 @@ enum Result<T, E> {
     Ok(T),
     Err(E),
 }
-```
+```text
 
 - `T` is the type of the value that will be returned in a success case.
 - `E` is the type of the error that will be returned in a failure case.
@@ -73,7 +74,7 @@ fn main() {
         },
     }
 }
-```
+```text
 
 ### 9.2.2 Matching on Different Errors
 
@@ -97,7 +98,7 @@ fn main() {
         },
     }
 }
-```
+```text
 
 ### 9.2.3 Shortcuts for Panic on Error: `unwrap` and `expect`
 
@@ -108,14 +109,14 @@ If the Result value is the `Ok` variant, `unwrap` will return the value inside `
 
 ```fusion
 let f = File::open("hello.txt").unwrap()
-```
+```text
 
 **`expect(msg)`**:
 Similar to `unwrap`, but lets us choose the panic error message. This helps significantly with debugging.
 
 ```fusion
 let f = File::open("hello.txt").expect("Failed to open hello.txt")
-```
+```text
 
 ### 9.2.4 Propagating Errors
 
@@ -140,7 +141,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
         Err(e) => Err(e),
     }
 }
-```
+```text
 
 ### 9.2.5 The `?` Operator
 
@@ -157,7 +158,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
     f.read_to_string(&mut s)?
     Ok(s)
 }
-```
+```text
 
 The `?` placed after a `Result` value works like this:
 - If the value is `Ok(x)`, the expression evaluates to `x` and the program continues.
@@ -171,7 +172,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
     File::open("hello.txt")?.read_to_string(&mut s)?
     Ok(s)
 }
-```
+```text
 
 **Note**: The `?` operator can only be used in functions that return `Result` (or `Option`). You cannot use it in `main` (unless `main` returns `Result`).
 
@@ -180,7 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let f = File::open("hello.txt")?
     Ok(())
 }
-```
+```text
 
 ---
 
@@ -190,17 +191,19 @@ How do you decide when you should `panic!` and when you should return `Result`?
 
 ### 9.3.1 Guidelines
 
-1.  **Examples and Prototypes**: It is fine to use `unwrap` and `expect`.
-2.  **Tests**: Tests should panic if they fail (`unwrap` is fine).
-3.  **Libraries**: Libraries should generally **never** panic. Always return `Result` so the user can decide how to handle the failure.
-4.  **Contract Violations**: If a function receives input that violates its requirements (e.g., index out of bounds), panic is acceptable (this indicates a bug in the caller).
+1. **Examples and Prototypes**: It is fine to use `unwrap` and `expect`.
+2. **Tests**: Tests should panic if they fail (`unwrap` is fine).
+3. **Libraries**: Libraries should generally **never** panic. Always return `Result` so the user can decide how to handle the failure.
+4. **Contract Violations**: If a function receives input that violates its requirements (e.g., index out of bounds), panic is acceptable (this indicates a bug in the caller).
 
 ### 9.3.2 Defining Custom Error Types
 
 It's common to define custom error types for your crate.
 
 ```fusion
+
 #[derive(Debug)]
+
 pub enum MyError {
     Io(std::io::Error),
     Parse(std::num::ParseIntError),
@@ -208,7 +211,7 @@ pub enum MyError {
 }
 
 // Implement Display and Error traits (Chapter 10)
-```
+```text
 
 ---
 
@@ -225,9 +228,9 @@ In the next chapter, we’ll move away from errors and into the world of generic
 
 ## 9.5 Exercises
 
-1.  **Improved Guessing Game**: Update the guessing game from Chapter 2. Instead of crashing on non-number input, prompt the user specifically with "Please enter a number" without clearing the screen, using `match`.
-2.  **File Reader**: Write a function that takes a filename and prints its content. Use the `?` operator. If the file doesn't exist, print a friendly "File not found" message instead of a stack trace.
-3.  **Validation**: Create a function `div(a: i32, b: i32) -> Result<i32, String>`. It should return `Err("division by zero")` if `b` is 0, otherwise `Ok(a / b)`.
+1. **Improved Guessing Game**: Update the guessing game from Chapter 2. Instead of crashing on non-number input, prompt the user specifically with "Please enter a number" without clearing the screen, using `match`.
+2. **File Reader**: Write a function that takes a filename and prints its content. Use the `?` operator. If the file doesn't exist, print a friendly "File not found" message instead of a stack trace.
+3. **Validation**: Create a function `div(a: i32, b: i32) -> Result<i32, String>`. It should return `Err("division by zero")` if `b` is 0, otherwise `Ok(a / b)`.
 
 ---
 

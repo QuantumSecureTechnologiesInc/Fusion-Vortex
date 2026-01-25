@@ -1,0 +1,18 @@
+[package]
+name = "fusion_training"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Fusion Framework crate: training."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_ai_core = { workspace = true }
+rand = { workspace = true }
+fusion_std = "1.0.0"
+
+

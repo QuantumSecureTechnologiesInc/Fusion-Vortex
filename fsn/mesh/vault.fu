@@ -1,0 +1,20 @@
+// mesh/vault.fsn
+// Capacity-aware eviction.
+
+struct Vault {
+    shard: LruCache<FString, Tensor>,
+}
+
+impl Vault {
+    fn store(mut self, key: FString, data: Tensor) {
+        if self.shard.memory_usage() > 90_000 {
+            self.evict_coldest();
+        }
+        self.shard.insert(key, data);
+    }
+
+    fn evict_coldest(mut self) {
+        println!("Vault safety valve triggered: evicting LRU");
+        self.shard.pop_lru();
+    }
+}

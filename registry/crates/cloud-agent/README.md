@@ -1,7 +1,7 @@
 # Cloud Agent
 
-**Version:** 0.2.0  
-**Type:** Cloud Infrastructure  
+**Version:** 0.2.0
+**Type:** Cloud Infrastructure
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use fusion_q_cloud_agent::{CloudAgent, Provider};
 
 let agent = CloudAgent::new(Provider::AWS, "us-east-1");
 agent.submit_circuit(quantum_circuit).await?;
-```
+```text
 
 ## Dependencies
 

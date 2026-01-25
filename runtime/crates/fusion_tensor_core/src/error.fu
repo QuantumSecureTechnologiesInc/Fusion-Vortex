@@ -1,0 +1,31 @@
+//! Error types for tensor operations
+#[derive(Debug, Clone)]
+enum TensorError {
+    ShapeMismatch { op: FString, lhs: FVec<FSize>, rhs: FVec<FSize> },
+    IndexOutOfBounds { indices: FVec<FSize>, shape: FVec<FSize> },
+    MatrixDimensionMismatch {
+        op: FString,
+        lhs_shape: (FSize, FSize),
+        rhs_shape: (FSize, FSize),
+    },
+}
+impl fmt::Display for TensorError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ShapeMismatch { op, lhs, rhs } => {
+                write!(f, "Shape mismatch in {}: {:?} vs {:?}", op, lhs, rhs)
+            }
+            Self::IndexOutOfBounds { indices, shape } => {
+                write!(f, "Index {:?} out of bounds for shape {:?}", indices, shape)
+            }
+            Self::MatrixDimensionMismatch { op, lhs_shape, rhs_shape } => {
+                write!(
+                    f, "Matrix dimension mismatch in {}: {:?} vs {:?}", op, lhs_shape,
+                    rhs_shape
+                )
+            }
+        }
+    }
+}
+impl std::error::Error for TensorError {}
+type TensorResult<T> = Result<T, TensorError>;

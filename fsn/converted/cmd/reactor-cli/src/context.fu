@@ -1,0 +1,53 @@
+// SOURCE: cmd/reactor-cli/src/context.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// reactor_cli/src/context.rs
+// Production Context Resolver using IPC
+
+use crate::ipc::IpcClient;
+
+pub trait ContextSource {
+    fn resolve(&self, key: &str) -> Option<FString>;
+}
+
+struct EnvSource;
+impl ContextSource for EnvSource {
+    fn resolve(&self, key: &str) -> Option<FString> {
+        std::env::var(format!("FUSION_{}", key.to_uppercase())).ok()
+    }
+}
+
+struct ClusterSource {
+    client: IpcClient,
+}
+
+impl ClusterSource {
+    fn new() -> Self {
+        Self {
+            client: IpcClient::new(),
+        }
+    }
+}
+
+impl Default for ClusterSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ContextSource for ClusterSource {
+    fn resolve(&self, key: &str) -> Option<FString> {
+        self.client.query_context(key)
+    }
+}
+
+fn resolve_key(key: &str) -> Option<FString> {
+    let sources: FVec<Box<dyn ContextSource>> =
+        vec![Box::new(EnvSource), Box::new(ClusterSource::new())];
+
+    for source in sources {
+        if let Some(val) = source.resolve(key) {
+            return Some(val);
+        }
+    }
+    None
+}

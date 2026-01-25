@@ -1,0 +1,367 @@
+// SOURCE: runtime/crates/fusion_runtime_scheduler/src/vlc.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Variational Loop Controller (VLC)
+//!
+//! High-speed iterative execution engine that bypassesthe OS scheduler
+//! for tight loops (gradient descent, VQE, etc.)
+
+use parking_lot::Mutex;
+use tracing::{debug, info, trace};
+
+/// VLC Configuration
+#[derive(Debug, Clone)]
+struct VlcConfig {
+    pub max_iterations: usize,
+    pub learning_rate: f64,
+    pub epsilon: f64, // Convergence threshold
+    pub early_stopping: FBool,
+    pub checkpoint_every: Option<usize>,
+}
+
+impl Default for VlcConfig {
+    fn default() -> Self {
+        Self {
+            max_iterations: 1000,
+            learning_rate: 0.01,
+            epsilon: 1e-4,
+            early_stopping: true,
+            checkpoint_every: Some(100),
+        }
+    }
+}
+
+/// Training result from VLC
+#[derive(Debug, Clone)]
+struct TrainingResult {
+    pub final_loss: f64,
+    pub iterations: usize,
+    pub converged: FBool,
+    pub training_time_us: FU64,
+}
+
+/// VQE result
+#[derive(Debug, Clone)]
+struct VqeResult {
+    pub ground_state_energy: f64,
+    pub optimal_params: FVec<f64>,
+    pub iterations: usize,
+}
+
+/// Variational Loop Controller
+///
+/// Executes iterative workloads (training loops, VQE, etc.) entirely
+/// at the hardware layer without returning to the OS scheduler.
+///
+/// # Key Innovation
+///
+/// Traditional async runtimes suffer from context-switch overhead:
+/// - Each `.await` suspends the future
+/// - Scheduler intervention required
+/// - 100s of nanoseconds overhead per iteration
+///
+/// VLC eliminates this by:
+/// - Executing entire loop on HAL
+/// - Using hardware-level synchronization (GPU events)
+/// - Only signaling scheduler at completion
+///
+/// # Performance
+///
+/// For a 1000-iteration gradient descent:
+/// - Traditional: 4,000 context switches (~400μs overhead)
+/// - VLC: 1 context switch (~100ns overhead)
+/// - **4000x reduction in scheduling overhead**
+struct VariationalLoopController {
+    /// GPU executor for kernel launching
+    gpu_executor: Option<Arc<GpuExecutorStub>>,
+
+    /// QPU interface for quantum circuits
+    qpu_interface: Option<Arc<QpuInterfaceStub>>,
+
+    /// Iteration statistics
+    stats: Arc<Mutex<VlcStats>>,
+}
+
+#[derive(Debug, Default)]
+struct VlcStats {
+    total_iterations: FU64,
+    total_loops: FU64,
+    avg_iterations_per_loop: f64,
+    total_time_us: FU64,
+}
+
+// Stub implementations (would be replaced with real HAL references)
+struct GpuExecutorStub;
+struct QpuInterfaceStub;
+
+impl VariationalLoopController {
+    fn new() -> Self {
+        info!("Initializing Variational Loop Controller");
+        Self {
+            gpu_executor: None,
+            qpu_interface: None,
+            stats: Arc::new(Mutex::new(VlcStats::default())),
+        }
+    }
+
+    /// Execute a training loop at hardware level
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - VLC configuration
+    /// * `forward_fn` - Forward pass function
+    /// * `loss_fn` - Loss calculation function
+    /// * `backward_fn` - Backward pass function
+    ///
+    /// # Returns
+    ///
+    /// Training result with final loss and convergence status
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let config = VlcConfig::default();
+    /// let result = vlc.execute_training_loop(config, |weights| {
+    ///     // Forward, loss, backward executed at GPU level
+    /// });
+    /// ```
+    fn execute_training_loop<F>(&self, config: VlcConfig, mut iteration_fn: F) -> TrainingResult
+    where
+        F: FnMut(usize) -> f64, // Returns loss
+    {
+        debug!(
+            "Starting VLC training loop: max_iters={}, epsilon={}",
+            config.max_iterations, config.epsilon
+        );
+
+        let start_time = std::time::Instant::now();
+        let mut loss = f64::INFINITY;
+        let mut iteration = 0;
+        let mut converged = false;
+
+        // Main VLC loop - runs entirely without scheduler intervention
+        while iteration < config.max_iterations {
+            // Execute single iteration
+            loss = iteration_fn(iteration);
+
+            trace!("VLC iteration {}: loss={:.6}", iteration, loss);
+
+            // Check convergence
+            if config.early_stopping && loss < config.epsilon {
+                info!(
+                    "VLC converged at iteration {} (loss={:.6} < epsilon={:.6})",
+                    iteration, loss, config.epsilon
+                );
+                converged = true;
+                break;
+            }
+
+            // Checkpoint (optional)
+            if let Some(checkpoint_freq) = config.checkpoint_every {
+                if iteration > 0 && iteration % checkpoint_freq == 0 {
+                    debug!(
+                        "VLC checkpoint at iteration {}: loss={:.6}",
+                        iteration, loss
+                    );
+                }
+            }
+
+            iteration += 1;
+        }
+
+        let elapsed = start_time.elapsed();
+
+        // Update statistics
+        let mut stats = self.stats.lock();
+        stats.total_iterations += iteration as FU64;
+        stats.total_loops += 1;
+        stats.avg_iterations_per_loop = stats.total_iterations as f64 / stats.total_loops as f64;
+        stats.total_time_us += elapsed.as_micros() as FU64;
+
+        TrainingResult {
+            final_loss: loss,
+            iterations: iteration,
+            converged,
+            training_time_us: elapsed.as_micros() as FU64,
+        }
+    }
+
+    /// Execute VQE (Variational Quantum Eigensolver) loop
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - VLC configuration
+    /// * `params` - Initial variational parameters
+    /// * `circuit_fn` - Function to execute quantum circuit
+    ///
+    /// # Returns
+    ///
+    /// VQE result with ground state energy and optimal parameters
+    ///
+    /// # How it Works
+    ///
+    /// 1. Submit quantum circuit to QPU (async)
+    /// 2. Poll for result (direct polling, no scheduler)
+    /// 3. Calculate energy from measurements (CPU)
+    /// 4. Calculate gradients (parameter shift rule)
+    /// 5. Update parameters
+    /// 6. Repeat until convergence
+    ///
+    /// **Key Optimization**: Entire loop runs without returning to
+    /// main scheduler, eliminating 1000s of context switches.
+    fn execute_vqe_loop<F>(
+        &self,
+        config: VlcConfig,
+        mut params: FVec<f64>,
+        mut circuit_fn: F,
+    ) -> VqeResult
+    where
+        F: FnMut(&[f64]) -> f64, // Execute circuit, return energy
+    {
+        debug!(
+            "Starting VLC VQE loop: max_iters={}, num_params={}",
+            config.max_iterations,
+            params.len()
+        );
+
+        let mut energy = f64::INFINITY;
+        let mut iteration = 0;
+        let mut prev_energy = energy;
+
+        while iteration < config.max_iterations {
+            // Execute quantum circuit and get energy
+            energy = circuit_fn(&params);
+
+            let energy_change = (energy - prev_energy).abs();
+
+            trace!(
+                "VQE iteration {}: energy={:.6}, change={:.6}",
+                iteration,
+                energy,
+                energy_change
+            );
+
+            // Check convergence
+            if config.early_stopping && energy_change < config.epsilon {
+                info!(
+                    "VQE converged at iteration {} (energy={:.6})",
+                    iteration, energy
+                );
+                break;
+            }
+
+            // Calculate gradients (parameter shift rule - simplified)
+            let grads = self.calculate_gradients(&params, &circuit_fn);
+
+            // Update parameters (gradient descent)
+            for (p, g) in params.iter_mut().zip(grads.iter()) {
+                *p -= config.learning_rate * g;
+            }
+
+            prev_energy = energy;
+            iteration += 1;
+        }
+
+        VqeResult {
+            ground_state_energy: energy,
+            optimal_params: params,
+            iterations: iteration,
+        }
+    }
+
+    /// Calculate gradients using parameter shift rule
+    fn calculate_gradients<F>(&self, params: &[f64], circuit_fn: &F) -> FVec<f64>
+    where
+        F: Fn(&[f64]) -> f64, // Changed from FnMut to Fn
+    {
+        const SHIFT: f64 = std::f64::consts::FRAC_PI_2; // π/2
+
+        let mut grads = Vec::with_capacity(params.len());
+
+        for i in 0..params.len() {
+            let mut params_plus = params.to_vec();
+            let mut params_minus = params.to_vec();
+
+            params_plus[i] += SHIFT;
+            params_minus[i] -= SHIFT;
+
+            let energy_plus = circuit_fn(&params_plus);
+            let energy_minus = circuit_fn(&params_minus);
+
+            let grad = (energy_plus - energy_minus) / 2.0;
+            grads.push(grad);
+        }
+
+        grads
+    }
+
+    /// Get VLC statistics
+    fn stats(&self) -> VlcStats {
+        self.stats.lock().clone()
+    }
+}
+
+impl Default for VariationalLoopController {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Clone for VlcStats {
+    fn clone(&self) -> Self {
+        Self {
+            total_iterations: self.total_iterations,
+            total_loops: self.total_loops,
+            avg_iterations_per_loop: self.avg_iterations_per_loop,
+            total_time_us: self.total_time_us,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vlc_training_convergence() {
+        let vlc = VariationalLoopController::new();
+        let config = VlcConfig {
+            max_iterations: 100,
+            epsilon: 0.1,
+            ..Default::default()
+        };
+
+        // Simulated training: loss decreases exponentially
+        let mut loss = 1.0;
+        let result = vlc.execute_training_loop(config, |_iter| {
+            loss *= 0.95; // 5% decrease per iteration
+            loss
+        });
+
+        assert!(result.converged);
+        assert!(result.final_loss < 0.1);
+        assert!(result.iterations < 100);
+    }
+
+    #[test]
+    fn test_vlc_vqe() {
+        let vlc = VariationalLoopController::new();
+        let config = VlcConfig {
+            max_iterations: 50,
+            learning_rate: 0.1,
+            epsilon: 0.001,
+            ..Default::default()
+        };
+
+        let initial_params = vec![0.5, 0.5];
+
+        // Simulated VQE: energy = (p0 - 0.2)^2 + (p1 - 0.3)^2
+        let result = vlc.execute_vqe_loop(config, initial_params, |params| {
+            (params[0] - 0.2).powi(2) + (params[1] - 0.3).powi(2)
+        });
+
+        // Should converge close to (0.2, 0.3)
+        assert!(result.ground_state_energy < 0.01);
+        assert!((result.optimal_params[0] - 0.2).abs() < 0.1);
+        assert!((result.optimal_params[1] - 0.3).abs() < 0.1);
+    }
+}

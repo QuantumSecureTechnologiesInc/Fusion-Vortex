@@ -13,18 +13,22 @@ The Fusion Runtime employs an **interwoven component architecture** where compon
 While the components can be conceptually organized into 4 functional areas, they are **interwoven** and work together seamlessly:
 
 ### I. Control/Synchronization
+
 - **Fibers API**: Low-latency task switching
 - **Low-Jitter Timer**: QoS guarantees
 - **Event FD/I/O Poller**: Fused event handling
 
 ### II. Optimization
+
 - **VLC (Variational Loop Controller)**: Multi-iteration loop optimization
 
 ### III. Resource Management
+
 - **Shared Memory Buffer**: Zero-copy IPC
 - **Device Memory Allocator (DMA)**: VRAM management
 
 ### IV. Communication
+
 - **Collective Comms (NCCL/Gloo)**: Distributed training primitives
 - **QPU Sequencer**: Quantum job batching
 
@@ -51,7 +55,7 @@ While the components can be conceptually organized into 4 functional areas, they
 │  Provides timing │         │  Triggers events     │
 │  for convergence │         │  on loop completion  │
 └──────────────────┘         └──────────────────────┘
-```
+```text
 
 **Integration Benefits**:
 - VLC uses Fiber Scheduler for lightweight loop execution
@@ -80,7 +84,7 @@ While the components can be conceptually organized into 4 functional areas, they
 │ Synchronizes        │       │  jobs across         │
 │ gradients in VRAM   │       │  processes           │
 └─────────────────────┘       └──────────────────────┘
-```
+```text
 
 **Integration Benefits**:
 - Shared Memory enables zero-copy tensor transfer between `ai-daemon` and inference processes
@@ -101,7 +105,7 @@ While the components can be conceptually organized into 4 functional areas, they
    │                              │
    ▼                              ▼
  Fiber Scheduler ◀──────▶  QPU Sequencer
-```
+```text
 
 **Integration Examples**:
 
@@ -158,30 +162,30 @@ let result = runtime.vlc().execute_training_loop(
         // - Uses Fiber Scheduler for task switching
         // - Uses Timer for convergence checks
         // - Triggers Event Poller on GPU completion
-        
+
         // Forward pass (GPU)
         let loss = model.forward(&batch);
-        
+
 // Backward pass (GPU)
         model.backward(loss);
-        
+
         // All-reduce gradients across 4 GPUs (Collective Comms + Device Memory)
         runtime.collective_comms()
             .all_reduce(comm, &mut gradients, ReduceOp::Sum)?;
-        
+
         // QPU-enhanced optimizer (QPU Sequencer + Event Poller)
         if iteration % 10 == 0 {
             let qpu_job = runtime.qpu_sequencer().try_create_batch();
             // Event Poller notifies when QPU job completes
         }
-        
+
         loss
     }
 );
 
 println!("Training complete: {} iterations, loss={:.6}",
          result.iterations, result.final_loss);
-```
+```text
 
 **Components Working Together**:
 1. **Shared Memory** ↔ **Device Memory**: Zero-copy model weight transfer
@@ -190,9 +194,9 @@ println!("Training complete: {} iterations, loss={:.6}",
 4. **QPU Sequencer** ↔ **Event Poller**: Async quantum job notifications
 5. **Event Poller** ↔ **VLC**: GPU completion signals
 
-**Performance**: 
+**Performance**:
 - 4000x fewer context switches (VLC + Fiber)
-- Zero-copy transfers (Shared Memory + Device Memory)  
+- Zero-copy transfers (Shared Memory + Device Memory)
 - Sub-10μs loop iterations (Timer + VLC)
 - Async QPU integration (Sequencer + Event Poller)
 
@@ -223,7 +227,7 @@ println!("Training complete: {} iterations, loss={:.6}",
                        │Collective │◀─▶│   QPU   │
                        │  Comms    │  │Sequencer│
                        └───────────┘  └─────────┘
-```
+```text
 
 **Key**: `◀─▶` indicates bidirectional interweaving
 
@@ -257,7 +261,7 @@ runtime.qpu_sequencer()    // → &QpuJobSequencer
 runtime.scheduler()        // → &Scheduler
 runtime.hal()              // → &HardwareLayer
 runtime.executor()         /→ &Executor
-```
+```text
 
 ---
 
@@ -278,12 +282,12 @@ runtime.executor()         /→ &Executor
 
 ## Summary
 
-✅ **All Components Interwoven**: 13 components working in coordinated fashion  
-✅ **No Strict Layering**: Components communicate directly for maximum performance  
-✅ **Cross-Component Integration**: Timer ↔ VLC, Event Poller ↔ Comm, Memory ↔ Memory  
-✅ **Unified Accessor Interface**: All components accessible through `Runtime`  
+✅ **All Components Interwoven**: 13 components working in coordinated fashion
+✅ **No Strict Layering**: Components communicate directly for maximum performance
+✅ **Cross-Component Integration**: Timer ↔ VLC, Event Poller ↔ Comm, Memory ↔ Memory
+✅ **Unified Accessor Interface**: All components accessible through `Runtime`
 ✅ **Production-Ready**: Complete with tests and examples
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
 **Related**: `PRODUCTION_COMPONENTS.md`, `VISUAL_ARCHITECTURE_GUIDE.md`

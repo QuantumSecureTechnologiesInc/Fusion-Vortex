@@ -1,0 +1,29 @@
+extern fn printf(fmt: string, ...) -> int;
+
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Rect {
+    top_left: Point,
+    bottom_right: Point
+}
+
+fn main() -> int {
+    let p1: Point = Point { x: 10, y: 20 };
+    let x: int = 100;
+    let y: int = 200;
+    let p2: Point = Point { x, y };
+
+    let r: Rect = Rect { top_left: p1, bottom_right: p2 };
+
+    printf("p1.x = %d\n", p1.x);
+    printf("r.bottom_right.y = %d\n", r.bottom_right.y);
+
+    let ptr_to_p1: *Point = &p1;
+    (*ptr_to_p1).x = 55;
+    printf("p1.x after modification = %d\n", p1.x);
+
+    return 0;
+}

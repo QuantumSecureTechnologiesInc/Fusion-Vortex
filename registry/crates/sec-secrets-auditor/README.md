@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-secrets-auditor = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_secrets_auditor::scan;
 fn main() {
     scan("src/");
 }
-```
+```text
 
 ## License
 

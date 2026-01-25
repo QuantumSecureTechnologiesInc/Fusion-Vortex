@@ -1,7 +1,7 @@
 # Fusion Compiler Passes
 
-**Version:** 0.2.0  
-**Type:** Compiler Plugin  
+**Version:** 0.2.0
+**Type:** Compiler Plugin
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ use fusion_q_compiler_pass::{PassManager, GateOptimizationPass};
 let mut pm = PassManager::new();
 pm.add_pass(GateOptimizationPass::default());
 pm.run(&mut ir_module)?;
-```
+```text
 
 ## Dependencies
 

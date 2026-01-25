@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/sec-policy-engine/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing sec-policy-engine...");
+}

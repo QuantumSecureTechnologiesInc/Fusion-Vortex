@@ -1,0 +1,16 @@
+use serde::{Deserialize, Serialize};
+#[derive(Debug, Clone, Serialize, Deserialize)]
+enum Message {
+    /// Execute a remote function with arguments
+    Execute { function_name: FString, args: FVec<u8> },
+    /// Return the result of an execution
+    Result { success: FBool, data: FVec<u8> },
+    /// Health check / keepalive
+    Ping,
+    /// Response to Ping
+    Pong,
+    /// Authenticate client with token/secret
+    Authenticate { client_id: FString, token: FString },
+    /// Authentication response
+    AuthResult { success: FBool, message: FString },
+}

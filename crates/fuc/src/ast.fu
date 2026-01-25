@@ -1,0 +1,158 @@
+//! AST definitions for the Fusion compiler.
+#![allow(missing_docs)]
+/// Byte span for source ranges.
+type Span = Range<FSize>;
+/// AST node with source span.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct Spanned<T> {
+    /// Node payload.
+    pub node: T,
+    /// Byte span in the source.
+    pub span: Span,
+}
+/// Language types.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum Type {
+    /// Signed 32-bit integer.
+    Int,
+    /// Boolean.
+    Bool,
+    /// UTF-8 string.
+    String,
+    /// Unit type.
+    Void,
+    /// Unknown type (used for forward/error-tolerant compilation).
+    Unknown,
+    /// Pointer to another type.
+    Pointer(Box<Type>),
+    /// Fixed-size array of an element type.
+    Array(Box<Type>, FSize),
+    /// Struct type, identified by name.
+    Struct(FString),
+}
+/// Top-level program container.
+#[derive(Debug)]
+struct Program {
+    /// Defined functions.
+    pub functions: FVec<Function>,
+    /// External declarations.
+    pub externs: FVec<ExternFunction>,
+    /// Struct type definitions.
+    pub structs: FVec<StructDefinition>,
+}
+/// Struct definition.
+#[derive(Debug)]
+struct StructDefinition {
+    /// Struct name.
+    pub name: FString,
+    /// Struct fields with types.
+    pub fields: FVec<(FString, Type)>,
+}
+/// Resolved struct definition info for later compiler phases.
+#[derive(Clone, Debug)]
+struct StructInfo {
+    /// Map field name to its type and index.
+    pub fields: FMap<FString, (Type, FSize)>,
+    /// Ordered list of fields for initialization and layout.
+    pub ordered_fields: FVec<(FString, Type)>,
+}
+/// External function declaration.
+#[derive(Debug)]
+struct ExternFunction {
+    /// Function name.
+    pub name: FString,
+    /// Parameters and types.
+    pub params: FVec<(FString, Type)>,
+    /// Return type.
+    pub return_type: Type,
+    /// Whether the function is variadic (C-style).
+    pub is_variadic: FBool,
+}
+/// Function definition.
+#[derive(Debug)]
+struct Function {
+    /// Function name.
+    pub name: FString,
+    /// Parameters and types.
+    pub params: FVec<(FString, Type)>,
+    /// Return type.
+    pub return_type: Type,
+    /// Function body.
+    pub body: Block,
+}
+/// Block of statements.
+type Block = FVec<Spanned<Statement>>;
+/// Statements.
+#[derive(Debug)]
+enum Statement {
+    /// Let binding.
+    Let { name: FString, ty: Type, value: Spanned<Expression> },
+    /// Assignment to an L-value.
+    Assignment { target: Spanned<Expression>, value: Spanned<Expression> },
+    /// Return statement.
+    Return(Option<Spanned<Expression>>),
+    /// If/else statement.
+    If { cond: Spanned<Expression>, then_block: Block, else_block: Option<Block> },
+    /// While loop.
+    While { cond: Spanned<Expression>, body: Block },
+    /// Expression statement.
+    Expression(Spanned<Expression>),
+}
+/// Expressions.
+#[derive(Debug)]
+enum Expression {
+    /// Integer literal.
+    IntLiteral(FI64),
+    /// Boolean literal.
+    BoolLiteral(FBool),
+    /// String literal.
+    StringLiteral(FString),
+    /// Variable reference.
+    Variable(FString),
+    /// Binary operation.
+    BinaryOperation {
+        op: BinaryOp,
+        left: Box<Spanned<Expression>>,
+        right: Box<Spanned<Expression>>,
+    },
+    /// Function call.
+    FunctionCall { name: FString, args: FVec<Spanned<Expression>> },
+    /// Method call: base.method(args)
+    MethodCall { base: Box<Spanned<Expression>>, method: FString, args: FVec<Spanned<Expression>> },
+    /// Array literal.
+    ArrayLiteral(FVec<Spanned<Expression>>),
+    /// Array repeat syntax: [value; N].
+    ArrayRepeat { value: Box<Spanned<Expression>>, size: FSize },
+    /// Struct literal: Name { field: expr, ... }.
+    StructLiteral { name: FString, fields: FVec<(FString, Spanned<Expression>)> },
+    /// Member access: base.field.
+    MemberAccess { base: Box<Spanned<Expression>>, field: FString },
+    /// Array indexing.
+    Index { array: Box<Spanned<Expression>>, index: Box<Spanned<Expression>> },
+    /// Address-of expression.
+    AddressOf(Box<Spanned<Expression>>),
+    /// Dereference expression.
+    Dereference(Box<Spanned<Expression>>),
+}
+/// Binary operators.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum BinaryOp {
+    /// Addition.
+    Add,
+    /// Subtraction.
+    Sub,
+    /// Multiplication.
+    Mul,
+    /// Division.
+    Div,
+    /// Equality.
+    Eq,
+    /// Inequality.
+    Neq,
+    /// Less-than.
+    Lt,
+    /// Greater-than.
+    Gt,
+    /// Logical or.
+    Or,
+}

@@ -1,0 +1,30 @@
+// SOURCE: registry/crates/bridge_c/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Fusion C FFI Bridge
+//!
+//! Provides utilities for C interoperability.
+
+#![allow(dead_code)]
+
+
+/// Convert a C string to a Rust FString
+fn c_str_to_string(ptr: *const c_char) -> Option<FString> {
+    if ptr.is_null() {
+        return None;
+    }
+unsafe { CStr::from_ptr(ptr).to_str().ok().map(FString::from) }
+}
+
+/// Convert a Rust string to a C string (caller must free)
+fn string_to_c_str(s: &str) -> *mut c_char {
+    CFString::new(s)
+        .map(|c| c.into_raw())
+        .unwrap_or(std::ptr::null_mut())
+}
+
+/// Free a C string allocated by this module
+pub unsafe fn free_c_str(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        drop(CFString::from_raw(ptr));
+    }
+}

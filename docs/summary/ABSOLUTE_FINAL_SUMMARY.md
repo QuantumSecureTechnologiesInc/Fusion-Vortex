@@ -91,7 +91,7 @@ fusion build              # Build with dependencies
 fusion test               # Run tests
 fusion run                # Run project
 fusion publish            # Publish to registry
-```
+```text
 
 ### 2. ML Library (95%) - 3,000+ lines, 5 files
 
@@ -324,7 +324,7 @@ fusion-lang/
 ├── ChangeLog.md
 ├── FINAL_PROJECT_SUMMARY.md
 └── ULTIMATE_PROJECT_SUMMARY.md
-```
+```text
 
 **Total Files**: **75** across complete project
 

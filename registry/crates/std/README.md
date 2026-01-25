@@ -1,7 +1,7 @@
 # Fusion Std
 
-**Version:** 0.2.0  
-**Type:** Core Library  
+**Version:** 0.2.0
+**Type:** Core Library
 **License:** MIT
 
 ## Overview
@@ -26,13 +26,21 @@ fn save_config() -> FusionResult<()> {
     file.write_all(b"key=value")?;
     Ok(())
 }
-```
+```text
 
 ## Dependencies
 
 - `fusion_core`
 - `thiserror`
 - `serde`
+
+## Reference Bundles
+
+Additional standard library reference material has been incorporated under:
+
+- `registry/crates/std/stdlib_docs/source_files_standard_lib/`
+- `registry/crates/std/stdlib_docs/matth_downloads_standard_lib/`
+- `registry/crates/std/stdlib_docs/fusion_integrations_3/`
 
 ## Contributing
 

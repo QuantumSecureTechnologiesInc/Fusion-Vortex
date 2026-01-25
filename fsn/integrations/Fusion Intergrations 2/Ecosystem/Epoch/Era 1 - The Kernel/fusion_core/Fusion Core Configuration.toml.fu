@@ -1,0 +1,15 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Fusion Core Configuration.toml
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_core"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Core type system and runtime for the Fusion Programming Language"
+// authors = ["Fusion Language Team"]
+// license = "MIT"
+// 
+// [dependencies]
+// num-complex = "0.4"  # For Quantum amplitudes
+// serde = { version = "1.0", features = ["derive"] } # For serialization support (Standard Lib req)
+// rand = "0.8"         # For probabilistic measurement

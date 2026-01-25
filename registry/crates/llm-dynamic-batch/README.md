@@ -1,7 +1,7 @@
 # Fusion LLM Dynamic Batch
 
-**Version:** 0.2.0  
-**Type:** Inference Optimization  
+**Version:** 0.2.0
+**Type:** Inference Optimization
 **License:** MIT
 
 ## Overview
@@ -27,7 +27,7 @@ scheduler.submit("Request 2").await;
 
 // Scheduler automatically forms optimal batches
 scheduler.run_loop().await?;
-```
+```text
 
 ## Dependencies
 

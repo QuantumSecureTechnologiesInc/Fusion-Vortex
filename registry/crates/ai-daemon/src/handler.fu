@@ -1,0 +1,6 @@
+use anyhow::Result;
+#[allow(dead_code)]
+#[allow(dead_code)]
+async fn handle_request(_request: serde_json::Value) -> Result<serde_json::Value> {
+    Ok(serde_json::json!({ "status" : "ok", "response" : "Mock AI daemon response" }))
+}

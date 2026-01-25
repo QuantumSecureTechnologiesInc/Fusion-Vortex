@@ -14,7 +14,7 @@
 
 The Fusion Terminal Browser is built with a modular architecture that separates concerns into distinct layers:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │          Browser (Orchestration)        │
 ├─────────────────────────────────────────┤
@@ -24,7 +24,7 @@ The Fusion Terminal Browser is built with a modular architecture that separates 
 ├─────────────────────────────────────────┤
 │    headless_chrome  │  wgpu  │  ratatui │
 └─────────────────────────────────────────┘
-```
+```text
 
 ### Layer Responsibilities
 
@@ -47,7 +47,7 @@ pub struct Engine {
     config: BrowserConfig,
     current_tab: Option<Arc<Tab>>,
 }
-```
+```text
 
 **Key Responsibilities:**
 - Browser process lifecycle management
@@ -57,12 +57,13 @@ pub struct Engine {
 - DOM interaction
 
 **Usage Example:**
+
 ```rust
 let mut engine = Engine::new(config)?;
 engine.navigate("https://example.com")?;
 let screenshot = engine.capture_screenshot()?;
 let title = engine.get_title()?;
-```
+```text
 
 ### Terminal Renderer (`src/renderer.rs`)
 
@@ -73,7 +74,7 @@ pub struct TerminalRenderer {
     config: BrowserConfig,
     buffer: Vec<Vec<TerminalCell>>,
 }
-```
+```text
 
 **Rendering Pipeline:**
 1. Decode PNG screenshot
@@ -89,11 +90,12 @@ pub struct TerminalRenderer {
 - **True Color**: Full 24-bit RGB with Unicode characters
 
 **Usage Example:**
+
 ```rust
 let mut renderer = TerminalRenderer::new(config);
 renderer.screenshot_to_cells(&screenshot_data)?;
 renderer.render()?;
-```
+```text
 
 ### WebGPU Renderer (`src/webgpu.rs`)
 
@@ -107,7 +109,7 @@ pub struct WebGpuRenderer {
     queue: Option<Queue>,
     enabled: bool,
 }
-```
+```text
 
 **Capabilities:**
 - Hardware-accelerated image scaling
@@ -116,6 +118,7 @@ pub struct WebGpuRenderer {
 - Future: Custom compute shaders for enhancement
 
 **Initialization:**
+
 ```rust
 let mut webgpu = WebGpuRenderer::new(true);
 pollster::block_on(webgpu.initialize())?;
@@ -123,7 +126,7 @@ pollster::block_on(webgpu.initialize())?;
 if webgpu.is_available() {
     let processed = webgpu.process_image(data, width, height)?;
 }
-```
+```text
 
 ### Terminal UI (`src/terminal.rs`)
 
@@ -133,10 +136,11 @@ Rich terminal interface using ratatui:
 pub struct TerminalUI {
     terminal: RatatuiTerminal<CrosstermBackend<io::Stdout>>,
 }
-```
+```text
 
 **Layout:**
-```
+
+```text
 ┌─────────────────────────────────┐
 │  Header (Title, URL)             │
 ├─────────────────────────────────┤
@@ -147,9 +151,10 @@ pub struct TerminalUI {
 ├─────────────────────────────────┤
 │  Footer (Status, Shortcuts)      │
 └─────────────────────────────────┘
-```
+```text
 
 **Event Handling:**
+
 ```rust
 pub enum UIEvent {
     Quit,
@@ -160,7 +165,7 @@ pub enum UIEvent {
     Escape,
     Resize(u16, u16),
 }
-```
+```text
 
 ### Session Manager (`src/session.rs`)
 
@@ -175,7 +180,7 @@ pub struct Session {
     pub cookies: Vec<Cookie>,
     pub last_access: DateTime<Utc>,
 }
-```
+```text
 
 **Features:**
 - Automatic serialisation to JSON
@@ -199,7 +204,7 @@ pub struct Browser {
     webgpu_renderer: Option<WebGpuRenderer>,
     running: bool,
 }
-```
+```text
 
 #### Methods
 
@@ -208,83 +213,92 @@ pub struct Browser {
 Creates a new browser instance with the given configuration.
 
 **Example:**
+
 ```rust
 let config = BrowserConfig::default();
 let browser = Browser::new(config)?;
-```
+```text
 
 ##### `navigate(&mut self, url: &str) -> Result<()>`
 
 Navigates to the specified URL and updates session history.
 
 **Example:**
+
 ```rust
 browser.navigate("https://example.com")?;
-```
+```text
 
 ##### `render(&mut self) -> Result<()>`
 
 Captures a screenshot and renders it to the terminal.
 
 **Example:**
+
 ```rust
 browser.render()?;
-```
+```text
 
 ##### `run(&mut self) -> Result<()>`
 
 Starts an interactive browser session with full UI.
 
 **Example:**
+
 ```rust
 browser.run()?;
-```
+```text
 
 ##### `execute_script(&self, script: &str) -> Result<serde_json::Value>`
 
 Executes JavaScript and returns the result.
 
 **Example:**
+
 ```rust
 let result = browser.execute_script("document.title")?;
 println!("Title: {}", result);
-```
+```text
 
 ##### `screenshot_to_file(&self, path: &Path) -> Result<()>`
 
 Saves a screenshot of the current page to a file.
 
 **Example:**
+
 ```rust
 browser.screenshot_to_file(Path::new("screenshot.png"))?;
-```
+```text
 
 ##### `get_html(&self) -> Result<String>`
 
 Returns the HTML source of the current page.
 
 **Example:**
+
 ```rust
 let html = browser.get_html()?;
-```
+```text
 
 ##### `click(&self, selector: &str) -> Result<()>`
 
 Clicks an element by CSS selector.
 
 **Example:**
+
 ```rust
 browser.click("#submit-button")?;
-```
+```text
 
 ##### `type_text(&self, selector: &str, text: &str) -> Result<()>`
 
 Types text into an element by CSS selector.
 
 **Example:**
+
 ```rust
 browser.type_text("#search-input", "Rust programming")?;
-```
+```text
 
 ### BrowserConfig Struct
 
@@ -312,7 +326,7 @@ pub struct BrowserConfig {
     pub render_mode: RenderMode,
     pub color_depth: ColorDepth,
 }
-```
+```text
 
 #### Methods
 
@@ -343,17 +357,19 @@ Add to `cmd/fusion/Cargo.toml`:
 ```toml
 [dependencies]
 fusion-terminal-browser = { path = "../../crates/fusion-terminal-browser" }
-```
+```text
 
 #### Step 2: Add Command Enum
 
 In `cmd/fusion/src/main.rs`:
 
 ```rust
+
 #[derive(Subcommand)]
+
 enum Commands {
     // ... existing commands
-    
+
     /// Terminal-based web browser
     Browser {
         #[command(subcommand)]
@@ -362,32 +378,33 @@ enum Commands {
 }
 
 #[derive(Subcommand)]
+
 enum BrowserCommands {
     /// Browse a URL interactively
     Browse {
         url: Option<String>,
     },
-    
+
     /// Capture a screenshot
     Screenshot {
         url: String,
         #[arg(short, long)]
         output: String,
     },
-    
+
     /// Execute JavaScript
     Exec {
         url: String,
         #[arg(short, long)]
         script: String,
     },
-    
+
     /// Get HTML content
     Html {
         url: String,
     },
 }
-```
+```text
 
 #### Step 3: Implement Command Handler
 
@@ -396,7 +413,7 @@ use fusion_terminal_browser::{Browser, BrowserConfig};
 
 fn handle_browser_command(cmd: BrowserCommands) -> Result<()> {
     let config = BrowserConfig::default();
-    
+
     match cmd {
         BrowserCommands::Browse { url } => {
             let mut browser = Browser::new(config)?;
@@ -405,7 +422,7 @@ fn handle_browser_command(cmd: BrowserCommands) -> Result<()> {
             }
             browser.run()?;
         }
-        
+
         BrowserCommands::Screenshot { url, output } => {
             let mut browser = Browser::new(config)?;
             browser.navigate(&url)?;
@@ -413,7 +430,7 @@ fn handle_browser_command(cmd: BrowserCommands) -> Result<()> {
             browser.screenshot_to_file(Path::new(&output))?;
             println!("Screenshot saved to: {}", output);
         }
-        
+
         BrowserCommands::Exec { url, script } => {
             let mut browser = Browser::new(config)?;
             browser.navigate(&url)?;
@@ -421,7 +438,7 @@ fn handle_browser_command(cmd: BrowserCommands) -> Result<()> {
             let result = browser.execute_script(&script)?;
             println!("{}", serde_json::to_string_pretty(&result)?);
         }
-        
+
         BrowserCommands::Html { url } => {
             let mut browser = Browser::new(config)?;
             browser.navigate(&url)?;
@@ -430,10 +447,10 @@ fn handle_browser_command(cmd: BrowserCommands) -> Result<()> {
             println!("{}", html);
         }
     }
-    
+
     Ok(())
 }
-```
+```text
 
 ### Library Integration
 
@@ -447,7 +464,7 @@ pub fn my_function() -> Result<(), Box<dyn std::error::Error>> {
     // Use browser...
     Ok(())
 }
-```
+```text
 
 #### Advanced Integration
 
@@ -470,76 +487,90 @@ impl WebAutomation {
             page_load_timeout: 60000,
             ..Default::default()
         };
-        
+
         let browser = Browser::new(config)?;
         Ok(Self { browser })
     }
-    
+
     pub fn scrape_data(&mut self, url: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
         self.browser.navigate(url)?;
-        
+
         let result = self.browser.execute_script(r#"
             Array.from(document.querySelectorAll('.data-item'))
                 .map(el => el.textContent)
         "#)?;
-        
+
         let data = result.as_array()
             .ok_or("Expected array")?
             .iter()
             .filter_map(|v| v.as_str().map(String::from))
             .collect();
-        
+
         Ok(data)
     }
 }
-```
+```text
 
 ## Building and Testing
 
 ### Building
 
 ```bash
+
 # Debug build
+
 cargo build
 
 # Release build
+
 cargo build --release
 
 # With specific features
+
 cargo build --features webgpu
 
 # Without default features
+
 cargo build --no-default-features
-```
+```text
 
 ### Testing
 
 ```bash
+
 # Run all tests
+
 cargo test
 
 # Run with output
+
 cargo test -- --nocapture
 
 # Run specific test
+
 cargo test test_browser_creation
 
 # Run integration tests
+
 cargo test --test integration_tests
-```
+```text
 
 ### Running Examples
 
 ```bash
+
 # Basic example
+
 cargo run --example basic
 
 # Screenshot example
+
 cargo run --example screenshot
 
 # JavaScript example
+
 cargo run --example javascript
-```
+```text
 
 ### Documentation
 
@@ -547,58 +578,66 @@ Generate and open API documentation:
 
 ```bash
 cargo doc --open
-```
+```text
 
 ## Performance Optimisation
 
 ### Memory Usage
 
 1. **Disable WebGPU** if not needed:
+
    ```rust
    config.enable_webgpu = false;
-   ```
+```text
 
 2. **Reduce window size**:
+
    ```rust
    config.window_width = 1024;
    config.window_height = 768;
-   ```
+```text
 
 3. **Disable images** for text-only sites:
+
    ```rust
    config.enable_images = false;
-   ```
+```text
 
 ### Rendering Speed
 
 1. **Use ASCII mode** for maximum speed:
+
    ```rust
    config.render_mode = RenderMode::Ascii;
    config.color_depth = ColorDepth::Ansi16;
-   ```
+```text
 
 2. **Enable WebGPU** for GPU acceleration:
+
    ```rust
    config.enable_webgpu = true;
-   ```
+```text
 
 3. **Reduce terminal size** for faster rendering:
+
    ```rust
    config.terminal_width = 80;
    config.terminal_height = 24;
-   ```
+```text
 
 ### Page Load Time
 
 1. **Increase timeout** for slow sites:
+
    ```rust
    config.page_load_timeout = 60000; // 60 seconds
-   ```
+```text
 
 2. **Disable JavaScript** if not needed:
+
    ```rust
    config.enable_javascript = false;
-   ```
+```text
 
 ## Contributing
 
@@ -607,37 +646,43 @@ cargo doc --open
 Follow Rust standard style guidelines:
 
 ```bash
+
 # Format code
+
 cargo fmt
 
 # Check lints
+
 cargo clippy
 
 # Fix simple issues
+
 cargo clippy --fix
-```
+```text
 
 ### Adding Features
 
 1. **Create a branch**:
+
    ```bash
    git checkout -b feature/my-new-feature
-   ```
+```text
 
 2. **Implement the feature**
 
 3. **Add tests**:
+
    ```rust
    #[cfg(test)]
    mod tests {
        use super::*;
-       
+
        #[test]
        fn test_my_feature() {
            // Test implementation
        }
    }
-   ```
+```text
 
 4. **Update documentation**
 
@@ -677,7 +722,7 @@ impl TerminalRenderer {
         // Your custom algorithm here
     }
 }
-```
+```text
 
 ### WebGPU Compute Shaders
 
@@ -689,7 +734,7 @@ let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
     label: Some("Custom Image Processor"),
     source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
 });
-```
+```text
 
 ### Chrome DevTools Protocol
 
@@ -704,7 +749,7 @@ tab.call_method(cdp::Page::Navigate {
     url: "https://example.com".into(),
     ..Default::default()
 })?;
-```
+```text
 
 ## Architecture Decisions
 

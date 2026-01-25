@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/llm-tensor-parallel/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing llm-tensor-parallel...");
+}

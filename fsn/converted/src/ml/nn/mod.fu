@@ -1,0 +1,22 @@
+// SOURCE: src/ml/nn/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/ml/nn/mod.rs - Neural Network Module
+#![allow(dead_code)]
+// Provides layers, loss functions, and models
+
+mod layers;
+
+use super::tensor::Tensor;
+use super::MLError;
+
+/// Neural Network Module Trait
+pub trait Module {
+    /// Forward pass
+    fn forward(&self, input: &Tensor) -> Result<Tensor, MLError>;
+
+    /// Get trainable parameters
+    fn parameters(&self) -> FVec<&Tensor>;
+
+    /// Set training mode
+    fn train(&mut self, mode: FBool);
+}

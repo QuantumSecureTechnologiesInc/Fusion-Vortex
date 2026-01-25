@@ -20,16 +20,19 @@ Fusion Unified is the official, next-generation build system and toolchain for t
 ## Quick Start
 
 ```bash
+
 # Build the monolith
+
 cargo build -p fusion-monolith-core --release
 
 # Run commands
+
 fusion-monolith check   # Fast semantic analysis
 fusion-monolith build   # Full compilation
 fusion-monolith run     # Build and execute
 fusion-monolith audit   # Security scan only
 fusion-monolith watch   # Daemon mode with LSP
-```
+```text
 
 ## CLI Reference
 
@@ -45,15 +48,19 @@ fusion-monolith watch   # Daemon mode with LSP
 ## Autonomous Agents
 
 ### Sentry (Audit Agent)
+
 Dedicated Security & Compliance monitoring.
 
-### Forge (Build Agent)  
+### Forge (Build Agent)
+
 Pure Artifact Generation with GPU-accelerated resolution.
 
 ### Drive (Run Agent)
+
 Execution & Testing environment with sandboxing.
 
 ### Nexus (Intelligence Agent)
+
 Powers LSP and static analysis with zero-copy reads.
 
 ## Architecture

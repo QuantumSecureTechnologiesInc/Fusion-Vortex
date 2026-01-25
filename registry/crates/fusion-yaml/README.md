@@ -1,7 +1,7 @@
 # Fusion YAML
 
-**Version:** 0.2.0  
-**Type:** Data Format  
+**Version:** 0.2.0
+**Type:** Data Format
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let config = MyConfig::default();
 let yaml = to_string(&config)?;
 
 println!("{}", yaml);
-```
+```text
 
 ## Dependencies
 

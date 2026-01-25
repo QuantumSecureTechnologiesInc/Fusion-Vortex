@@ -1,7 +1,7 @@
 # Fusion LLM Distill
 
-**Version:** 0.2.0  
-**Type:** CLI Tool  
+**Version:** 0.2.0
+**Type:** CLI Tool
 **License:** MIT
 
 ## Overview
@@ -18,7 +18,7 @@ Fusion LLM Distill (`llm-distill`) is a command-line utility for running knowled
 
 ```bash
 fusion-distill --teacher "gpt-4" --student "llama-3-8b" --dataset "reasoning.jsonl"
-```
+```text
 
 ## Dependencies
 

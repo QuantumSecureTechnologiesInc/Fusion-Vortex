@@ -1,0 +1,210 @@
+// SOURCE: tests/test_package_manager.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// tests/test_package_manager.rs - Package manager tests (Phase 4)
+// NOTE: These tests are currently DISABLED because the package manager is a stub
+// for future development. Integration tests cannot import from binary crates.
+// These will be enabled when the package manager is fully implemented in Phase 4.
+
+// Disabled until Phase 4 implementation
+#[cfg(disabled)]
+mod package_manager_tests {
+    // use fusion_lang::package_manager::*;
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_version_parsing() {
+        // let v = Version::parse("1.2.3").unwrap();
+        assert_eq!(v.major, 1);
+        assert_eq!(v.minor, 2);
+        assert_eq!(v.patch, 3);
+        assert_eq!(v.to_string(), "1.2.3");
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_version_comparison() {
+        let v1 = Version::new(1, 2, 3);
+        let v2 = Version::new(1, 2, 4);
+        let v3 = Version::new(1, 3, 0);
+        let v4 = Version::new(2, 0, 0);
+
+        assert!(v2 > v1);
+        assert!(v3 > v2);
+        assert!(v4 > v3);
+        assert_eq!(v1, v1.clone());
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_caret_requirement() {
+        let req = VersionRequirement::Caret(Version::new(1, 2, 3));
+
+        // Should match same version
+        assert!(req.matches(&Version::new(1, 2, 3)));
+
+        // Should match higher patch/minor
+        assert!(req.matches(&Version::new(1, 2, 4)));
+        assert!(req.matches(&Version::new(1, 3, 0)));
+
+        // Should NOT match different major
+        assert!(!req.matches(&Version::new(2, 0, 0)));
+
+        // Should NOT match lower version
+        assert!(!req.matches(&Version::new(1, 2, 2)));
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_tilde_requirement() {
+        let req = VersionRequirement::Tilde(Version::new(1, 2, 3));
+
+        // Should match same version
+        assert!(req.matches(&Version::new(1, 2, 3)));
+
+        // Should match higher patch
+        assert!(req.matches(&Version::new(1, 2, 4)));
+
+        // Should NOT match different minor
+        assert!(!req.matches(&Version::new(1, 3, 0)));
+
+        // Should NOT match different major
+        assert!(!req.matches(&Version::new(2, 0, 0)));
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_package_manager_creation() {
+        let cache_dir = PathBuf::from("/tmp/fusion-test-cache");
+        let pm = PackageManager::new(cache_dir.clone());
+
+        assert_eq!(pm.cache_dir, cache_dir);
+        assert_eq!(pm.installed_packages.len(), 0);
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_dependency_resolution_simple() {
+        // use resolver::DependencyResolver;
+
+        let mut resolver = DependencyResolver::new();
+
+        // Add package A version 1.0.0
+        resolver.add_package(Package {
+            name: "package-a".to_string(),
+            version: Version::new(1, 0, 0),
+            authors: vec![],
+            description: None,
+            license: None,
+            repository: None,
+            dependencies: vec![],
+        });
+
+        // Resolve dependency on A
+        let deps = vec![Dependency {
+            name: "package-a".to_string(),
+            version_req: VersionRequirement::Caret(Version::new(1, 0, 0)),
+        }];
+
+        let resolved = resolver.resolve(&deps).unwrap();
+
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].name, "package-a");
+        assert_eq!(resolved[0].version, Version::new(1, 0, 0));
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_dependency_resolution_transitive() {
+        // use resolver::DependencyResolver;
+
+        let mut resolver = DependencyResolver::new();
+
+        // Package B depends on nothing
+        resolver.add_package(Package {
+            name: "package-b".to_string(),
+            version: Version::new(1, 0, 0),
+            authors: vec![],
+            description: None,
+            license: None,
+            repository: None,
+            dependencies: vec![],
+        });
+
+        // Package A depends on B
+        resolver.add_package(Package {
+            name: "package-a".to_string(),
+            version: Version::new(1, 0, 0),
+            authors: vec![],
+            description: None,
+            license: None,
+            repository: None,
+            dependencies: vec![Dependency {
+                name: "package-b".to_string(),
+                version_req: VersionRequirement::Caret(Version::new(1, 0, 0)),
+            }],
+        });
+
+        // Resolve dependency on A (should include B)
+        let deps = vec![Dependency {
+            name: "package-a".to_string(),
+            version_req: VersionRequirement::Any,
+        }];
+
+        let resolved = resolver.resolve(&deps).unwrap();
+
+        assert_eq!(resolved.len(), 2);
+
+        let names: FVec<FString> = resolved.iter().map(|p| p.name.clone()).collect();
+        assert!(names.contains(&"package-a".to_string()));
+        assert!(names.contains(&"package-b".to_string()));
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_manifest_generation() {
+        // use manifest::Manifest;
+
+        let manifest = Manifest::generate("test-project", "0.1.0").unwrap();
+
+        assert!(manifest.contains("[package]"));
+        assert!(manifest.contains("name = \"test-project\""));
+        assert!(manifest.contains("version = \"0.1.0\""));
+        assert!(manifest.contains("[dependencies]"));
+        assert!(manifest.contains("[dev-dependencies]"));
+    }
+
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_cli_create_project() {
+        // use cli::create_new_project;
+
+        let temp_dir = env::temp_dir().join("fusion-cli-test");
+
+        create_new_project("cli-test", &temp_dir).unwrap();
+
+        // Verify files created
+        assert!(temp_dir.join("fusion.toml").exists());
+        assert!(temp_dir.join("src").exists());
+        assert!(temp_dir.join("src/main.fu").exists());
+        assert!(temp_dir.join("README.md").exists());
+
+        // Cleanup
+        fs::remove_dir_all(temp_dir).ok();
+    }
+}
+
+#[cfg(disabled)]
+mod integration_tests {
+    #[test]
+    #[ignore = "Phase 4 feature"]
+    fn test_full_package_workflow() {
+        // This would test the complete workflow:
+        // 1. Create project
+        // 2. Add dependencies
+        // 3. Resolve dependencies
+        // 4. Download packages
+        // 5. Build project
+
+        // TODO: Implement when registry is available
+    }
+}

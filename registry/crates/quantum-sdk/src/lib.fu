@@ -1,0 +1,8 @@
+/// Fusion Quantum SDK
+/// Provides interfaces for Quantum Processing Units (QPUs).
+use fusion_core::types::quantum::QuantumCircuit;
+trait OptimizationPass {
+    fn run(&self, circuit: &mut QuantumCircuit);
+}
+struct QuantumBackend;
+struct CircuitCompiler;

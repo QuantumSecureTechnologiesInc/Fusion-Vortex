@@ -1,7 +1,7 @@
 # Fusion LLM Prompt Tuning
 
-**Version:** 0.2.0  
-**Type:** Fine-Tuning  
+**Version:** 0.2.0
+**Type:** Fine-Tuning
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use llm_prompt_tuning::{Tuner, Config};
 let tuner = Tuner::new(model, Config::default());
 let soft_prompt = tuner.train(dataset).await?;
 soft_prompt.save("my_task.bin")?;
-```
+```text
 
 ## Dependencies
 

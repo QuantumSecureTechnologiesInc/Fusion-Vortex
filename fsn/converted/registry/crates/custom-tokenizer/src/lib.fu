@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/custom-tokenizer/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// custom-tokenizer implementation
+struct CustomTokenizerModule;

@@ -37,7 +37,7 @@ fn main() {
         thread::sleep(Duration::from_millis(1))
     }
 }
-```
+```text
 
 Note that when the main thread completes, the program exits, even if the spawned thread is still running.
 
@@ -61,7 +61,7 @@ fn main() {
 
     handle.join().unwrap()
 }
-```
+```text
 
 Now the program waits for the spawned thread to complete.
 
@@ -76,12 +76,12 @@ fn main() {
     let handle = thread::spawn(move || {
         println!("Here's a vector: {:?}", v)
     })
-    
+
     // println!("{:?}", v) // Error! v was moved to the thread.
-    
+
     handle.join().unwrap()
 }
-```
+```text
 
 This prevents race conditions where the main thread drops `v` while the spawned thread is still trying to read it.
 
@@ -113,7 +113,7 @@ fn main() {
     let received = rx.recv().unwrap()
     println!("Got: {}", received)
 }
-```
+```text
 
 ### 15.2.2 Sending Multiple Values
 
@@ -140,7 +140,7 @@ fn main() {
         println!("Got: {}", received)
     }
 }
-```
+```text
 
 ### 15.2.3 Creating Multiple Producers by Cloning the Transmitter
 
@@ -157,7 +157,7 @@ thread::spawn(move || {
 thread::spawn(move || {
     // send from tx (original)
 })
-```
+```text
 
 ---
 
@@ -184,7 +184,7 @@ fn main() {
 
     println("m = {:?}", m)
 }
-```
+```text
 
 `m.lock()` blocks the thread until the lock is acquired. It returns a smart pointer (`MutexGuard`) wrapped in a `LockResult`. The guard implements `Deref` to point to the inner data, and `Drop` to release the lock automatically.
 
@@ -216,7 +216,7 @@ fn main() {
 
     println!("Result: {}", *counter.lock().unwrap()) // 10
 }
-```
+```text
 
 This pattern—`Arc<Mutex<T>>`—is very common in Fusion for shared mutable state.
 
@@ -262,9 +262,9 @@ In the next chapter, we will see one of the unique features of Fusion's tri-brid
 
 ## 15.6 Exercises
 
-1.  **Parallel Map**: implement a function `pmap(vec, closure)` that applies the closure to each element of the vector using threads, creating a new vector in parallel.
-2.  **Deadlock Creation**: Write a program that intentionally deadlocks using two Mutexes, and analyze why it happens.
-3.  **Chat Server**: A primitive chat server where a main thread listens for messages from multiple client threads (simulated) and broadcasts them.
+1. **Parallel Map**: implement a function `pmap(vec, closure)` that applies the closure to each element of the vector using threads, creating a new vector in parallel.
+2. **Deadlock Creation**: Write a program that intentionally deadlocks using two Mutexes, and analyze why it happens.
+3. **Chat Server**: A primitive chat server where a main thread listens for messages from multiple client threads (simulated) and broadcasts them.
 
 ---
 

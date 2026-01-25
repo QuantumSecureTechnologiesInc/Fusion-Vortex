@@ -1,0 +1,16 @@
+[package]
+name = "fusion_carver"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Experimental: EXPERIMENTAL: Code carving and extraction utilities."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "experimental", "experimental", "utilities"]
+categories = ["experimental"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+
+

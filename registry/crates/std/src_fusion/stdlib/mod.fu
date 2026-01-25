@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: stdlib/mod (stub)
+fn _stdlib_stub() -> void { }

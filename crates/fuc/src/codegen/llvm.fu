@@ -1,0 +1,990 @@
+//! LLVM code generation backend.
+use super::{Backend, CodegenError};
+use crate::ast;
+use crate::ir::{self, Function, Instruction, Module, Terminator, TypedValue, Value};
+use crate::sema;
+use generational_arena::Index;
+use inkwell::builder::Builder;
+use inkwell::builder::BuilderError;
+use inkwell::context::Context;
+use inkwell::debug_info::{DICompileUnit, DWARFEmissionKind, DWARFSourceLanguage};
+use inkwell::module::{Linkage, Module as InkwellModule};
+use inkwell::targets::{
+    CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
+};
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
+use inkwell::values::{BasicValueEnum, FunctionValue, PointerValue};
+use inkwell::{AddressSpace, IntPredicate, OptimizationLevel};
+/// Configuration options for LLVM code generation.
+#[derive(Debug)]
+struct CodegenConfig<'a> {
+    /// Optimization level (0-3).
+    pub opt_level: u8,
+    /// Target triple override.
+    pub target_triple: Option<FString>,
+    /// Whether to emit textual LLVM IR (.ll).
+    pub emit_llvm: FBool,
+    /// Source file path (for debug info).
+    pub source_file_path: &'a str,
+    /// Compile as library (skip entry point checks).
+    pub is_lib: FBool,
+}
+/// LLVM backend implementation.
+struct LlvmBackend<'ctx> {
+    context: &'ctx Context,
+    module: InkwellModule<'ctx>,
+    builder: Builder<'ctx>,
+    config: CodegenConfig<'ctx>,
+    dibuilder: inkwell::debug_info::DebugInfoBuilder<'ctx>,
+    #[allow(dead_code)]
+    compile_unit: DICompileUnit<'ctx>,
+    value_map: FMap<FString, PointerValue<'ctx>>,
+    block_map: FMap<Index, inkwell::basic_block::BasicBlock<'ctx>>,
+    string_globals: FVec<PointerValue<'ctx>>,
+    struct_types: FMap<FString, inkwell::types::StructType<'ctx>>,
+}
+impl<'ctx> LlvmBackend<'ctx> {
+    /// Creates a new LLVM backend.
+    pub fn new(context: &'ctx Context, config: CodegenConfig<'ctx>) -> Self {
+        let module = context.create_module("fuc_module");
+        if let Some(triple) = &config.target_triple {
+            module.set_triple(&inkwell::targets::TargetTriple::create(triple));
+        }
+        let (dibuilder, compile_unit) = module
+            .create_debug_info_builder(
+                true,
+                DWARFSourceLanguage::C,
+                config.source_file_path,
+                ".",
+                "fuc compiler",
+                config.opt_level > 0,
+                "",
+                0,
+                "",
+                DWARFEmissionKind::Full,
+                0,
+                false,
+                false,
+                "",
+                "",
+            );
+        Self {
+            context,
+            module,
+            builder: context.create_builder(),
+            config,
+            dibuilder,
+            compile_unit,
+            value_map: HashMap::new(),
+            block_map: HashMap::new(),
+            string_globals: Vec::new(),
+            struct_types: HashMap::new(),
+        }
+    }
+    fn map_builder<T>(
+        &self,
+        result: Result<T, BuilderError>,
+    ) -> Result<T, CodegenError> {
+        result.map_err(|e| CodegenError::LlvmError(e.to_string()))
+    }
+    fn as_llvm_type(&self, ty: &ast::Type) -> BasicTypeEnum<'ctx> {
+        match ty {
+            ast::Type::Int => self.context.i32_type().into(),
+            ast::Type::Bool => self.context.bool_type().into(),
+            ast::Type::String => self
+                .context
+                .ptr_type(AddressSpace::default())
+                .into(),
+            ast::Type::Array(elem_ty, size) => {
+                self.as_llvm_type(elem_ty).array_type(*size as FU32).into()
+            }
+            ast::Type::Pointer(_) => {
+                self.context.ptr_type(AddressSpace::default()).into()
+            }
+            ast::Type::Struct(name) => {
+                self.struct_types
+                    .get(name)
+                    .unwrap_or_else(|| {
+                        panic!("Internal ICE: unknown struct type '{}'", name)
+                    })
+                    .as_basic_type_enum()
+            }
+            ast::Type::Void => {
+                panic!("Internal ICE: Cannot convert Void type to BasicTypeEnum")
+            }
+            ast::Type::Unknown => self.context.i32_type().into(),
+        }
+    }
+    fn get_var_ptr(&self, name: &str) -> Result<PointerValue<'ctx>, CodegenError> {
+        self.value_map
+            .get(name)
+            .cloned()
+            .ok_or_else(|| {
+                CodegenError::InternalError(
+                    format!("Value '{}' not found in scope during codegen", name),
+                )
+            })
+    }
+    fn get_or_alloc_ptr(
+        &mut self,
+        name: &str,
+        ty: &ast::Type,
+    ) -> Result<PointerValue<'ctx>, CodegenError> {
+        if let Some(ptr) = self.value_map.get(name) {
+            return Ok(*ptr);
+        }
+        let alloca = self
+            .map_builder(self.builder.build_alloca(self.as_llvm_type(ty), name))?;
+        self.value_map.insert(name.to_string(), alloca);
+        Ok(alloca)
+    }
+    fn get_value_name(&self, val: &Value) -> FString {
+        match val {
+            Value::Variable(name) => name.clone(),
+            Value::Temporary(id) => format!("tmp{}", id),
+            _ => panic!("Internal ICE: Get name for constant value: {:?}", val),
+        }
+    }
+
+    fn get_or_declare_strcmp(&mut self) -> FunctionValue<'ctx> {
+        if let Some(func) = self.module.get_function("strcmp") {
+            return func;
+        }
+        let i32_ty = self.context.i32_type();
+        let ptr_ty = self.context.ptr_type(AddressSpace::default());
+        let fn_ty = i32_ty.fn_type(&[ptr_ty.into(), ptr_ty.into()], false);
+        self.module.add_function("strcmp", fn_ty, Some(Linkage::External))
+    }
+    fn get_llvm_value(
+        &mut self,
+        val: &TypedValue,
+    ) -> Result<BasicValueEnum<'ctx>, CodegenError> {
+        match &val.val {
+            Value::IntConst(i) => {
+                Ok(self.context.i32_type().const_int(*i as FU64, true).into())
+            }
+            Value::BoolConst(b) => {
+                Ok(self.context.bool_type().const_int(*b as FU64, false).into())
+            }
+            Value::StringConst(idx) => Ok(self.string_globals[*idx].into()),
+            Value::Variable(_) | Value::Temporary(_) => {
+                let name = self.get_value_name(&val.val);
+                let ptr = self.get_or_alloc_ptr(&name, &val.ty)?;
+                self.map_builder(
+                    self.builder.build_load(self.as_llvm_type(&val.ty), ptr, &name),
+                )
+            }
+        }
+    }
+    fn get_address_ptr(
+        &mut self,
+        addr: &ir::Address,
+    ) -> Result<PointerValue<'ctx>, CodegenError> {
+        match addr {
+            ir::Address::Variable { name, .. } => self.get_var_ptr(name),
+            ir::Address::Pointer { val, .. } => {
+                Ok(self.get_llvm_value(val)?.into_pointer_value())
+            }
+            ir::Address::Element { base, index, element_ty } => {
+                let base_ptr = self.get_address_ptr(base)?;
+                let base_pointee_ty = self.address_pointee_type(base)?;
+                self.build_gep(base_ptr, &base_pointee_ty, index, element_ty)
+            }
+            ir::Address::Field { base, field_index, field_ty, struct_name } => {
+                let base_ptr = self.get_address_ptr(base)?;
+                self.build_struct_gep(base_ptr, struct_name, *field_index, field_ty)
+            }
+        }
+    }
+    fn address_pointee_type(
+        &self,
+        addr: &ir::Address,
+    ) -> Result<ast::Type, CodegenError> {
+        match addr {
+            ir::Address::Variable { ty, .. } => Ok(ty.clone()),
+            ir::Address::Pointer { pointed_to_ty, .. } => Ok(pointed_to_ty.clone()),
+            ir::Address::Element { element_ty, .. } => Ok(element_ty.clone()),
+            ir::Address::Field { field_ty, .. } => Ok(field_ty.clone()),
+        }
+    }
+    fn build_gep(
+        &mut self,
+        base_ptr: PointerValue<'ctx>,
+        base_pointee_ty: &ast::Type,
+        index: &TypedValue,
+        element_ty: &ast::Type,
+    ) -> Result<PointerValue<'ctx>, CodegenError> {
+        let idx_val = self.get_llvm_value(index)?.into_int_value();
+        let element_ptr = self.context.ptr_type(AddressSpace::default());
+        let casted = self
+            .map_builder(self.builder.build_bit_cast(base_ptr, element_ptr, "gep_cast"))?
+            .into_pointer_value();
+        let (gep_ty, indices) = match base_pointee_ty {
+            ast::Type::Array(_, _) => {
+                (
+                    self.as_llvm_type(base_pointee_ty),
+                    vec![self.context.i32_type().const_zero(), idx_val],
+                )
+            }
+            _ => (self.as_llvm_type(element_ty), vec![idx_val]),
+        };
+        {
+            self.map_builder(self.builder.build_gep(gep_ty, casted, &indices, "gep"))
+        }
+    }
+    fn build_struct_gep(
+        &self,
+        base_ptr: PointerValue<'ctx>,
+        struct_name: &str,
+        field_index: FSize,
+        _field_ty: &ast::Type,
+    ) -> Result<PointerValue<'ctx>, CodegenError> {
+        let struct_ty = self
+            .struct_types
+            .get(struct_name)
+            .ok_or_else(|| CodegenError::InternalError(
+                format!("Unknown struct type '{}'", struct_name),
+            ))?;
+        let struct_ptr_ty = self.context.ptr_type(AddressSpace::default());
+        let casted = self
+            .map_builder(
+                self.builder.build_bit_cast(base_ptr, struct_ptr_ty, "struct_gep_cast"),
+            )?
+            .into_pointer_value();
+        let gep = self
+            .map_builder(
+                self
+                    .builder
+                    .build_struct_gep(
+                        *struct_ty,
+                        casted,
+                        field_index as FU32,
+                        "field_gep",
+                    ),
+            )?;
+        Ok(gep)
+    }
+    fn declare_structs(
+        &mut self,
+        structs: &[sema::TypedStructDefinition],
+    ) -> Result<(), CodegenError> {
+        for s in structs {
+            let ty = self.context.opaque_struct_type(&s.name);
+            self.struct_types.insert(s.name.clone(), ty);
+        }
+        for s in structs {
+            let ty = self
+                .struct_types
+                .get(&s.name)
+                .ok_or_else(|| CodegenError::InternalError(
+                    format!("Missing struct type '{}'", s.name),
+                ))?;
+            let field_types: FVec<BasicTypeEnum> = s
+                .fields
+                .iter()
+                .map(|(_, field_ty)| self.as_llvm_type(field_ty))
+                .collect();
+            ty.set_body(&field_types, false);
+        }
+        Ok(())
+    }
+    fn get_array_size(&self, ptr_ty: &ast::Type) -> FU64 {
+        match ptr_ty {
+            ast::Type::Pointer(inner) => {
+                match &**inner {
+                    ast::Type::Array(_, size) => *size as FU64,
+                    _ => {
+                        panic!(
+                            "Internal Compiler Error: GEP base is not a pointer to an array. Type is: {:?}",
+                            ptr_ty
+                        )
+                    }
+                }
+            }
+            _ => {
+                panic!(
+                    "Internal Compiler Error: GEP base is not a pointer. Type is: {:?}",
+                    ptr_ty
+                )
+            }
+        }
+    }
+    fn default_return_value(&self, ty: &ast::Type) -> Option<BasicValueEnum<'ctx>> {
+        match ty {
+            ast::Type::Void => None,
+            ast::Type::Int => Some(self.context.i32_type().const_zero().into()),
+            ast::Type::Bool => Some(self.context.bool_type().const_zero().into()),
+            ast::Type::String | ast::Type::Pointer(_) => {
+                Some(self.context.ptr_type(AddressSpace::default()).const_null().into())
+            }
+            ast::Type::Array(_, _) | ast::Type::Struct(_) => {
+                Some(self.as_llvm_type(ty).const_zero())
+            }
+            ast::Type::Unknown => Some(self.context.i32_type().const_zero().into()),
+        }
+    }
+    fn compile_function(
+        &mut self,
+        func: &Function,
+    ) -> Result<FunctionValue<'ctx>, CodegenError> {
+        let param_types: FVec<BasicMetadataTypeEnum> = func
+            .params
+            .iter()
+            .map(|(_, ty)| self.as_llvm_type(ty).into())
+            .collect();
+        let func_type = if func.return_type == ast::Type::Void {
+            self.context.void_type().fn_type(&param_types, false)
+        } else {
+            self.as_llvm_type(&func.return_type).fn_type(&param_types, false)
+        };
+        let llvm_func = self
+            .module
+            .get_function(&func.name)
+            .unwrap_or_else(|| self.module.add_function(&func.name, func_type, None));
+        self.value_map.clear();
+        self.block_map.clear();
+        for (index, block) in func.blocks.iter() {
+            let llvm_bb = self.context.append_basic_block(llvm_func, &block.label);
+            self.block_map.insert(index, llvm_bb);
+        }
+        let entry_bb = self.block_map[&func.entry_block];
+        self.builder.position_at_end(entry_bb);
+        for (i, (arg_name, arg_ty)) in func.params.iter().enumerate() {
+            let alloca = self
+                .map_builder(
+                    self.builder.build_alloca(self.as_llvm_type(arg_ty), arg_name),
+                )?;
+            self.value_map.insert(arg_name.clone(), alloca);
+            self.map_builder(
+                self
+                    .builder
+                    .build_store(alloca, llvm_func.get_nth_param(i as FU32).unwrap()),
+            )?;
+        }
+        for (_, block) in func.blocks.iter() {
+            for instr in &block.instrs {
+                let dest = match instr {
+                    Instruction::Alloca { name, ty } => {
+                        if !self.value_map.contains_key(name) {
+                            let alloca = self
+                                .map_builder(
+                                    self.builder.build_alloca(self.as_llvm_type(ty), name),
+                                )?;
+                            self.value_map.insert(name.clone(), alloca);
+                        }
+                        None
+                    }
+                    Instruction::BinaryOperation { dest, .. }
+                    | Instruction::Load { dest, .. }
+                    | Instruction::GetAddress { dest, .. }
+                    | Instruction::GetElementPtr { dest, .. }
+                    | Instruction::GetFieldPtr { dest, .. } => Some(dest),
+                    Instruction::Call { dest: Some(dest), .. } => Some(dest),
+                    _ => None,
+                };
+                if let Some(dest) = dest {
+                    let name = self.get_value_name(&dest.val);
+                    if !self.value_map.contains_key(&name) {
+                        let alloca = self
+                            .map_builder(
+                                self
+                                    .builder
+                                    .build_alloca(self.as_llvm_type(&dest.ty), &name),
+                            )?;
+                        self.value_map.insert(name, alloca);
+                    }
+                }
+            }
+        }
+        let mut stack = vec![func.entry_block];
+        let mut visited = HashSet::new();
+        visited.insert(func.entry_block);
+        while let Some(block_idx) = stack.pop() {
+            let block = &func.blocks[block_idx];
+            self.builder.position_at_end(self.block_map[&block_idx]);
+            for instr in &block.instrs {
+                match instr {
+                    Instruction::Alloca { .. } => {}
+                    Instruction::BinaryOperation { dest, op, op1, op2 } => {
+                        let val1 = self.get_llvm_value(op1)?;
+                        let val2 = self.get_llvm_value(op2)?;
+                        let dest_ptr = self
+                            .get_var_ptr(&self.get_value_name(&dest.val))?;
+                        let result: BasicValueEnum<'ctx> = match op {
+                            ast::BinaryOp::Add => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_add(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "add",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Sub => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_sub(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "sub",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Mul => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_mul(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "mul",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Div => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_signed_div(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "div",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Eq => {
+                                if op1.ty == ast::Type::String && op2.ty == ast::Type::String {
+                                    let strcmp_fn = self.get_or_declare_strcmp();
+                                    let lhs = val1.into_pointer_value();
+                                    let rhs = val2.into_pointer_value();
+                                    let call_site = self.map_builder(
+                                            self
+                                                .builder
+                                                .build_call(
+                                                    strcmp_fn,
+                                                    &[lhs.into(), rhs.into()],
+                                                    "strcmp",
+                                                ),
+                                        )?;
+                                    let cmp_val = call_site
+                                        .try_as_basic_value()
+                                        .left()
+                                        .unwrap()
+                                        .into_int_value();
+                                    self.map_builder(
+                                            self
+                                                .builder
+                                                .build_int_compare(
+                                                    IntPredicate::EQ,
+                                                    cmp_val,
+                                                    self.context.i32_type().const_zero(),
+                                                    "str_eq",
+                                                ),
+                                        )?
+                                        .into()
+                                } else {
+                                    self.map_builder(
+                                            self
+                                                .builder
+                                                .build_int_compare(
+                                                    IntPredicate::EQ,
+                                                    val1.into_int_value(),
+                                                    val2.into_int_value(),
+                                                    "eq",
+                                                ),
+                                        )?
+                                        .into()
+                                }
+                            }
+                            ast::BinaryOp::Neq => {
+                                if op1.ty == ast::Type::String && op2.ty == ast::Type::String {
+                                    let strcmp_fn = self.get_or_declare_strcmp();
+                                    let lhs = val1.into_pointer_value();
+                                    let rhs = val2.into_pointer_value();
+                                    let call_site = self.map_builder(
+                                            self
+                                                .builder
+                                                .build_call(
+                                                    strcmp_fn,
+                                                    &[lhs.into(), rhs.into()],
+                                                    "strcmp",
+                                                ),
+                                        )?;
+                                    let cmp_val = call_site
+                                        .try_as_basic_value()
+                                        .left()
+                                        .unwrap()
+                                        .into_int_value();
+                                    self.map_builder(
+                                            self
+                                                .builder
+                                                .build_int_compare(
+                                                    IntPredicate::NE,
+                                                    cmp_val,
+                                                    self.context.i32_type().const_zero(),
+                                                    "str_neq",
+                                                ),
+                                        )?
+                                        .into()
+                                } else {
+                                    self.map_builder(
+                                            self
+                                                .builder
+                                                .build_int_compare(
+                                                    IntPredicate::NE,
+                                                    val1.into_int_value(),
+                                                    val2.into_int_value(),
+                                                    "neq",
+                                                ),
+                                        )?
+                                        .into()
+                                }
+                            }
+                            ast::BinaryOp::Lt => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_compare(
+                                                IntPredicate::SLT,
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "lt",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Gt => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_int_compare(
+                                                IntPredicate::SGT,
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "gt",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                            ast::BinaryOp::Or => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_or(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "or",
+                                            ),
+                                    )?
+                                    .into()
+                            }
+                        };
+                        self.map_builder(self.builder.build_store(dest_ptr, result))?;
+                    }
+                    Instruction::Call { dest, func_name, args } => {
+                        let callee = self
+                            .module
+                            .get_function(func_name)
+                            .ok_or_else(|| CodegenError::InternalError(
+                                format!("Function '{}' not found", func_name),
+                            ))?;
+                        let mut llvm_args: FVec<
+                            inkwell::values::BasicMetadataValueEnum<'ctx>,
+                        > = Vec::new();
+                        for arg in args {
+                            llvm_args.push(self.get_llvm_value(arg)?.into());
+                        }
+                        let call_site = self
+                            .map_builder(
+                                self.builder.build_call(callee, &llvm_args, "call"),
+                            )?;
+                        if let Some(dest_val) = dest {
+                            let dest_ptr = self
+                                .get_var_ptr(&self.get_value_name(&dest_val.val))?;
+                            if let Some(basic_val) = call_site
+                                .try_as_basic_value()
+                                .left()
+                            {
+                                self.map_builder(
+                                    self.builder.build_store(dest_ptr, basic_val),
+                                )?;
+                            }
+                        }
+                    }
+                    Instruction::Load { dest, src } => {
+                        let src_ptr = self.get_address_ptr(src)?;
+                        let loaded_val = self
+                            .map_builder(
+                                self
+                                    .builder
+                                    .build_load(self.as_llvm_type(&dest.ty), src_ptr, "load"),
+                            )?;
+                        let dest_ptr = self
+                            .get_var_ptr(&self.get_value_name(&dest.val))?;
+                        self.map_builder(
+                            self.builder.build_store(dest_ptr, loaded_val),
+                        )?;
+                    }
+                    Instruction::Store { dest, val } => {
+                        let val_to_store = self.get_llvm_value(val)?;
+                        let dest_ptr = self.get_address_ptr(dest)?;
+                        self.map_builder(
+                            self.builder.build_store(dest_ptr, val_to_store),
+                        )?;
+                    }
+                    Instruction::GetAddress { dest, var_name, .. } => {
+                        let var_ptr = self.get_var_ptr(var_name)?;
+                        let dest_ptr = self
+                            .get_var_ptr(&self.get_value_name(&dest.val))?;
+                        self.map_builder(self.builder.build_store(dest_ptr, var_ptr))?;
+                    }
+                    Instruction::GetElementPtr { dest, base_ptr, index, element_ty } => {
+                        let current_llvm_func = self
+                            .module
+                            .get_function(&func.name)
+                            .ok_or_else(|| CodegenError::InternalError(
+                                "Current function not found".into(),
+                            ))?;
+                        let base = self.get_llvm_value(base_ptr)?.into_pointer_value();
+                        let idx = self.get_llvm_value(index)?.into_int_value();
+                        let dest_ptr = self
+                            .get_var_ptr(&self.get_value_name(&dest.val))?;
+                        let array_size = self.get_array_size(&base_ptr.ty);
+                        let size_val = self
+                            .context
+                            .i32_type()
+                            .const_int(array_size as FU64, false);
+                        let zero_val = self.context.i32_type().const_int(0, false);
+                        let fail_bb = self
+                            .context
+                            .append_basic_block(current_llvm_func, "bounds_fail");
+                        let success_bb = self
+                            .context
+                            .append_basic_block(current_llvm_func, "bounds_ok");
+                        let lt_zero = self
+                            .map_builder(
+                                self
+                                    .builder
+                                    .build_int_compare(
+                                        IntPredicate::SLT,
+                                        idx,
+                                        zero_val,
+                                        "lt_zero",
+                                    ),
+                            )?;
+                        let ge_size = self
+                            .map_builder(
+                                self
+                                    .builder
+                                    .build_int_compare(
+                                        IntPredicate::SGE,
+                                        idx,
+                                        size_val,
+                                        "ge_size",
+                                    ),
+                            )?;
+                        let out_of_bounds = self
+                            .map_builder(
+                                self.builder.build_or(lt_zero, ge_size, "out_of_bounds"),
+                            )?;
+                        self.map_builder(
+                            self
+                                .builder
+                                .build_conditional_branch(
+                                    out_of_bounds,
+                                    fail_bb,
+                                    success_bb,
+                                ),
+                        )?;
+                        self.builder.position_at_end(fail_bb);
+                        let panic_func = self
+                            .module
+                            .get_function("panic")
+                            .unwrap_or_else(|| {
+                                let i8_ptr = self.context.ptr_type(AddressSpace::default());
+                                let fn_type = self
+                                    .context
+                                    .void_type()
+                                    .fn_type(&[i8_ptr.into()], false);
+                                self.module
+                                    .add_function("panic", fn_type, Some(Linkage::External))
+                            });
+                        let error_msg = self
+                            .map_builder(
+                                self
+                                    .builder
+                                    .build_global_string_ptr(
+                                        "Array index out of bounds!",
+                                        "bounds_err_msg",
+                                    ),
+                            )?;
+                        self.map_builder(
+                            self
+                                .builder
+                                .build_call(
+                                    panic_func,
+                                    &[error_msg.as_pointer_value().into()],
+                                    "",
+                                ),
+                        )?;
+                        self.map_builder(self.builder.build_unreachable())?;
+                        self.builder.position_at_end(success_bb);
+                        let (gep_ty, indices) = match &base_ptr.ty {
+                            ast::Type::Pointer(inner) => {
+                                match &**inner {
+                                    ast::Type::Array(_, _) => {
+                                        (self.as_llvm_type(&*inner), vec![zero_val, idx])
+                                    }
+                                    _ => (self.as_llvm_type(element_ty), vec![idx]),
+                                }
+                            }
+                            _ => (self.as_llvm_type(element_ty), vec![idx]),
+                        };
+                        let gep = {
+                            self.map_builder(
+                                self.builder.build_gep(gep_ty, base, &indices, "gep"),
+                            )?
+                        };
+                        self.map_builder(self.builder.build_store(dest_ptr, gep))?;
+                    }
+                    Instruction::GetFieldPtr {
+                        dest,
+                        base_ptr,
+                        field_index,
+                        struct_name,
+                        field_ty,
+                    } => {
+                        let base = self.get_llvm_value(base_ptr)?.into_pointer_value();
+                        let dest_ptr = self
+                            .get_var_ptr(&self.get_value_name(&dest.val))?;
+                        let field_ptr = self
+                            .build_struct_gep(
+                                base,
+                                struct_name,
+                                *field_index,
+                                field_ty,
+                            )?;
+                        self.map_builder(self.builder.build_store(dest_ptr, field_ptr))?;
+                    }
+                    Instruction::BoundsFail { message } => {
+                        let panic_fn = self
+                            .module
+                            .get_function("panic")
+                            .ok_or_else(|| CodegenError::InternalError(
+                                "Missing panic declaration".into(),
+                            ))?;
+                        let msg_ptr = self
+                            .map_builder(
+                                self.builder.build_global_string_ptr(message, "bounds_msg"),
+                            )?;
+                        self.map_builder(
+                            self
+                                .builder
+                                .build_call(
+                                    panic_fn,
+                                    &[msg_ptr.as_pointer_value().into()],
+                                    "panic",
+                                ),
+                        )?;
+                    }
+                }
+            }
+            match &block.terminator {
+                Terminator::Return(val_opt) => {
+                    if let Some(val) = val_opt {
+                        let ret_val = self.get_llvm_value(val)?;
+                        self.map_builder(self.builder.build_return(Some(&ret_val)))?;
+                    } else if let Some(default_val) = self
+                        .default_return_value(&func.return_type)
+                    {
+                        self.map_builder(self.builder.build_return(Some(&default_val)))?;
+                    } else {
+                        self.map_builder(self.builder.build_return(None))?;
+                    }
+                }
+                Terminator::Jump(target_idx) => {
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_unconditional_branch(self.block_map[target_idx]),
+                    )?;
+                    if visited.insert(*target_idx) {
+                        stack.push(*target_idx);
+                    }
+                }
+                Terminator::ConditionalJump { cond, then_block, else_block } => {
+                    let cond_val = self.get_llvm_value(cond)?.into_int_value();
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_conditional_branch(
+                                cond_val,
+                                self.block_map[then_block],
+                                self.block_map[else_block],
+                            ),
+                    )?;
+                    if visited.insert(*then_block) {
+                        stack.push(*then_block);
+                    }
+                    if visited.insert(*else_block) {
+                        stack.push(*else_block);
+                    }
+                }
+            }
+        }
+        for (block_idx, block) in func.blocks.iter() {
+            if visited.contains(&block_idx) {
+                continue;
+            }
+            self.builder.position_at_end(self.block_map[&block_idx]);
+            match &block.terminator {
+                Terminator::Return(val_opt) => {
+                    if let Some(val) = val_opt {
+                        let ret_val = self.get_llvm_value(val)?;
+                        self.map_builder(self.builder.build_return(Some(&ret_val)))?;
+                    } else if let Some(default_val) = self
+                        .default_return_value(&func.return_type)
+                    {
+                        self.map_builder(self.builder.build_return(Some(&default_val)))?;
+                    } else {
+                        self.map_builder(self.builder.build_return(None))?;
+                    }
+                }
+                Terminator::Jump(target_idx) => {
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_unconditional_branch(self.block_map[target_idx]),
+                    )?;
+                }
+                Terminator::ConditionalJump { cond, then_block, else_block } => {
+                    let cond_val = self.get_llvm_value(cond)?.into_int_value();
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_conditional_branch(
+                                cond_val,
+                                self.block_map[then_block],
+                                self.block_map[else_block],
+                            ),
+                    )?;
+                }
+            }
+        }
+        Ok(llvm_func)
+    }
+}
+impl<'ctx> Backend for LlvmBackend<'ctx> {
+    fn name(&self) -> &str {
+        "LLVM"
+    }
+    fn generate(&mut self, ir: &Module, output_path: &str) -> Result<(), CodegenError> {
+        let dummy_fn = self
+            .module
+            .add_function(
+                "__fuc_globals",
+                self.context.void_type().fn_type(&[], false),
+                Some(Linkage::Internal),
+            );
+        let dummy_bb = self.context.append_basic_block(dummy_fn, "entry");
+        self.builder.position_at_end(dummy_bb);
+        self.declare_structs(&ir.structs)?;
+        for str_lit in &ir.strings {
+            let global_str = self
+                .map_builder(self.builder.build_global_string_ptr(str_lit, "str_lit"))?;
+            self.string_globals.push(global_str.as_pointer_value());
+        }
+        self.map_builder(self.builder.build_return(None))?;
+        for ext in &ir.externs {
+            let param_types: FVec<BasicMetadataTypeEnum> = ext
+                .params
+                .iter()
+                .map(|(_, ty)| self.as_llvm_type(ty).into())
+                .collect();
+            let func_type = if ext.return_type == ast::Type::Void {
+                self.context.void_type().fn_type(&param_types, ext.is_variadic)
+            } else {
+                self.as_llvm_type(&ext.return_type)
+                    .fn_type(&param_types, ext.is_variadic)
+            };
+            self.module.add_function(&ext.name, func_type, Some(Linkage::External));
+        }
+        for func in &ir.functions {
+            self.compile_function(func)?;
+        }
+        if !self.config.is_lib {
+            if self.module.get_function("main").is_none() {
+                return Err(CodegenError::InternalError(
+                    "No entry point found (missing main)".to_string(),
+                ));
+            }
+        }
+        self.dibuilder.finalize();
+        let opt_level = match self.config.opt_level {
+            0 => OptimizationLevel::None,
+            1 => OptimizationLevel::Less,
+            2 => OptimizationLevel::Default,
+            _ => OptimizationLevel::Aggressive,
+        };
+        if self.config.emit_llvm {
+            let ll_path = Path::new(output_path).with_extension("ll");
+            self.module
+                .print_to_file(&ll_path)
+                .map_err(|e| CodegenError::LlvmError(e.to_string()))?;
+        }
+        Target::initialize_x86(&InitializationConfig::default());
+        let triple = if let Some(triple_str) = self.config.target_triple.clone() {
+            inkwell::targets::TargetTriple::create(&triple_str)
+        } else {
+            TargetMachine::get_default_triple()
+        };
+        let target = Target::from_triple(&triple)
+            .map_err(|e| CodegenError::TargetError(
+                format!("Target '{}' not supported: {}", triple, e.to_string()),
+            ))?;
+        let target_machine = target
+            .create_target_machine(
+                &triple,
+                "generic",
+                "",
+                opt_level,
+                RelocMode::Static,
+                CodeModel::Default,
+            )
+            .ok_or_else(|| CodegenError::TargetError(
+                format!("Could not create target machine for {}", triple),
+            ))?;
+        self.module.set_data_layout(&target_machine.get_target_data().get_data_layout());
+        // Reduce PIE-related relocations in .text by aligning module flags with static/exec model.
+        self.module.add_basic_value_flag(
+            "PIE Level",
+            inkwell::module::FlagBehavior::Warning,
+            self.context.i32_type().const_int(0, false),
+        );
+        self.module.add_basic_value_flag(
+            "PIC Level",
+            inkwell::module::FlagBehavior::Warning,
+            self.context.i32_type().const_int(0, false),
+        );
+        if let Err(e) = self.module.verify() {
+            return Err(
+                CodegenError::LlvmError(
+                    format!("Module verification failed: {}", e.to_string()),
+                ),
+            );
+        }
+        target_machine
+            .write_to_file(&self.module, FileType::Object, Path::new(output_path))
+            .map_err(|e| CodegenError::LlvmError(
+                format!("Failed to write object file: {}", e.to_string()),
+            ))?;
+        Ok(())
+    }
+}

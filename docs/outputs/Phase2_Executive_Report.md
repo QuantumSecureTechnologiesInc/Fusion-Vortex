@@ -157,7 +157,7 @@ pub fn hybrid_sign(message: &[u8], classical_sk: &[u8], pqc_sk: &[u8])
 pub fn hybrid_verify(message: &[u8], sig: &HybridSignature,
                      classical_pk: &[u8], pqc_pk: &[u8])
     -> Result<bool, String>
-```
+```text
 
 ### Security Model
 
@@ -182,7 +182,7 @@ pub fn hybrid_verify(message: &[u8], sig: &HybridSignature,
 ✅ test_keypair_generation .............. PASS
 
 Test Coverage: 5/5 (100%)
-```
+```text
 
 ### Integration Status
 
@@ -220,7 +220,7 @@ All Fusion stdlib components successfully compile to valid LLVM IR:
 ✅ stdlib/result.fu
 ✅ stdlib/string.fu
 ✅ stdlib/stringutils.fu
-```
+```text
 
 ### Build Quality
 

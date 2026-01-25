@@ -1,0 +1,73 @@
+// SOURCE: registry/crates/ai-core/src/autograd.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use fusion_core::types::tensor::Tensor;
+use fusion_core::FusionResult;
+
+/// Production Autograd Variable
+///
+/// Wraps a tensor with optional name and metadata.
+/// In a full autograd system, this would also track the computational graph
+/// and gradients. For now, we providing a robust foundation that stores the actual tensor data.
+#[derive(Clone, Debug)]
+struct Variable {
+    pub name: FString,
+    pub data: Tensor<f64, 2>,
+    pub grad: Option<Tensor<f64, 2>>,
+}
+
+impl Variable {
+    /// Create a new variable with data and a name
+    fn new(name: impl Into<FString>, data: Tensor<f64, 2>) -> Self {
+        Self {
+            name: name.into(),
+            data,
+            grad: None,
+        }
+    }
+
+    /// Helper to create a variable from an existing name (for stubs compatibility)
+    fn from_name(name: impl Into<FString>) -> Self {
+        Self {
+            name: name.into(),
+            data: Tensor::zeros([1, 1]), // Minimum data allocation
+            grad: None,
+        }
+    }
+
+    /// Access the shape of the underlying tensor
+    fn shape(&self) -> &[usize] {
+        self.data.shape()
+    }
+}
+
+/// Stochastic Gradient Descent (SGD) Optimizer
+///
+/// Updates parameters based on their gradients and a learning rate.
+struct SGD {
+    pub lr: f64,
+}
+
+impl SGD {
+    fn new(lr: f64) -> Self {
+        Self { lr }
+    }
+
+    /// Update a single variable using its gradient
+    fn step(&self, var: &mut Variable) -> FusionResult<()> {
+        if let Some(grad) = &var.grad {
+            // Updated weight = weight - lr * gradient
+            let update = grad.scale(self.lr);
+            var.data = var.data.sub(&update)?;
+            var.grad = None; // Reset gradient after step
+        }
+        Ok(())
+    }
+
+    /// Update multiple variables
+    fn step_many(&self, vars: &mut [Variable]) -> FusionResult<()> {
+        for var in vars {
+            self.step(var)?;
+        }
+        Ok(())
+    }
+}

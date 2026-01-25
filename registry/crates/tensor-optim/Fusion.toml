@@ -1,0 +1,17 @@
+[package]
+name = "fusion_tensor_optim"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Fusion Algorithm crate: tensor-optim."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true } # For Variable/Grads
+fusion_std = "1.0.0"
+
+

@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: security (stub)
+fn _security_stub() -> void { }

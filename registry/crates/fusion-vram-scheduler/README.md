@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-vram-scheduler = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_vram_scheduler::schedule;
 fn main() {
     schedule();
 }
-```
+```text
 
 ## License
 

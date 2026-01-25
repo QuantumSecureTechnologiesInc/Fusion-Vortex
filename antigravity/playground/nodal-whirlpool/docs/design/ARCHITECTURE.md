@@ -2,7 +2,7 @@
 
 ## System Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Fusion CLI (cmd/fusion)                     │
 │                    Entry Point & Argument Parsing                │
@@ -33,11 +33,11 @@
 │ • pkgmgr     │   │ • docgen     │   │ • deploy     │
 │ • audit      │   │              │   │ • audit      │
 └──────────────┘   └──────────────┘   └──────────────┘
-```
+```text
 
 ## AI Subsystem Architecture
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────┐
 │                        AI CLI Commands                          │
 │  assist│generate│refactor│explain│review│tests│doc│config     │
@@ -83,11 +83,11 @@
     │ • Anthropic      │       │ • ONNX           │
     │ • Azure OpenAI   │       │ • Custom         │
     └──────────────────┘       └──────────────────┘
-```
+```text
 
 ## Safety-First Workflow
 
-```
+```text
 ┌─────────────┐
 │ User Issues │
 │  AI Command │
@@ -168,11 +168,11 @@
               │  └─────────────────┘
               │
               └─No───► Cancel
-```
+```text
 
 ## Data Flow
 
-```
+```text
    User Input
        │
        ▼
@@ -224,11 +224,11 @@
               │ File System  │
               │   Updates    │
               └──────────────┘
-```
+```text
 
 ## Crate Dependency Graph
 
-```
+```text
 fusion (cmd/fusion)
     ├─► fusion-core
     ├─► fusion-toolchain
@@ -258,11 +258,12 @@ fusion-ai-daemon
 
 fusion-ai-models
     (no internal dependencies)
-```
+```text
 
 ## External Dependencies
 
 ### Core
+
 - **clap** - CLI argument parsing
 - **serde** - Serialization
 - **anyhow** / **thiserror** - Error handling
@@ -270,6 +271,7 @@ fusion-ai-models
 - **tracing** - Logging
 
 ### Cryptography
+
 - **pqcrypto** - Post-quantum suite
 - **pqcrypto-kyber** - Key encapsulation
 - **pqcrypto-dilithium** - Signatures
@@ -277,11 +279,13 @@ fusion-ai-models
 - **sha3** - SHA-3 hashing
 
 ### Networking
+
 - **reqwest** - HTTP client
 - **hyper** - HTTP server
 - **tower** - Service middleware
 
 ### Development
+
 - **git2** - Git integration
 - **similar** - Diff generation
 - **handlebars** / **tera** - Templating

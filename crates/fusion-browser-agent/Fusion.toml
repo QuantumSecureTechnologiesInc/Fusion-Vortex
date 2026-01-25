@@ -1,0 +1,19 @@
+[package]
+name = "fusion-browser-agent"
+version = "1.0.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Browser subagent for Fusion Coder"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["json"] }
+tracing = "0.1"
+
+# Fusion dependencies
+fusion-review-policy = { path = "../fusion-review-policy" }
+fusion_std = "1.0.0"

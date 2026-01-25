@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 llm-rotary-opt = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use llm_rotary_opt::rope;
 fn main() {
     rope();
 }
-```
+```text
 
 ## License
 

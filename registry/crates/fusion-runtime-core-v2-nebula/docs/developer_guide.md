@@ -18,7 +18,7 @@ If you haven't already:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+```text
 
 ### 2.2 Add the WASM Target
 
@@ -26,7 +26,7 @@ Fusion v2.0 uses the `wasm32-unknown-unknown` target for lightweight, stateless 
 
 ```bash
 rustup target add wasm32-unknown-unknown
-```
+```text
 
 ## 3. Building a Fusion Plugin
 
@@ -39,7 +39,7 @@ Create a new library project:
 ```bash
 cargo new --lib my-fusion-plugin
 cd my-fusion-plugin
-```
+```text
 
 ### 3.2 Configure Cargo.toml
 
@@ -57,8 +57,10 @@ edition = "2021"
 crate-type = ["cdylib"] # Critical for WASM generation
 
 [dependencies]
+
 # No heavy dependencies! Keep plugins lightweight.
-```
+
+```text
 
 ### 3.3 Writing the Logic (src/lib.rs)
 
@@ -67,7 +69,9 @@ The Core looks for a specific entry point named `fusion_entry`. You must prevent
 **File: src/lib.rs**
 
 ```rust
+
 #[no_mangle]
+
 pub extern "C" fn fusion_entry() -> i32 {
     // 1. Perform calculation
     let result = perform_complex_logic();
@@ -84,7 +88,7 @@ fn perform_complex_logic() -> bool {
     // Your business logic here
     true
 }
-```
+```text
 
 ### 3.4 Compiling
 
@@ -92,15 +96,15 @@ Run the build command:
 
 ```bash
 cargo build --target wasm32-unknown-unknown --release
-```
+```text
 
 **Artifact Location:**
 
 Your compiled binary will be located at:
 
-```
+```text
 target/wasm32-unknown-unknown/release/my_fusion_plugin.wasm
-```
+```text
 
 ## 4. Deploying & Testing
 
@@ -113,8 +117,10 @@ Once you have your `.wasm` file, you need to upload it to the running Core. We u
 ```bash
 cd server
 cargo run
+
 # Output: Fusion Runtime Core v2.0 (Nebula) listening on 0.0.0.0:50051
-```
+
+```text
 
 ### 4.2 Run the Client Script
 
@@ -129,10 +135,12 @@ import os
 client = FusionClient()
 
 # Check Core Health
+
 health = client.check_health()
 print(f"Core Status: {health}")
 
 # Define path to your new plugin
+
 wasm_path = "../my-fusion-plugin/target/wasm32-unknown-unknown/release/my_fusion_plugin.wasm"
 
 if os.path.exists(wasm_path):
@@ -141,7 +149,7 @@ if os.path.exists(wasm_path):
     print(f"Result: {result}")
 else:
     print("Error: WASM file not found. Did you run cargo build?")
-```
+```text
 
 ## 5. Troubleshooting & Limitations
 
@@ -180,7 +188,7 @@ jobs:
         with:
           name: plugin-binary
           path: target/wasm32-unknown-unknown/release/*.wasm
-```
+```text
 
 ## 7. Advanced Topics
 

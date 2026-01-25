@@ -1,0 +1,529 @@
+[package]
+name = "fusion_lang"
+version = "0.2.0-beta.1"
+edition = "2021"
+authors = ["QuantumSecure Technologies Ltd"]
+description = "Fusion Programming Language Compiler"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)'] }
+unsafe_code = "warn"
+unused_imports = "warn"
+unused_variables = "warn"
+dead_code = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+# Allow common patterns
+module_name_repetitions = "allow"
+
+
+
+[dependencies]
+# Core Dependencies
+logos = "0.14"
+clap = { version = "4.4", features = ["derive"] }
+lazy_static = "1.4"
+regex = "1.10"
+thiserror = "1.0"
+sha2 = { workspace = true }
+sha3 = "0.10"  # For hybrid cryptography module
+
+# Cryptography - Classical
+x25519-dalek = "2.0"
+ed25519-dalek = "2.1"
+rand = "0.8"
+
+# Cryptography - Post-Quantum (NIST Standardized)
+pqcrypto-mlkem = "0.1"
+pqcrypto-mldsa = "0.1"
+pqcrypto-traits = "0.3"
+
+# Phase 3: Language Server Protocol (LSP)
+tower-lsp = "0.20"
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+chacha20poly1305 = "0.10"
+async-trait = "0.1"
+
+parking_lot = { workspace = true }
+reqwest = { workspace = true, features = ["blocking"] }
+num_cpus = "0.2"
+# Dependencies for examples and scripts
+anyhow = { workspace = true }
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true }
+fusion_quantum = { path = "registry/crates/fusion_quantum" } 
+fusion_runtime_core = { path = "registry/crates/fusion_runtime_core" }
+fusion_finance = { path = "registry/crates/fusion_finance" }
+fusion_runtime_scheduler = { path = "registry/crates/fusion_runtime_scheduler" }
+
+# Phase 3: WebAssembly Backend
+wasm-encoder = "0.219"
+wasmparser = "0.219"
+fusion_std = "1.0.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[workspace]
+resolver = "2"
+members = [
+    "cmd/fusion",
+    "cmd/fusion-coder", "cmd/reactor-cli", "cmd/fusion-visual", "cmd/fusion-visual-native", "cmd/fusion-visual-desktop",
+    "crates/*",
+    "registry/crates/*",
+]
+exclude = [
+    "crates/tensorweave",
+    "crates/fusion-monolith-core",
+    "registry/crates/fusion-terminal-browser",
+    "crates/fusion_std",
+    "crates/settings",
+    "crates/ai-core",
+    "crates/vscode-runtime",
+    "tools/forge",
+]
+
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+homepage = "https://fusion-lang.org"
+rust-version = "1.80"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+unused_imports = "warn"
+unused_variables = "warn"
+dead_code = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+# Allow common patterns
+module_name_repetitions = "allow"
+
+
+
+[workspace.dependencies]
+anyhow = "1.0.94"
+async-trait = "0.1.83"
+clap = { version = "4.5.23", features = ["derive"] }
+clap_complete = "4.5.38"
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = "1.0.133"
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"] }
+bytes = "1.9.0"
+async-stream = "0.3.5"
+futures = "0.3.31"
+thiserror = "2.0.6"
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+tempfile = "3.14.0"
+log = "0.4.22"
+metrics = "0.23.0"
+url = "2.5.4"
+regex = "1.11.1"
+walkdir = "2.5.0"
+glob = "0.3.1"
+toml = "0.8.19"
+dirs = "5.0.1"
+once_cell = "1.20.2"
+parking_lot = "0.12.3"
+base64 = "0.22.1"
+rand = "0.8.5"
+sha2 = "0.10.8"
+pin-project-lite = "0.2.14"
+num_cpus = "1.16.0"
+hex = "0.4.3"
+which = "6.0.3"
+hyper = { version = "1.5.1", features = ["full"] }
+tower = { version = "0.5.1" }
+tower-lsp = "0.20"
+similar = "2.6.0"
+diff = "0.1.13"
+git2 = { version = "0.19.0", default-features = false }
+handlebars = "6.2.0"
+proptest = "1.6.0"
+criterion = "0.5.1"
+memmap2 = "0.9.4"
+socket2 = "0.5.7"
+ash = "0.38.0"
+metal = "0.27.0"
+jsonrpc-core = "18.0.0"
+jsonrpc-derive = "18.0.0"
+boa_engine = "0.18.0"
+zip = "0.6.6"
+fusion_q_aws_backend = { path = "registry/crates/q-aws-backend" }
+fusion_q_ibm_backend = { path = "registry/crates/q-ibm-backend" }
+num-traits = "0.2"
+ndarray = "0.15"
+async-graphql = "7.0"
+petgraph = "0.6"
+axum = "0.7"
+wasmtime = "17.0"
+pyo3 = "0.20"
+
+# Crypto
+hmac = "0.12.1"
+blake3 = "1.5.0"
+sha3 = "0.10.8"
+pqcrypto = "0.17.0"
+pqcrypto-mldsa = "0.1.0"
+pqcrypto-mlkem = "0.1"
+pqcrypto-sphincsplus = "0.8.0"
+pqcrypto-falcon = "0.3.0"
+pqcrypto-classicmceliece = "0.3.0"
+ring = "0.17.8"
+
+# Fusion Internals
+# Unified Core Crate (merged type system + compiler)
+fusion-core = { path = "registry/crates/fusion-core", version = "0.2.0" }
+fusion_core = { path = "registry/crates/fusion-core", version = "0.2.0", package = "fusion-core" }
+fusion-ai-core = { path = "registry/crates/ai-core", version = "0.2.0" }
+fusion_ai_core = { path = "registry/crates/fusion_ai_core", version = "0.2.0" }
+fusion-monolith-core = { path = "crates/fusion-monolith-core", version = "3.4.1" }
+fusion-policy = { path = "crates/policy", version = "0.1.0" }
+fusion_std = { path = "registry/crates/std", version = "0.2.0" }
+fusion_runtime_core = { path = "registry/crates/fusion_runtime_core", version = "0.2.0" }
+fusion_net = { path = "registry/crates/fusion_net", version = "0.2.0" }
+fusion_http = { path = "registry/crates/http", version = "0.2.0" }
+fusion_quantum_sdk = { path = "registry/crates/quantum-sdk", version = "0.2.0" }
+fusion_k8s_operator = { path = "registry/crates/k8s-operator", version = "0.2.0" }
+sentinael-tribrid = { path = "registry/crates/sentinel-tribrid", version = "1.0.0" }
+num_complex = { package = "num-complex", version = "0.4" }
+semver = "1.0"
+fusion_llm_inference_engine = { path = "registry/crates/llm-inference", version = "0.2.0" }
+fusion_llm_lora_manager = { path = "registry/crates/llm-lora-manager", version = "0.2.0" }
+fusion_tensor_sparse = { path = "registry/crates/tensor-sparse", version = "0.2.0" }
+fusion_sec_policy_engine = { path = "registry/crates/sec-policy-engine", version = "0.2.0", package = "sec-policy-engine" }
+fusion_audit = { path = "registry/crates/audit", version = "0.2.0" }
+fusion_sec_audit_log = { path = "registry/crates/audit", version = "0.2.0", package = "fusion-audit" }
+fusion_ai_core_adapters = { path = "registry/crates/ai-core", version = "0.2.0", package = "fusion-ai-core" }
+
+
+# Additional from golden-singularity
+crossbeam = "0.8"
+dashmap = "5.5"
+libc = "0.2"
+
+# ============================================================================
+# POLYGLOT LANGUAGE SUPPORT
+# ============================================================================
+[languages.cpp]
+enabled = true
+standard = "c++20"
+compiler = "clang++"
+sources = ["src/native/physics.cpp", "src/native/math.cpp"]
+include_dirs = ["include/", "vendor/eigen/"]
+libraries = ["boost", "eigen"]
+compile_flags = ["-O3", "-march=native"]
+
+[languages.python]
+enabled = true
+version = "3.11"
+requirements = ["numpy>=1.24", "pytorch>=2.0", "pandas"]
+entry_point = "src/ai/model.py"
+virtual_env = ".venv"
+package_manager = "uv"
+
+[languages.javascript]
+enabled = true
+manager = "bun"
+packages = { react = "^18.0", typescript = "^5.0", "@types/node" = "^20.0" }
+entry_point = "src/ui/app.tsx"
+
+# ============================================================================
+# RUNTIME CONFIGURATION
+# ============================================================================
+[runtime]
+profile = "supernova"
+target = "native"
+
+[runtime.supernova]
+heterogeneous_execution = true
+gpu_backends = ["cuda", "vulkan", "metal"]
+quantum_backends = ["simulator", "aws-braket", "ibm-quantum"]
+max_threads = "auto"
+memory_pool_size = "4GB"
+
+[runtime.thread_pool]
+worker_threads = "auto"
+stack_size = "2MB"
+work_stealing = true
+
+# ============================================================================
+# BUILD CONFIGURATION
+# ============================================================================
+[build]
+optimization_level = 2
+debug_info = true
+incremental = true
+parallel = true
+lto = false
+codegen_units = 16
+
+[build.target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "target-cpu=native"]
+
+[build.target.wasm32-unknown-unknown]
+opt_level = "z"
+strip = true
+
+# ============================================================================
+# MONOLITH (INCREMENTAL COMPILATION ENGINE)
+# ============================================================================
+[monolith]
+enabled = true
+persistence_path = ".fusion/cache"
+max_cache_size = "10GB"
+daemon_timeout = "30m"
+incremental_threshold = 0.1
+
+# ============================================================================
+# HAFT (HYPER-ADAPTIVE FLUX TENSOR)
+# ============================================================================
+[haft]
+enabled = true
+gpu_memory_limit = "8GB"
+ram_memory_limit = "32GB"
+ssd_cache_path = "/tmp/haft-cache"
+tiering_strategy = "adaptive"
+
+[haft.agents]
+researcher_interval = "100ms"
+builder_threshold = 0.7
+optimizer_prefetch = true
+
+# ============================================================================
+# SENTINEL TRIBRID (SECURITY)
+# ============================================================================
+[sentinel]
+enabled = true
+mode = "tribrid"
+
+[sentinel.crypto]
+key_exchange = "hybrid"
+signatures = "hybrid"
+encryption = "aes-256-gcm"
+pq_security_level = 3
+
+[sentinel.chaos]
+enabled = true
+initial_state = "random"
+rotation_interval = "1h"
+entropy_threshold = 0.95
+
+# ============================================================================
+# CORTEX AI SCHEDULER
+# ============================================================================
+[cortex]
+enabled = true
+learning_mode = "adaptive"
+profiling_interval = "1s"
+optimization_threshold = 0.8
+
+[cortex.gpu]
+auto_dispatch = true
+batch_size_optimization = true
+kernel_fusion = true
+
+# ============================================================================
+# QUANTUM COMPUTING
+# ============================================================================
+[quantum]
+default_backend = "simulator"
+max_qubits = 25
+shots = 1000
+
+[quantum.aws_braket]
+enabled = false
+region = "us-east-1"
+device = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+
+[quantum.ibm_quantum]
+enabled = false
+api_token = "${IBM_QUANTUM_TOKEN}"
+hub = "ibm-q"
+group = "open"
+project = "main"
+
+# ============================================================================
+# AI/ML CONFIGURATION
+# ============================================================================
+[ai]
+default_device = "cuda:0"
+mixed_precision = true
+gradient_checkpointing = true
+provider = "ollama"
+
+[ai.serving]
+batch_size = 32
+timeout = "5s"
+quantization = "int8"
+
+[ai.distributed]
+backend = "nccl"
+world_size = 4
+rank = 0
+
+[ai.ollama]
+base_url = "http://localhost:11434"
+model = "llama3"
+
+[ai.gpt_oss]
+base_url = "http://localhost:11435/v1"
+model = "gpt-oss"
+
+[ai.mistral]
+api_key = "${MISTRAL_API_KEY}"
+base_url = "https://api.mistral.ai/v1"
+model = "mistral-large-latest"
+
+[ai.phi]
+base_url = "http://localhost:11436/v1"
+model = "phi-3.5-mini"
+
+[ai.gemma]
+base_url = "http://localhost:11437/v1"
+model = "gemma-2-9b-it"
+
+[ai.qwen]
+api_key = "${QWEN_API_KEY}"
+base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+model = "qwen2.5-72b-instruct"
+
+[ai.deepseek]
+api_key = "${DEEPSEEK_API_KEY}"
+base_url = "https://api.deepseek.com/v1"
+model = "deepseek-chat"
+
+# ============================================================================
+# WEB SERVER
+# ============================================================================
+[web]
+host = "0.0.0.0"
+port = 8080
+workers = "auto"
+max_connections = 10000
+request_timeout = "30s"
+keep_alive = "75s"
+
+[web.tls]
+enabled = true
+cert_path = "certs/server.crt"
+key_path = "certs/server.key"
+pq_cipher_suites = [
+  "TLS_KYBER768_AES_256_GCM_SHA384",
+  "TLS_ECDHE_KYBER768_AES_256_GCM_SHA384"
+]
+
+# ============================================================================
+# DATABASE
+# ============================================================================
+[database]
+url = "postgresql://localhost/mydb"
+max_connections = 20
+min_connections = 5
+connection_timeout = "5s"
+idle_timeout = "10m"
+
+# ============================================================================
+# LOGGING & TELEMETRY
+# ============================================================================
+[logging]
+level = "info"
+format = "json"
+output = "stdout"
+
+[telemetry]
+enabled = true
+endpoint = "https://telemetry.example.com"
+sample_rate = 0.1
+metrics = ["latency", "throughput", "errors"]
+
+# ============================================================================
+# TESTING
+# ============================================================================
+[test]
+parallel = true
+timeout = "60s"
+coverage = true
+coverage_threshold = 80
+
+# ============================================================================
+# BENCHMARKING
+# ============================================================================
+[bench]
+warmup_time = "3s"
+measurement_time = "5s"
+sample_size = 100
+confidence_level = 0.95
+
+# ============================================================================
+# FEATURES (CONDITIONAL COMPILATION)
+# ============================================================================
+[features]
+default = ["std", "async"]
+std = []
+async = ["tokio"]
+kubernetes = ["fusion_k8s_operator"]
+aws = ["fusion_cloud_aws"]
+full = ["std", "async", "kubernetes", "aws"]
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+[docs]
+generate = true
+output_dir = "target/doc"
+private_items = false
+examples = true
+
+# ============================================================================
+# DEPLOYMENT
+# ============================================================================
+[deploy]
+target = "kubernetes"
+registry = "ghcr.io/quantumsecuretechnologiesinc"
+
+[deploy.kubernetes]
+namespace = "production"
+replicas = 3
+resources = { cpu = "1000m", memory = "2Gi" }
+
+[deploy.docker]
+base_image = "debian:bookworm-slim"
+expose_ports = [8080, 9090]
+
+# ============================================================================
+# SECURITY POLICIES
+# ============================================================================
+[security]
+audit_mode = "strict"
+secrets_detection = true
+dependency_scanning = true
+sbom_generation = true
+
+# ============================================================================
+# CUSTOM SCRIPTS
+# ============================================================================
+[scripts]
+pretest = "fusion check"
+postbuild = "fusion doc"
+deploy = "kubectl apply -f k8s/"
+
+# VS Code Runtime
+boa_engine = "0.19.0"
+zip = "1.1.0"
+jsonrpc-core = "18.0.0"
+jsonrpc-derive = "18.0.0"

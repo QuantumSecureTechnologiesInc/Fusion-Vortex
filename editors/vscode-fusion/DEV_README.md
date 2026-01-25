@@ -4,7 +4,7 @@ This directory contains the Visual Studio Code extension for Fusion language sup
 
 ## Development
 
-```
+```text
 
 # Install dependencies
 
@@ -21,7 +21,7 @@ npm run watch
 # Package extension
 
 npm run package
-```
+```text
 
 ## Testing
 

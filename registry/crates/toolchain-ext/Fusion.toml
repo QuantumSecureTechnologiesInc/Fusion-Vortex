@@ -1,0 +1,20 @@
+[package]
+name = "fusion_toolchain_ext"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Fusion Tool crate: toolchain-ext."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "tool"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion-core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_runtime_core = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+
+

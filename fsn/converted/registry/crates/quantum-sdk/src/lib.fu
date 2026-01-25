@@ -1,0 +1,12 @@
+// SOURCE: registry/crates/quantum-sdk/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Fusion Quantum SDK
+/// Provides interfaces for Quantum Processing Units (QPUs).
+use fusion_core::types::quantum::QuantumCircuit;
+
+pub trait OptimizationPass {
+    fn run(&self, circuit: &mut QuantumCircuit);
+}
+
+struct QuantumBackend;
+struct CircuitCompiler;

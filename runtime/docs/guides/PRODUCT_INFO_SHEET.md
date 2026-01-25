@@ -1,8 +1,8 @@
 # Product Information Sheet: Fusion Runtime Core
 
-**Product Name:** Fusion Runtime Core  
-**Version:** 0.3.0 (Alpha)  
-**Developer:** Quantum Secure Technologies Inc.  
+**Product Name:** Fusion Runtime Core
+**Version:** 0.3.0 (Alpha)
+**Developer:** Quantum Secure Technologies Inc.
 **Release Date:** 11 December 2025
 
 ---
@@ -112,19 +112,24 @@ While traditional runtimes (such as Tokio, Node.js libuv, or Go runtime) focus s
 ## 7. Getting Started
 
 ```bash
+
 # Clone the repository
+
 git clone https://github.com/QuantumSecureTechnologiesInc/fusion.git
 
 # Build the runtime (simulation mode)
+
 cd fusion/runtime
 cargo build --release --features simulation
 
 # Run tests
+
 cargo test --workspace --features simulation
 
 # Run a simple example
+
 cargo run --example hello_fusion --features simulation
-```
+```text
 
 ---
 

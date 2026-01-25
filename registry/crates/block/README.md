@@ -1,7 +1,7 @@
 # Fusion Block
 
-**Version:** 0.2.0  
-**Type:** Blockchain Core  
+**Version:** 0.2.0
+**Type:** Blockchain Core
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let block = Block::new(parent_hash, timestamp, transactions);
 
 // Calculate hash
 let hash = block.hash();
-```
+```text
 
 ## Dependencies
 

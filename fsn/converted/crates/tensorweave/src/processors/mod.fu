@@ -1,0 +1,6 @@
+// SOURCE: crates/tensorweave/src/processors/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod learn;
+mod optimize;
+mod secure;
+mod stabilize;

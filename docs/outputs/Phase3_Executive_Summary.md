@@ -105,7 +105,7 @@ Successfully delivered **FIVE complete major systems** in a single continuous de
 
 ```bash
 fusion_lang -i program.fu
-```
+```text
 
 **Output**: Native machine code via LLVM
 
@@ -117,7 +117,7 @@ fusion_lang -i program.fu
 
 ```bash
 fusion_lang -i program.fu --target wasm -o program.wasm
-```
+```text
 
 **Output**: WebAssembly binary (73 bytes for simple add function)
 
@@ -133,7 +133,7 @@ fusion_lang -i program.fu --target wasm -o program.wasm
       console.log(result); // 8
     });
 </script>
-```
+```text
 
 ---
 
@@ -285,7 +285,7 @@ pub fn add(a: int, b: int) -> int {
 pub fn multiply(x: int, y: int) -> int {
     return x * y;
 }
-```
+```text
 
 **main.fu**:
 
@@ -297,7 +297,7 @@ fn calculate() -> int {
     let product = utils::multiply(sum, 2);
     return product;
 }
-```
+```text
 
 **Compile**:
 
@@ -306,7 +306,7 @@ fusion_lang -i main.fu --multi-file
 
 # ✅ Compiled 2 modules successfully
 
-```
+```text
 
 ### Example 2: WebAssembly Compilation
 
@@ -320,7 +320,7 @@ fn add(a: int, b: int) -> int {
 fn multiply(x: int, y: int) -> int {
     return x * y;
 }
-```
+```text
 
 **Compile to WASM**:
 
@@ -333,7 +333,7 @@ fusion_lang -i math.fu --target wasm -o math.wasm
 
 # Size: 73 bytes
 
-```
+```text
 
 **Use in Browser**:
 
@@ -353,7 +353,7 @@ fusion_lang -i math.fu --target wasm -o math.wasm
 </script>
 </body>
 </html>
-```
+```text
 
 ---
 

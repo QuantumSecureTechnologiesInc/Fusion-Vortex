@@ -1,0 +1,73 @@
+// tools/migrate.fsn
+// Automated Rust-to-Fusion migration engine.
+
+struct MigrationStats {
+    crates_scanned: AtomicFInt,
+    files_converted: AtomicFInt,
+    lines_refactored: AtomicFInt,
+}
+
+fn main() {
+    let root_path = env::arg("path").unwrap_or(".");
+    println!("Fusion Migration Engine: Targeting {}", root_path);
+
+    let stats = MigrationStats::new();
+
+    for entry in fs::walk_dir(root_path) {
+        if entry.is_file() && entry.extension() == "rs" {
+            process_file(entry.path(), &stats);
+        } else if entry.name() == "Cargo.toml" {
+            process_manifest(entry.path(), &stats);
+        }
+    }
+
+    println!("Migration Complete");
+    println!("  Crates: {}", stats.crates_scanned.val());
+    println!("  Files:  {}", stats.files_converted.val());
+}
+
+fn process_file(path: FString, stats: &MigrationStats) {
+    let content = fs::read_to_string(&path);
+    let mut new_content = FString::new();
+
+    for line in content.lines() {
+        if line.starts_with("use ") {
+            continue;
+        }
+
+        let line = line.replace("pub fn", "fn")
+            .replace("pub struct", "struct")
+            .replace("pub enum", "enum")
+            .replace("pub mod", "mod");
+
+        if line.contains("unsafe {") {
+            new_content.append("// [FUSION_AUDIT_REQUIRED] Unsafe block removed\n");
+            let line = line.replace("unsafe {", "{");
+        }
+
+        let line = line.replace("String", "FString")
+            .replace("Vec<", "FVec<")
+            .replace("i32", "FInt")
+            .replace("println!", "println!");
+
+        new_content.append(line + "\n");
+    }
+
+    let new_path = path.replace(".rs", ".fsn");
+    fs::write(new_path, new_content);
+    fs::remove_file(path);
+
+    stats.files_converted.inc();
+    println!("Converted: {}", new_path);
+}
+
+fn process_manifest(path: FString, stats: &MigrationStats) {
+    let content = fs::read_to_string(&path);
+    let mut new_manifest = content.replace("[dependencies]", "[dependencies]\nfusion_std = \"1.0\"");
+
+    let new_path = path.replace("Cargo.toml", "Fusion.toml");
+    fs::write(new_path, new_manifest);
+    fs::remove_file(path);
+
+    stats.crates_scanned.inc();
+}

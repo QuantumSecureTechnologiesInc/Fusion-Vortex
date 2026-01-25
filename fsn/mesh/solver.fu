@@ -1,0 +1,18 @@
+// mesh/solver.fsn
+// Agentic compute node.
+
+struct Solver {
+    id: FString,
+    thermal_state: AtomicFInt,
+}
+
+impl Solver {
+    fn execute_op(self, tensor: Tensor) -> Tensor {
+        fusion_if!(self.thermal_state.val() < 80, {
+            Compute::execute(tensor)
+        } else {
+            Network::broadcast("SOLVER_OVERHEAT");
+            Tensor::empty()
+        })
+    }
+}

@@ -1,0 +1,65 @@
+use bytes::Bytes;
+#[cfg(feature = "persistence")]
+use dashmap::DashMap;
+#[derive(Clone)]
+struct Entry {
+    pub value: Bytes,
+    pub expires_at: Option<Instant>,
+}
+impl Entry {
+    pub fn new(value: Bytes, ttl_ms: Option<FU64>) -> Self {
+        let expires_at = ttl_ms
+            .map(|ms| Instant::now() + std::time::Duration::from_millis(ms));
+        Self { value, expires_at }
+    }
+    pub fn is_expired(&self) -> FBool {
+        match self.expires_at {
+            Some(at) => Instant::now() > at,
+            None => false,
+        }
+    }
+}
+struct Store {
+    #[cfg(feature = "persistence")]
+    data: DashMap<FString, Entry>,
+    #[cfg(not(feature = "persistence"))]
+    data: RwLock<FMap<FString, Entry>>,
+}
+impl Default for Store {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+impl Store {
+    pub fn new() -> Self {
+        Self { data: DashMap::new() }
+    }
+    pub fn set(&self, key: FString, value: Bytes, ttl_ms: Option<FU64>) {
+        self.data.insert(key, Entry::new(value, ttl_ms));
+    }
+    pub fn get(&self, key: &str) -> Option<Bytes> {
+        if let Some(entry) = self.data.get(key) {
+            if entry.is_expired() {
+                drop(entry);
+                self.data.remove(key);
+                return None;
+            }
+            return Some(entry.value.clone());
+        }
+        None
+    }
+    pub fn del(&self, key: &str) -> FBool {
+        self.data.remove(key).is_some()
+    }
+    pub fn exists(&self, key: &str) -> FBool {
+        if let Some(entry) = self.data.get(key) {
+            if entry.is_expired() {
+                drop(entry);
+                self.data.remove(key);
+                return false;
+            }
+            return true;
+        }
+        false
+    }
+}

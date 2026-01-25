@@ -1,0 +1,11 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Lib.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// pub mod types;
+// pub mod traits;
+// pub mod ops;
+// pub mod compiler;
+// pub mod error; // Export Error module
+// 
+// pub use error::{FusionError, FusionResult};
+// // ... other exports ...

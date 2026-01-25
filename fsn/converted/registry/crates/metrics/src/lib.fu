@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/metrics/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// metrics implementation
+struct MetricsModule;

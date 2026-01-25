@@ -1,0 +1,5 @@
+// SOURCE: cmd/fusion-visual-desktop/build.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn main() {
+    tauri_build::build()
+}

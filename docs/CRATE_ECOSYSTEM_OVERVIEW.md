@@ -1,6 +1,6 @@
 ﻿# Fusion Crate Ecosystem Documentation
 
-**Generated**: 2025-12-17 15:06:19 UTC  
+**Generated**: 2025-12-17 15:06:19 UTC
 **Total Crates**: 250
 
 ## Overview
@@ -18,6 +18,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 ## Crates by Archetype
 
 ### Foundation (12 crates)
+
 > **Foundation crates** provide core primitives and building blocks. They are dependency-minimal, panic-free, and designed for composition.
 
 | Crate | Version | Description |
@@ -36,6 +37,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 | `math-tensor-sparse` | 0.2.0 | Foundation: Mathematical primitive: tensor sparse. |
 
 ### Algorithm (91 crates)
+
 > **Algorithm crates** implement specific computational methods with documented complexity guarantees.
 
 | Crate | Version | Description |
@@ -133,6 +135,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 | `q-visualization` | 0.2.0 | Algorithm: Quantum algorithm/module: q-visualization. Optimized for performance. |
 
 ### Integration (27 crates)
+
 > **Integration crates** connect Fusion to external services, languages, and protocols.
 
 | Crate | Version | Description |
@@ -166,6 +169,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 | `interop-python-pkgmgr` | 0.2.0 | Integration: Language interoperability layer for python-pkgmgr. |
 
 ### Framework (29 crates)
+
 > **Framework crates** provide opinionated, batteries-included platforms for specific domains.
 
 | Crate | Version | Description |
@@ -201,6 +205,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 | `sentinael-tribrid` | 1.0.0 | Framework: Fusion Framework crate: sentinel-tribrid. |
 
 ### Tool (85 crates)
+
 > **Tool crates** are CLI utilities and development tools with excellent error reporting.
 
 | Crate | Version | Description |
@@ -292,6 +297,7 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 | `sec-trusted-anchor` | 0.2.0 | Tool: Security tool: sec-trusted-anchor. Excellent error reporting. |
 
 ### Experimental (6 crates)
+
 | Crate | Version | Description |
 |-------|---------|-------------|
 | `fusion_carver` | 0.2.0 | Experimental: EXPERIMENTAL: Code carving and extraction utilities. |
@@ -306,38 +312,50 @@ The Fusion Programming Language ecosystem consists of 250 crates organized into 
 ## Quick Reference
 
 ### Core Infrastructure
-- **usion_core**: Foundation type system
-- **usion_std**: Standard library extensions
-- **usion_runtime_core**: Heterogeneous runtime
-- **usion_ai_core**: AI/ML framework
+
+- **
+usion_core**: Foundation type system
+- **
+usion_std**: Standard library extensions
+- **
+usion_runtime_core**: Heterogeneous runtime
+- **
+usion_ai_core**: AI/ML framework
 
 ### Quantum Computing
-- **usion_quantum**: Quantum primitives
+
+- **
+usion_quantum**: Quantum primitives
 - **q-sim**: Quantum circuit simulator
 - **qaoa**: Quantum optimization algorithm
 - **q-error-correction**: Error correction codes
 
 ### Neural Networks
+
 - **
 n-lstm**: LSTM layers
 - **
 n-attention-block**: Attention mechanisms
 - **
 n-layer-norm**: Layer normalization
-- **esnet**: ResNet implementation
+- **
+esnet**: ResNet implementation
 
 ### Large Language Models
+
 - **llm-tokenizers**: BPE/WordPiece tokenizers
 - **llm-quantization**: Model quantization
 - **llm-beam-search**: Beam search decoding
 - **llm-rag**: Retrieval-Augmented Generation
 
 ### Cloud Integration
+
 - **cloud-aws**: AWS connector
 - **cloud-gcp**: Google Cloud connector
 - **cloud-azure**: Azure connector
 
 ### Security Tools
+
 - **sec-penetration**: Penetration testing
 - **sec-forensics**: Security forensics
 - **sec-policy-engine**: Policy enforcement
@@ -353,20 +371,26 @@ Add to your Cargo.toml:
 `	oml
 [dependencies]
 fusion_core = { workspace = true }
+
 # Or specify version if not in Fusion workspace
+
 fusion_ai_core = "0.2.0"
 `
 
 ### Building from Source
 
 `ash
+
 # Build entire workspace
+
 cargo build --workspace
 
 # Build specific crate
+
 cargo build -p fusion_runtime_core
 
 # Run tests
+
 cargo test --workspace
 `
 

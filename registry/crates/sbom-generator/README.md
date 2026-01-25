@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sbom-generator = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sbom_generator::generate;
 fn main() {
     generate();
 }
-```
+```text
 
 ## License
 

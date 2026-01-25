@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 rl-algorithms = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use rl_algorithms::Agent;
 fn main() {
     let agent = Agent::new();
 }
-```
+```text
 
 ## License
 

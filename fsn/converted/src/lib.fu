@@ -1,0 +1,27 @@
+// SOURCE: src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/lib.rs - Library exports for testing and external use
+
+mod ast;
+mod async_runtime; // Async/Await Runtime
+mod borrow_checker;
+mod codegen;
+mod crypto; // Hybrid cryptography module
+mod docs; // Documentation generator
+mod fusion_core; // Fusion 50/50 security primitives
+mod lexer;
+mod lib_integration; // Library integration traits
+mod lsp; // Language Server Protocol
+mod ml; // Machine Learning & GPU
+mod module_resolver; // Module resolution and dependency graph
+mod network; // Secure Networking
+mod optimization; // Optimization passes
+mod package_manager; // Package management
+mod parser;
+mod quantum; // Quantum computing support
+mod registry; // Package registry
+mod security; // Security features (FIPS, fuzzing, verification, etc.)
+mod semantic_analyzer;
+mod stdlib;
+mod wasm; // WebAssembly backend
+mod web; // Web Framework

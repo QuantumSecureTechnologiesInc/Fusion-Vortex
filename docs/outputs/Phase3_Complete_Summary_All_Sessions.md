@@ -129,7 +129,7 @@ WASM Code Generator
 WebAssembly Binary (.wasm)
     ↓
 Validation (wasmparser)
-```
+```text
 
 ### Type Conversions
 
@@ -196,7 +196,7 @@ Validation (wasmparser)
 pub fn add(a: int, b: int) -> int {
     return a + b;
 }
-```
+```text
 
 **main.fu**:
 
@@ -206,7 +206,7 @@ pub mod utils;
 fn main() -> int {
     return utils::add(5, 3);
 }
-```
+```text
 
 **Compile**:
 
@@ -215,7 +215,7 @@ fusion_lang -i main.fu --multi-file
 
 # ✅ Compiled 2 modules successfully
 
-```
+```text
 
 ### WebAssembly Generation (Ready)
 
@@ -225,7 +225,7 @@ fusion_lang -i main.fu --multi-file
 fn add(a: int, b: int) -> int {
     return a + b;
 }
-```
+```text
 
 **Expected WASM Output**:
 
@@ -238,7 +238,7 @@ fn add(a: int, b: int) -> int {
   )
   (export "add" (func $add))
 )
-```
+```text
 
 ---
 

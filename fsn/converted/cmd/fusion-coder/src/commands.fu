@@ -1,0 +1,7 @@
+// SOURCE: cmd/fusion-coder/src/commands.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! CLI commands implementation stub
+fn handle_resume(session_id: Option<FString>, last: FBool) {
+    // TODO: Resume session
+    println!("Resume - session_id: {:?}, last: {}", session_id, last);
+}

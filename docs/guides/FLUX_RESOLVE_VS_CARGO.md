@@ -3,32 +3,35 @@
 ## The "Conflict" Example - CORRECTED
 
 ### Initial Setup
-```
+
+```text
 my_app requires:
 ├─ fusion_std ^1.0      (means: >=1.0.0, <2.0.0)
 └─ fusion_crypto ^0.8   (means: >=0.8.0, <0.9.0)
 
 fusion_crypto 0.8.0 requires:
 └─ fusion_std >=1.2     (means: any version >=1.2.0)
-```
+```text
 
 ### Is This Actually a Conflict? ❌ NO!
 
 **Analysis:**
-```
+
+```text
 ^1.0 means:  [1.0.0, 1.1.0, 1.2.0, 1.3.0, ..., 1.99.99]
 >=1.2 means: [1.2.0, 1.3.0, 1.4.0, ..., 2.0.0, 3.0.0, ...]
 
 Intersection: [1.2.0, 1.3.0, ..., 1.99.99]  ✅ Non-empty!
-```
+```text
 
 ### Flux-Resolve Solution
-```
+
+```text
 ✅ Pick fusion_std 1.2.0 (or any 1.x >= 1.2)
    - Satisfies ^1.0 (is within 1.x)
    - Satisfies >=1.2 (is at least 1.2)
    - CONFLICT RESOLVED!
-```
+```text
 
 ---
 
@@ -36,49 +39,53 @@ Intersection: [1.2.0, 1.3.0, ..., 1.99.99]  ✅ Non-empty!
 
 Here's an **actual conflict** that Flux-Resolve handles:
 
-```
+```text
 my_app requires:
 ├─ fusion_std ^1.0      (1.0.0 ≤ version < 2.0.0)
 └─ fusion_crypto ^0.8
 
 fusion_crypto 0.8.0 requires:
 └─ fusion_std ^2.0      (2.0.0 ≤ version < 3.0.0)  ❌ CONFLICT!
-```
+```text
 
 **There's NO overlap:**
-```
+
+```text
 ^1.0:  [1.0.0 ... 1.99.99]
 ^2.0:  [2.0.0 ... 2.99.99]
 Intersection: EMPTY  ❌
-```
+```text
 
 ### How Flux-Resolve Handles This
 
 #### Step 1: Detect Incompatibility
-```
+
+```text
 VSIDS heuristic tries fusion_crypto 0.8.0
 → Checks if fusion_std ^1.0 AND ^2.0 can coexist
 → NO SOLUTION
 → Penalize fusion_crypto 0.8.x (score +1.0)
-```
+```text
 
 #### Step 2: Backtrack to Alternative
-```
+
+```text
 Try fusion_crypto 0.7.9 instead
 → Check dependencies:
    fusion_crypto 0.7.9 requires fusion_std ^1.0  ✅ Compatible!
 → Solution found
-```
+```text
 
 #### Step 3: Learn for Future
-```
+
+```text
 VSIDS scores after this build:
 
 fusion_crypto 0.8.x: +1.0 (caused conflict)
 fusion_crypto 0.7.x: 0.0 (worked fine)
 
 Next build: Try 0.7.x FIRST (skip known bad versions)
-```
+```text
 
 ---
 
@@ -86,7 +93,7 @@ Next build: Try 0.7.x FIRST (skip known bad versions)
 
 ### Cargo's Approach (File Locking)
 
-```
+```text
 Build 1 starts:
   ├─ Read Cargo.toml
   ├─ Lock Cargo.lock (exclusive file lock) 🔒
@@ -95,17 +102,17 @@ Build 1 starts:
   └─ Unlock 🔓
 
 Build 2 starts (same project):
-  ├─ Read Cargo.toml  
+  ├─ Read Cargo.toml
   ├─ Try to lock Cargo.lock
   └─ ⏸️  BLOCKED! Wait for Build 1 to finish...
       (can take minutes on large projects)
-```
+```text
 
 **Problem:** Only **one build at a time** per project!
 
 ### Flux-Resolve Approach (Lock-Free CAS)
 
-```
+```text
 Build 1 starts:
   ├─ Read fusion.toml
   ├─ Hash manifest → "7f3a9b2c..."
@@ -125,7 +132,7 @@ Build 3 starts (concurrent with Build 1):
   ├─ Check cache → MISS (Build 1 not done yet)
   ├─ Resolve independently (no blocking!)
   └─ Write to cache (atomic operation)
-```
+```text
 
 **Key Difference:** **100+ builds can run simultaneously!**
 
@@ -134,16 +141,18 @@ Build 3 starts (concurrent with Build 1):
 ## How It Works: Content-Addressable Storage
 
 ### Traditional Lock File (Cargo.lock)
-```
+
+```text
 Project Directory:
   Cargo.toml       ← Input
   Cargo.lock       ← Output (SINGLE FILE, locked)
-  
+
 Problem: Two builds → Fight over same file
-```
+```text
 
 ### Flux-Resolve (CAS)
-```
+
+```text
 Project Directory:
   fusion.toml      ← Input
 
@@ -151,10 +160,10 @@ Cache Directory (.fusion/cache_db/):
   7f3a9b2c.lock    ← Result for manifest hash "7f3a9b2c"
   a1b2c3d4.lock    ← Result for manifest hash "a1b2c3d4"
   ...
-  
+
 Benefit: Different inputs → Different cache entries
          Same input → Same cache entry (shared)
-```
+```text
 
 ### Concurrent Safety
 
@@ -169,14 +178,15 @@ Thread 3: cache.put("new_hash")  // Write
 Thread 4: cache.get("7f3a9b2c")  // Read
 
 All happen concurrently without blocking! ✅
-```
+```text
 
 **DashMap uses sharding:**
-```
+
+```text
 Hash Map internally divided into 64 shards
 Lock per shard, not global lock
 99.9% of operations on different shards → no contention
-```
+```text
 
 ---
 
@@ -185,7 +195,8 @@ Lock per shard, not global lock
 ### Scenario: Monorepo with 50 Microservices
 
 **Cargo (Traditional):**
-```
+
+```text
 CI Pipeline kicks off 50 builds in parallel
 ├─ Build 1: Lock Cargo.lock ✅ (runs)
 ├─ Build 2: BLOCKED ⏸️
@@ -195,10 +206,11 @@ CI Pipeline kicks off 50 builds in parallel
 
 All builds serialize → Takes 50× longer
 Total time: 50 services × 2min = 100 minutes
-```
+```text
 
 **Flux-Resolve:**
-```
+
+```text
 CI Pipeline kicks off 50 builds in parallel
 
 Same dependencies:
@@ -215,14 +227,15 @@ Different dependencies:
 
 Total time: Max(resolve time) ≈ 100ms
 Speedup: 60,000× faster!
-```
+```text
 
 ---
 
 ## Technical Details: Lock-Free Operations
 
 ### DashMap Architecture
-```
+
+```text
 ┌─────────────────────────────────────────┐
 │ DashMap<String, LockFile>               │
 ├─────────────────────────────────────────┤
@@ -236,9 +249,10 @@ Speedup: 60,000× faster!
 Thread accessing "7f3a9b2c" → Shard 44
 Thread accessing "a1b2c3d4" → Shard 12
 Both threads run in parallel (different shards) ✅
-```
+```text
 
 ### Atomic Cache Writes
+
 ```rust
 // Multiple threads writing same key is safe
 thread 1: cache.insert("abc123", solution_1)
@@ -246,7 +260,7 @@ thread 2: cache.insert("abc123", solution_2)
 
 // One wins (doesn't matter which - deterministic results)
 // Both solutions are identical for same input
-```
+```text
 
 ---
 
@@ -280,20 +294,20 @@ thread 2: cache.insert("abc123", solution_2)
 
 ### The "Conflict" Was Actually Solvable
 
-```
+```text
 fusion_std ^1.0 AND >=1.2
 → Solution: fusion_std 1.2.0 (satisfies both) ✅
 
 Real conflict would be:
 fusion_std ^1.0 AND ^2.0
 → No overlap, try different dependency versions
-```
+```text
 
 ### Key Innovation: Content-Addressable
 
-```
+```text
 Traditional: One file, one lock, one build at a time
 Flux-Resolve: Hash-based cache, no locks, infinite parallel
-```
+```text
 
 **In one sentence:** Flux-Resolve eliminates build queue bottlenecks by using lock-free content-addressable caching instead of file locking.

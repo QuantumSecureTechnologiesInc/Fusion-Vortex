@@ -1,0 +1,208 @@
+// SOURCE: runtime/examples/vlc_quantum_ml.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Example: Quantum Machine Learning with VLC
+//!
+//! This example demonstrates the Variational Loop Controller (VLC) optimizing
+//! a hybrid quantum-classical model without scheduler overhead.
+
+use fusion_runtime_core::{Runtime, QoSMode};
+use fusion_runtime_scheduler::{VariationalLoopController, VlcConfig};
+use fusion_quantum::{Circuit, Qubit};
+use fusion_ai_core::Tensor;
+
+#[tokio::main]
+async fn main() {
+    println!("=== Quantum Machine Learning with VLC ===\n");
+    
+    // Initialize runtime with VLC support
+    let runtime = Runtime::builder()
+        .enable_gpu()
+        .enable_qpu()
+        .enable_qos(QoSMode::HighThroughput)
+        .build();
+    
+    println!("✅ Runtime initialized with VLC support\n");
+    
+    // Example 1: Variational Quantum Eigensolver (VQE)
+    println!("📊 Example 1: VQE for Ground State Energy");
+    println!("==========================================");
+    
+    run_vqe_example();
+    
+    println!();
+    
+    // Example 2: Quantum Neural Network Training
+    println!("🤖 Example 2: Quantum Neural Network");
+    println!("====================================");
+    
+    run_qnn_training();
+    
+    println!();
+    
+    // Example 3: Hybrid Optimization Loop
+    println!("⚡ Example 3: Hybrid Optimization");
+    println!("=================================");
+    
+    run_hybrid_optimization();
+}
+
+/// Example 1: Variational Quantum Eigensolver
+fn run_vqe_example() {
+    let vlc = VariationalLoopController::new();
+    
+    let config = VlcConfig {
+        max_iterations: 100,
+        learning_rate: 0.1,
+        epsilon: 0.001,
+        early_stopping: true,
+        ..Default::default()
+    };
+    
+    // Initial variational parameters
+    let initial_params = vec![0.0, 0.0, 0.0, 0.0];
+    
+    println!("Starting VQE with {} parameters...", initial_params.len());
+    println!("Target: Find ground state energy of H2 molecule\n");
+    
+    // Execute VQE loop (runs entirely at hardware level)
+    let result = vlc.execute_vqe_loop(config, initial_params, |params| {
+        // Simulated Hamiltonian expectation value
+        // In reality, this would:
+        // 1. Submit quantum circuit to QPU
+        // 2. Measure expectation value
+        // 3. Return energy
+        
+        simulate_h2_energy(params)
+    });
+    
+    println!("✅ VQE Complete!");
+    println!("  Ground state energy: {:.6}", result.ground_state_energy);
+    println!("  Optimal parameters: {:?}", result.optimal_params);
+    println!("  Iterations: {}", result.iterations);
+    println!("  Status: {}", if result.iterations < 100 { "Converged" } else { "Max iterations" });
+}
+
+/// Example 2: Quantum Neural Network Training
+fn run_qnn_training() {
+    let vlc = VariationalLoopController::new();
+    
+    let config = VlcConfig {
+        max_iterations: 50,
+        learning_rate: 0.01,
+        epsilon: 0.01,
+        early_stopping: true,
+        checkpoint_every: Some(10),
+        ..Default::default()
+    };
+    
+    println!("Training Quantum Neural Network...");
+    println!("Dataset: Quantum state classification\n");
+    
+    // Training loop (no context switches!)
+    let mut loss = 1.0;
+    let result = vlc.execute_training_loop(config, |iteration| {
+        // Simulated training step
+        // In reality:
+        // 1. Forward pass: Classical → Quantum → Classical
+        // 2. Calculate loss
+        // 3. Backward pass (parameter shift)
+        // 4. Update weights
+        
+        loss *= 0.92;  // Simulated convergence
+        
+        if iteration % 10 == 0 {
+            println!("  Iteration {}: loss = {:.6}", iteration, loss);
+        }
+        
+        loss
+    });
+    
+    println!("\n✅ Training Complete!");
+    println!("  Final loss: {:.6}", result.final_loss);
+    println!("  Iterations: {}", result.iterations);
+    println!("  Training time: {} μs", result.training_time_us);
+    println!("  Converged: {}", result.converged);
+    
+    // Calculate overhead saved
+    let traditional_overhead = result.iterations * 4 * 100;  // 4 context switches × 100ns
+    let vlc_overhead = 100; // Single context switch
+    let saved = traditional_overhead - vlc_overhead as usize;
+    
+    println!("\n💡 Performance Gain:");
+    println!("  Traditional overhead: ~{} ns ({} context switches)", 
+             traditional_overhead, result.iterations * 4);
+    println!("  VLC overhead: {} ns (1 context switch)", vlc_overhead);
+    println!("  Saved: ~{} ns ({}x speedup)", saved, traditional_overhead / vlc_overhead as usize);
+}
+
+/// Example 3: Hybrid Quantum-Classical Optimization
+fn run_hybrid_optimization() {
+    let vlc = VariationalLoopController::new();
+    
+    let config = VlcConfig {
+        max_iterations: 75,
+        learning_rate: 0.05,
+        epsilon: 0.005,
+        early_stopping: true,
+        ..Default::default()
+    };
+    
+    println!("Hybrid Optimization: Portfolio + Quantum Annealing");
+    println!("Problem: Maximize returns while minimizing risk\n");
+    
+    let initial_params = vec![0.25, 0.25, 0.25, 0.25];  // Equal weights
+    
+    let result = vlc.execute_vqe_loop(config, initial_params, |weights| {
+        // Simulated portfolio optimization
+        // Classical: Calculate expected returns
+        // Quantum: Use QAOA for constraint satisfaction
+        // Returns: Combined objective function
+        
+        simulate_portfolio_objective(weights)
+    });
+    
+    println!("✅ Optimization Complete!");
+    println!("  Optimal allocation: {:?}", result.optimal_params);
+    println!("  Expected return: {:.2}%", -result.ground_state_energy * 100.0);
+    println!("  Iterations: {}", result.iterations);
+    
+    println!("\n📈 Portfolio Breakdown:");
+    let assets = ["Stocks", "Bonds", "Crypto", "Commodities"];
+    for (asset, weight) in assets.iter().zip(result.optimal_params.iter()) {
+        println!("  {}: {:.1}%", asset, weight * 100.0);
+    }
+}
+
+// Simulation functions
+
+fn simulate_h2_energy(params: &[f64]) -> f64 {
+    // Simulated H2 Hamiltonian energy (ground state ~ -1.137)
+    let target = vec![0.5, 0.25, -0.3, 0.1];
+    
+    params.iter()
+        .zip(target.iter())
+        .map(|(p, t)| (p - t).powi(2))
+        .sum::<f64>()
+        - 1.0
+}
+
+fn simulate_portfolio_objective(weights: &[f64]) -> f64 {
+    // Simulated portfolio objective (negative because we minimize)
+    let target_weights = vec![0.3, 0.3, 0.2, 0.2];
+    let returns = vec![0.08, 0.04, 0.15, 0.06];
+    
+    // Calculate deviation from target
+    let deviation: f64 = weights.iter()
+        .zip(target_weights.iter())
+        .map(|(w, t)| (w - t).powi(2))
+        .sum();
+    
+    // Calculate expected return
+    let expected_return: f64 = weights.iter()
+        .zip(returns.iter())
+        .map(|(w, r)| w * r)
+        .sum();
+    
+    // Objective: maximize return, minimize deviation
+    -expected_return + 0.5 * deviation
+}

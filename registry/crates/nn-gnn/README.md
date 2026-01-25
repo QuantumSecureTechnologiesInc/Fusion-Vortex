@@ -7,9 +7,10 @@ General Graph Neural Network (GNN) primitives.
 ```toml
 [dependencies]
 nn-gnn = "0.1.0"
-```
+```text
 
 ## Features
+
 - Graph attention mechanisms
 - Edge updates
 - Node aggregation

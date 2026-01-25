@@ -1,0 +1,36 @@
+use crossbeam_queue::SegQueue;
+use futures::task::{waker_ref, ArcWake};
+/// A runnable task.
+struct Task {
+    pub future: Mutex<Option<Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>,
+    pub injector: Arc<SegQueue<Arc<Task>>>,
+}
+impl ArcWake for Task {
+    fn wake_by_ref(arc_self: &Arc<Self>) {
+        arc_self.injector.push(arc_self.clone());
+    }
+}
+impl Task {
+    pub fn spawn<F>(future: F, injector: Arc<SegQueue<Arc<Task>>>) -> Arc<Task>
+    where
+        F: Future<Output = ()> + Send + 'static,
+    {
+        Arc::new(Task {
+            future: Mutex::new(Some(Box::pin(future))),
+            injector,
+        })
+    }
+    pub fn poll(self: Arc<Self>) {
+        let mut future_slot = self.future.lock().unwrap();
+        if let Some(future) = future_slot.as_mut() {
+            let waker = waker_ref(&self);
+            let context = &mut Context::from_waker(&*waker);
+            match future.as_mut().poll(context) {
+                Poll::Pending => {}
+                Poll::Ready(_) => {
+                    *future_slot = None;
+                }
+            }
+        }
+    }
+}

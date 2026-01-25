@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: prelude (stub)
+fn _prelude_stub() -> void { }

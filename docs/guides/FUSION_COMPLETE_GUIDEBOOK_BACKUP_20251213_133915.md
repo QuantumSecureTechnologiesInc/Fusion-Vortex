@@ -1,6 +1,6 @@
 # Fusion Programming Language – The Comprehensive Guidebook
 
-**Version**: 4.0 (Quantum-Secure Nebula Era)  
+**Version**: 4.0 (Quantum-Secure Nebula Era)
 **Author**: Fusion Core Team
 
 ---
@@ -84,67 +84,67 @@ graph TB
         CLI[Fusion CLI]
         LSP[Language Server]
     end
-    
+
     subgraph "Unified Monolith Core"
         Compiler[Compiler Core]
         TypeChecker[Type Checker]
         Auditor[Security Auditor]
         AST[(Shared AST State)]
-        
+
         Compiler --> AST
         TypeChecker --> AST
         Auditor --> AST
     end
-    
+
     subgraph "Build & Dependencies"
         FluxResolve[Flux-Resolve v2.0]
         FluxEngine[Flux-Resolve Engine<br/>GPU Accelerated]
         HiveMind[Hive Mind Cache<br/>Redis]
-        
+
         FluxResolve --> FluxEngine
         FluxResolve --> HiveMind
     end
-    
+
     subgraph "Runtime System"
         RuntimeCore[Runtime Core v2.0<br/>Nebula]
         Cortex[Cortex AI Scheduler]
         HAL[Hardware Abstraction Layer]
         QEM[Quantum Enhanced Memory]
-        
+
         RuntimeCore --> Cortex
         RuntimeCore --> HAL
         RuntimeCore --> QEM
     end
-    
+
     subgraph "Data & AI"
         HAFT[HAFT Engines]
         Researcher[Researcher Agent]
         Builder[Builder Agent]
         Optimizer[Optimizer Agent]
         TensorWeave[TensorWeave]
-        
+
         HAFT --> Researcher
         HAFT --> Builder
         HAFT --> Optimizer
         TensorWeave --> HAFT
     end
-    
+
     subgraph "Security Layer"
         Sentinel[Sentinel TriBrid]
         Chaos[Chaos Math Engine]
         Mesh[Oscillating Mesh]
         Adaptive[Adaptive Threat Response]
-        
+
         Sentinel --> Chaos
         Sentinel --> Mesh
         Sentinel --> Adaptive
     end
-    
+
     subgraph "User Interface"
         TermBlink[TermBlink UI]
         MCP[FUSION MCP v1.0]
     end
-    
+
     IDE --> LSP
     LSP --> AST
     CLI --> Compiler
@@ -153,12 +153,12 @@ graph TB
     RuntimeCore --> HAFT
     RuntimeCore --> Sentinel
     MCP --> AST
-    
+
     style RuntimeCore fill:#4a90e2
     style HAFT fill:#e27d60
     style Sentinel fill:#85dcb0
     style AST fill:#e8a87c
-```
+```text
 
 This diagram illustrates how Fusion's components form an integrated ecosystem rather than isolated tools. The Monolith's shared AST state ensures all components (compiler, LSP, auditor) work from the same understanding of your code.
 
@@ -188,7 +188,7 @@ sequenceDiagram
     participant Editor
     participant Traditional as Traditional Toolchain
     participant Fusion as Fusion Monolith
-    
+
     Note over Dev,Fusion: Traditional Workflow
     Dev->>Editor: Edit code
     Editor->>Traditional: Parse (from scratch)
@@ -199,7 +199,7 @@ sequenceDiagram
     Traditional->>Traditional: Compile
     Traditional-->>Dev: Executable
     Note over Traditional: Total: ~5-30 seconds
-    
+
     Note over Dev,Fusion: Fusion Workflow
     Dev->>Editor: Edit code
     Editor->>Fusion: Incremental update
@@ -210,22 +210,24 @@ sequenceDiagram
     Fusion->>Fusion: Compile (incremental)
     Fusion-->>Dev: Executable
     Note over Fusion: Total: ~50-200ms
-```
+```text
 
 ### Example: The Same Application in Different Languages
 
 To demonstrate Fusion's expressiveness, here's a simple HTTP server with async handling, written in multiple languages:
 
 **Fusion (concise and safe):**
+
 ```fusion
 use fusion::web::{Server, Router, Json};
 use fusion::sentinel::TriBrid;
 
 #[tribrid_protected]  // Automatic security
+
 async fn main() {
     let mut router = Router::new();
     router.get("/users/:id", get_user);
-    
+
     Server::bind("0.0.0.0:8080")
         .serve(router)
         .await
@@ -236,14 +238,16 @@ async fn get_user(id: int) -> Json<User> {
     let user = db::find_user(id).await?;  // Error handling with ?
     Json(user)
 }
-```
+```text
 
 **Rust (more verbose, manual async):**
+
 ```rust
 use actix_web::{web, App, HttpServer, Result};
 use serde::Serialize;
 
 #[derive(Serialize)]
+
 struct User { /* fields */ }
 
 async fn get_user(path: web::Path<u64>) -> Result<web::Json<User>> {
@@ -252,6 +256,7 @@ async fn get_user(path: web::Path<u64>) -> Result<web::Json<User>> {
 }
 
 #[actix_web::main]
+
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
@@ -261,9 +266,10 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-```
+```text
 
 **Python (dynamic typing, no compile-time safety):**
+
 ```python
 from fastapi import FastAPI
 import uvicorn
@@ -277,7 +283,7 @@ async def get_user(id: int):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
-```
+```text
 
 Notice how Fusion achieves similar conciseness to Python whilst maintaining Rust's safety guarantees, plus adds automatic security via `#[tribrid_protected]` that neither language provides.
 
@@ -293,7 +299,7 @@ For Unix-like systems including Linux and macOS, installation is straightforward
 
 ```bash
 curl -fsSL https://sh.fusion-lang.org | sh
-```
+```text
 
 The installer will detect your system architecture automatically, whether you're on an Intel/AMD x86_64 machine, an ARM64 system like Apple Silicon, or even a RISC-V platform. It downloads the appropriate pre-built binaries, installs them to `~/.fusion/bin`, and updates your shell's PATH environment variable. By default, the installer also sets up shell completions for bash, zsh, and fish, so you get tab completion for `fusion` commands immediately.
 
@@ -301,7 +307,7 @@ Windows users have an equally seamless experience using PowerShell. Launch Power
 
 ```powershell
 iwr https://win.fusion-lang.org -useb | iex
-```
+```text
 
 This downloads the Windows-specific installer which handles all the platform quirks: registering the `.fu` file extension, setting up the Visual Studio Build Tools integration if you want to use MSVC as your linker, and configuring Windows Defender exclusions forthe Fusion build cache to prevent performance degradation during compilation.
 
@@ -309,7 +315,7 @@ After installation completes, close and reopen your terminal to ensure the PATH 
 
 ```bash
 fusion --version
-```
+```text
 
 You should see output indicating you're running Fusion v4.0 (Quantum-Secure Nebula Era) along with detailed version information for each component: the compiler, the Monolith, Flux-Resolve, and the Runtime Core.
 
@@ -320,7 +326,7 @@ With Fusion installed, you're ready to create your first project. Fusion enforce
 ```bash
 fusion new hello-fusion
 cd hello-fusion
-```
+```text
 
 The `fusion new` command generates a complete project structure. Let's explore what it created. At the root, you'll find `Fusion.toml`, the project manifest file that declares your project's metadata, dependencies, build configuration, and runtime settings. Think of it as analogous to `Cargo.toml` in Rust or `package.json` in Node.js, but with Fusion-specific sections for configuring the Monolith, HAFT engines, Sentinel security, and other advanced features.
 
@@ -332,7 +338,7 @@ fn main() -> int {
     println("Hello, Fusion!")
     return 0
 }
-```
+```text
 
 This simple program demonstrates several Fusion conventions. The `main` function is your program's entry point, just like in C or Rust. It returns an `int` which becomes the process exit code (0 indicates success by convention). The `println` function is part of the standard library's prelude—a set of commonly used functions and types that are automatically in scope without requiring explicit imports.
 
@@ -343,17 +349,17 @@ Let's enhance this to demonstrate a few more features. Replace the contents with
 fn main() -> int {
     // String variables are immutable by default
     let name = "Developer"
-    
+
     // println supports format strings with {} placeholders
     println("Hello, {}! Welcome to Fusion.", name)
-    
+
     // Let's demonstrate basic control flow
     let version = get_fusion_version()
     match version {
         v if v >= 4.0 => println("You're running the latest: Quantum-Secure Nebula!"),
         _ => println("Consider upgrading to v4.0 for the best experience.")
     }
-    
+
     // Return explicit exit code (0 = success)
     return 0
 }
@@ -362,7 +368,7 @@ fn get_fusion_version() -> f64 {
     // In real code, this would query runtime metadata
     4.0
 }
-```
+```text
 
 This expanded version shows string interpolation via `println`'s format placeholders, pattern matching with guards using the `match` expression, and basic function definitions. All of these concepts will be explored in depth in the Language Fundamentals section.
 
@@ -370,7 +376,7 @@ This expanded version shows string interpolation via `println`'s format placehol
 
 Understanding the project structure is crucial. Here's a complete view of what `fusion new` generates:
 
-```
+```text
 hello-fusion/
 ├── Fusion.toml          # Project manifest
 ├── .fusion/             # Fusion toolchain cache (gitignore this)
@@ -385,7 +391,7 @@ hello-fusion/
 │   ├── debug/          # Debug builds
 │   └── release/        # Release builds
 └── README.md            # Project documentation
-```
+```text
 
 The `Fusion.toml` manifest contains all project configuration:
 
@@ -397,6 +403,7 @@ edition = "2024"
 authors = ["Your Name <you@example.com>"]
 
 [dependencies]
+
 # Dependencies will be listed here
 
 [monolith]
@@ -411,7 +418,7 @@ profile = "default"               # Options: default, nebula, legacy
 
 [build]
 optimization_level = 2            # 0-3, higher = slower compile, faster runtime
-```
+```text
 
 Let's visualize how the Monolith manages this project state:
 
@@ -422,40 +429,40 @@ graph LR
         TOML[Fusion.toml]
         FS[Other source files]
     end
-    
+
     subgraph "Monolith Shared State"
         AST[Abstract Syntax Tree]
         TYPES[Type Information]
         DEPS[Dependency Graph]
         ERRORS[Error Cache]
     end
-    
+
     subgraph "Tool Consumers"
         IDE[IDE/LSP]
         COMPILER[Compiler]
         AUDITOR[Security Auditor]
         FORMATTER[Code Formatter]
     end
-    
+
     SRC --> |File changes| AST
     TOML --> |Config| DEPS
     FS --> |Incremental parse| AST
-    
+
     AST -.Zero-copy read.-> IDE
     AST -.Zero-copy read.-> COMPILER
     AST -.Zero-copy read.-> AUDITOR
     AST -.Zero-copy read.-> FORMATTER
-    
+
     TYPES -.Shared state.-> IDE
     TYPES -.Shared state.-> COMPILER
-    
+
     DEPS -.Shared state.-> AUDITOR
-    
+
     style AST fill:#ffeb3b
     style IDE fill:#4caf50
     style COMPILER fill:#2196f3
     style AUDITOR fill:#f44336
-```
+```text
 
 ### Running Your Application
 
@@ -463,7 +470,7 @@ Fusion makes running your code effortless. From your project directory, simply e
 
 ```bash
 fusion run
-```
+```text
 
 Behind the scenes, this command does several things. Let's visualize the complete build and execution flow:
 
@@ -474,45 +481,45 @@ flowchart TD
     CHECK -->|Yes| CONNECT[Connect to Monolith]
     SPAWN --> PARSE
     CONNECT --> PARSE
-    
+
     PARSE[Parse source files] --> CACHE{AST in<br/>cache?}
     CACHE -->|Yes, unchanged| TYPE
     CACHE -->|No or modified| PARSEFILES[Parse modified files]
     PARSEFILES --> UPDATE[Update AST in memory]
     UPDATE --> TYPE
-    
+
     TYPE[Type checking] --> TYPECACHE{Types<br/>cached?}
     TYPECACHE -->|Yes| AUDIT
     TYPECACHE -->|No| TYPECHECK[Run type checker]
     TYPECHECK --> AUDIT
-    
+
     AUDIT[Security audit] --> ERRORS{Any<br/>errors?}
     ERRORS -->|Yes| REPORT[Report errors]
     REPORT --> END([Exit with error])
-    
+
     ERRORS -->|No| CODEGEN[Generate code]
     CODEGEN --> INCREMENTAL{Incremental<br/>build?}
     INCREMENTAL -->|Yes| LINK[Link only changed modules]
     INCREMENTAL -->|No| FULLLINK[Full linking]
     LINK --> EXEC
     FULLLINK --> EXEC
-    
+
     EXEC[Execute program] --> SUCCESS([Program runs])
-    
+
     style START fill:#4caf50
     style SUCCESS fill:#4caf50
     style END fill:#f44336
     style PARSE fill:#2196f3
     style TYPE fill:#2196f3
     style CODEGEN fill:#ff9800
-```
+```text
 
 Once compilation succeeds, Fusion executes your program. You'll see the output:
 
-```
+```text
 Hello, Developer! Welcome to Fusion.
 You're running the latest: Quantum-Secure Nebula!
-```
+```text
 
 ### Build Performance Comparison
 
@@ -527,10 +534,10 @@ Here's a concrete example comparing build times:
 
 Notice how incremental builds stay under 4 seconds even for million-line codebases.
 
-```
+```text
 Hello, Developer! Welcome to Fusion.
 You're running the latest: Quantum-Secure Nebula!
-```
+```text
 
 ### Understanding the Development Workflow
 
@@ -540,7 +547,7 @@ For longer running programs, Fusion provides a watch mode that automatically reb
 
 ```bash
 fusion watch run
-```
+```text
 
 This mode is particularly valuable during active development. Modify your code, save the file, and within milliseconds your programme restarts with the new changes applied. This tight feedback loop dramatically accelerates development, especially when combined with TermBlink-based terminal UIs that redraw beautifully without flicker.
 
@@ -552,7 +559,7 @@ fusion build      # Compile to executable (target/debug/hello-fusion or target/r
 fusion build --release  # Optimised build for production
 fusion test       # Run test suite
 fusion bench      # Run benchmarks
-```
+```text
 
 Each command benefits from the Monolith's shared state. Running `fusion check` followed by `fusion build` doesn't redo the type checking—the build reuses the checker's results from memory.
 
@@ -602,7 +609,7 @@ counter = counter * 2  // Also allowed
 let value = 10
 let value = value * 2  // Different variable with the same name
 let value = format("The value is {}", value)  // Now it's a string
-```
+```text
 
 The `mut` keyword makes mutation explicit and visible. When you see `let mut` in code, you know to pay attention—this state might change, which affects how you reason about the code. The vast majority of variables don't need `mut`, which means most of your code consists of transformations that produce new values rather than modifications that change existing ones.
 
@@ -625,7 +632,7 @@ fn find_user(id: int) -> Result<User> {
     if id < 0 {
         return Err("Invalid user ID")
     }
-    
+
     // Query database...
     Ok(user)
 }
@@ -648,7 +655,7 @@ fn make_adder(n: int) -> fn(int) -> int {
 
 let add_five = make_adder(5)
 println(add_five(10))  // Outputs: 15
-```
+```text
 
 Notice the `-> T` syntax for return types. If a function doesn't return a meaningful value, you can omit the return type entirely or explicitly write `-> ()` where `()` is the unit type (analogous to `void` in other languages).
 
@@ -696,7 +703,7 @@ fn quadrant(point: Point) -> string {
         _ => "On an axis"
     }
 }
-```
+```text
 
 The exhaustiveness checking is more than a convenience—it's a safety feature. When you add a new variant to an enum, every `match` expression that handles that enum becomes a compile error until you handle the new case. This means refactoring is safe: the compiler will find every place that needs updating.
 
@@ -711,11 +718,11 @@ Unlike languages where the ecosystem fragments into sync and async versions of e
 async fn fetch_user_data(id: int) -> Result<User> {
     // await suspends this function until the HTTP request completes
     let response = await http::get(format("https://api.example.com/users/{}", id))
-    
+
     // Can await multiple operations
     let user_data = await response.json()
     let preferences = await fetch_preferences(id)
-    
+
     Ok(User::new(user_data, preferences))
 }
 
@@ -727,7 +734,7 @@ async fn fetch_all_data() -> Result<Dashboard> {
         fetch_posts(),
         fetch_comments()
     )
-    
+
     Ok(Dashboard::new(users, posts, comments))
 }
 
@@ -738,7 +745,7 @@ async fn process_user(id: int) -> Result<()> {
     await store_user(user)?
     Ok(())
 }
-```
+```text
 
 The `join!` macro executes multiple async operations concurrently and waits for all to complete, which is dramatically more efficient than sequential awaits. The `?` operator provides ergonomic error handling—if the expression returns an `Err`, it immediately returns from the containing function with that error.
 
@@ -776,7 +783,7 @@ fn main() -> int {
         }
     }
 }
-```
+```text
 
 The `?` operator dramatically improves ergonomics. It unwraps `Ok` values automatically and early-returns `Err` values, eliminating the boilerplate of manual `match` expressions for every fallible operation. Yet the errors remain visible in the function signature through the `Result` return type.
 
@@ -808,7 +815,7 @@ fn print_all<T: Display>(items: &[T]) {
         println("{}", item)  // T must implement Display trait
     }
 }
-```
+```text
 
 The type system includes powerful features like algebraic data types (enums with associated data), traits for polymorphism, and lifetime annotations for the borrow checker (which we'll cover in the next section). But these features activate only when you need them—simple code has simple types.
 
@@ -818,7 +825,8 @@ async fn fetch_user_data(id: int) -> Result<User> {
     let response = await http.get(url)
     return response.json()
 }
-```
+
+```text
 
 ---
 
@@ -833,6 +841,7 @@ Most programming languages force an all-or-nothing decision at the project level
 Let's visualize how these two modes coexist:
 
 ```mermaid
+
 graph TB
     subgraph "Application Code"
         MAIN[Main Application Logic]
@@ -842,33 +851,34 @@ graph TB
         AUDIO[Audio Processing]
         NETWORK[Network Driver]
     end
-    
+
     subgraph "Garbage Collected Mode"
         GC[Generational GC]
         HEAP1[GC Heap]
-        
+
         MAIN --> GC
         UI --> GC
         BUSINESS --> GC
         GC --> HEAP1
     end
-    
+
     subgraph "Borrowed Mode"
         BORROW[Borrow Checker]
         HEAP2[Stack/Manual Heap]
-        
+
         HOTPATH --> BORROW
         AUDIO --> BORROW
         NETWORK --> BORROW
         BORROW --> HEAP2
     end
-    
+
     style GC fill:#4caf50
     style BORROW fill:#2196f3
     style HOTPATH fill:#ff9800
     style AUDIO fill:#ff9800
     style NETWORK fill:#ff9800
-```
+
+```text
 
 ### Garbage Collector Mode (Default)
 
@@ -898,6 +908,7 @@ Here's a comparison of memory management characteristics:
 When you need deterministic performance—zero garbage collection pauses, predictable worst-case latency, and minimal memory overhead—you can opt into borrow checking for specific functions or modules. Applying the `@borrowed` attribute switches the compiler into Rust-style ownership and borrowing mode for that scope.
 
 ```fusion
+
 // This function runs without any GC pauses
 @borrowed
 fn process_audio_buffer(buffer: &mut [f32]) {
@@ -916,42 +927,45 @@ fn load_audio_file(path: string) -> Vec<f32> {
 // Combine both: GC for file I/O, @borrowed for processing
 fn process_audio_file(path: string) {
     let samples = load_audio_file(path);  // GC mode
-    
+
     // Convert to borrowed mode for processing
     process_audio_buffer(samples.as_mut_slice());  // @borrowed mode
-    
+
     // Back to GC for output
     write_audio_file("output.wav", &samples);  // GC mode
 }
-```
+
+```text
 
 Let's visualize how the borrow checker ensures memory safety:
 
 ```mermaid
+
 stateDiagram-v2
     [*] --> Owned: Create value
     Owned --> BorrowedImmutable: &value (shared)
     Owned --> BorrowedMutable: &mut value (exclusive)
-    
+
     BorrowedImmutable --> Owned: Borrow ends
     BorrowedMutable --> Owned: Borrow ends
-    
+
     BorrowedImmutable --> BorrowedImmutable: Multiple readers OK
-    
+
     Owned --> Moved: Transfer ownership
     Moved --> [*]: Value consumed
-    
+
     note right of BorrowedMutable
         Only ONE mutable borrow
         OR multiple immutable borrows
         Never both simultaneously
     end note
-    
+
     note right of Moved
         Original binding
         now invalid
     end note
-```
+
+```text
 
 ### The Effect System: Beyond Memory Management
 
@@ -960,22 +974,23 @@ The effect system extends far beyond memory management. Fusion provides several 
 #### Visualization of Effect Application
 
 ```mermaid
+
 flowchart LR
     SOURCE[Source Code] --> PARSER[Parser]
     PARSER --> AST[AST]
     AST --> EFFECT{Effect<br/>Annotation?}
-    
+
     EFFECT -->|@borrowed| BORROW[Borrow Checker]
     EFFECT -->|@gpu_accelerated| GPU[CUDA/OpenCL Codegen]
     EFFECT -->|@constant_time| CONST[Constant-Time Verifier]
     EFFECT -->|@atomic| ATOMIC[Atomic Operations]
     EFFECT -->|None| NORMAL[Standard Codegen]
-    
+
     BORROW --> VALIDATION1{Pass<br/>checks?}
     GPU --> VALIDATION2{GPU<br/>available?}
     CONST --> VALIDATION3{Timing<br/>safe?}
     ATOMIC --> VALIDATION4{Atomicity<br/>guaranteed?}
-    
+
     VALIDATION1 -->|Yes| TARGET[Target Binary]
     VALIDATION1 -->|No| ERROR1[Compile Error]
     VALIDATION2 -->|Yes| TARGET
@@ -986,17 +1001,19 @@ flowchart LR
     VALIDATION4 -->|No| ERROR3[Atomicity Error]
     NORMAL --> TARGET
     FALLBACK --> TARGET
-    
+
     style ERROR1 fill:#f44336
     style ERROR2 fill:#f44336
     style ERROR3 fill:#f44336
-```
+
+```text
 
 #### `@gpu_accelerated`: Automatic GPU Execution
 
 This effect attribute automatically compiles the function to run on GPU hardware via CUDA or OpenCL:
 
 ```fusion
+
 use fusion::haft::FluxTensor;
 
 // This function runs on the GPU automatically
@@ -1010,20 +1027,22 @@ fn matrix_multiply(a: &FluxTensor<f32>, b: &FluxTensor<f32>) -> FluxTensor<f32> 
 fn benchmark_matrix_ops() {
     let a = FluxTensor::random([1000, 1000]);
     let b = FluxTensor::random([1000, 1000]);
-    
+
     let start = time::now();
     let result_gpu = matrix_multiply(&a, &b);  // ~2ms on modern GPU
     println("GPU time: {}ms", start.elapsed().as_millis());
-    
+
     // CPU version would take ~500ms for the same operation
 }
-```
+
+```text
 
 #### `@constant_time`: Cryptographic Safety
 
 Critical for cryptography, this effect prevents the compiler from making optimizations that could introduce timing side-channels:
 
 ```fusion
+
 use fusion::crypto::subtle;
 
 // Prevents timing attacks on password comparison
@@ -1032,24 +1051,26 @@ fn compare_passwords(input: &[u8], expected: &[u8]) -> bool {
     if input.len() != expected.len() {
         return false;
     }
-    
+
     let mut diff = 0u8;
     for i in 0..input.len() {
         diff |= input[i] ^expected[i];
     }
-    
+
     diff == 0  // This comparison takes constant time regardless of diff value
 }
 
 // Without @constant_time, the compiler might short-circuit on first mismatch,
 // leaking information about which byte position differs via timing
-```
+
+```text
 
 #### `@atomic`: Lock-Free Data Structures
 
 This effect enforces atomic memory access guarantees for implementing lock-free data structures:
 
 ```fusion
+
 use fusion::sync::Atomic;
 
 struct LockFreeQueue<T> {
@@ -1063,41 +1084,45 @@ impl<T> LockFreeQueue<T> {
     fn push(&self, value: T) -> bool {
         let tail = self.tail.load(Ordering::Acquire);
         let next_tail = (tail + 1) % self.buffer.len();
-        
+
         if next_tail == self.head.load(Ordering::Acquire) {
             return false;  // Queue full
         }
-        
+
         self.buffer[tail] = Some(value);
         self.tail.store(next_tail, Ordering::Release);
         true
     }
 }
-```
+
+```text
 
 ### Effect Composition
 
 Effects can be combined. For example, a function that processes sensitive data on the GPU:
 
 ```fusion
+
 @gpu_accelerated
 @constant_time
 fn secure_tensor_operation(encrypted_data: &FluxTensor<u8>, key: &[u8]) -> FluxTensor<u8> {
     // Runs on GPU with constant-time guarantees
     encrypted_data.xor_with_key(key)
 }
-```
+
+```text
 
 ### Practical Example: Complete Application with Mixed Modes
 
 Here's a real-world example showing how different parts of an application use different memory modes:
 
 ```fusion
+
 // High-level application logic: Use GC for convenience
 fn main() {
     let config = load_configuration("config.toml");  // GC handles strings, etc.
     let audio_engine = AudioEngine::new(config.sample_rate);
-    
+
     // Main event loop
     loop {
         let events = poll_user_input();  // GC for event objects
@@ -1119,14 +1144,14 @@ impl AudioEngine {
             *sample = self.generate_sample();
         }
     }
-    
+
     // GPU-accelerated FFT analysis
     @gpu_accelerated
     fn analyze_spectrum(&self, input: &[f32]) -> Vec<f32> {
         // Automatically runs on GPU
         fft::compute(input)
     }
-    
+
     fn process_events(&mut self, events: Vec<Event>) {
         // GC mode for event processing (not time-critical)
         for event in events {
@@ -1137,7 +1162,7 @@ impl AudioEngine {
             }
         }
     }
-    
+
     @borrowed
     fn generate_sample(&self) -> f32 {
         // @borrowed ensures this has no GC overhead
@@ -1145,7 +1170,8 @@ impl AudioEngine {
         0.5 * (self.phase * 440.0 * 2.0 * PI).sin()
     }
 }
-```
+
+```text
 
 This example demonstrates Fusion's philosophy: use the right tool for each job. GC for application logic and UI, `@borrowed` for real-time processing, `@gpu_accelerated` for parallel computation—all in the same codebase with seamless interoperability.
 
@@ -1163,10 +1189,10 @@ Fusion v3.4 introduced **Fusion Monolith Core**. It is a single, long-running pr
 
 The `fusion` CLI is your gateway to the Monolith.
 
--   **`fusion check`**: Performs semantic analysis. Because it reuses the state from the Monolith, it is near-instantaneous.
--   **`fusion build`**: Runs the full compilation pipeline.
--   **`fusion audit`**: Scans your dependencies against the Fusion Security Database. Thanks to "Shift-Left" security, this happens *during* dependency resolution.
--   **`fusion watch`**: Starts the Monolith in daemon mode, powering your IDE extensions.
+- **`fusion check`**: Performs semantic analysis. Because it reuses the state from the Monolith, it is near-instantaneous.
+- **`fusion build`**: Runs the full compilation pipeline.
+- **`fusion audit`**: Scans your dependencies against the Fusion Security Database. Thanks to "Shift-Left" security, this happens *during* dependency resolution.
+- **`fusion watch`**: Starts the Monolith in daemon mode, powering your IDE extensions.
 
 ---
 
@@ -1178,28 +1204,30 @@ Fusion is designed for the AI era. Instead of relying on external libraries like
 
 A standard array is dumb; it just sits in memory. A **FluxTensor** is intelligent. It is managed by three autonomous background agents:
 
-1.  **The Researcher**: Continually analyzes your code's access patterns. Is it reading sequentially? Randomly? Is the matrix sparse (mostly zeros)?
-2.  **The Builder**: Managing the "Hot" and "Cold" storage tiers. Based on the Researcher's findings, it moves rarely accessed data to compressed cold storage (RAM or NVMe), keeping only the active "hot" data in GPU memory or CPU cache.
-3.  **The Optimizer**: Tunes the data layout in real-time, effectively rewriting memory organization to match your usage patterns.
+1. **The Researcher**: Continually analyzes your code's access patterns. Is it reading sequentially? Randomly? Is the matrix sparse (mostly zeros)?
+2. **The Builder**: Managing the "Hot" and "Cold" storage tiers. Based on the Researcher's findings, it moves rarely accessed data to compressed cold storage (RAM or NVMe), keeping only the active "hot" data in GPU memory or CPU cache.
+3. **The Optimizer**: Tunes the data layout in real-time, effectively rewriting memory organization to match your usage patterns.
 
 ### Example: AI Model Training
 
 ```fusion
+
 import fusion.haft
 import fusion.nn
 
 fn train_model() {
     // 100GB Tensor - exceeds GPU memory!
     let data = FluxTensor::from_file("massive_dataset.csv")
-    
+
     // HAFT agents activate automatically.
     // They will keep only the current batch in GPU memory.
     let model = nn::Transformer::new()
-    
+
     // Training loop is syntax-native, no complex library calls
     model.fit(data, epochs=10)
 }
-```
+
+```text
 
 This significantly lowers the barrier to entry for training large models on consumer hardware.
 
@@ -1216,28 +1244,32 @@ Fusion adopts a "Quantum-Native" stance. We assume that powerful quantum compute
 By default, all cryptographic operations in the standard library use **Hybrid** algorithms. For example, a TLS handshake doesn't just use Elliptic Curve Diffie-Hellman (ECDH); it combines it with a Post-Quantum algorithm like Kyber-1024.
 
 ```fusion
+
 // This automatically uses Hybrid Crypto (X25519 + Kyber)
 let secure_socket = net::TcpStream::connect_secure("bank.com:443")
-```
+
+```text
 
 ### Quantum Circuits
 
 You can write quantum algorithms directly in Fusion. The `fusion::quantum` module provides primitives for Qubits and Gates.
 
 ```fusion
+
 fn entangle_pair() -> Result<Measurement> {
     let q = QubitRegister::new(2)
-    
+
     // Hadamard gate puts q[0] in superposition
     q.h(0)
-    
+
     // CNOT gate entangles q[0] and q[1]
     q.cnot(control=0, target=1)
-    
+
     // Collapse wave function
     return q.measure()
 }
-```
+
+```text
 
 These circuits can run on the built-in simulator or be dispatched to a cloud QPU (IBM Q, Rigetti) by changing a simple configuration flag.
 
@@ -1250,6 +1282,7 @@ With Sentinel TriBrid's Chaos Math Engine and hybrid cryptography in stdlib, Fus
 3. **Plan for Algorithm Agility**: Design systems that can upgrade cryptographic algorithms without breaking existing deployments
 
 ```fusion
+
 use fusion::crypto::hybrid::CryptoConfig;
 
 // Configure crypto agility
@@ -1260,7 +1293,8 @@ let config = CryptoConfig::builder()
     .build();
 
 let signed_data = config.sign(&data)?;
-```
+
+```text
 
 ---
 
@@ -1270,14 +1304,15 @@ let signed_data = config.sign(&data)?;
 
 **Challenge**: Process millions of market ticks per second with microsecond latency.
 
-**Fusion Solution**: 
--   Use `@borrowed` for the order matching engine to eliminate GC pauses
--   Use Runtime Core v2.0 Nebula's Cortex for AI-driven task scheduling
--   Use Fusion HAL `@gpu_accelerated` to run risk analysis models in parallel on the GPU
--   Result: A deterministic, ultra-low latency engine in a high-level language
+**Fusion Solution**:
+- Use `@borrowed` for the order matching engine to eliminate GC pauses
+- Use Runtime Core v2.0 Nebula's Cortex for AI-driven task scheduling
+- Use Fusion HAL `@gpu_accelerated` to run risk analysis models in parallel on the GPU
+- Result: A deterministic, ultra-low latency engine in a high-level language
 
 **Implementation Highlights**:
 ```fusion
+
 use fusion::runtime::nebula::*;
 
 @borrowed
@@ -1287,11 +1322,13 @@ fn match_orders(book: &mut OrderBook, order: Order) -> Vec<Trade> {
 }
 
 #[hal_accelerated]
+
 fn calculate_portfolio_risk(positions: &[Position]) -> RiskMetrics {
     // Automatically runs on GPU via Fusion HAL
     positions.iter().map(|p| p.var_calculation()).sum()
 }
-```
+
+```text
 
 ---
 
@@ -1300,30 +1337,33 @@ fn calculate_portfolio_risk(positions: &[Position]) -> RiskMetrics {
 **Challenge**: Store patient data for 50 years, ensuring it remains secure against future quantum computers.
 
 **Fusion Solution**:
--   Use Sentinel TriBrid with full TriBrid mode enabled for multi-layered security
--   Use the standard library's Hybrid Cryptography for all data at rest
--   Use `@constant_time` utilities for all custom parsing logic to prevent timing attacks
--   Oscillating Security Mesh ensures stolen credentials expire rapidly
--   Result: Future-proof data compliance out of the box
+- Use Sentinel TriBrid with full TriBrid mode enabled for multi-layered security
+- Use the standard library's Hybrid Cryptography for all data at rest
+- Use `@constant_time` utilities for all custom parsing logic to prevent timing attacks
+- Oscillating Security Mesh ensures stolen credentials expire rapidly
+- Result: Future-proof data compliance out of the box
 
 **Implementation Highlights**:
 ```fusion
+
 use fusion::sentinel::TriBrid;
 use fusion::crypto::hybrid::Cipher;
 
 #[tribrid_protected]
+
 mod medical_records {
     async fn store_patient_data(record: PatientRecord) -> Result<()> {
         // Sentinel TriBrid automatically:
         // 1. Encrypts with Chaos Cipher + Hybrid Crypto
         // 2. Rotates encryption keys via Oscillating Mesh
         // 3. Monitors access patterns for anomalies
-        
+
         let encrypted = Cipher::encrypt(&record.to_bytes())?;
         database.store(encrypted).await
     }
 }
-```
+
+```text
 
 ---
 
@@ -1332,30 +1372,32 @@ mod medical_records {
 **Challenge**: Train a 175B parameter model on consumer hardware with limited VRAM.
 
 **Fusion Solution**:
--   Use HAFT FluxTensors to automatically tier data between GPU VRAM, RAM, and NVMe
--   Use TensorWeave's pipeline parallelism to distribute model layers across multiple GPUs
--   Use Runtime Core v2.0 Nebula's QEM for optimal memory layout
--   Result: Train massive models without requiring expensive infrastructure
+- Use HAFT FluxTensors to automatically tier data between GPU VRAM, RAM, and NVMe
+- Use TensorWeave's pipeline parallelism to distribute model layers across multiple GPUs
+- Use Runtime Core v2.0 Nebula's QEM for optimal memory layout
+- Result: Train massive models without requiring expensive infrastructure
 
 **Implementation Highlights**:
 ```fusion
+
 use fusion::haft::FluxTensor;
 use fusion::tensorweave::pipeline::Pipeline;
 
 fn train_llm() {
     // Dataset exceeds GPU memory
     let dataset = FluxTensor::from_parquet("500GB_corpus.parquet");
-    
+
     // Pipeline across 4 GPUs
     let model_layers = create_transformer_layers(num_layers=96);
     let pipeline = Pipeline::new(model_layers, num_stages=4);
-    
+
     for batch in dataset.batches(micro_batch_size=8) {
         // Pipeline processes 4 micro-batches concurrently
         pipeline.forward(&batch);
     }
 }
-```
+
+```text
 
 ---
 
@@ -1364,33 +1406,36 @@ fn train_llm() {
 **Challenge**: Build a terminal-based monitoring dashboard that updates in real-time without flickering.
 
 **Fusion Solution**:
--   Use TermBlink's differential rendering engine for smooth updates
--   Use TermBlink's virtualized widgets to display millions of log lines
--   Use Runtime Core v2.0's async execution for non-blocking I/O
--   Result: Professional-grade terminal UI with sub-5ms frame times
+- Use TermBlink's differential rendering engine for smooth updates
+- Use TermBlink's virtualized widgets to display millions of log lines
+- Use Runtime Core v2.0's async execution for non-blocking I/O
+- Result: Professional-grade terminal UI with sub-5ms frame times
 
 **Implementation Highlights**:
 ```fusion
+
 use fusion::termblink::*;
 
 #[termblink_app]
+
 async fn devops_dashboard() -> Result<()> {
     let mut term = Terminal::new()?;
-    
+
     loop {
         let metrics = fetch_metrics().await?;
-        
+
         // TermBlink only redraws changed cells
         let layout = Layout::vertical(vec![
             Widget::LineChart().data(&metrics.cpu_history),
             Widget::Table().rows(&metrics.active_containers),
             Widget::BarChart().data(&metrics.request_rates),
         ]);
-        
+
         term.render(&layout)?;  // <5ms even for complex layouts
     }
 }
-```
+
+```text
 
 ---
 
@@ -1399,35 +1444,37 @@ async fn devops_dashboard() -> Result<()> {
 **Challenge**: Run physics simulations across a 100-node compute cluster with minimal communication overhead.
 
 **Fusion Solution**:
--   Use HAFT's Distributed Tensors to shard simulation state across nodes
--   Use Flux-Resolve v2.0 Hive Mind to coordinate dependency versions across the cluster
--   Use `fusion::distributed` stdlib module for remote execution
--   Result: Near-linear scaling to hundreds of nodes
+- Use HAFT's Distributed Tensors to shard simulation state across nodes
+- Use Flux-Resolve v2.0 Hive Mind to coordinate dependency versions across the cluster
+- Use `fusion::distributed` stdlib module for remote execution
+- Result: Near-linear scaling to hundreds of nodes
 
 **Implementation Highlights**:
 ```fusion
+
 use fusion::haft::distributed::DistributedTensor;
 use fusion::distributed::Cluster;
 
 async fn run_simulation() -> Result<()> {
     let cluster = Cluster::connect("cluster.internal:7946").await?;
-    
+
     // Shard 100GB simulation state across 100 nodes
     let state = DistributedTensor::new([1_000_000, 1_000], cluster.clone());
-    
+
     for timestep in 0..1000 {
         // Each node processes its shard in parallel
         cluster.broadcast(|| {
             state.local_shard_mut().apply_physics_step();
         }).await?;
-        
+
         // HAFT handles synchronization automatically
         state.sync_boundaries().await?;
     }
-    
+
     Ok(())
 }
-```
+
+```text
 
 ---
 
@@ -1436,70 +1483,70 @@ async fn run_simulation() -> Result<()> {
 ### Language Fundamentals
 
 **Do:**
--   **Prefer Immutability**: Use `let` instead of `let mut` whenever possible. It makes code easier to reason about.
--   **Use GC by Default**: Don't reach for `@borrowed` optimization prematurely. The Fusion GC is highly tuned. Only optimize hot paths.
--   **Trust the Monolith**: Keep `fusion watch` running. The shared state makes your tools smarter.
--   **Annotate Asynchronously**: If a function does I/O, mark it `async`. Blocking the main thread is an anti-pattern.
+- **Prefer Immutability**: Use `let` instead of `let mut` whenever possible. It makes code easier to reason about.
+- **Use GC by Default**: Don't reach for `@borrowed` optimization prematurely. The Fusion GC is highly tuned. Only optimize hot paths.
+- **Trust the Monolith**: Keep `fusion watch` running. The shared state makes your tools smarter.
+- **Annotate Asynchronously**: If a function does I/O, mark it `async`. Blocking the main thread is an anti-pattern.
 
 **Don't:**
--   **Ignore Security Warnings**: If `fusion audit` flags a dependency, do not suppress it without a rigorous manual review.
--   **Manually Manage Tensors**: Avoid writing manual loops for matrix math. Use HAFT operators (`tensor_a * tensor_b`) to let the autonomous agents optimize execution.
--   **Mix Modes Carelessly**: Be careful when passing data between `@borrowed` code and GC code. The compiler handles it, but extensive copying can hurt performance.
+- **Ignore Security Warnings**: If `fusion audit` flags a dependency, do not suppress it without a rigorous manual review.
+- **Manually Manage Tensors**: Avoid writing manual loops for matrix math. Use HAFT operators (`tensor_a * tensor_b`) to let the autonomous agents optimize execution.
+- **Mix Modes Carelessly**: Be careful when passing data between `@borrowed` code and GC code. The compiler handles it, but extensive copying can hurt performance.
 
 ### Flux-Resolve & Dependency Management
 
 **Do:**
--   **Enable Hive Mind in Teams**: Configure Redis for distributed caching to share resolution results
--   **Monitor Cache Hit Rates**: Use `fusion flux-resolve metrics` to track performance
--   **Use GPU Mode for Large Projects**: Enable `--engine-mode gpu` for monorepos with complex dependency graphs
+- **Enable Hive Mind in Teams**: Configure Redis for distributed caching to share resolution results
+- **Monitor Cache Hit Rates**: Use `fusion flux-resolve metrics` to track performance
+- **Use GPU Mode for Large Projects**: Enable `--engine-mode gpu` for monorepos with complex dependency graphs
 
 **Don't:**
--   **Disable Security Scanning**: Always keep `--security-level strict` enabled in production
--   **Ignore Version Conflicts**: Let Flux-Resolve handle resolution; manual overrides can introduce subtle bugs
+- **Disable Security Scanning**: Always keep `--security-level strict` enabled in production
+- **Ignore Version Conflicts**: Let Flux-Resolve handle resolution; manual overrides can introduce subtle bugs
 
 ### Runtime Core & Performance
 
 **Do:**
--   **Provide AI Scheduler Warm-Up Time**: Set `FUSION_RUNTIME_WARMUP=true` for optimal performance
--   **Use HAL Annotations Liberally**: Let `#[hal_accelerated]` automatically choose the best device
--   **Profile Before Optimizing**: Use `fusion profile record` to identify actual bottlenecks
+- **Provide AI Scheduler Warm-Up Time**: Set `FUSION_RUNTIME_WARMUP=true` for optimal performance
+- **Use HAL Annotations Liberally**: Let `#[hal_accelerated]` automatically choose the best device
+- **Profile Before Optimizing**: Use `fusion profile record` to identify actual bottlenecks
 
 **Don't:**
--   **Force Device Selection Without Reason**: Let Fusion HAL auto-detect optimal devices
--   **Ignore Cortex Thrashing**: If the AI scheduler struggles, provide a saved profile from testing
+- **Force Device Selection Without Reason**: Let Fusion HAL auto-detect optimal devices
+- **Ignore Cortex Thrashing**: If the AI scheduler struggles, provide a saved profile from testing
 
 ### HAFT & TensorWeave
 
 **Do:**
--   **Let HAFT Learn**: First run profiles access patterns; subsequent runs are optimized
--   **Save Profiles for Production**: Use `fusion haft save-profile production.haft`
--   **Use TensorWeave for Multi-Tensor Workflows**: Graph optimization provides significant benefits
+- **Let HAFT Learn**: First run profiles access patterns; subsequent runs are optimized
+- **Save Profiles for Production**: Use `fusion haft save-profile production.haft`
+- **Use TensorWeave for Multi-Tensor Workflows**: Graph optimization provides significant benefits
 
 **Don't:**
--   **Micromanage Memory Tiers**: Trust the Builder Agent to tier data optimally
--   **Skip Graph Caching**: For training loops, cache optimized graphs with `graph.save()`
+- **Micromanage Memory Tiers**: Trust the Builder Agent to tier data optimally
+- **Skip Graph Caching**: For training loops, cache optimized graphs with `graph.save()`
 
 ### Security with Sentinel TriBrid
 
 **Do:**
--   **Enable Full TriBrid Mode**: All three subsystems complement each other
--   **Configure Appropriate Rotation Periods**: High-security: 5-15s; Standard: 60s
--   **Provide Adequate Warmup Data**: Adaptive Threat Response needs ≥10,000 samples
+- **Enable Full TriBrid Mode**: All three subsystems complement each other
+- **Configure Appropriate Rotation Periods**: High-security: 5-15s; Standard: 60s
+- **Provide Adequate Warmup Data**: Adaptive Threat Response needs ≥10,000 samples
 
 **Don't:**
--   **Disable Auto-Response in Production**: Sentinel's automated threat response prevents attacks in real-time
--   **Use Overly Short Rotation Periods**: <5 seconds can cause legitimate request failures
+- **Disable Auto-Response in Production**: Sentinel's automated threat response prevents attacks in real-time
+- **Use Overly Short Rotation Periods**: <5 seconds can cause legitimate request failures
 
 ### Terminal UIs with TermBlink
 
 **Do:**
--   **Use Virtualization**: Let TermBlink handle large datasets with virtualized widgets
--   **Enable GPU Rendering**: Auto-detected on supported terminals for sub-ms frame times
--   **Profile Rendering**: Use `fusion termblink profile` to identify slow widgets
+- **Use Virtualization**: Let TermBlink handle large datasets with virtualized widgets
+- **Enable GPU Rendering**: Auto-detected on supported terminals for sub-ms frame times
+- **Profile Rendering**: Use `fusion termblink profile` to identify slow widgets
 
 **Don't:**
--   **Re-render Entire Screen**: Trust differential rendering to update only changed cells
--   **Ignore Terminal Capabilities**: Gracefully degrade features on older terminals
+- **Re-render Entire Screen**: Trust differential rendering to update only changed cells
+- **Ignore Terminal Capabilities**: Gracefully degrade features on older terminals
 
 ---
 
@@ -1514,17 +1561,23 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Verify CUDA/OpenCL installation:
    ```bash
+
    fusion diagnostics --check-gpu
-   ```
+
+```text
 2. Check GPU device visibility:
    ```bash
+
    fusion config flux-resolve --list-devices
-   ```
+
+```text
 3. Review driver compatibility: Fusion requires CUDA 11.4+ or OpenCL 2.0+
 4. Enable debug logging:
    ```bash
+
    FUSION_LOG=trace fusion build
-   ```
+
+```text
 
 #### Problem: "Hive Mind cache miss rate is high"
 
@@ -1533,8 +1586,10 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Verify Redis connection:
    ```bash
+
    fusion config flux-resolve --test-redis
-   ```
+
+```text
 2. Check Redis cluster health and persistence settings
 3. Ensure all team members use the same Flux-Resolve version
 4. Review firewall rules blocking Redis port (6379)
@@ -1550,12 +1605,16 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Increase warm-up period:
    ```bash
+
    export FUSION_CORTEX_WARMUP_SECS=60
-   ```
+
+```text
 2. Provide a saved profile from testing:
    ```bash
+
    fusion cortex load-profile production.cortex
-   ```
+
+```text
 3. Reduce concurrent task count to match available cores
 4. Check for memory pressure causing excessive context switching
 
@@ -1566,8 +1625,10 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. List available devices:
    ```bash
+
    fusion hal list-devices
-   ```
+
+```text
 2. Verify device installation (CUDA for NVIDIA, ROCm for AMD)
 3. Check device permissions (user must have GPU access)
 4. Review system logs for GPU driver errors
@@ -1579,17 +1640,23 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Enable aggressive compaction:
    ```toml
+
    [runtime.qem]
    compaction_mode = "aggressive"
-   ```
+
+```text
 2. Increase compaction frequency:
    ```toml
+
    compaction_interval_ms = 100
-   ```
+
+```text
 3. Profile memory allocation patterns:
    ```bash
+
    fusion runtime profile --memory
-   ```
+
+```text
 
 ---
 
@@ -1603,18 +1670,24 @@ async fn run_simulation() -> Result<()> {
 1. Ensure adequate warm-up time (first few iterations profile access patterns)
 2. Check agent activity:
   ```bash
+
    fusion haft monitor --dashboard http://localhost:8080
-   ```
+
+```text
 3. Provide access pattern hints if runtime behavior changes:
    ```fusion
+
    tensor.haft_hint(AccessPattern::Sparse);
-   ```
+
+```text
 4. Verify sufficient tier memory:
    ```toml
+
    [haft]
    builder_hot_tier_mb = 8192
    builder_warm_tier_mb = 65536
-   ```
+
+```text
 
 #### Problem: "GPU tensor copy overhead is high"
 
@@ -1623,17 +1696,23 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Use zero-copy interop:
    ```fusion
+
    tensor.as_device_ptr()  // No CPU-GPU copy
-   ```
+
+```text
 2. Keep data in GPU tier:
    ```fusion
+
    tensor.pin_to_device(Device::GPU);
-   ```
+
+```text
 3. Batch operations to minimize transfers
 4. Profile data movement:
    ```bash
+
    fusion haft profile --device-transfers
-   ```
+
+```text
 
 ---
 
@@ -1646,17 +1725,23 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Check MCP server is running:
    ```bash
+
    fusion mcp status
-   ```
+
+```text
 2. Verify port availability:
    ```bash
+
    fusion mcp serve --port 9339
-   ```
+
+```text
 3. Check firewall rules allowing port 9339
 4. Review policy mode (strict may block connections):
    ```bash
+
    fusion mcp serve --policy-mode permissive
-   ```
+
+```text
 
 #### Problem: "AI suggestions are outdated"
 
@@ -1665,16 +1750,22 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Ensure Monolith is running:
    ```bash
+
    fusion watch &
-   ```
+
+```text
 2. Restart MCP server to refresh state:
    ```bash
+
    fusion mcp restart
-   ```
+
+```text
 3. Clear MCP cache:
    ```bash
+
    fusion mcp cache clear
-   ```
+
+```text
 
 ---
 
@@ -1687,22 +1778,30 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Increase warmup samples:
    ```toml
+
    [sentinel.adaptive]
    warmup_samples = 20000
-   ```
+
+```text
 2. Adjust risk thresholds:
    ```toml
+
    risk_threshold_log = 0.4
    risk_threshold_block = 0.8
-   ```
+
+```text
 3. Review logged threat scores to calibrate thresholds:
    ```bash
+
    fusion sentinel logs --show-scores
-   ```
+
+```text
 4. Whitelist known-good patterns:
    ```bash
+
    fusion sentinel whitelist-pattern "endpoint:/api/batch-process"
-   ```
+
+```text
 
 #### Problem: "Oscillating Mesh token rotation causing authentication failures"
 
@@ -1711,16 +1810,20 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Increase overlap period:
    ```toml
+
    [sentinel.mesh]
    rotation_period_secs = 15
    overlap_period_secs = 10
-   ```
+
+```text
 2. Ensure clients handle token refresh properly
 3. Check system time synchronization (NTP) across all nodes
 4. Review rotation logs:
    ```bash
+
    fusion sentinel mesh logs
-   ```
+
+```text
 
 ---
 
@@ -1733,17 +1836,23 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Disable aggressive optimizations:
    ```fusion
+
    graph.optimize_with(OptimizationLevel::Conservative);
-   ```
+
+```text
 2. Profile computations of graph compilation overhead:
    ```bash
+
    fusion tensorweave profile --include-compile-time
-   ```
+
+```text
 3. Cache optimized graphs to amortize compilation cost:
    ```fusion
+
    graph.save("optimized.graph");
    let cached = Graph::load("optimized.graph")?;
-   ```
+
+```text
 
 #### Problem: "Distributed execution hangs"
 
@@ -1752,16 +1861,22 @@ async fn run_simulation() -> Result<()> {
 **Solutions**:
 1. Check network connectivity between nodes:
    ```bash
+
    fusion tensorweave test-connectivity
-   ```
+
+```text
 2. Review node status:
    ```bash
+
    fusion tensorweave cluster status
-   ```
+
+```text
 3. Enable distributed execution timeout:
    ```fusion
+
    distributed.set_timeout(Duration::from_secs(300));
-   ```
+
+```text
 4. Check for deadlocks in computation graph (cyclic dependencies)
 
 ---
@@ -1776,16 +1891,22 @@ async fn run_simulation() -> Result<()> {
 1. Enable V-Sync in terminal emulator settings
 2. Reduce render frame rate:
    ```fusion
+
    term.set_max_fps(30);  // Default is 60
-   ```
+
+```text
 3. Check terminal capabilities:
    ```bash
+
    fusion termblink detect-capabilities
-   ```
+
+```text
 4. Disable GPU rendering if unsupported:
    ```fusion
+
    let term = Terminal::new()?.disable_gpu();
-   ```
+
+```text
 
 #### Problem: "Widget virtualization not working"
 
@@ -1795,12 +1916,16 @@ async fn run_simulation() -> Result<()> {
 1. Verify virtualization is enabled (default for Table/List)
 2. Set explicit viewport size:
    ```fusion
+
    table.viewport_size(1000);  // Show 1000 rows at a time
-   ```
+
+```text
 3. Profile widget rendering:
    ```bash
+
    fusion termblink profile --widget-breakdown
-   ```
+
+```text
 4. Reduce data granularity (show summaries, not raw data)
 
 ---
@@ -1833,6 +1958,7 @@ A: Yes! Fusion supports all major platforms:
 
 A: Yes. Fusion provides FFI (Foreign Function Interface) for seamless interop:
 ```fusion
+
 // Call C library
 @ffi("libmath.so")
 extern fn compute_fft(data: *mut f64, size: usize) -> i32;
@@ -1840,7 +1966,8 @@ extern fn compute_fft(data: *mut f64, size: usize) -> i32;
 // Call from Rust crate
 use rust_crate::some_function;
 let result = some_function(42);
-```
+
+```text
 
 ---
 
@@ -1858,9 +1985,11 @@ A: Yes. Hive Mind is optional. Without Redis, Flux-Resolve operates in local-onl
 
 A: Configure private registries in `Flux.toml`:
 ```toml
+
 [registries]
 internal = { url = "https://packages.internal.company.com", auth = "token" }
-```
+
+```text
 Flux-Resolve queries both public and private registries during resolution.
 
 ---
@@ -1891,11 +2020,14 @@ A: Minimal. Agents run in background threads with <1% CPU usage. The performance
 
 A: Yes, via FFI. HAFT tensors can be exported as raw pointers compatible with NumPy, PyTorch, and TensorFlow:
 ```python
+
 # Python side
+
 import fusion_haft
 tensor = fusion_haft.FluxTensor.from_file("data.bin")
 numpy_array = tensor.as_numpy()  # Zero-copy view
-```
+
+```text
 
 **Q: What happens if HAFT cold tier (disk) fails?**
 
@@ -1916,15 +2048,19 @@ A: Fusion MCP implements the standard Model Context Protocol. Compatible assista
 
 A: Yes. Use `fusion-policy.toml` to define fine-grained capabilities:
 ```toml
+
 [mcp.allowed_operations]
 operations = ["query_types", "suggest_completions"]
+
 # Writing files, executing commands, etc. are denied by default in strict mode
-```
+
+```text
 
 **Q: Does MCP work with remote AI models (e.g., cloud APIs)?**
 
 A: Yes. MCP server can expose endpoints over HTTPS with authentication:
 ```bash
+
 fusion mcp serve --bind 0.0.0.0:9339 --require-auth --cert server.crt --key server.key
 ``
 
@@ -1951,9 +2087,11 @@ A: Recommended periods:
 **Q: Can I audit what Sentinel is doing?**
 
 A: Yes. Enable audit logging:
+
 ```bash
 fusion sentinel audit --log-file sentinel-audit.log --verbose
-```
+```text
+
 Logs include all threat scores, blocked requests, and cryptographic operations.
 
 ---
@@ -1972,22 +2110,28 @@ Subsequent builds are near-instantaneous as they reuse cached state.
 **Q: How do I benchmark Fusion code?**
 
 A: Use the built-in benchmarking framework:
+
 ```fusion
+
 #[bench]
+
 fn benchmark_function(b: &mut Bencher) {
     b.iter(|| {
         // Code to benchmark
     });
 }
-```
+```text
+
 Run with:
+
 ```bash
 fusion bench --profile release
-```
+```text
 
 **Q: Can I disable background agents to save resources?**
 
 A: Yes, but not recommended. To disable:
+
 ```toml
 [haft]
 enabled = false
@@ -1997,7 +2141,8 @@ enabled = false
 
 [sentinel]
 enabled = false
-```
+```text
+
 This returns Fusion to a "basic" mode similar to traditional languages.
 
 ---
@@ -2009,24 +2154,27 @@ This returns Fusion to a "basic" mode similar to traditional languages.
 A: Fusion builds native binaries. Choose deployment method:
 
 1. **Standalone Binary**:
+
    ```bash
    fusion build --release
    # Binary at target/release/my-app
-   ```
+```text
 
 2. **Docker Container**:
+
    ```dockerfile
    FROM fusion:latest
    COPY . /app
    WORKDIR /app
    RUN fusion build --release
    CMD ["./target/release/my-app"]
-   ```
+```text
 
 3. **System Service**:
+
    ```bash
    fusion deploy --systemd --service-name my-app
-   ```
+```text
 
 **Q: Do I need to deploy the Monolith with my application?**
 
@@ -2035,16 +2183,21 @@ A: No! The Monolith is a development tool. Production binaries are self-containe
 **Q: Can I cross-compile for different platforms?**
 
 A: Yes:
+
 ```bash
+
 # Build for Linux from macOS
+
 fusion build --target x86_64-unknown-linux-gnu
 
 # Build for Windows from Linux
+
 fusion build --target x86_64-pc-windows-msvc
 
 # Build for ARM
+
 fusion build --target aarch64-unknown-linux-gnu
-```
+```text
 
 ---
 
@@ -2059,7 +2212,7 @@ By default, all cryptographic operations in the standard library use **Hybrid** 
 ```fusion
 // This automatically uses Hybrid Crypto (X25519 + Kyber)
 let secure_socket = net::TcpStream::connect_secure("bank.com:443")
-```
+```text
 
 ### Quantum Circuits
 
@@ -2068,17 +2221,17 @@ You can write quantum algorithms directly in Fusion. The `fusion::quantum` modul
 ```fusion
 fn entangle_pair() -> Result<Measurement> {
     let q = QubitRegister::new(2)
-    
+
     // Hadamard gate puts q[0] in superposition
     q.h(0)
-    
+
     // CNOT gate entangles q[0] and q[1]
     q.cnot(control=0, target=1)
-    
+
     // Collapse wave function
     return q.measure()
 }
-```
+```text
 
 These circuits can run on the built-in simulator or be dispatched to a cloud QPU (IBM Q, Rigetti) by changing a simple configuration flag.
 
@@ -2111,7 +2264,7 @@ fusion add "quantum-sim@^2.4.0"
 // 1. Has any team member already resolved this?
 // 2. Are there known security issues?
 // 3. What's the optimal version considering team-wide constraints?
-```
+```text
 
 ### Use Cases
 
@@ -2155,7 +2308,7 @@ fusion config flux-resolve --engine-mode cpu
 
 // Hybrid mode: Use GPU for complex graphs, CPU for simple ones
 fusion config flux-resolve --engine-mode adaptive
-```
+```text
 
 ### Advanced Configuration
 
@@ -2168,7 +2321,7 @@ max_threads = 4096          # Maximum parallel threads
 timeout_seconds = 120       # Abort if resolution takes too long
 cache_backend = "redis"     # Use Redis for distributed caching
 fallback_to_cpu = true      # Fallback to CPU if GPU unavailable
-```
+```text
 
 ### Use Cases
 
@@ -2215,7 +2368,7 @@ fusion mcp serve --port 9339
 // - /context/file - File-level AST and types
 // - /operations/refactor - Safe refactoring operations
 // - /operations/generate - Code generation with type validation
-```
+```text
 
 From your AI coding assistant (e.g., VS Code extension):
 
@@ -2241,7 +2394,7 @@ const refactoring = await mcp.refactor({
 
 // Fusion validates and applies the change
 await mcp.apply(refactoring);
-```
+```text
 
 ### MCP Facets: Composable Capabilities
 
@@ -2260,7 +2413,7 @@ fusion mcp serve --facets lsp,syntax,semantics
 
 // Configure policy restrictions
 fusion mcp serve --policy-mode strict --facets lsp,commands
-```
+```text
 
 ### Use Cases
 
@@ -2288,7 +2441,7 @@ operations = [
   "navigate_ast",
   "suggest_completions"
 ]
-```
+```text
 
 ### Best Practices
 
@@ -2337,7 +2490,7 @@ async fn new_style() {
         heavy_computation().await
     });
 }
-```
+```text
 
 ### Performance Benchmarks
 
@@ -2383,13 +2536,13 @@ async fn data_pipeline() {
         validate_schema(),    // I/O-intensive (network calls)
         check_cache()         // Memory-intensive
     );
-    
+
     // Cortex scheduled these optimally:
     // - parse_dataset() -> High-performance CPU cores
     // - validate_schema() -> Background thread with async I/O
     // - check_cache() -> Executed first, others wait only if cache hit
 }
-```
+```text
 
 #### 2. Fusion HAL: Hardware Abstraction Layer
 
@@ -2399,6 +2552,7 @@ The Hardware Abstraction Layer provides a unified interface for executing code o
 use fusion::hal::{Device, DeviceType};
 
 #[hal_accelerated]  // Compiler chooses optimal device
+
 fn matrix_multiply(a: &Matrix, b: &Matrix) -> Matrix {
     // Exactly the same code runs on:
     // - CPU with SIMD optimizations
@@ -2416,7 +2570,7 @@ fn force_gpu_execution() {
         matrix_multiply(&large_matrix_a, &large_matrix_b)
     });
 }
-```
+```text
 
 #### 3. Fusion QEM: Quantum-Enhanced Memory
 
@@ -2433,34 +2587,42 @@ The Quantum-Enhanced Memory system uses advanced allocation strategies inspired 
 use fusion::runtime::nebula::*;
 
 #[nebula_main]  // Opt-in to v2.0 runtime
+
 async fn main() {
     // High-level async code
     let user_data = fetch_user_profile( user_id).await;
-    
+
     // HAL-accelerated computation
     let risk_score = compute_risk_model(&user_data);
-    
+
     // Cortex automatically moved compute_risk_model to GPU
     // QEM ensured user_data was zero-copy between CPU and GPU
-    
+
     log::info!("Computed in {} µs", timer.elapsed());
     // Typical result: 150 µs (vs. 2.3 ms on legacy runtime)
 }
-```
+```text
 
 ### Troubleshooting Nebula
 
-**Issue**: "Cortex AI scheduler is thrashing"  
+**Issue**: "Cortex AI scheduler is thrashing"
 **Solution**: Increase warm-up period: `FUSION_CORTEX_WARMUP_SECS=60` or provide a saved profile: `fusion cortex load-profile production.cortex`
 
-**Issue**: "HAL device not found"  
+**Issue**: "HAL device not found"
 **Solution**: Verify device installation:
+
 ```bash
 fusion hal list-devices
+
 # Expected output:
+
+
 # Device 0: Intel Core i9-13900K (CPU)
+
+
 # Device 1: NVIDIA RTX 4090 (GPU/CUDA)
-```
+
+```text
 
 ---
 
@@ -2482,25 +2644,34 @@ All four subsystems share state via `Arc<RwLock<FusionState>>`, meaning a change
 ### How It Works
 
 traditional workflow:
+
 ```bash
+
 # Each command reparses the entire project
+
 cargo check      # Parse → Type Check → Exit
 cargo build      # Parse → Type Check → Compile → Exit  (redundant work!)
 cargo audit      # Download → Parse → Check → Exit
 rust-analyzer    # Separate process, parses independently
-```
+```text
 
 Fusion Monolith workflow:
+
 ```bash
+
 # Start the Monolith once
+
 fusion watch &
 
 # All subsequent commands are near-instantaneous
+
 fusion check     # Uses in-memory AST
 fusion build     # Reuses type checking from 'check'
 fusion audit     # Reads dependency graph already in memory
+
 # VSCode extension reads from the same shared memory
-```
+
+```text
 
 ### Shared Memory Architecture
 
@@ -2518,7 +2689,7 @@ struct FusionState {
 // Multiple processes can access this simultaneously
 let state = FusionState::global();
 let ast = state.ast.get(&file_id)?;  // Zero-copy read
-```
+```text
 
 ### Benefits for Development Workflow
 
@@ -2531,14 +2702,16 @@ let ast = state.ast.get(&file_id)?;  // Zero-copy read
 ### Configuring the Monolith
 
 ```toml
+
 # Fusion.toml
+
 [monolith]
 enabled = true
 persistence_path = ".fusion/cache"  # Where to save state between restarts
 max_memory_gb = 8                    # Limit memory usage
 audit_interval_secs = 300            # How often to check for new vulns
 agents = ["optimizer", "doc-generator", "test-runner"]
-```
+```text
 
 ### Use Cases
 
@@ -2559,18 +2732,23 @@ The Fusion Visual Studio Code CLI Next-Level Upgrade enhances the integration be
 The upgraded CLI provides `fusion mcp` subcommands for managing MCP servers, tools, and context:
 
 ```bash
+
 # Start MCP server with specific facets
+
 fusion mcp serve --facets lsp,syntax,semantics --port 9339
 
 # List available MCP tools
+
 fusion mcp tool list
 
 # Add a custom MCP tool
+
 fusion mcp tool add --name "refactor-assistant" --script "./tools/refactor.fu"
 
 # Query MCP context
+
 fusion mcp context query --file src/main.fu --line 42 --column 10
-```
+```text
 
 ### LSP Resources and Composable Facets
 
@@ -2586,32 +2764,40 @@ The CLI exposes LSP capabilities as modular facets that can be enabled independe
 | `policy`    | Security policy enforcement     | Restrict AI capabilities       |
 
 ```bash
+
 # Minimal LSP for performance-constrained environments
+
 fusion mcp serve --facets lsp
 
 # Full-featured AI coding assistant
+
 fusion mcp serve --facets lsp,syntax,semantics,project
 
 # Security-hardened mode
+
 fusion mcp serve --facets lsp,commands --policy-mode strict
-```
+```text
 
 ### Policy Enforcement Architecture
 
 The CLI integrates `fusion-policy` to enforce fine-grained capability control:
 
 ```bash
+
 # Initialize policy configuration
+
 fusion policy init
 
 # Define allowed operations
+
 fusion policy allow --operation read_file_system
 fusion policy deny --operation execute_commands
 fusion policy deny --operation network_access
 
 # Audit policy compliance
+
 fusion policy audit --report policy-audit.json
-```
+```text
 
 Example policy file (`fusion-policy.toml`):
 
@@ -2630,26 +2816,29 @@ network_access = false
   [extensions."gemini-code-assist"]
   allowed_operations = ["query_types", "suggest_completions"]
   denied_operations = ["modify_files", "execute_shell"]
-  
+
   [extensions."github-copilot"]
   allowed_operations = ["read_context"]
   denied_operations = ["all"]  # Deny all by default
-```
+```text
 
 ### Debugging Integration
 
 The CLI provides enhanced debugging capabilities integrated directly into VS Code:
 
 ```bash
+
 # Start debug session
+
 fusion debug --target debug --attach
 
 # Enable advanced debugging features
-fusion debug --features breakpoint-injection,hot-reload,time-travel
-```
 
-**Breakpoint Injection**: Set breakpoints dynamically without recompilation  
-**Hot Reload**: Modify code during a debug session and continue execution  
+fusion debug --features breakpoint-injection,hot-reload,time-travel
+```text
+
+**Breakpoint Injection**: Set breakpoints dynamically without recompilation
+**Hot Reload**: Modify code during a debug session and continue execution
 **Time-Travel Debugging**: Record execution and step backwards through program state
 
 ### Extension Manifest Validation
@@ -2657,14 +2846,23 @@ fusion debug --features breakpoint-injection,hot-reload,time-travel
 The VSC CLI upgrade includes extension capability validation:
 
 ```bash
+
 # Validate extension manifest against policy
+
 fusion extension validate --manifest .vscode/extensions/my-extension/package.json --policy fusion-policy.toml
 
 # Output:
+
+
 # ✓ Extension 'my-extension' complies with policy
+
+
 # ✗ Warning: Extension requests 'execute_commands' capability (denied by policy)
+
+
 # ✗ Error: Extension manifest missing required field 'security_capabilities'
-```
+
+```text
 
 ### Best Practices
 
@@ -2702,7 +2900,7 @@ let massive_tensor = FluxTensor::from_file("100GB_dataset.dat");
 // - Reading rows sequentially → Row-major layout optimal
 // - Only using 5% of columns → Sparse storage beneficial
 // - Repeating access to first 1000 rows → Cache those in fast memory
-```
+```text
 
 #### 2. The Builder Agent
 
@@ -2723,7 +2921,7 @@ let training_data = FluxTensor::new([1_000_000, 10_000]);  // 10B elements!
 // - Stages next batch in RAM
 // - Compresses remaining batches on disk
 model.train(training_data, batch_size=1024);
-```
+```text
 
 #### 3. The Optimizer Agent
 
@@ -2742,7 +2940,7 @@ let result = (tensor_a * tensor_b) + tensor_c;
 // 2. Chooses optimal layout to minimize memory bandwidth
 // 3. Generates specialized CUDA kernel if GPU available
 // Result: 10-50x faster than naive implementation
-```
+```text
 
 ### Practical Example: Large Language Model Training
 
@@ -2753,20 +2951,20 @@ use fusion::nn::{Transformer, Optimizer};
 fn train_llm() {
     // Dataset exceeds available GPU memory (500GB vs. 24GB VRAM)
     let dataset = FluxTensor::from_parquet("500GB_text_corpus.parquet");
-    
+
     // HAFT agents handle everything:
     // - Researcher detects streaming access pattern
     // - Builder stages batches: next batch in RAM while current in VRAM
     // - Optimizer pre-generates batched embedding kernels
-    
+
     let model = Transformer::new(
         vocab_size=50000,
         hidden_dim=4096,
         num_layers=48
     );
-    
+
     let optimizer = Optimizer::adamw(lr=3e-4);
-    
+
     // Training loop is simple—HAFT handles complexity
     for epoch in 0..100 {
         for batch in dataset.batches(batch_size=32) {
@@ -2776,21 +2974,23 @@ fn train_llm() {
         }
     }
 }
-```
+```text
 
 ### Configuration and Tuning
 
 While HAFT is fully automatic by default, advanced users can tune agent behaviour:
 
 ```toml
+
 # Fusion.toml
+
 [haft]
 researcher_interval_ms = 100       # How often to profile access patterns
 builder_hot_tier_mb = 8192          # Max GPU/cache usage (8GB)
 builder_warm_tier_mb = 65536        # Max RAM usage (64GB)
 builder_compression_level = 6       # Zstd compression for cold tier
 optimizer_aggressive_fusion = true  # Enable experimental optimisations
-```
+```text
 
 ### Advanced Features
 
@@ -2806,7 +3006,7 @@ let tensor = FluxTensor::new([4096, 4096]);
 // HAFT ensures data is in GPU memory
 // Then passes raw CUDA pointer to cuBLAS
 cublas::gemm(tensor.as_device_ptr(), ...);
-```
+```text
 
 **Distributed HAFT**: For cluster computing, HAFT can shard tensors across multiple nodes:
 
@@ -2824,7 +3024,7 @@ let huge_tensor = DistributedTensor::new([1_000_000, 1_000_000], cluster);
 
 // Operations run in parallel across the cluster
 let result = huge_tensor.matmul(&other_huge_tensor);
-```
+```text
 
 ### Best Practices
 
@@ -2859,7 +3059,7 @@ let ciphertext = cipher.encrypt(plaintext);
 // Even if attacker knows we use Lorenz system,
 // they cannot decrypt without the exact initial state
 // (which has 2^256 possible values)
-```
+```text
 
 #### 2. Oscillating Security Mesh
 
@@ -2884,7 +3084,7 @@ let api_token = mesh.generate_token("api_access");
 
 // After 15 seconds, old token is still valid for 5 seconds (overlap)
 // Then becomes invalid—attacker's stolen token expires rapidly
-```
+```text
 
 #### 3. Adaptive Threat Response
 
@@ -2907,7 +3107,7 @@ monitor.observe(Event::FileAccess { path: "/var/log/app.log", mode: Read });
 // Later, anomalous behavior is detected
 monitor.observe(Event::ApiCall { endpoint: "/admin/delete-all", response_time_ms: 12000 });
 // ⚠️ Sentinel auto-response: Block request, alert admin, capture forensics
-```
+```text
 
 ### Complete Integration Example
 
@@ -2915,30 +3115,33 @@ monitor.observe(Event::ApiCall { endpoint: "/admin/delete-all", response_time_ms
 use fusion::sentinel::TriBrid;
 
 #[tribrid_protected]  // Sentinel protects this entire module
+
 mod secure_api {
     use fusion::web::{Router, Json};
     use fusion::sentinel::chaos::ChaosCipher;
-    
+
     pub fn configure(router: &mut Router) {
         router.post("/api/sensitive", handle_sensitive_data);
     }
-    
+
     async fn handle_sensitive_data(data: Json<SensitivePayload>) -> Result<Json<Response>> {
         // Sentinel automatically:
         // 1. Validates request against Oscillating Mesh (token must be current)
         // 2. Scores request risk (Adaptive Threat Response)
         // 3. Encrypts response with Chaos Cipher
-        
+
         let processed = process_data(&data)?;
         Ok(Json(processed))
     }
 }
-```
+```text
 
 ### Configuration
 
 ```toml
+
 # Fusion.toml
+
 [sentinel]
 enabled = true
 mode = "tribrid"  # Options: chaos-only, mesh-only, adaptive-only, tribrid
@@ -2957,7 +3160,7 @@ warmup_samples = 10000
 risk_threshold_log = 0.3
 risk_threshold_block = 0.7
 enable_auto_response = true
-```
+```text
 
 ### Use Cases
 
@@ -3011,7 +3214,7 @@ loss.backward();  // TensorWeave computes all gradients automatically
 // Gradients available as:
 let dL_dweights = weights.grad();
 let dL_dbiases = biases.grad();
-```
+```text
 
 ### Graph Optimization
 
@@ -3037,7 +3240,7 @@ let e = graph.reduce_sum(&d);
 let optimized = graph.optimize();
 // TensorWeave fused: matmul + relu → single kernel
 // TensorWeave scheduled: reduce_sum in parallel with other work
-```
+```text
 
 ### Distributed Tensor Parallelism
 
@@ -3058,7 +3261,7 @@ let distributed = DistributedGraph::new(graph, strategy);
 
 // Computation automatically parallelized
 let output = distributed.execute(&input);
-```
+```text
 
 ### Pipeline Parallelism
 
@@ -3082,7 +3285,7 @@ let pipeline = Pipeline::new(layers, num_stages=4);
 for batch in dataset.batches(micro_batch_size=8) {
     pipeline.forward(&batch);
 }
-```
+```text
 
 ### Integration with HAFT
 
@@ -3101,7 +3304,7 @@ let tensor = Tensor::from_haft(FluxTensor::new([10000, 10000]));
 // TensorWeave manages computation graph
 // HAFT manages memory and execution
 let result = tensor.matmul(&other_tensor).softmax();
-```
+```text
 
 ### Best Practices
 
@@ -3137,10 +3340,10 @@ let layout = build_dashboard();
 loop {
     // TermBlink only redraws changed regions
     term.render(&layout)?;
-    
+
     // handle input...
 }
-```
+```text
 
 #### 2. GPU-Accelerated Text Rendering
 
@@ -3153,7 +3356,7 @@ let renderer = GpuRenderer::new()?;  // Auto-detects GPU terminal support
 
 // Renders 80x24 terminal in <1ms
 renderer.render_frame(&terminal_state);
-```
+```text
 
 #### 3. Rich Widget Library
 
@@ -3177,7 +3380,7 @@ let table = Table::new()
 let chart = BarChart::new()
     .data(vec![("Q1", 42), ("Q2", 57), ("Q3", 63)])
     .color(Color::Green);
-```
+```text
 
 #### 4. Event-Driven Architecture
 
@@ -3196,7 +3399,7 @@ loop {
         _ => {}
     }
 }
-```
+```text
 
 ### Practical Example: Real-Time Log Viewer
 
@@ -3204,10 +3407,11 @@ loop {
 use fusion::termblink::*;
 
 #[termblink_app]
+
 async fn log_viewer() -> Result<()> {
     let mut term = Terminal::new()?;
     let mut log_buffer = VecDeque::new();
-    
+
     loop {
         // Read logs asynchronously
         if let Ok(line) = log_stream.recv().await {
@@ -3216,20 +3420,20 @@ async fn log_viewer() -> Result<()> {
                 log_buffer.pop_front();
             }
         }
-        
+
         // Build UI
         let layout = Layout::vertical(vec![
             Widget::Text("Log Viewer - Press 'q' to quit")
                 .style(Style::default().fg(Color::Cyan).bold()),
-            
+
             Widget::Table()
                 .rows(&log_buffer)  // TermBlink handles virtualization
                 .scroll_offset(scroll_position),
         ]);
-        
+
         // Differential rendering: only changed parts redraw
         term.render(&layout)?;
-        
+
         // Handle input
         if let Some(Event::Key(key)) = term.poll_event_timeout(Duration::from_millis(16))? {
             match key.code {
@@ -3240,10 +3444,10 @@ async fn log_viewer() -> Result<()> {
             }
         }
     }
-    
+
     Ok(())
 }
-```
+```text
 
 ### Advanced Features
 
@@ -3283,7 +3487,7 @@ let vec2 = vec1.push(4);  // O(log n), not O(n)!
 // vec1 and vec2 share structure—no full copy
 assert_eq!(vec1.len(), 3);
 assert_eq!(vec2.len(), 4);
-```
+```text
 
 #### 2. `fusion::quantum`
 
@@ -3296,7 +3500,7 @@ let mut circuit = QuantumCircuit::new(3);
 circuit.apply(Gate::Hadamard, 0);
 circuit.apply(Gate::CNOT, 0, 1);
 let result = circuit.execute();
-```
+```text
 
 #### 3. `fusion::crypto::hybrid`
 
@@ -3308,7 +3512,7 @@ use fusion::crypto::hybrid::{ KeyPair, Cipher};
 // Automatically uses X25519 + Kyber1024
 let keypair = KeyPair::generate();
 let ciphertext = Cipher::encrypt(&plaintext, &keypair.public);
-```
+```text
 
 #### 4. `fusion::distributed`
 
@@ -3323,7 +3527,7 @@ let cluster = Cluster::connect("cluster.internal:7946").await?;
 let result: i32 = cluster.exec_remote("node-5", || {
     expensive_computation()
 }).await?;
-```
+```text
 
 ### Enhanced Existing Modules
 
@@ -3341,7 +3545,7 @@ fs::write_atomic("/etc/config.toml", serialized_config).await?;
 
 // Secure path handling prevents directory traversal
 let safe_path = Path::new("/uploads").join_safe(user_input)?;
-```
+```text
 
 #### `fusion::concurrency` - Concurrency Primitives
 
@@ -3361,7 +3565,7 @@ scope(|s| {
     });
     // Scope waits for both tasks to complete
 }).await;
-```
+```text
 
 ### Best Practices for stdlib Usage
 
@@ -3379,9 +3583,10 @@ Developers spend half their time reading documentation. Switching context to a w
 It renders Markdown, API references, and standard web pages directly in your terminal with full mouse support and strict Vim keybindings.
 
 **Usage:**
+
 ```bash
 fusion tool browser https://docs.fusion-lang.org/std/collections
-```
+```text
 
 You can even integrate it into your IDE setup to have documentation open in a side pane without the overhead of a Chrome instance.
 
@@ -3390,50 +3595,56 @@ You can even integrate it into your IDE setup to have documentation open in a si
 ## 10. Real-World Use Cases {#real-world-use-cases}
 
 ### Case Study: High-Frequency Trading (HFT)
+
 **Challenge**: Process millions of market ticks per second with microsecond latency.
-**Fusion Solution**: 
--   Use `@borrowed` for the order matching engine to eliminate GC pauses.
--   Use `@gpu_accelerated` to run risk analysis models in parallel on the GPU.
--   Result: A deterministic, ultra-low latency engine in a high-level language.
+**Fusion Solution**:
+- Use `@borrowed` for the order matching engine to eliminate GC pauses.
+- Use `@gpu_accelerated` to run risk analysis models in parallel on the GPU.
+- Result: A deterministic, ultra-low latency engine in a high-level language.
 
 ### Case Study: Secure Medical Records
+
 **Challenge**: Store patient data for 50 years, ensuring it remains secure against future quantum computers.
 **Fusion Solution**:
--   Use the standard library's Hybrid Cryptography for all data at rest.
--   Use `@constant_time` utilities for all custom parsing logic.
--   Result: Future-proof data compliance out of the box.
+- Use the standard library's Hybrid Cryptography for all data at rest.
+- Use `@constant_time` utilities for all custom parsing logic.
+- Result: Future-proof data compliance out of the box.
 
 ---
 
 ## 11. Best Practices Guide {#best-practices-guide}
 
 ### Do:
--   **Prefer Immutability**: Use `let` instead of `let mut` whenever possible. It makes code easier to reason about.
--   **Use GC by Default**: Don't reach for `@borrowed` optimization prematurely. The Fusion GC is highly tuned. Only optimize hot paths.
--   **Trust the Monolith**: Keep `fusion watch` running. The shared state makes your tools smarter.
--   **Annotate Asynchronously**: If a function does I/O, mark it `async`. Blocking the main thread is an anti-pattern.
+
+- **Prefer Immutability**: Use `let` instead of `let mut` whenever possible. It makes code easier to reason about.
+- **Use GC by Default**: Don't reach for `@borrowed` optimization prematurely. The Fusion GC is highly tuned. Only optimize hot paths.
+- **Trust the Monolith**: Keep `fusion watch` running. The shared state makes your tools smarter.
+- **Annotate Asynchronously**: If a function does I/O, mark it `async`. Blocking the main thread is an anti-pattern.
 
 ### Don't:
--   **Ignore Security Warnings**: If `fusion audit` flags a dependency, do not suppress it without a rigorous manual review.
--   **Manually Manage Tensors**: Avoid writing manual loops for matrix math. Use HAFT operators (`tensor_a * tensor_b`) to let the autonomous agents optimize execution.
--   **Mix Modes Carelessly**: Be careful when passing data between `@borrowed` code and GC code. The compiler handles it, but extensive copying can hurt performance.
+
+- **Ignore Security Warnings**: If `fusion audit` flags a dependency, do not suppress it without a rigorous manual review.
+- **Manually Manage Tensors**: Avoid writing manual loops for matrix math. Use HAFT operators (`tensor_a * tensor_b`) to let the autonomous agents optimize execution.
+- **Mix Modes Carelessly**: Be careful when passing data between `@borrowed` code and GC code. The compiler handles it, but extensive copying can hurt performance.
 
 ---
 
 ## 12. Appendices {#appendices}
 
 ### A. Glossary
--   **HAFT**: Hyper-Adaptive Flux Tensor. The intelligent array primitive.
--   **Monolith**: The unified compiler/toolchain process.
--   **Flux-Resolve**: The GPU-accelerated dependency solver.
--   **Agent**: An autonomous background thread optimizing runtime state.
+
+- **HAFT**: Hyper-Adaptive Flux Tensor. The intelligent array primitive.
+- **Monolith**: The unified compiler/toolchain process.
+- **Flux-Resolve**: The GPU-accelerated dependency solver.
+- **Agent**: An autonomous background thread optimizing runtime state.
 
 ### B. Cheat Sheet
--   `fusion new <name>` - Create project
--   `fusion run` - Build and run
--   `fusion audit` - Security Check
--   `@borrowed` - Zero-copy mode
--   `@gpu_accelerated` - CUDA/OpenCL target
+
+- `fusion new <name>` - Create project
+- `fusion run` - Build and run
+- `fusion audit` - Security Check
+- `@borrowed` - Zero-copy mode
+- `@gpu_accelerated` - CUDA/OpenCL target
 
 ---
 *Updated for Fusion v3.4 (Monolith Era)*

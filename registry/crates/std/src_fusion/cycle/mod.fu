@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: cycle (stub)
+fn _cycle_stub() -> void { }

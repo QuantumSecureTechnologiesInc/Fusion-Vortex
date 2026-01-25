@@ -11,7 +11,7 @@ Add the dependency:
 ```toml
 [dependencies]
 fusion-terminal-browser = { path = "../../crates/fusion-terminal-browser" }
-```
+```text
 
 ### Step 2: Add Browser Commands
 
@@ -23,82 +23,84 @@ use fusion_terminal_browser::{Browser, BrowserConfig};
 use fusion_terminal_browser::config::{RenderMode, ColorDepth};
 
 #[derive(Subcommand)]
+
 pub enum Commands {
     // ... existing commands ...
-    
+
     /// Terminal browser with Blink engine and WebGPU
     #[command(subcommand)]
     Browser(BrowserCommands),
 }
 
 #[derive(Subcommand)]
+
 pub enum BrowserCommands {
     /// Browse interactively in the terminal
     Browse {
         /// URL to navigate to
         url: Option<String>,
-        
+
         /// Disable WebGPU acceleration
         #[arg(long)]
         no_webgpu: bool,
-        
+
         /// Rendering mode
         #[arg(long, default_value = "truecolor")]
         render_mode: String,
     },
-    
+
     /// Capture a screenshot
     Screenshot {
         /// URL to screenshot
         url: String,
-        
+
         /// Output file path
         #[arg(short, long, default_value = "screenshot.png")]
         output: String,
-        
+
         /// Window width
         #[arg(long, default_value = "1920")]
         width: u32,
-        
+
         /// Window height
         #[arg(long, default_value = "1080")]
         height: u32,
     },
-    
+
     /// Execute JavaScript on a page
     Exec {
         /// URL to load
         url: String,
-        
+
         /// JavaScript code to execute
         script: String,
-        
+
         /// Output format (json, pretty, value)
         #[arg(short, long, default_value = "pretty")]
         format: String,
     },
-    
+
     /// Get HTML content
     Html {
         /// URL to load
         url: String,
-        
+
         /// Save to file
         #[arg(short, long)]
         output: Option<String>,
     },
-    
+
     /// Automate web interaction
     Automate {
         /// URL to start from
         url: String,
-        
+
         /// Automation script file (YAML)
         #[arg(short, long)]
         script: String,
     },
 }
-```
+```text
 
 ### Step 3: Implement Command Handler
 
@@ -121,23 +123,23 @@ pub fn handle_browser_command(cmd: BrowserCommands) -> anyhow::Result<()> {
             run_automation(&url, &script)?;
         }
     }
-    
+
     Ok(())
 }
 
 fn browse_interactive(url: Option<String>, enable_webgpu: bool, render_mode: &str) -> anyhow::Result<()> {
     let (width, height) = crossterm::terminal::size()?;
-    
+
     let mut config = BrowserConfig::from_terminal_size(width, height);
     config.enable_webgpu = enable_webgpu;
     config.render_mode = parse_render_mode(render_mode);
-    
+
     let mut browser = Browser::new(config)?;
-    
+
     if let Some(url) = url {
         browser.navigate(&url)?;
     }
-    
+
     browser.run()?;
     Ok(())
 }
@@ -146,27 +148,27 @@ fn capture_screenshot(url: &str, output: &str, width: u32, height: u32) -> anyho
     let mut config = BrowserConfig::default();
     config.window_width = width;
     config.window_height = height;
-    
+
     let mut browser = Browser::new(config)?;
     browser.navigate(url)?;
-    
+
     // Wait for page load
     std::thread::sleep(std::time::Duration::from_secs(2));
-    
+
     browser.screenshot_to_file(std::path::Path::new(output))?;
     println!("Screenshot saved to: {}", output);
-    
+
     Ok(())
 }
 
 fn execute_script(url: &str, script: &str, format: &str) -> anyhow::Result<()> {
     let mut browser = Browser::new(BrowserConfig::default())?;
     browser.navigate(url)?;
-    
+
     std::thread::sleep(std::time::Duration::from_secs(2));
-    
+
     let result = browser.execute_script(script)?;
-    
+
     match format {
         "json" => println!("{}", serde_json::to_string(&result)?),
         "pretty" => println!("{}", serde_json::to_string_pretty(&result)?),
@@ -179,38 +181,38 @@ fn execute_script(url: &str, script: &str, format: &str) -> anyhow::Result<()> {
         }
         _ => println!("{}", result),
     }
-    
+
     Ok(())
 }
 
 fn get_html(url: &str, output: Option<&str>) -> anyhow::Result<()> {
     let mut browser = Browser::new(BrowserConfig::default())?;
     browser.navigate(url)?;
-    
+
     std::thread::sleep(std::time::Duration::from_secs(2));
-    
+
     let html = browser.get_html()?;
-    
+
     if let Some(path) = output {
         std::fs::write(path, html)?;
         println!("HTML saved to: {}", path);
     } else {
         println!("{}", html);
     }
-    
+
     Ok(())
 }
 
 fn run_automation(url: &str, script_path: &str) -> anyhow::Result<()> {
     // This is a placeholder for automation functionality
     // In a real implementation, you would parse a YAML/JSON automation script
-    
+
     let mut browser = Browser::new(BrowserConfig::default())?;
     browser.navigate(url)?;
-    
+
     println!("Automation not yet implemented");
     println!("Script: {}", script_path);
-    
+
     Ok(())
 }
 
@@ -225,35 +227,43 @@ fn parse_render_mode(mode: &str) -> RenderMode {
         _ => RenderMode::TrueColor,
     }
 }
-```
+```text
 
 ## Usage Examples
 
 Once integrated, you can use the browser through the Fusion CLI:
 
 ```bash
+
 # Interactive browsing
+
 fusion browser browse --url https://example.com
 
 # Capture screenshot
+
 fusion browser screenshot https://github.com --output github.png
 
 # Execute JavaScript
+
 fusion browser exec https://example.com "document.title"
 
 # Get HTML
+
 fusion browser html https://example.com > page.html
 
 # With options
+
 fusion browser browse --url https://example.com --no-webgpu --render-mode ascii
-```
+```text
 
 ## Advanced Integration: Automation Scripts
 
 You could implement automation using YAML scripts:
 
 ```yaml
+
 # automation.yml
+
 name: "Login and Navigate"
 steps:
   - navigate: "https://example.com/login"
@@ -270,13 +280,13 @@ steps:
   - execute:
       script: "document.querySelector('.user-info').textContent"
       save_to: "user_info.txt"
-```
+```text
 
 Then run:
 
 ```bash
 fusion browser automate https://example.com --script automation.yml
-```
+```text
 
 ## Benefits of Integration
 

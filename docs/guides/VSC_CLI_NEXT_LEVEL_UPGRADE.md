@@ -10,7 +10,7 @@
 
 ### What This Upgrade Delivers
 
-**Current State**: Basic extension execution with MCP bridge  
+**Current State**: Basic extension execution with MCP bridge
 **Target State**: Production-grade MCP infrastructure with security, composability, and observability
 
 ### Key Transformations
@@ -39,6 +39,7 @@
 - `src/trust.rs` - Trust levels and verification system
 
 **Key Features**:
+
 ```rust
 // Capabilities (11 types)
 pub enum Capability {
@@ -68,9 +69,10 @@ pub enum EnforcementMode {
     Warn,     // Log violations but allow
     Disabled, // Development only
 }
-```
+```text
 
 **Manifest Format** (`~/.fusion/extensions/<id>/capabilities.json`):
+
 ```json
 {
   "extension": "google.gemini-code-assist",
@@ -88,7 +90,7 @@ pub enum EnforcementMode {
   ],
   "version": 1
 }
-```
+```text
 
 ---
 
@@ -128,11 +130,11 @@ impl ExtensionHost {
     ) -> Result<()> {
         let manifest = self.manifests.get(extension_id)
             .ok_or_else(|| anyhow!("No manifest for {}", extension_id))?;
-        
+
         self.enforcer.check_capability(&capability, &manifest.capabilities)
     }
 }
-```
+```text
 
 #### B. Node Bridge Gating
 
@@ -144,7 +146,7 @@ runtime.check_capability(extension_id, Capability::FilesystemRead).await?;
 
 // Before filesystem write
 runtime.check_capability(extension_id, Capability::FilesystemWrite).await?;
-```
+```text
 
 #### C. Network Operation Gating
 
@@ -153,13 +155,14 @@ runtime.check_capability(extension_id, Capability::FilesystemWrite).await?;
 ```rust
 // Before network request
 runtime.check_capability(extension_id, Capability::NetworkOutbound).await?;
-```
+```text
 
 ---
 
 ## Phase 3: Headless Compatibility Profiles 🔄
 
 ### Purpose
+
 Prevent "activated but does nothing" issues by declaring what VS Code APIs are supported headlessly.
 
 ### Implementation
@@ -167,7 +170,9 @@ Prevent "activated but does nothing" issues by declaring what VS Code APIs are s
 **File**: `crates/vscode-runtime/src/compat.rs`
 
 ```rust
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum CompatibilityLevel {
     /// Full VS Code API support
     Full,
@@ -183,29 +188,47 @@ pub struct ExtensionCompatibility {
     pub unsupported_apis: Vec<String>,
     pub warnings: Vec<String>,
 }
-```
+```text
 
 ### CLI Command
 
 ```bash
+
 # Check extension compatibility
+
 fusion extensions doctor google.gemini-code-assist
 
 # Output:
+
+
 # ✅ Compatibility: Headless
+
+
 # ⚠️  Unsupported APIs:
+
+
 #    - vscode.window.createWebviewPanel (UI required)
+
+
 # ✅ Supported features:
+
+
 #    - Commands: ✓
+
+
 #    - LSP integration: ✓
+
+
 #    - File operations: ✓
-```
+
+```text
 
 ---
 
 ## Phase 4: MCP Tool Facets 🔄
 
 ### Purpose
+
 Break monolithic tool calls into composable sub-operations (preview, diff, apply).
 
 ### Implementation
@@ -229,28 +252,35 @@ pub struct McpToolFacet {
 pub trait McpHandler {
     async fn handle(&self, input: Value) -> Result<Value>;
 }
-```
+```text
 
 ### Example: Gemini Code Generation
 
 **Before (monolithic)**:
+
 ```bash
 fusion extensions exec gemini.generateCode --args '["Create API handler"]'
-```
+```text
 
 **After (faceted)**:
+
 ```bash
+
 # Preview only (no state change)
+
 fusion tools run gemini.generateCode.preview --input '{"prompt": "Create API handler"}'
 
 # Generate diff
+
 fusion tools run gemini.generateCode.diff --input '{"file": "api.rs"}'
 
 # Apply changes
+
 fusion tools run gemini.generateCode.apply --input '{"changes": "..."}'
-```
+```text
 
 ### Benefits
+
 - ✅ **Agent-friendly** - LLMs can plan multi-step workflows
 - ✅ **CI/CD ready** - Each step is independently testable
 - ✅ **User approval** - Preview before apply
@@ -261,6 +291,7 @@ fusion tools run gemini.generateCode.apply --input '{"changes": "..."}'
 ## Phase 5: LSP as MCP Resources 🔄
 
 ### Purpose
+
 Stop pretending LSP servers are "extensions" - they're infrastructure services.
 
 ### Implementation
@@ -288,35 +319,41 @@ pub struct LspCapabilities {
     pub formatting: bool,
     pub code_actions: bool,
 }
-```
+```text
 
 ### MCP Endpoints
 
 ```bash
+
 # List LSP resources
+
 fusion mcp resources list --type lsp
 
 # Get diagnostics
+
 fusion mcp resource call lsp.diagnostics \
   --file src/main.rs \
   --language rust
 
 # Get symbols
+
 fusion mcp resource call lsp.symbols \
   --file src/lib.rs
 
 # Code actions
+
 fusion mcp resource call lsp.codeActions \
   --file src/main.rs \
   --line 42 \
   --char 10
-```
+```text
 
 ---
 
 ## Phase 6: Streaming Execution 🔄
 
 ### Purpose
+
 Real-time feedback, cancellation, and observability for long-running operations.
 
 ### Implementation
@@ -324,7 +361,9 @@ Real-time feedback, cancellation, and observability for long-running operations.
 **File**: `crates/mcp/src/stream.rs`
 
 ```rust
+
 #[derive(Serialize, Deserialize)]
+
 pub enum StreamEvent {
     Started { tool: String },
     Progress { message: String, percent: Option<f32> },
@@ -334,7 +373,7 @@ pub enum StreamEvent {
 }
 
 pub type StreamReceiver = tokio::sync::mpsc::Receiver<StreamEvent>;
-```
+```text
 
 ### Example: Gemini Code Generation with Streaming
 
@@ -359,7 +398,7 @@ tx.send(StreamEvent::Data {
 tx.send(StreamEvent::Completed {
     result: json!({"status": "success"}),
 }).await?;
-```
+```text
 
 ### CLI Output
 
@@ -367,16 +406,24 @@ tx.send(StreamEvent::Completed {
 fusion tools run gemini.generateCode.apply --stream
 
 # Output:
+
+
 # [█░░░░░░░░░] 10% Calling Gemini API...
+
+
 # [█████░░░░░] 50% Parsing response...
+
+
 # [██████████] 100% ✅ Code generated successfully
-```
+
+```text
 
 ---
 
 ## Phase 7: Tool Dependency Graph 🔄
 
 ### Purpose
+
 Enable agent orchestration by modeling tool dependencies and execution order.
 
 ### Implementation
@@ -410,12 +457,14 @@ impl ToolRegistry {
         // ...
     }
 }
-```
+```text
 
 ### Example
 
 ```bash
+
 # Define dependencies
+
 fusion tools graph add \
   --tool gemini.refactor \
   --depends-on lsp.diagnostics
@@ -425,14 +474,24 @@ fusion tools graph add \
   --depends-on lsp.symbols
 
 # View execution plan
+
 fusion tools graph plan gemini.refactor
 
 # Output:
+
+
 # Execution plan for 'gemini.refactor':
+
+
 #   1. lsp.diagnostics
+
+
 #   2. lsp.symbols
+
+
 #   3. gemini.refactor
-```
+
+```text
 
 ---
 
@@ -441,7 +500,9 @@ fusion tools graph plan gemini.refactor
 ### New Commands
 
 ```bash
+
 # Tool Management
+
 fusion tools list                          # List all available tools
 fusion tools inspect <tool>                # Show tool metadata + facets
 fusion tools run <tool.facet> --input ...  # Execute tool facet
@@ -449,61 +510,72 @@ fusion tools policy <tool>                 # Show capability requirements
 fusion tools graph                         # View tool dependency graph
 
 # Policy Management
+
 fusion policy show <extension>             # Show extension capabilities
 fusion policy grant <extension> <cap>      # Grant capability
 fusion policy revoke <extension> <cap>     # Revoke capability
 fusion policy audit                        # Audit all extensions
 
 # Compatibility
+
 fusion extensions doctor <extension>       # Check headless compatibility
 fusion extensions compat <extension>       # Show compatibility level
 
 # Streaming
+
 fusion tools run <tool> --stream           # Stream execution progress
 fusion tools watch <tool>                  # Watch for tool events
-```
+```text
 
 ---
 
 ## Migration Plan (Safe & Incremental)
 
 ### Step 1: Add Policy Crate ✅ COMPLETE
+
 - [x] Create `crates/policy/`
 - [x] Define capabilities
 - [x] Build enforcement engine
 - [x] Define trust model
 
 ### Step 2: Warn-Mode Integration 🔄 NEXT
+
 - [ ] Add policy to vscode-runtime dependencies
 - [ ] Inject capability checks (warn mode)
 - [ ] Create manifests for existing extensions
 - [ ] CLI: `fusion policy audit`
 
 ### Step 3: Compatibility Profiles 🔄
+
 - [ ] Create `compat.rs`
 - [ ] Classify existing extensions
 - [ ] CLI: `fusion extensions doctor`
 
 ### Step 4: Tool Facets (Gemini First) 🔄
+
 - [ ] Implement facet system
 - [ ] Convert `gemini.generateCode` to facets
 - [ ] CLI: `fusion tools run gemini.generateCode.preview`
 
 ### Step 5: LSP Resources 🔄
+
 - [ ] Create LSP resource type
 - [ ] Expose `lsp.diagnostics`, `lsp.symbols`, etc.
 - [ ] CLI: `fusion mcp resources call lsp.diagnostics`
 
 ### Step 6: Streaming 🔄
+
 - [ ] Implement stream events
 - [ ] Update extension handlers to emit streams
 - [ ] CLI: `fusion tools run --stream`
 
 ### Step 7: Dependency Graph 🔄
+
 - [ ] Create tool registry graph
 - [ ] CLI: `fusion tools graph plan`
 
 ### Step 8: Flip to Strict Mode 🔄
+
 - [ ] Change default enforcement to Strict
 - [ ] Update documentation
 - [ ] Release v2.0
@@ -513,11 +585,13 @@ fusion tools watch <tool>                  # Watch for tool events
 ## What This Unlocks (Strategic Value)
 
 ### Current Fusion
+
 - ✅ Runs VS Code extensions headlessly
 - ✅ Provides MCP bridge
 - ✅ Extension authentication
 
 ### Upgraded Fusion
+
 - ✅ **Secure AI tool backend** (policy-enforced)
 - ✅ **CI/CD integration** (tool facets)
 - ✅ **Agent substrate** (dependency graph)
@@ -534,34 +608,38 @@ fusion tools watch <tool>                  # Watch for tool events
    - Network calls require `NetworkOutbound` capability
 
 2. **CI/CD Pipeline**
+
    ```yaml
    - run: fusion tools run gemini.refactor.preview
    - run: fusion tools run gemini.refactor.diff
    - run: fusion tools run gemini.refactor.apply --approve
-   ```
+```text
 
 3. **Agent Orchestration**
+
    ```bash
    fusion tools graph plan "refactor codebase"
    # → Automatically chains:
    #   1. lsp.diagnostics
-   #   2. lsp.symbols  
+   #   2. lsp.symbols
    #   3. gemini.refactor.analyze
    #   4. gemini.refactor.plan
    #   5. gemini.refactor.apply
-   ```
+```text
 
 4. **Air-Gapped Development**
+
    ```bash
    fusion extensions doctor --check-offline
    # → Only lists Headless/Minimal compatible extensions
-   ```
+```text
 
 ---
 
 ## Testing Strategy
 
 ### Unit Tests
+
 - [x] Policy enforcement (strict/warn modes)
 - [x] Capability checks
 - [x] Manifest serialization
@@ -570,6 +648,7 @@ fusion tools watch <tool>                  # Watch for tool events
 - [ ] Streaming events
 
 ### Integration Tests
+
 - [ ] Extension activation with policy
 - [ ] Capability-gated filesystem access
 - [ ] Capability-gated network access
@@ -577,6 +656,7 @@ fusion tools watch <tool>                  # Watch for tool events
 - [ ] Tool chain execution
 
 ### End-to-End Tests
+
 - [ ] Full Gemini workflow with facets
 - [ ] Policy violation handling
 - [ ] Streaming execution

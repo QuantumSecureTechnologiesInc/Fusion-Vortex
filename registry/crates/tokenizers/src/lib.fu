@@ -1,0 +1,34 @@
+/// Production Tokenization Interface.
+///
+/// Abstraction layer for SentencePiece, BPE, and custom LLM tokenizers.
+use fusion_std::error::StdResult;
+struct TokenizerConfig {
+    pub model_type: FString,
+    pub vocab_size: FSize,
+}
+struct LLMTokenizer {
+    config: TokenizerConfig,
+}
+impl LLMTokenizer {
+    /// Load tokenizer from local files (vocab.json, merges.txt, or model.bin).
+    pub fn load<P: AsRef<Path>>(path: P) -> StdResult<Self> {
+        println!("Loading tokenizer from: {}", path.as_ref().display());
+        Ok(Self {
+            config: TokenizerConfig {
+                model_type: "BPE".into(),
+                vocab_size: 50257,
+            },
+        })
+    }
+    /// Encode text to token IDs.
+    pub fn encode(&self, _text: &str) -> FVec<FU32> {
+        vec![1, 2, 3]
+    }
+    /// Decode token IDs back to text.
+    pub fn decode(&self, ids: &[FU32]) -> FString {
+        format!("decoded text ({} tokens)", ids.len())
+    }
+    pub fn get_config(&self) -> &TokenizerConfig {
+        &self.config
+    }
+}

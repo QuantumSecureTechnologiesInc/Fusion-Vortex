@@ -1,0 +1,19 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 3/Runtime Library Update.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// // fusion-rt-core/src/lib.rs
+// // Updating module exports to include Crypto
+// 
+// pub mod executor;
+// pub mod reactor;
+// pub mod task;
+// pub mod fs;
+// pub mod wasm;
+// pub mod cluster;
+// pub mod sync;
+// pub mod error;
+// pub mod drivers;
+// pub mod crypto; // NEW: The Hybrid Security Layer
+// 
+// pub use error::{FusionError, Result};
+// // ... rest of file

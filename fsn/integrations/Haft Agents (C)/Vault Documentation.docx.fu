@@ -1,0 +1,62 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/Vault Documentation.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// HAFT Component: The Vault
+// Executable: haft_vault
+// Role: Distributed Storage Node
+// Status: Active
+// Part 1: Explanation (The Concept)
+// 1.1 The Memory of the Mesh
+// The Vault acts as the distributed memory of the Fusion system. In high-performance tensor networks, relying on a monolithic database introduces a single point of failure and an unacceptable I/O bottleneck. To solve this, the Vault architecture relies on Horizontal Sharding. We slice the global tensor namespace into discrete segments, with each Vault node responsible for a specific subset of data (a shard). This allows the system's total memory capacity to grow linearly with the number of nodes added.
+// 1.2 CAP Theorem: Availability First
+// In the design of distributed data stores, the CAP theorem dictates you can only guarantee two of three properties: Consistency, Availability, and Partition Tolerance. For the Vault, we explicitly favour Availability (AP) over strict Consistency.
+// The Rationale: In AI workloads, a Solver waiting for a weight update is fatal to throughput. It is better to serve a slightly stale version of a tensor immediately than to block execution while waiting for a global consensus commit.
+// Implication: The Vault behaves like a massive, persistent LRU (Least Recently Used) cache. It prioritizes keeping &quot;hot&quot; tensors in RAM close to the compute nodes.
+// 1.3 The Dirty Write Protocol
+// A critical architectural feature is the handling of &quot;dirty&quot; states via a Write-Back Caching strategy.
+// Write-Through (Traditional): Data is written to RAM and Disk simultaneously. This is safe but slow, bounded by disk I/O speed.
+// Write-Back (Vault): Data is written to RAM immediately and marked as is_dirty. The client receives a success acknowledgement instantly. A background agent then trickles these dirty tensors down to persistent storage asynchronously. This ensures the Solver nodes operate at memory speeds, never blocked by disk latency.
+// Part 2: Reference (Architecture &amp; API)
+// 2.1 Storage Primitives
+// The Vault manages data using specialized structures designed for high-velocity access rather than complex querying.
+// The Shard: Internally implemented as an std::unordered_map linking string keys to smart pointers (std::shared_ptr&lt;FluxTensor&gt;).
+// Why Pointers? Tensors can be megabytes in size. Moving them by value triggers deep copies, destroying performance. We move pointers, ensuring the heavy data stays pinned in memory locations.
+// The FluxTensor (Storage Variant): Unlike the compute variant, the storage tensor wrapper includes metadata specifically for lifecycle management:
+// size_bytes: Pre-calculated footprint for instant capacity checks.
+// is_dirty: The boolean flag tracking persistence status.
+// last_access: A timestamp used to inform eviction candidates (in full implementations).
+// 2.2 The Eviction Protocol
+// Memory is finite. When the Vault reaches its hard capacity limit (simulated here as 1MB), it must make difficult decisions to prevent Out-Of-Memory (OOM) crashes. This is handled by the Safety Valve mechanism:
+// Capacity Check: Before any write, the Vault compares current_usage_bytes + new_tensor_size against max_capacity_bytes.
+// Victim Selection: The current simulation utilises a Random Eviction strategy.
+// Trade-off: While less optimal than a true LRU (Least Recently Used) or Clock-PRO algorithm, random eviction is $O(1)$ fast and avoids the overhead of maintaining doubly-linked lists for access order. In high-churn caches, random eviction is often surprisingly effective.
+// Purge &amp; Defrag: The victim tensor is removed from the map. The std::shared_ptr destructor fires, freeing the heap memory. Note that this frees the logical memory; the OS allocator may hold the pages for reuse.
+// 2.3 Agent States
+// The AgenticCore drives the node through distinct lifecycle phases:
+// SYNCING: The boot phase. The node connects to the mesh but refuses client requests. It effectively &quot;warms the cache&quot; by pre-loading frequently used tensors from deep storage.
+// ONLINE: The standard operational state. The node accepts Reads (retrievals) and Writes (stores). Background persistence threads run concurrently.
+// PURGING: A specific maintenance state triggered by high memory pressure (fragmentation). The node briefly pauses writes to aggressively free memory and reorganise internal structures, similar to a Garbage Collection pause in managed languages.
+// OFFLINE: The terminal state. The node flushes all is_dirty tensors to disk and shuts down cleanly.
+// Part 3: How-To (Operations)
+// 3.1 Compilation
+// The Vault is primarily I/O and memory bound, not CPU compute bound. However, we still recommend optimization flags to speed up the hashing functions used in the map lookups.
+// g++ -std=c++20 -O3 -pthread haft_vault.cpp -o haft_vault
+// 3.2 Running the Simulation
+// Execute the binary directly. The internal simulation engine will spin up a mock environment to demonstrate the caching lifecycle.
+// ./haft_vault
+// 3.3 Verifying Behaviour
+// The simulation output is designed to narrate the &quot;story&quot; of the data lifecycle. Watch for these three distinct acts in the logs:
+// Act I: Ingestion (The Write-Back):
+// Look for [Vault] Stored tensor: alpha [100000 bytes].
+// Verification: Note that these happen instantly, with no simulated &quot;disk wait&quot; latency. This confirms the write-back architecture is working.
+// Act II: Retrieval (The Hit/Miss):
+// Look for [Vault] Cache HIT: alpha. This confirms the data is resident in the shard.
+// Look for [Vault] Cache MISS: zeta. This mimics a request for data that doesn't exist or belongs to a different shard.
+// Act III: Stress (The Eviction):
+// The simulation deliberately attempts to overflow the 1MB buffer.
+// Critical Log: [Vault] Capacity reached (1024000B). Evicting....
+// Outcome: You should see an existing key (e.g., &quot;beta&quot;) being removed to make room for MASSIVE_TENSOR. This proves the safety valve prevents the node from crashing under load.
+// 3.4 Troubleshooting
+// Segmentation Faults: If you modify the code to use raw pointers instead of std::shared_ptr, you risk accessing evicted memory. Ensure thread safety mutexes (std::lock_guard) surround all map access.
+// &quot;Storage Failed&quot;: If you see this log, it means even after eviction, the single new tensor is larger than the entire capacity of the Vault. In a real system, this would require resizing the node or rejecting the transaction.

@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/REROPE Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_rerope"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Rotary Positional Embeddings with relative position bias (REROPE)"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_ai_core = { path = "../ai-core", version = "0.1.0" }

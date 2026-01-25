@@ -117,21 +117,24 @@ The Fusion crate ecosystem has been systematically categorized and polished acco
 ### Feature Flag Strategy
 
 **Primitives**: No defaults, explicit opt-in
+
 ```toml
 [features]
 default = []
 serde = ["dep:serde"]
-```
+```text
 
 **Integration**: Sensible defaults,async/blocking split
+
 ```toml
 [features]
 default = ["async"]
 async = ["tokio"]
 blocking = []
-```
+```text
 
 **Frameworks**: Full by default, modular opt-out
+
 ```toml
 [features]
 default = ["full"]
@@ -139,7 +142,7 @@ full = ["scheduler", "memory", "hal"]
 scheduler = []
 memory = []
 hal = []
-```
+```text
 
 ### Dependency Management
 
@@ -245,6 +248,7 @@ See **COMPLETE_CRATE_INVENTORY.md** for pattern-based categorization of all 269 
 ## Next Steps
 
 ### Phase 1: Complete Core Primitives (Priority: HIGH)
+
 - [ ] `std` - Standard extensions
 - [ ] `finite-fields` - Field arithmetic
 - [ ] `math-sparse` - Sparse operations
@@ -252,6 +256,7 @@ See **COMPLETE_CRATE_INVENTORY.md** for pattern-based categorization of all 269 
 - [ ] `fusion-cryptography` - Crypto primitives
 
 ### Phase 2: Algorithm Engines (Priority: HIGH)
+
 - [ ] `attention` - With complexity docs
 - [ ] `resnet` - With benchmarks
 - [ ] `q-algo` - Quantum algorithms
@@ -259,6 +264,7 @@ See **COMPLETE_CRATE_INVENTORY.md** for pattern-based categorization of all 269 
 - [ ] `density-matrix` - Matrix operations
 
 ### Phase 3: Integration Layer (Priority: MEDIUM)
+
 - [ ] `grpc` - gRPC integration
 - [ ] `graphql` - GraphQL integration
 - [ ] `cloud-aws` - AWS connector
@@ -266,18 +272,21 @@ See **COMPLETE_CRATE_INVENTORY.md** for pattern-based categorization of all 269 
 - [ ] `fusion-database` - Database integration
 
 ### Phase 4: Frameworks (Priority: MEDIUM)
+
 - [ ] `fusion_ai_core` - AI framework
 - [ ] `fusion_runtime_hal` - HAL framework
 - [ ] `model-server-core` - Model serving
 - [ ] `mcp` - MCP framework
 
 ### Phase 5: Tooling (Priority: LOW)
+
 - [ ] `debugger` - Debugger tool
 - [ ] `profiler` - Profiler tool
 - [ ] `formatter` - Formatter tool
 - [ ] `sec-penetration` - Security tool
 
 ### Phase 6: Experimental (Priority: LOW)
+
 - [ ] `flux-resolve-v2-hive-mind` - Mark experimental
 - [ ] `sentinel-tribrid` - Add roadmap
 - [ ] `llm-rerope` - Document research
@@ -285,11 +294,13 @@ See **COMPLETE_CRATE_INVENTORY.md** for pattern-based categorization of all 269 
 ## Automation Strategy
 
 ### Current Approach
+
 - Manual polish of representative crates
 - Template documentation
 - PowerShell automation script (foundation)
 
 ### Future Approach
+
 1. **TOML Parser Integration**: Use `toml-cli` or Rust script
 2. **Batch Processing**: Process crates by category
 3. **Validation**: Automated checks for compliance
@@ -356,6 +367,7 @@ For each crate, ensure:
 ## Success Metrics
 
 ### Quality Indicators
+
 - [ ] No crate without clear archetype
 - [ ] All primitives have benchmarks
 - [ ] All algorithms document complexity
@@ -365,6 +377,7 @@ For each crate, ensure:
 - [ ] All experimental crates warn users
 
 ### User Experience
+
 - [ ] Faster discovery (search by archetype keywords)
 - [ ] Clear expectations (archetype in description)
 - [ ] Fewer surprises (explicit features)

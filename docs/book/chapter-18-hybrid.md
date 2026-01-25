@@ -42,10 +42,10 @@ fn hardware_efficient_ansatz(num_qubits: i32, depth: i32, params: &Tensor) -> Qu
             circuit.cnot(q, q + 1)
         }
     }
-    
+
     circuit
 }
-```
+```text
 
 ### 18.1.2 The Hamiltonian (Cost Function)
 
@@ -63,7 +63,7 @@ fn h2_hamiltonian() -> Observable {
         ("XX",  0.180),
     ])
 }
-```
+```text
 
 ### 18.1.3 The Optimization Loop
 
@@ -77,10 +77,10 @@ fn main() {
     let num_qubits = 2
     let depth = 2
     let num_params = num_qubits * 2 * depth
-    
+
     // 1. Initialize parameters as a Tensor requiring gradients
     let mut params = Tensor::randn(&[num_params], Device::Cpu).requires_grad(true)
-    
+
     // 2. Setup Classical Optimizer
     let mut optimizer = Adam::new(&[&params], 0.1) // learning rate 0.1
     let hamiltonian = h2_hamiltonian()
@@ -88,7 +88,7 @@ fn main() {
 
     for epoch in 0..100 {
         optimizer.zero_grad()
-        
+
         // 3. Quantum Forward Pass (calculating Expectation Value)
         // Fusion supports "autograd" through quantum circuits via parameter shift rule!
         let energy = sim.expectation_value_autograd(
@@ -96,17 +96,17 @@ fn main() {
             &params,
             &hamiltonian
         )
-        
+
         println!("Epoch {}: Energy = {:.6}", epoch, energy.item::<f64>())
-        
+
         // 4. Backward Pass (calculates gradients combining quantum and classical chains)
         energy.backward()
-        
+
         // 5. Update Parameters
         optimizer.step()
     }
 }
-```
+```text
 
 This code is revolutionary. In other languages, you'd need PyTorch + Qiskit + a bridge library. In Fusion, `Tensor` and `QuantumCircuit` speak the same autodiff language.
 
@@ -124,10 +124,10 @@ QAOA alternates between two Hamiltonians: $H_C$ (Cost) and $H_B$ (Mixer).
 fn qaoa_circuit(graph: &Graph, gammas: &[f64], betas: &[f64], p: i32) -> QuantumCircuit {
     let n = graph.num_nodes()
     let mut circuit = QuantumCircuit::new(n)
-    
+
     // Initial superposition
     for i in 0..n { circuit.h(i) }
-    
+
     for layer in 0..p {
         // Cost Hamiltonian (ZZ interactions for edges)
         let gamma = gammas[layer]
@@ -136,18 +136,18 @@ fn qaoa_circuit(graph: &Graph, gammas: &[f64], betas: &[f64], p: i32) -> Quantum
             circuit.rz(v, gamma)
             circuit.cnot(u, v)
         }
-        
+
         // Mixer Hamiltonian (X rotations)
         let beta = betas[layer]
         for i in 0..n {
             circuit.rx(i, 2.0 * beta)
         }
     }
-    
+
     circuit.measure_all()
     circuit
 }
-```
+```text
 
 The rest of the optimization loop looks very similar to VQE.
 
@@ -174,13 +174,13 @@ impl Module for QuantumLayer {
         // Encode classical input data into quantum state (Data Encoding)
         // Apply parameterized variational circuit (Trainable Weights)
         // Measure expectation values (Decode to Classical)
-        
+
         // This function returns a Tensor resulting from the quantum measurement
         // connected to the computation graph.
         self.simulator.run_hybrid_batch(inputs, &self.params)
     }
 }
-```
+```text
 
 ### 18.3.2 The Hybrid Neural Network
 
@@ -201,7 +201,7 @@ impl HybridClassifier {
             fc2: nn::Linear::new(4, 10),   // 4 -> 10 classes
         }
     }
-    
+
     fn forward(&self, x: &Tensor) -> Tensor {
         let x = self.fc1.forward(x).relu() // Classical reduction
         let x = self.q_layer.forward(&x)   // Quantum processing
@@ -209,7 +209,7 @@ impl HybridClassifier {
         x
     }
 }
-```
+```text
 
 This allows us to leverage quantum Hilbert space for feature processing while keeping standard classical interfaces for I/O.
 
@@ -229,7 +229,7 @@ let options = SamplingOptions {
 
 // Automatic handling of variance in the optimizer
 optimizer.set_stochastic(true)
-```
+```text
 
 ---
 
@@ -247,9 +247,9 @@ This capability makes Fusion the premier language for quantum research and devel
 
 ## 18.6 Exercises
 
-1.  **MaxCut**: Implement MaxCut solver using QAOA for a simple 5-node graph.
-2.  **Quantum Kernel**: Instead of a variational circuit, implement a Quantum Kernel Estimation method to serve as a kernel for a classical Support Vector Machine (SVM).
-3.  **Barren Plateaus**: Experiment with deep circuits and observe the "vanishing gradient" problem specific to quantum landscapes, then try to mitigate it by initializing parameters in a restricted way.
+1. **MaxCut**: Implement MaxCut solver using QAOA for a simple 5-node graph.
+2. **Quantum Kernel**: Instead of a variational circuit, implement a Quantum Kernel Estimation method to serve as a kernel for a classical Support Vector Machine (SVM).
+3. **Barren Plateaus**: Experiment with deep circuits and observe the "vanishing gradient" problem specific to quantum landscapes, then try to mitigate it by initializing parameters in a restricted way.
 
 ---
 

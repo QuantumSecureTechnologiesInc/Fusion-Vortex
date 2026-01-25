@@ -1,7 +1,7 @@
 # Fusion Tensor Optim
 
-**Version:** 0.2.0  
-**Type:** ML Training  
+**Version:** 0.2.0
+**Type:** ML Training
 **License:** MIT
 
 ## Overview
@@ -25,7 +25,7 @@ let total_norm = gradients.clip_norm(1.0)?;
 
 // Apply accumulated gradients
 optimizer.step(&accumulated_grads)?;
-```
+```text
 
 ## Dependencies
 

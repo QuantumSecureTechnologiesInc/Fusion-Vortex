@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "fusion-formatter"
 version = "0.2.0"
 edition = "2021"
@@ -9,12 +9,12 @@ repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming
 keywords = ["fusion", "tool"]
 categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
+
 [dependencies]
-fusion_core = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-toml = { workspace = true }
-fusion-core = { workspace = true }
-
-
+fusion_core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+toml = { version = "0.8.19" }
+fusion-core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
+fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }

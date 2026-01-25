@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 4 - The Enterprise Platform/fusion_k8s_operator/Operator Library.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// //! # Fusion Kubernetes Operator
+// //! 
+// //! Orchestrates Fusion applications on Kubernetes.
+// //! Specialized handling for Hybrid Quantum/AI workloads.
+// 
+// pub mod crd;
+// pub mod controller;
+// 
+// pub use crd::FusionApp;

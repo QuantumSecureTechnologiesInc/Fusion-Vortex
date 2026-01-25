@@ -1,7 +1,7 @@
 # Fusion Training
 
-**Version:** 0.2.0  
-**Type:** ML Logic  
+**Version:** 0.2.0
+**Type:** ML Logic
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ let config = TrainerConfig::default().epochs(10);
 let trainer = Trainer::new(model, optimizer, config);
 
 trainer.fit(train_loader, val_loader).await?;
-```
+```text
 
 ## Dependencies
 

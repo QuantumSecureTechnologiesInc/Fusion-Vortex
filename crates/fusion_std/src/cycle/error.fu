@@ -1,0 +1,18 @@
+//! src/cycle/error.rs
+//! Defines the narrative error types for the Compute (Cycle) layer.
+//!
+//! These errors describe why a compute agreement or task failed on the decentralised grid.
+use thiserror::Error;
+#[derive(Error, Debug)]
+enum CycleFailure {
+    #[error("Grid connection lost: {0}")]
+    GridUnreachable(FString),
+    #[error("Contract breach: {reason} (Agreement ID: {agreement_id})")]
+    ContractBreach { agreement_id: FString, reason: FString },
+    #[error("Market volatility: Bid rejected. Required: {required}, Offered: {offered}")]
+    InsufficientBid { required: FU64, offered: FU64 },
+    #[error("Resource exhaustion: Node {node_id} cannot fulfil request for {resource}")]
+    ResourceUnavailable { node_id: FString, resource: FString },
+    #[error("Consensus failure: Nodes disagreed on result (Confidence: {confidence}%)")]
+    ConsensusMismatch { confidence: f32 },
+}

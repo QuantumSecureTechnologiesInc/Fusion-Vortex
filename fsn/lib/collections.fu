@@ -1,0 +1,24 @@
+// lib/collections.fsn
+// Secure collections.
+
+struct FVec<T> {
+    inner: Vec<T>,
+}
+
+impl<T> FVec<T> {
+    fn new() -> Self {
+        FVec { inner: Vec::new() }
+    }
+
+    fn push(mut self, item: T) {
+        self.inner.push(item);
+    }
+
+    fn get(self, index: usize) -> Option<T> {
+        self.inner.get(index).cloned()
+    }
+
+    fn len(self) -> usize {
+        self.inner.len()
+    }
+}

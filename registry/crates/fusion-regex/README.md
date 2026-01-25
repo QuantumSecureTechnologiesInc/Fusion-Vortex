@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-regex = "0.2.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_regex::hello;
 fn main() {
     hello();
 }
-```
+```text
 
 ## License
 

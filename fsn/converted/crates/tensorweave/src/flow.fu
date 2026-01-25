@@ -1,0 +1,52 @@
+// SOURCE: crates/tensorweave/src/flow.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use crate::core::TensorData;
+use anyhow::Result;
+use rayon::prelude::*;
+use tracing::{error, info};
+
+pub trait FlowProcessor: Send + Sync {
+    fn name(&self) -> &str;
+    fn process_sync(&self, tensor: TensorData) -> Result<TensorData>;
+}
+
+struct TensorWeaveEngine {
+    processors: Arc<FVec<Box<dyn FlowProcessor>>>,
+}
+
+impl TensorWeaveEngine {
+    fn new(_timeout_sec: FU64) -> Self {
+        Self {
+            processors: Arc::new(Vec::new()),
+        }
+    }
+
+    fn add_processor(&mut self, processor: Box<dyn FlowProcessor>) {
+        if let Some(procs) = Arc::get_mut(&mut self.processors) {
+            procs.push(processor);
+        }
+    }
+
+    fn run_batch_sync(&self, batch: FVec<TensorData>) -> FVec<Result<TensorData>> {
+        info!("Dispatching batch processing with Rayon parallelism");
+
+        let shared_engine = self.processors.clone();
+
+        batch
+            .into_par_iter()
+            .map(|data| {
+                let mut current_data = data;
+                for p in shared_engine.iter() {
+                    match p.process_sync(current_data) {
+                        Ok(processed) => current_data = processed,
+                        Err(e) => {
+                            error!("Tensor processing failed: {}", e);
+                            return Err(e);
+                        }
+                    }
+                }
+                Ok(current_data)
+            })
+            .collect()
+    }
+}

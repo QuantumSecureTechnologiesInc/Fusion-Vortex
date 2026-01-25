@@ -1,0 +1,21 @@
+// lib/outcome.fsn
+// Tri-state result system.
+
+enum Outcome<T> {
+    Success(T),
+    LogicFailure(FString),
+    SecurityBreach(FString),
+}
+
+impl<T> Outcome<T> {
+    fn unwrap(self) -> T {
+        match self {
+            Outcome::Success(val) => val,
+            Outcome::LogicFailure(msg) => panic!("Logic Error: {}", msg.as_str()),
+            Outcome::SecurityBreach(msg) => {
+                Kernel::audit_log("CRITICAL BREACH", msg);
+                panic!("SYSTEM LOCKDOWN");
+            }
+        }
+    }
+}

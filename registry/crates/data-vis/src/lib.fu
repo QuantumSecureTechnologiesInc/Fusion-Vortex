@@ -1,0 +1,25 @@
+/// Production Data Visualization Toolkit.
+///
+/// Generates renderable schemas (JSON) for charts based on Fusion Tensor data.
+use fusion_core::types::tensor::Vector1D;
+use fusion_std::error::StdResult;
+use serde_json::{json, Value};
+struct ChartGenerator;
+impl ChartGenerator {
+    /// Generates a JSON spec for a line chart from a 1D Tensor.
+    pub fn generate_line_chart_spec(
+        &self,
+        data: &Vector1D<f64>,
+        title: &str,
+    ) -> StdResult<Value> {
+        let x_data: FVec<FU32> = (0..data.shape()[0] as FU32).collect();
+        let y_data: FVec<f64> = data.data.iter().copied().collect();
+        Ok(
+            json!(
+                { "type" : "line", "title" : title, "data" : [{ "x" : x_data, "y" :
+                y_data, "mode" : "lines", "name" : "Series 1" }], "layout" : { "xaxis" :
+                { "title" : "Index" }, "yaxis" : { "title" : "Value" } } }
+            ),
+        )
+    }
+}

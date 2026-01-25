@@ -5,6 +5,7 @@
 ### Features Implemented
 
 #### 1. **OAuth Authentication** (`cmd/fusion/src/commands/auth.rs`)
+
 - **Google OAuth Provider**: Pre-configured for Gemini Code Assist
 - **Browser-based Flow**: Launches terminal browser for user authentication
 - **Token Storage**: Securely stores OAuth tokens
@@ -12,6 +13,7 @@
 - **Callback Handling**: Local server on port 8765 for OAuth callback
 
 #### 2. **Credential Storage** (`cmd/fusion/src/commands/credentials.rs`)
+
 - **Secure Storage**: JSON-based credential store in `~/.fusion/credentials/`
 - **API Keys**: Store and retrieve extension API keys
 - **OAuth Tokens**: Store and retrieve OAuth access tokens
@@ -19,14 +21,16 @@
 - **Credential Listing**: View all stored credentials
 
 #### 3. **Extension Integration** (`cmd/fusion/src/commands/extensions.rs`)
+
 - **Pre-Install Auth**: Authentication required before installation
-- **Dual Auth Methods**: 
+- **Dual Auth Methods**:
   - OAuth (Recommended) - Sign in with Google
   - API Key - Manual entry for existing keys
 - **Auth Verification**: Commands require valid credentials
 - **Credential Check**: Visual indicator (🔑) for authenticated extensions
 
-#### 4. **Terminal Browser** 
+#### 4. **Terminal Browser**
+
 - **Dependency Added**: `fusion-terminal-browser` integrated
 - **OAuth UI**: Renders authentication pages in terminal
 - **Callback Support**: Handles OAuth redirect URLs
@@ -34,9 +38,10 @@
 ## Full Cycle Test Flow
 
 ### 1. Install Extension with OAuth
+
 ```bash
 fusion extensions install google.gemini-code-assist
-```
+```text
 
 **Flow:**
 1. CLI detects authentication requirement
@@ -50,9 +55,10 @@ fusion extensions install google.gemini-code-assist
 9. Registers available commands
 
 ### 2. Install Extension with API Key
+
 ```bash
 fusion extensions install google.gemini-code-assist
-```
+```text
 
 **Flow:**
 1. CLI detects authentication requirement
@@ -62,9 +68,10 @@ fusion extensions install google.gemini-code-assist
 5. Activates extension
 
 ### 3. Execute Extension Command
+
 ```bash
 fusion extensions exec gemini.generateCode --args '["Create a REST API"]'
-```
+```text
 
 **Flow:**
 1. CLI verifies credentials exist
@@ -77,7 +84,7 @@ fusion extensions exec gemini.generateCode --args '["Create a REST API"]'
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      Fusion VSC CLI                         │
 ├─────────────────────────────────────────────────────────────┤
@@ -112,7 +119,7 @@ fusion extensions exec gemini.generateCode --args '["Create a REST API"]'
 │  │  └──────────────┘         └──────────────┘           │ │
 │  └───────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
-```
+```text
 
 ## Security Features
 

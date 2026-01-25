@@ -1,0 +1,34 @@
+// SOURCE: src/registry/database.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/registry/database.rs - Database layer for package registry
+#![allow(dead_code)]
+
+use super::{PackageMetadata, RegistryError};
+
+/// Database connection
+struct Database {
+    connection_string: FString,
+}
+
+impl Database {
+    fn new(connection_string: FString) -> Self {
+        Self { connection_string }
+    }
+
+    fn connect(&self) -> Result<(), RegistryError> {
+        println!("Connecting to database: {}", self.connection_string);
+        Ok(())
+    }
+
+    fn store_package(&self, _metadata: &PackageMetadata) -> Result<(), RegistryError> {
+        Ok(())
+    }
+
+    fn get_package(
+        &self,
+        name: &str,
+        _version: &str,
+    ) -> Result<PackageMetadata, RegistryError> {
+        Err(RegistryError::PackageNotFound(name.to_string()))
+    }
+}

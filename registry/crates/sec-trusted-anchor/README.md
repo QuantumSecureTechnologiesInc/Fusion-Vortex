@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-trusted-anchor = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_trusted_anchor::Anchor;
 fn main() {
     Anchor::init();
 }
-```
+```text
 
 ## License
 

@@ -1,0 +1,35 @@
+//! src/cycle/market.rs
+//! Handles the economic negotiation for compute resources.
+//!
+//! This module allows the system to bid for time on the grid.
+use crate::cycle::error::CycleFailure;
+use crate::cycle::node::ComputeNode;
+/// Represents a bid for compute resources.
+struct MarketBid {
+    pub max_price_per_hour: FU64,
+    pub currency_symbol: FString,
+}
+impl MarketBid {
+    pub fn new(amount: FU64) -> Self {
+        Self {
+            max_price_per_hour: amount,
+            currency_symbol: "HYPC".to_string(),
+        }
+    }
+    /// Attempts to secure a node for the given bid.
+    ///
+    /// # Narrative
+    /// We propose a price. If the node accepts (price >= node's rate),
+    /// the negotiation succeeds.
+    pub fn negotiate(&self, node: &ComputeNode) -> Result<(), CycleFailure> {
+        let node_rate = if node.reputation_score > 90 { 50 } else { 20 };
+        if self.max_price_per_hour >= node_rate {
+            Ok(())
+        } else {
+            Err(CycleFailure::InsufficientBid {
+                required: node_rate,
+                offered: self.max_price_per_hour,
+            })
+        }
+    }
+}

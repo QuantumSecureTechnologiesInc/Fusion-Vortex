@@ -9,20 +9,22 @@
 ## The Problem It Solves
 
 When building software, you have dependencies:
-```
+
+```text
 my_app
  ├─ depends on: fusion_std (^1.0)
  ├─ depends on: fusion_network (^2.3)
  └─ depends on: fusion_crypto (^0.8)
-```
+```text
 
 But **those dependencies have dependencies too**:
-```
+
+```text
 fusion_network (2.3.1)
  ├─ depends on: fusion_std (^1.0)
  ├─ depends on: fusion_async (^1.5)
  └─ depends on: fusion_io (^0.9)
-```
+```text
 
 The challenge: **Finding compatible versions of all packages** such that:
 - ✅ All version constraints are satisfied
@@ -40,7 +42,7 @@ Traditional resolvers (like Cargo) can take **minutes** on large dependency grap
 
 Borrowed from SAT solvers used in chip design, VSIDS **learns from conflicts**:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │ First attempt: Try fusion_crypto v0.8.0 │
 │ Result: ❌ Conflict with fusion_std 1.2  │
@@ -63,7 +65,7 @@ Borrowed from SAT solvers used in chip design, VSIDS **learns from conflicts**:
 Every cycle, scores decay by 5%:
   0.95^n prevents old conflicts from
   permanently biasing future builds
-```
+```text
 
 **Benefit:** Learns which packages cause problems and tries them first next time (fail-fast).
 
@@ -71,7 +73,7 @@ Every cycle, scores decay by 5%:
 
 Before doing expensive work, check for circular dependencies:
 
-```
+```text
 ┌────────────────────────────────────────┐
 │ Package A depends on Package B         │
 │ Package B depends on Package C         │
@@ -84,13 +86,13 @@ Time Complexity: O(V + E)
   E = number of dependencies
 
 Rejects invalid graphs in <1ms
-```
+```text
 
 ### 3. **Content-Addressable Storage (CAS)**
 
 Cache resolutions by **hash of dependency tree**:
 
-```
+```text
 ┌──────────────────────────────────────────────┐
 │ Input: Manifest                              │
 │   my_app v1.0.0                              │
@@ -112,13 +114,13 @@ Cache resolutions by **hash of dependency tree**:
 
 If hash matches → instant return (no resolution)
 Cache hit rate in CI/CD: >80%
-```
+```text
 
 ### 4. **Adaptive GPU Offloading**
 
 For **complex dependency graphs** (>10,000 nodes), offload to GPU:
 
-```
+```text
 ┌────────────────────────────────────────────┐
 │ Complexity Score = Nodes × Branching Factor│
 │                                            │
@@ -136,26 +138,26 @@ For **complex dependency graphs** (>10,000 nodes), offload to GPU:
 └────────────────────────────────────────────┘
 
 GPU Speedup: 10-50× for large graphs
-```
+```text
 
 ### 5. **Self-Optimizing Over Time**
 
 Flux-Resolve **gets smarter** with each build:
 
-```
+```text
 Build 1: Try random order
   Time: 500ms
   Conflicts: 12
-  
+
 Build 2: VSIDS scores guide search
   Time: 300ms
   Conflicts: 7
-  
+
 Build 10: Learned optimal path
   Time: 50ms
   Conflicts: 0
   Cache: Hit on previously seen sub-graphs
-```
+```text
 
 ---
 
@@ -163,8 +165,8 @@ Build 10: Learned optimal path
 
 ### Fusion Module (Core Logic)
 
-**File:** `stdlib/flux_resolve.fu` (planned)  
-**Language:** Fusion  
+**File:** `stdlib/flux_resolve.fu` (planned)
+**Language:** Fusion
 **Role:** Implements resolution algorithms
 
 ```fusion
@@ -181,12 +183,12 @@ manifest.add_dependency(
 
 let lock = resolver.resolve(manifest);
 resolver.report_telemetry();
-```
+```text
 
 ### Rust FFI Bridge (System Operations)
 
-**File:** `runtime/crates/fusion_flux_resolve/src/lib.rs`  
-**Language:** Rust  
+**File:** `runtime/crates/fusion_flux_resolve/src/lib.rs`
+**Language:** Rust
 **Role:** Provides system-level services
 
 ```rust
@@ -196,7 +198,7 @@ extern "C" {
     fn flux_resolve_cache_put(...);  // Disk writes
     fn flux_resolve_gpu_solve(...);  // CUDA kernels
 }
-```
+```text
 
 ---
 
@@ -213,11 +215,11 @@ version = "1.0.0"
 fusion_std = "^1.0"
 fusion_http = "^2.3"
 fusion_database = "^0.8"
-```
+```text
 
 ### Process Flow
 
-```
+```text
 ┌────────────────────────────────────────────────────┐
 │ 1. Parse Manifest                                  │
 │    Extract package name, version, dependencies     │
@@ -287,7 +289,7 @@ fusion_database = "^0.8"
                     ┌────────────────────────────────────┐
                     │ 13. Return Lock File               │
                     └────────────────────────────────────┘
-```
+```text
 
 ### Output: Lock File (`fusion.lock`)
 
@@ -318,7 +320,7 @@ dependencies = ["fusion_std 1.0.3"]
 [metadata]
 checksum = "sha256:7f3a9b2c4d5e8a1b..."
 resolved_at = "2025-12-12T06:15:00Z"
-```
+```text
 
 ---
 
@@ -326,26 +328,26 @@ resolved_at = "2025-12-12T06:15:00Z"
 
 ### Scenario: Large Web Application
 
-```
+```text
 Project: fusion_enterprise_app
 Dependencies (direct): 15 packages
 Dependencies (transitive): 247 packages
 Constraints: 412 version requirements
 Conflicts: 23 incompatibilities
-```
+```text
 
 ### Traditional Resolver (Cargo-like)
 
-```
+```text
 Time: 45 seconds
 Approach: Backtracking search
 Cache: File-based, slow lookups
 Result: Valid, but slow
-```
+```text
 
 ### Flux-Resolve
 
-```
+```text
 First Build:
   ├─ Parse: 2ms
   ├─ Cycle check: 8ms
@@ -359,28 +361,32 @@ Subsequent Builds (cache hit):
 
 Speedup: 45,000× on cached builds
          1,000× on fresh builds
-```
+```text
 
 ---
 
 ## Key Benefits
 
 ### 1. **Speed**
+
 - **Fresh builds:** 10-50× faster than Cargo
 - **Cached builds:** Instant (<1ms)
 - **Parallel builds:** 100+ concurrent without contention
 
 ### 2. **Intelligence**
+
 - Learns from conflicts (VSIDS)
 - Optimizes over time
 - Fail-fast on known problematic packages
 
 ### 3. **Scalability**
+
 - GPU offloading for complex graphs
 - Lock-free cache (DashMap)
 - O(V+E) cycle detection
 
 ### 4. **Reliability**
+
 - Deterministic results (same manifest = same lock file)
 - Pre-flight validation (catches cycles early)
 - Comprehensive telemetry
@@ -390,27 +396,33 @@ Speedup: 45,000× on cached builds
 ## Use Cases
 
 ### 1. **CI/CD Pipelines**
+
 ```bash
+
 # First build
+
 fusion build  # 50ms (resolve) + compile time
 
 # Subsequent builds (no changes)
+
 fusion build  # <1ms (cache hit) + compile time
-```
+```text
 
 ### 2. **Monorepos**
-```
+
+```text
 Large workspace with 200+ internal packages
 Traditional: Minutes to resolve
 Flux-Resolve: Seconds (first) / instant (cached)
-```
+```text
 
 ### 3. **Microservices**
-```
+
+```text
 100 services, each with 50+ dependencies
 Flux-Resolve resolves all in parallel
 Lock-free cache prevents bottlenecks
-```
+```text
 
 ---
 
@@ -434,32 +446,40 @@ Lock-free cache prevents bottlenecks
 ### Environment Variables
 
 ```bash
+
 # Enable GPU acceleration (default: true)
+
 export FUSION_CUDA_ENABLE=true
 
 # Registry URL
+
 export FUSION_REGISTRY_URL=https://registry.fusionlang.dev
 
 # Cache path
+
 export FUSION_CACHE_PATH=./.fusion/cache_db
-```
+```text
 
 ### Config File (`fusion.toml`)
 
 ```toml
 [fusion.solver]
+
 # VSIDS heuristics
+
 vsids_enabled = true
 decay_factor = 0.95
 
 # GPU settings
+
 gpu_enabled = true
 gpu_threshold = 10000
 
 # Cache
+
 cache_path = "./.fusion/cache_db"
 cache_max_size_mb = 1024
-```
+```text
 
 ---
 
@@ -467,14 +487,14 @@ cache_max_size_mb = 1024
 
 After each build, Flux-Resolve reports:
 
-```
+```text
 --- [FUSION TELEMETRY] ---
  Total Requests: 1
  Cache Hit Rate: 100.0%
  GPU Accelerated: 0
  Cycles Rejected: 0
 --------------------------
-```
+```text
 
 Metrics:
 - **Total Requests:** Number of resolution attempts
@@ -488,16 +508,16 @@ Metrics:
 
 **Flux-Resolve is:**
 
-✅ **A dependency resolver** - Finds compatible package versions  
-✅ **GPU-accelerated** - Offloads complex SAT problems to CUDA  
-✅ **Self-learning** - VSIDS heuristics improve over time  
-✅ **Lock-free** - Supports 100+ parallel builds  
-✅ **Cached** - L1/L2 content-addressable storage  
-✅ **Fast** - Milliseconds for fresh, microseconds for cached  
-✅ **Fusion-native** - Written in Fusion, not a Rust tool  
+✅ **A dependency resolver** - Finds compatible package versions
+✅ **GPU-accelerated** - Offloads complex SAT problems to CUDA
+✅ **Self-learning** - VSIDS heuristics improve over time
+✅ **Lock-free** - Supports 100+ parallel builds
+✅ **Cached** - L1/L2 content-addressable storage
+✅ **Fast** - Milliseconds for fresh, microseconds for cached
+✅ **Fusion-native** - Written in Fusion, not a Rust tool
 
-**It replaces:** `cargo build` (for Fusion projects)  
-**Located in:** `runtime/crates/fusion_flux_resolve`  
+**It replaces:** `cargo build` (for Fusion projects)
+**Located in:** `runtime/crates/fusion_flux_resolve`
 **Version:** 0.3.0 (part of Fusion Runtime)
 
 ---

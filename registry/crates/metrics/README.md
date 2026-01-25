@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 metrics = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use metrics::increment_counter;
 fn main() {
     increment_counter!("my_counter");
 }
-```
+```text
 
 ## License
 

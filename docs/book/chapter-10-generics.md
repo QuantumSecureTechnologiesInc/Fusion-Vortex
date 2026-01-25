@@ -3,9 +3,9 @@
 Every programming language has tools for handling the duplication of concepts. In Fusion, one such tool is **generics**: abstract stand-ins for concrete types or other properties.
 
 In this chapter, we're going to dive into three advanced but essential features that work together:
-1.  **Generics**: Define functions/structs that can operate on many types.
-2.  **Traits**: Define behavior shared by different types (similar to interfaces).
-3.  **Lifetimes**: Ensure that references verify scoping rules (validating that borrowed data is still valid).
+1. **Generics**: Define functions/structs that can operate on many types.
+2. **Traits**: Define behavior shared by different types (similar to interfaces).
+3. **Lifetimes**: Ensure that references verify scoping rules (validating that borrowed data is still valid).
 
 These three features are the "heart" of Fusion's compile-time safety and expressiveness system.
 
@@ -27,7 +27,7 @@ fn largest_i32(list: &[i32]) -> i32 {
     }
     largest
 }
-```
+```text
 
 If we wanted to find the largest `char`, we'd have to duplicate this function. Instead, we can use a **generic type parameter**.
 
@@ -43,7 +43,7 @@ fn largest<T>(list: &[T]) -> T {
     }
     largest
 }
-```
+```text
 
 The syntax `<T>` declares a generic type parameter named `T`. We read this as: "the function `largest` is generic over type `T`".
 
@@ -64,7 +64,7 @@ fn main() {
     let float = Point { x: 1.0, y: 4.0 }
     // let mixed = Point { x: 5, y: 4.0 } // Error! Types must match T
 }
-```
+```text
 
 If we want different types, we can use distinct generic parameters:
 
@@ -73,7 +73,7 @@ struct Point<T, U> {
     x: T,
     y: U,
 }
-```
+```text
 
 ### 10.1.3 Enum Definitions with Generics
 
@@ -89,7 +89,7 @@ enum Result<T, E> {
     Ok(T),
     Err(E),
 }
-```
+```text
 
 ### 10.1.4 Performance of Generics
 
@@ -113,7 +113,7 @@ Let's say we have multiple types that hold text: `NewsArticle` and `Tweet`. We w
 pub trait Summary {
     fn summarize(&self) -> String
 }
-```
+```text
 
 This trait declares a method signature that implementing types must provide.
 
@@ -145,7 +145,7 @@ impl Summary for Tweet {
         format!("{}: {}", self.username, self.content)
     }
 }
-```
+```text
 
 Now we can call `.summarize()` on instances of `NewsArticle` or `Tweet`.
 
@@ -159,7 +159,7 @@ pub trait Summary {
         String::from("(Read more...)")
     }
 }
-```
+```text
 
 ### 10.2.4 Traits as Parameters
 
@@ -169,7 +169,7 @@ Now we can define functions that accept *any* type that implements a trait.
 pub fn notify(item: &impl Summary) {
     println("Breaking news! {}", item.summarize())
 }
-```
+```text
 
 This is syntax sugar for **Trait Bounds**:
 
@@ -177,7 +177,7 @@ This is syntax sugar for **Trait Bounds**:
 pub fn notify<T: Summary>(item: &T) {
     println("Breaking news! {}", item.summarize())
 }
-```
+```text
 
 The syntax `T: Summary` means "any type T that implements the Summary trait".
 
@@ -187,7 +187,7 @@ We can specify more than one trait bound using the `+` syntax.
 
 ```fusion
 pub fn notify<T: Summary + Display>(item: &T) { ... }
-```
+```text
 
 ### 10.2.6 Where Clauses
 
@@ -199,7 +199,7 @@ where
     T: Display + Clone,
     U: Clone + Debug,
 { ... }
-```
+```text
 
 ### 10.2.7 Fixing the `largest` Function
 
@@ -215,7 +215,7 @@ fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
     }
     largest
 }
-```
+```text
 
 ---
 
@@ -242,7 +242,7 @@ fn main() {
 
     println("r: {}", r) // Error! r refers to invalid memory
 }
-```
+```text
 
 Fusion catches this at compile time using the **borrow checker**.
 
@@ -258,7 +258,7 @@ fn longest(x: &str, y: &str) -> &str {
         y
     }
 }
-```
+```text
 
 This fails to compile!
 `error: missing lifetime specifier`.
@@ -275,7 +275,7 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
         y
     }
 }
-```
+```text
 
 **Interpretation**: "For some lifetime `'a`, the function takes two parameters, both of which live at least as long as `'a`, and returns a reference that also lives at least as long as `'a`."
 
@@ -299,12 +299,12 @@ struct ImportantExcerpt<'a> {
 fn main() {
     let novel = String::from("Call me Ishmael. Some years ago...")
     let first_sentence = novel.split('.').next().expect("Could not find a '.'")
-    
+
     let i = ImportantExcerpt {
         part: first_sentence,
     }
 }
-```
+```text
 
 This guarantees `ImportantExcerpt` cannot outlive the reference it holds (`part`).
 
@@ -314,7 +314,7 @@ One special lifetime is `'static`. It means the reference *can* live for the ent
 
 ```fusion
 let s: &'static str = "I have a static lifetime."
-```
+```text
 
 ### 10.3.6 Putting It All Together
 
@@ -338,7 +338,7 @@ where
         y
     }
 }
-```
+```text
 
 ---
 
@@ -357,9 +357,9 @@ In the next chapter, we'll learn how to write **automated tests** to ensure your
 
 ## 10.5 Exercises
 
-1.  **Generic Struct**: Create a `Pair<T>` struct with `x` and `y` fields. Implement a method `new(x: T, y: T) -> Pair<T>`.
-2.  **Trait Implementation**: Create a struct `Circle` and a struct `Square`. Define a trait `Area` with a method `area(&self) -> f64`. Implement the trait for both structs.
-3.  **Refactoring**: Take the `largest` function we wrote and refactor it to work on a slice of `&T` references instead of `Copy` types, handling strict lifetime requirements.
+1. **Generic Struct**: Create a `Pair<T>` struct with `x` and `y` fields. Implement a method `new(x: T, y: T) -> Pair<T>`.
+2. **Trait Implementation**: Create a struct `Circle` and a struct `Square`. Define a trait `Area` with a method `area(&self) -> f64`. Implement the trait for both structs.
+3. **Refactoring**: Take the `largest` function we wrote and refactor it to work on a slice of `&T` references instead of `Copy` types, handling strict lifetime requirements.
 
 ---
 

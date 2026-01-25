@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-schema-validator = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_schema_validator::validate;
 fn main() {
     validate();
 }
-```
+```text
 
 ## License
 

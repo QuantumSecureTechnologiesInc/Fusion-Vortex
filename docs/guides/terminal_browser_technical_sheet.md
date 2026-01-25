@@ -2,10 +2,10 @@
 
 ## Product Overview
 
-**Name**: Fusion Terminal Browser  
-**Version**: 0.1.0  
-**Type**: Terminal-based Web Browser  
-**Licence**: MIT / Apache-2.0  
+**Name**: Fusion Terminal Browser
+**Version**: 0.1.0
+**Type**: Terminal-based Web Browser
+**Licence**: MIT / Apache-2.0
 **Platform**: Cross-platform (Linux, macOS, Windows)
 
 ## Description
@@ -76,13 +76,13 @@ dirs = "5.0"
 owo-colors = "4.1"
 unicode-width = "0.2"
 pollster = "0.4"
-```
+```text
 
 ### Architecture
 
 #### Component Diagram
 
-```
+```text
 ┌──────────────────────────────────────────────────┐
 │                  Browser API                      │
 │  (Public interface for navigation, rendering)     │
@@ -105,11 +105,11 @@ pollster = "0.4"
               │ (History, Bookmarks,   │
               │  Cookies, Persistence) │
               └────────────────────────┘
-```
+```text
 
 ### Rendering Pipeline
 
-```
+```text
 ┌────────────┐
 │   URL      │
 └─────┬──────┘
@@ -150,21 +150,21 @@ pollster = "0.4"
 │  Terminal Output  │
 │  (ANSI escapes)   │
 └───────────────────┘
-```
+```text
 
 ## Features
 
 ### Core Features
 
-✅ **Full Web Rendering**: Complete HTML, CSS, and JavaScript support via Blink  
-✅ **Multiple Render Modes**: ASCII, Unicode blocks, True color, Sixel, Kitty  
-✅ **WebGPU Acceleration**: Optional GPU-accelerated image processing  
-✅ **Interactive UI**: Full-featured terminal interface with keyboard/mouse support  
-✅ **Session Management**: Persistent history, bookmarks, and cookies  
-✅ **JavaScript Execution**: Execute arbitrary JavaScript and capture results  
-✅ **Screenshot Capture**: Save screenshots as PNG files  
-✅ **Headless Automation**: Perfect for testing and scraping  
-✅ **CLI Integration**: Designed for command-line workflows  
+✅ **Full Web Rendering**: Complete HTML, CSS, and JavaScript support via Blink
+✅ **Multiple Render Modes**: ASCII, Unicode blocks, True color, Sixel, Kitty
+✅ **WebGPU Acceleration**: Optional GPU-accelerated image processing
+✅ **Interactive UI**: Full-featured terminal interface with keyboard/mouse support
+✅ **Session Management**: Persistent history, bookmarks, and cookies
+✅ **JavaScript Execution**: Execute arbitrary JavaScript and capture results
+✅ **Screenshot Capture**: Save screenshots as PNG files
+✅ **Headless Automation**: Perfect for testing and scraping
+✅ **CLI Integration**: Designed for command-line workflows
 
 ### Rendering Modes
 
@@ -276,28 +276,34 @@ pub type Result<T> = std::result::Result<T, BrowserError>;
 // Session management
 pub struct Session { /*...*/ }
 pub struct SessionManager { /*...*/ }
-```
+```text
 
 ## CLI Interface
 
 ### Commands
 
 ```bash
+
 # Interactive browsing
+
 fusion-browser browse [URL]
 
 # Screenshot capture
+
 fusion-browser screenshot <URL> --output <FILE>
 
 # JavaScript execution
+
 fusion-browser exec <URL> --script <SCRIPT>
 
 # HTML retrieval
+
 fusion-browser html <URL>
 
 # Configuration management
+
 fusion-browser config [--show] [--save <FILE>]
-```
+```text
 
 ### Options
 
@@ -310,7 +316,7 @@ fusion-browser config [--show] [--save <FILE>]
 --color-depth <DEPTH>    Color depth
 --config <FILE>          Configuration file
 --verbose                Enable verbose logging
-```
+```text
 
 ## Security Considerations
 
@@ -355,6 +361,7 @@ fusion-browser config [--show] [--save <FILE>]
 ## Roadmap
 
 ### Version 0.2.0
+
 - [ ] File download support
 - [ ] Improved sixel/kitty graphics
 - [ ] Better mouse support
@@ -362,6 +369,7 @@ fusion-browser config [--show] [--save <FILE>]
 - [ ] Multiple tab support
 
 ### Version 0.3.0
+
 - [ ] Custom compute shaders
 - [ ] Streaming video to terminal (ASCII art)
 - [ ] Built-in ad blocker
@@ -369,6 +377,7 @@ fusion-browser config [--show] [--save <FILE>]
 - [ ] Performance profiling tools
 
 ### Version 1.0.0
+
 - [ ] Stable API
 - [ ] Complete documentation
 - [ ] Comprehensive test suite
@@ -377,18 +386,21 @@ fusion-browser config [--show] [--save <FILE>]
 ## Support and Resources
 
 ### Documentation
+
 - User Guide: `docs/guides/terminal_browser_user_guide.md`
 - Developer Guide: `docs/guides/terminal_browser_developer_guide.md`
 - API Documentation: `cargo doc --open`
 
 ### Community
+
 - GitHub: https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
 - Issues: GitHub Issues tracker
 - Discussions: GitHub Discussions
 
 ### Maintainership
-**Maintainer**: Fusion Team  
-**Organisation**: QuantumSecure Technologies Ltd  
+
+**Maintainer**: Fusion Team
+**Organisation**: QuantumSecure Technologies Ltd
 **Contact**: Via GitHub Issues
 
 ## Licence
@@ -402,6 +414,7 @@ Users may choose either licence at their option.
 ## Changelog
 
 ### Version 0.1.0 (Current)
+
 - Initial release
 - Basic browser functionality
 - Multiple rendering modes
@@ -414,6 +427,6 @@ Users may choose either licence at their option.
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-12  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-12
 **Status**: Production

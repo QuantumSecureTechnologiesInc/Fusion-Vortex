@@ -1,8 +1,8 @@
 # Fusion Programming Language - Syntax and Grammar Reference
 
-**Dataset Category**: Fundamentals  
-**Training Level**: Beginner to Intermediate  
-**Last Updated**: December 2025 (v0.2.0-beta.1)
+**Dataset Category**: Fundamentals
+**Training Level**: Beginner to Intermediate
+**Last Updated**: December 2025 (v1.0.0) (v1.0.0)
 
 ---
 
@@ -22,7 +22,7 @@ fn main() -> int {
     println("Hello, Fusion!")
     return 0
 }
-```
+```text
 
 **Key Points**:
 - Entry point is `main()` function
@@ -63,7 +63,7 @@ class Point {
 trait Drawable {
     fn draw(self)
 }
-```
+```text
 
 ## 2. Variables and Mutability
 
@@ -76,7 +76,7 @@ let pi = 3.14159                // Inferred as float
 
 // COMPILE ERROR: Cannot reassign immutable variable
 // name = "Bob"  // ERROR!
-```
+```text
 
 ### 2.2 Mutable Variables
 
@@ -87,7 +87,7 @@ counter = 10                    // OK: can reassign
 
 let mut scores: [int] = []      // Mutable array
 scores.push(95)                 // OK: can mutate
-```
+```text
 
 ### 2.3 Constants
 
@@ -97,7 +97,7 @@ const SERVER_URL: string = "https://api.example.com"
 
 // Constants must be compile-time evaluable
 const BUFFER_SIZE: int = 1024 * 8
-```
+```text
 
 ## 3. Types
 
@@ -134,7 +134,7 @@ let multiline = """
     This is a
     multiline string
 """
-```
+```text
 
 ### 3.2 Composite Types
 
@@ -150,7 +150,7 @@ let mut vec: [int] = []
 vec.push(1)
 vec.push(2)
 vec.extend([3, 4, 5])
-```
+```text
 
 #### Tuples
 
@@ -162,7 +162,7 @@ let person = ("Alice", 30, true)
 // Destructuring
 let (name, age, active) = person
 let (x, y) = point
-```
+```text
 
 #### Option Type
 
@@ -176,7 +176,7 @@ match some_value {
     Some(v) => println("Value: {}", v),
     None => println("No value")
 }
-```
+```text
 
 #### Result Type
 
@@ -190,7 +190,7 @@ match success {
     Ok(value) => println("Success: {}", value),
     Err(error) => println("Error: {}", error)
 }
-```
+```text
 
 ### 3.3 User-Defined Types
 
@@ -207,16 +207,16 @@ class Rectangle {
 class Point {
     x: float
     y: float
-    
+
     fn new(x: float, y: float) -> Point {
         return Point { x, y }
     }
-    
+
     fn distance_from_origin(self) -> float {
         return ((self.x ** 2) + (self.y ** 2)).sqrt()
     }
 }
-```
+```text
 
 #### Enums
 
@@ -245,7 +245,7 @@ match msg {
     Message::Write(text) => println("Write: {}", text),
     Message::ChangeColor(r, g, b) => println("Color: ({}, {}, {})", r, g, b)
 }
-```
+```text
 
 ### 3.4 Generic Types
 
@@ -253,11 +253,11 @@ match msg {
 // Generic struct
 class Box<T> {
     value: T
-    
+
     fn new(value: T) -> Box<T> {
         return Box { value }
     }
-    
+
     fn get(self) -> T {
         return self.value
     }
@@ -273,7 +273,7 @@ class Pair<K, V> {
     key: K
     value: V
 }
-```
+```text
 
 ## 4. Functions
 
@@ -299,7 +299,7 @@ fn print_message(msg: string) {
 fn multiply(a: int, b: int) -> int {
     a * b  // No return keyword needed
 }
-```
+```text
 
 ### 4.2 Default Parameters
 
@@ -311,7 +311,7 @@ fn greet(name: string, greeting: string = "Hello") -> string {
 // Usage
 greet("Alice")                  // "Hello, Alice!"
 greet("Bob", "Hi")              // "Hi, Bob!"
-```
+```text
 
 ### 4.3 Variadic Parameters
 
@@ -326,7 +326,7 @@ fn sum(numbers: ...int) -> int {
 
 // Usage
 sum(1, 2, 3, 4, 5)              // 15
-```
+```text
 
 ### 4.4 Lambda/Anonymous Functions
 
@@ -345,35 +345,35 @@ let complex = |x: int| {
 let numbers = [1, 2, 3, 4, 5]
 let doubled = numbers.map(|x| x * 2)
 let sum = numbers.reduce(|acc, x| acc + x, 0)
-```
+```text
 
 ### 4.5 Method Syntax
 
 ```fusion
 class Calculator {
     value: int
-    
+
     // Constructor
     fn new(initial: int) -> Calculator {
         return Calculator { value: initial }
     }
-    
+
     // Instance method (takes self)
     fn add(mut self, amount: int) {
         self.value += amount
     }
-    
+
     // Getter method
     fn get_value(self) -> int {
         return self.value
     }
-    
+
     // Static/associated function
     static fn create_default() -> Calculator {
         return Calculator::new(0)
     }
 }
-```
+```text
 
 ## 5. Control Flow
 
@@ -403,7 +403,7 @@ fn divide(a: int, b: int) -> Option<int> {
     }
     return Some(a / b)
 }
-```
+```text
 
 ### 5.2 Pattern Matching
 
@@ -431,7 +431,7 @@ match point {
     (0, y) => println("Y-axis at {}", y),
     (x, y) => println("Point at ({}, {})", x, y)
 }
-```
+```text
 
 ### 5.3 Loops
 
@@ -478,7 +478,7 @@ for i in 0..100 {
     }
     println(i)
 }
-```
+```text
 
 ## 6. Operators
 
@@ -495,7 +495,7 @@ a / b       // Division: 3 (integer division)
 a % b       // Modulo: 1
 a ** b      // Exponentiation: 1000
 -a          // Negation: -10
-```
+```text
 
 ### 6.2 Comparison Operators
 
@@ -506,7 +506,7 @@ a < b       // Less than: false
 a <= b      // Less than or equal: false
 a > b       // Greater than: true
 a >= b      // Greater than or equal: true
-```
+```text
 
 ### 6.3 Logical Operators
 
@@ -518,7 +518,7 @@ not true            // Logical NOT: false
 // Short-circuit evaluation
 condition1 and condition2  // condition2 not evaluated if condition1 is false
 condition1 or condition2   // condition2 not evaluated if condition1 is true
-```
+```text
 
 ### 6.4 Bitwise Operators
 
@@ -529,7 +529,7 @@ a ^ b       // Bitwise XOR
 ~a          // Bitwise NOT
 a << 2      // Left shift
 a >> 2      // Right shift
-```
+```text
 
 ### 6.5 Assignment Operators
 
@@ -541,7 +541,7 @@ x *= 2      // x = x * 2
 x /= 4      // x = x / 4
 x %= 3      // x = x % 3
 x **= 2     // x = x ** 2
-```
+```text
 
 ### 6.6 Range Operators
 
@@ -551,7 +551,7 @@ x **= 2     // x = x ** 2
 ..10        // Up to (exclusive): [0, 1, ..., 9]
 5           // From: [5, 6, 7, ...]
 ..          // Unbounded range (all values)
-```
+```text
 
 ## 7. Comments
 
@@ -570,16 +570,19 @@ fn documented_function() {
 }
 
 //! Module-level documentation comment
-```
+```text
 
 ## 8. Attributes
 
 ```fusion
 // Compiler attributes
+
 #[inline]
+
 fn fast_function() { }
 
 #[deprecated(message = "Use new_function instead")]
+
 fn old_function() { }
 
 // Effect system attributes
@@ -596,11 +599,13 @@ fn crypto_compare(a: &[u8], b: &[u8]) -> bool { }
 fn lock_free_increment(counter: &AtomicInt) { }
 
 // Test attribute
+
 #[test]
+
 fn test_addition() {
     assert_eq!(add(2, 3), 5)
 }
-```
+```text
 
 ## 9. Error Handling
 
@@ -627,7 +632,7 @@ fn critical_operation(value: int) {
     }
     // Continues if value >= 0
 }
-```
+```text
 
 ## 10. String Interpolation
 
@@ -645,7 +650,7 @@ println("Pi to 2 decimals: {:.2}", pi)  // "Pi to 2 decimals: 3.14"
 
 // Named placeholders
 println("{name} is {age} years old", name=name, age=age)
-```
+```text
 
 ## 11. Module System
 
@@ -655,7 +660,7 @@ module geometry {
     pub fn area_circle(radius: float) -> float {
         return 3.14159 * radius ** 2
     }
-    
+
     // Private (not exported)
     fn helper() { }
 }
@@ -674,7 +679,7 @@ import math::advanced as adv
 
 // Re-exporting
 pub import geometry::*
-```
+```text
 
 ## 12. Traits (Interfaces)
 
@@ -694,7 +699,7 @@ impl Drawable for Circle {
     fn draw(self) {
         println("Drawing circle with radius {}", self.radius)
     }
-    
+
     fn get_area(self) -> float {
         return 3.14159 * self.radius ** 2
     }
@@ -709,7 +714,7 @@ fn print_drawable<T: Drawable>(item: T) {
 fn complex<T: Drawable + Comparable>(item: T) {
     // Implementation
 }
-```
+```text
 
 ## Grammar Summary (ANTLR4 Format)
 
@@ -719,7 +724,7 @@ grammar Fusion;
 // Program structure
 program: declaration* EOF;
 
-declaration: 
+declaration:
     functionDecl
     | classDecl
     | traitDecl
@@ -759,7 +764,7 @@ postfix: primary (DOT IDENTIFIER | LBRACK expression RBRACK)*;
 FN: 'fn'; CLASS: 'class'; TRAIT: 'trait'; LET: 'let';
 IF: 'if'; ELSE: 'else'; WHILE: 'while'; FOR: 'for';
 IN: 'in'; RETURN: 'return'; BREAK: 'break'; CONTINUE: 'continue';
-```
+```text
 
 ## Training Examples
 
@@ -769,15 +774,15 @@ IN: 'in'; RETURN: 'return'; BREAK: 'break'; CONTINUE: 'continue';
 fn main() -> int {
     let a = 10
     let b = 5
-    
+
     println("Addition: {} + {} = {}", a, b, a + b)
     println("Subtraction: {} - {} = {}", a, b, a - b)
     println("Multiplication: {} * {} = {}", a, b, a * b)
     println("Division: {} / {} = {}", a, b, a / b)
-    
+
     return 0
 }
-```
+```text
 
 ### Example 2: Fibonacci Sequence
 
@@ -795,26 +800,26 @@ fn main() -> int {
     }
     return 0
 }
-```
+```text
 
 ### Example 3: Generic Stack
 
 ```fusion
 class Stack<T> {
     items: [T]
-    
+
     fn new() -> Stack<T> {
         return Stack { items: [] }
     }
-    
+
     fn push(mut self, item: T) {
         self.items.push(item)
     }
-    
+
     fn pop(mut self) -> Option<T> {
         return self.items.pop()
     }
-    
+
     fn is_empty(self) -> bool {
         return self.items.len() == 0
     }
@@ -825,17 +830,17 @@ fn main() -> int {
     stack.push(1)
     stack.push(2)
     stack.push(3)
-    
+
     while not stack.is_empty() {
         match stack.pop() {
             Some(value) => println("Popped: {}", value),
             None => break
         }
     }
-    
+
     return 0
 }
-```
+```text
 
 ---
 

@@ -1,0 +1,388 @@
+// SOURCE: runtime/crates/fusion_runtime_core/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Fusion Runtime Core - Updated with missing imports and placeholder components
+
+use parking_lot::RwLock;
+use tracing::{debug, info};
+
+// Re-export core types from other crates
+pub use fusion_quantum_core::{
+    QuantumCircuit, QuantumGate, QuantumRegistry, QuantumState, Qubit, QubitId,
+};
+pub use fusion_tensor_core::{Matrix, Scalar, Tensor, TensorOps, Vector};
+pub use fusion_traits::{DataType, Numeric, Unitary};
+
+// ==================== Configuration Types ====================
+#[derive(Debug, Clone)]
+struct RuntimeConfig {
+    pub enable_gpu: FBool,
+    pub enable_qpu: FBool,
+    pub qos_mode: QoSMode,
+    pub gpu_backend: GpuBackend,
+    pub worker_threads: usize,
+    pub memory_pool_size: usize,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum QoSMode {
+    Balanced,
+    LowLatency,
+    HighThroughput,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum GpuBackend {
+    Auto,
+    Cuda,
+    Metal,
+    Vulkan,
+}
+
+// ==================== Executor and TaskHandle ====================
+struct Executor;
+impl Executor {
+    fn block_on<F: Future>(&self, fut: F) -> F::Output {
+        futures::executor::block_on(fut)
+    }
+    fn spawn<F>(&self, future: F, _priority: TaskPriority) -> TaskHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        // Simple thread spawn for demonstration
+        std::thread::spawn(move || futures::executor::block_on(future))
+            .join()
+            .ok();
+        TaskHandle {
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+struct TaskHandle<T> {
+    _phantom: std::marker::PhantomData<T>,
+}
+
+// ==================== Placeholder Component Stubs ====================
+struct FiberScheduler;
+impl FiberScheduler {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct LowJitterTimer;
+impl LowJitterTimer {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct FusedIoReactor;
+impl FusedIoReactor {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct SharedMemoryManager;
+impl SharedMemoryManager {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct VariationalLoopController;
+impl VariationalLoopController {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct DeviceMemoryAllocator;
+impl DeviceMemoryAllocator {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct MemoryManager;
+impl MemoryManager {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct CollectiveComms;
+impl CollectiveComms {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct QpuJobSequencer;
+impl QpuJobSequencer {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct FusionCore;
+impl FusionCore {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct Scheduler;
+impl Scheduler {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct HardwareLayer;
+impl HardwareLayer {
+    fn new() -> Self {
+        Self
+    }
+}
+
+struct TaskPriority;
+impl TaskPriority {
+    pub const Normal: Self = TaskPriority;
+}
+
+// ==================== Runtime Definition ====================
+struct Runtime {
+    // Interwoven control & optimization
+    fiber_scheduler: Arc<FiberScheduler>,
+    timer: Arc<LowJitterTimer>,
+    event_poller: Arc<FusedIoReactor>,
+    vlc: Arc<VariationalLoopController>,
+
+    // Resource management
+    shared_memory: Arc<SharedMemoryManager>,
+    device_memory: Arc<DeviceMemoryAllocator>,
+    memory_manager: Arc<MemoryManager>,
+
+    // Communication
+    collective_comms: Arc<CollectiveComms>,
+    qpu_sequencer: Arc<QpuJobSequencer>,
+
+    // Phase 2/3 cores
+    quantum_registry: Arc<RwLock<fusion_quantum_core::QuantumRegistry>>,
+    fusion_core: Arc<FusionCore>,
+
+    // Core coordination
+    scheduler: Arc<Scheduler>,
+    hal: Arc<HardwareLayer>,
+    config: RuntimeConfig,
+    executor: Arc<Executor>,
+    metrics: Arc<RwLock<RuntimeMetrics>>,
+}
+
+#[derive(Debug, Default, Clone)]
+struct RuntimeMetrics {
+    pub tasks_spawned: FU64,
+    pub tasks_completed: FU64,
+    pub gpu_kernel_launches: FU64,
+    pub qpu_submissions: FU64,
+    pub zero_copy_transfers: FU64,
+    pub total_latency_us: FU64,
+}
+
+impl Runtime {
+    fn builder() -> RuntimeBuilder {
+        RuntimeBuilder::default()
+    }
+    fn new() -> Self {
+        Self::builder().build()
+    }
+
+    fn block_on<F>(&self, future: F) -> F::Output
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        self.executor.block_on(future)
+    }
+
+    fn spawn<F>(&self, future: F) -> TaskHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        self.metrics.write().tasks_spawned += 1;
+        self.executor.spawn(future, TaskPriority::Normal)
+    }
+
+    // Accessor methods (truncated for brevity)
+    fn fiber_scheduler(&self) -> &FiberScheduler {
+        &self.fiber_scheduler
+    }
+    fn timer(&self) -> &LowJitterTimer {
+        &self.timer
+    }
+    fn event_poller(&self) -> &FusedIoReactor {
+        &self.event_poller
+    }
+    fn vlc(&self) -> &VariationalLoopController {
+        &self.vlc
+    }
+    fn shared_memory(&self) -> &SharedMemoryManager {
+        &self.shared_memory
+    }
+    fn device_memory(&self) -> &DeviceMemoryAllocator {
+        &self.device_memory
+    }
+    fn memory_manager(&self) -> &MemoryManager {
+        &self.memory_manager
+    }
+    fn collective_comms(&self) -> &CollectiveComms {
+        &self.collective_comms
+    }
+    fn qpu_sequencer(&self) -> &QpuJobSequencer {
+        &self.qpu_sequencer
+    }
+    fn quantum_registry(&self) -> &RwLock<fusion_quantum_core::QuantumRegistry> {
+        &self.quantum_registry
+    }
+    fn fusion_core(&self) -> &FusionCore {
+        &self.fusion_core
+    }
+    fn scheduler(&self) -> &Scheduler {
+        &self.scheduler
+    }
+    fn hal(&self) -> &HardwareLayer {
+        &self.hal
+    }
+    fn config(&self) -> &RuntimeConfig {
+        &self.config
+    }
+    fn metrics(&self) -> RuntimeMetrics {
+        self.metrics.read().clone()
+    }
+}
+
+impl Default for Runtime {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ==================== Builder ====================
+#[derive(Default)]
+struct RuntimeBuilder {
+    enable_gpu: FBool,
+    enable_qpu: FBool,
+    qos_mode: Option<QoSMode>,
+    gpu_backend: Option<GpuBackend>,
+    worker_threads: Option<usize>,
+    memory_pool_size: Option<usize>,
+}
+
+impl RuntimeBuilder {
+    fn enable_gpu(mut self) -> Self {
+        self.enable_gpu = true;
+        self
+    }
+    fn enable_qpu(mut self) -> Self {
+        self.enable_qpu = true;
+        self
+    }
+    fn enable_qos(mut self, mode: QoSMode) -> Self {
+        self.qos_mode = Some(mode);
+        self
+    }
+    fn gpu_backend(mut self, backend: GpuBackend) -> Self {
+        self.gpu_backend = Some(backend);
+        self
+    }
+    fn worker_threads(mut self, threads: usize) -> Self {
+        self.worker_threads = Some(threads);
+        self
+    }
+    fn memory_pool_size(mut self, size: usize) -> Self {
+        self.memory_pool_size = Some(size);
+        self
+    }
+
+    fn build(self) -> Runtime {
+        info!("Building Fusion Runtime with interwoven components");
+        let config = RuntimeConfig {
+            enable_gpu: self.enable_gpu,
+            enable_qpu: self.enable_qpu,
+            qos_mode: self.qos_mode.unwrap_or(QoSMode::Balanced),
+            gpu_backend: self.gpu_backend.unwrap_or(GpuBackend::Auto),
+            worker_threads: self.worker_threads.unwrap_or_else(num_cpus),
+            memory_pool_size: self.memory_pool_size.unwrap_or(1024 * 1024 * 1024),
+        };
+        // Initialize components
+        let fiber_scheduler = Arc::new(FiberScheduler::new());
+        let timer = Arc::new(LowJitterTimer::new());
+        let event_poller = Arc::new(FusedIoReactor::new());
+        let shared_memory = Arc::new(SharedMemoryManager::new());
+        let vlc = Arc::new(VariationalLoopController::new());
+        let device_memory = Arc::new(DeviceMemoryAllocator::new());
+        let memory_manager = Arc::new(MemoryManager::new());
+        let collective_comms = Arc::new(CollectiveComms::new());
+        let qpu_sequencer = Arc::new(QpuJobSequencer::new());
+        let quantum_registry =
+            Arc::new(RwLock::new(fusion_quantum_core::QuantumRegistry::default()));
+        let fusion_core = Arc::new(FusionCore::new());
+        let scheduler = Arc::new(Scheduler::new());
+        let hal = Arc::new(HardwareLayer::new());
+        let executor = Arc::new(Executor);
+        let metrics = Arc::new(RwLock::new(RuntimeMetrics::default()));
+        Runtime {
+            fiber_scheduler,
+            timer,
+            event_poller,
+            vlc,
+            shared_memory,
+            device_memory,
+            memory_manager,
+            collective_comms,
+            qpu_sequencer,
+            quantum_registry,
+            fusion_core,
+            scheduler,
+            hal,
+            config,
+            executor,
+            metrics,
+        }
+    }
+}
+
+fn num_cpus() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_runtime_creation() {
+        let runtime = Runtime::new();
+        assert!(runtime.config().worker_threads > 0);
+    }
+    #[test]
+    fn test_all_components_accessible() {
+        let runtime = Runtime::builder().enable_gpu().enable_qpu().build();
+        let _ = runtime.fiber_scheduler();
+        let _ = runtime.timer();
+        let _ = runtime.event_poller();
+        let _ = runtime.vlc();
+        let _ = runtime.shared_memory();
+        let _ = runtime.device_memory();
+        let _ = runtime.memory_manager();
+        let _ = runtime.collective_comms();
+        let _ = runtime.qpu_sequencer();
+        let _ = runtime.scheduler();
+        let _ = runtime.hal();
+    }
+}

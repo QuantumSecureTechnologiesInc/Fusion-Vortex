@@ -57,7 +57,7 @@ mod front_of_house {
         fn take_payment() {}
     }
 }
-```
+```text
 
 We define a module with the `mod` keyword. Modules can be nested inside other modules.
 
@@ -75,7 +75,7 @@ crate
          ├── take_order
          ├── serve_order
          └── take_payment
-```
+```text
 
 This tree shows how some modules nest inside one another (like `hosting` nests inside `front_of_house`). The tree commands scope: you can't just call `add_to_waitlist` from anywhere.
 
@@ -98,7 +98,7 @@ pub fn eat_at_restaurant() {
     // Relative path
     front_of_house::hosting::add_to_waitlist()
 }
-```
+```text
 
 ### 7.3.1 Private by Default
 
@@ -122,7 +122,7 @@ pub fn eat_at_restaurant() {
     // This now works!
     crate::front_of_house::hosting::add_to_waitlist()
 }
-```
+```text
 
 ### 7.3.2 Starting Relative Paths with `super`
 
@@ -139,7 +139,7 @@ mod back_of_house {
 
     fn cook_order() {}
 }
-```
+```text
 
 ### 7.3.3 Making Structs and Enums Public
 
@@ -161,7 +161,7 @@ mod back_of_house {
         }
     }
 }
-```
+```text
 
 Because `seasonal_fruit` is private, users cannot construct a `Breakfast` directly (they can't set that field). They strictly *must* use the `Breakfast::summer` constructor.
 
@@ -172,7 +172,7 @@ pub enum Appetizer {
     Soup,
     Salad,
 }
-```
+```text
 
 ---
 
@@ -193,7 +193,7 @@ pub fn eat_at_restaurant() {
     hosting::add_to_waitlist()
     hosting::add_to_waitlist()
 }
-```
+```text
 
 ### 7.4.1 Idiomatic `use` Paths
 
@@ -206,7 +206,7 @@ use std::collections::HashMap
 fn main() {
     let mut map = HashMap::new()
 }
-```
+```text
 
 ### 7.4.2 Renaming with `as`
 
@@ -226,7 +226,7 @@ use std::io::Result as IoResult
 
 fn function1() -> Result { ... }
 fn function2() -> IoResult<()> { ... }
-```
+```text
 
 ### 7.4.3 Re-exporting Names with `pub use`
 
@@ -234,7 +234,7 @@ When you bring a name into scope with `use`, the name available in the new scope
 
 ```fusion
 pub use crate::front_of_house::hosting
-```
+```text
 
 ---
 
@@ -252,19 +252,19 @@ pub use crate::front_of_house::hosting
 pub fn eat_at_restaurant() {
     hosting::add_to_waitlist()
 }
-```
+```text
 
 File `src/front_of_house.fu`:
 
 ```fusion
 pub mod hosting
-```
+```text
 
 File `src/front_of_house/hosting.fu`:
 
 ```fusion
 pub fn add_to_waitlist() {}
-```
+```text
 
 Fusion looks for module code in:
 1. Inline (`mod foo { ... }`)
@@ -289,10 +289,10 @@ Mastering this system allows you to write clean, encapsulated, and reusable code
 
 ## 7.7 Exercises
 
-1.  **Library Creation**: Create a new library named `fusion_math`.
-2.  **Modules**: Inside, create a module `arithmetic` with functions `add` and `subtract`. Make `add` public but keep `subtract` private.
-3.  **Nested Modules**: Create a `shapes` module with a sub-module `rectangle`. Define a public struct `Rectangle` inside it.
-4.  **Integration**: Create a `tests` module and write a test function that uses `super` to call your arithmetic functions.
+1. **Library Creation**: Create a new library named `fusion_math`.
+2. **Modules**: Inside, create a module `arithmetic` with functions `add` and `subtract`. Make `add` public but keep `subtract` private.
+3. **Nested Modules**: Create a `shapes` module with a sub-module `rectangle`. Define a public struct `Rectangle` inside it.
+4. **Integration**: Create a `tests` module and write a test function that uses `super` to call your arithmetic functions.
 
 ---
 

@@ -13,6 +13,7 @@ This guide helps you migrate from:
 **Good news**: v3 maintains API compatibility with v1 for native execution!
 
 #### Before (v1)
+
 ```rust
 use fusion_runtime_core::Runtime;
 
@@ -24,9 +25,10 @@ let runtime = Runtime::builder()
 runtime.block_on(async {
     // Your code
 });
-```
+```text
 
 #### After (v3)
+
 ```rust
 use fusion_runtime_core_v3_supernova::Builder;
 
@@ -39,7 +41,7 @@ let runtime = Builder::new()
 runtime.block_on(async {
     // Same code works!
 });
-```
+```text
 
 ### New Capabilities in v3
 
@@ -52,7 +54,7 @@ runtime.spawn(future).await;
 // v3: Device-specific spawning
 runtime_handle.spawn_on_gpu(0, future).await;
 runtime_handle.spawn_on_qpu(0, future).await;
-```
+```text
 
 #### 2. WASM Plugins
 
@@ -63,7 +65,7 @@ runtime_handle.spawn_on_qpu(0, future).await;
 let engine = PluginEngine::new(runtime_handle)?;
 let plugin = engine.load(wasm_bytes).await?;
 engine.call(&plugin, "process", vec![]).await?;
-```
+```text
 
 #### 3. Distributed Execution
 
@@ -73,21 +75,23 @@ engine.call(&plugin, "process", vec![]).await?;
 // v3: Cluster-aware execution
 cluster.spawn_on_node("gpu-node", future).await;
 cluster.spawn_distributed(future).await;
-```
+```text
 
 ## From v2 Nebula to v3
 
 ### Enhanced Plugin System
 
 #### Before (v2)
+
 ```rust
 use fusion_runtime_core_v2_nebula::WasmEngine;
 
 let engine = WasmEngine::new()?;
 let result = engine.execute(&wasm_bytes, &input)?;
-```
+```text
 
 #### After (v3)
+
 ```rust
 use fusion_runtime_core_v3_supernova::wasm::PluginEngine;
 
@@ -96,7 +100,7 @@ let plugin = engine.load(&wasm_bytes).await?;
 
 // Plugins can now call host functions!
 engine.call(&plugin, "process", vec![]).await?;
-```
+```text
 
 ### Host Functions (NEW in v3)
 
@@ -110,13 +114,14 @@ extern "C" {
 }
 
 #[no_mangle]
+
 pub extern "C" fn process() {
     unsafe {
         // Call GPU from WASM!
         host_gpu_compute(0, data.as_ptr(), data.len() as i32);
     }
 }
-```
+```text
 
 ### Native Execution (NEW in v3)
 
@@ -129,17 +134,17 @@ v2 was WASM-only. v3 adds native execution:
 runtime.block_on(async {
     // Native tasks
     spawn(async { /* CPU work */ }).await;
-    
+
     // GPU tasks
     spawn_on_gpu(0, async { /* GPU work */ }).await;
-    
+
     // WASM plugins
     engine.call(&plugin, "func", vec![]).await;
-    
+
     // Distributed tasks
     cluster.spawn_on_node("node-1", async { /* ... */ }).await;
 });
-```
+```text
 
 ## Feature Mapping
 
@@ -161,16 +166,21 @@ runtime.block_on(async {
 ### Step 1: Update Dependencies
 
 ```toml
+
 # Before
+
 [dependencies]
 fusion_runtime_core = "0.2.0"  # v1
+
 # OR
+
 fusion-runtime-core-v2-nebula = "2.0.0"  # v2
 
 # After
+
 [dependencies]
 fusion-runtime-core-v3-supernova = { version = "3.0.0", features = ["full"] }
-```
+```text
 
 ### Step 2: Update Imports
 
@@ -183,7 +193,7 @@ use fusion_runtime_core_v2_nebula::WasmEngine;
 
 // After (v3)
 use fusion_runtime_core_v3_supernova::{Builder, spawn};
-```
+```text
 
 ### Step 3: Update Runtime Creation
 
@@ -197,7 +207,7 @@ let runtime = Builder::new()
     .enable_gpu()
     .enable_wasm()
     .build();
-```
+```text
 
 ### Step 4: Migrate Plugin Code (v2 → v3)
 
@@ -211,7 +221,7 @@ let runtime_handle = /* get from GLOBAL_RUNTIME */;
 let engine = PluginEngine::new(runtime_handle)?;
 let plugin = engine.load(&wasm).await?;
 engine.call(&plugin, "entry_point", vec![]).await?;
-```
+```text
 
 ### Step 5: Add New Features
 
@@ -222,17 +232,17 @@ runtime.block_on(async {
     let gpu_result = runtime_handle.spawn_on_gpu(0, async {
         // GPU kernel
     }).await;
-    
+
     // Shared memory
     let tensor = SharedTensor::new(&[1024, 1024])?;
     tensor.write_native(|data| { /* ... */ })?;
-    
+
     // Distributed execution
     cluster.spawn_distributed(async {
         // Runs on best available node
     }).await;
 });
-```
+```text
 
 ## Breaking Changes
 
@@ -260,7 +270,7 @@ use fusion_runtime_core as v1;
 use fusion_runtime_core_v3_supernova as v3;
 
 // Gradually migrate module by module
-```
+```text
 
 ## Performance Improvements
 

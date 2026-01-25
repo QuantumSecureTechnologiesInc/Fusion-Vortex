@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: seal/sanitiser (stub)
+fn _seal_sanitiser_stub() -> void { }

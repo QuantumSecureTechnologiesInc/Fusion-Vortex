@@ -7,7 +7,8 @@
 ## 📌 PINNED: Launch Announcement
 
 ### Post 1: Main Toot (Pin This)
-```
+
+```text
 🎉 Fusion v1.0 is now available!
 
 We're releasing the world's first quantum-native programming language — fully open source.
@@ -28,12 +29,14 @@ GitHub: [link]
 Boosts appreciated! Let's show that FOSS can build the computing platforms of the future. 🚀
 
 #FOSS #OpenSource #QuantumComputing #AI #Rust #ProgrammingLanguages
-```
+
+```text
 
 ---
 
 ### Post 2: Why Open Source
-```
+
+```text
 🤔 Why is Fusion open source?
 
 Because the future of computing — quantum + AI — is too important to be controlled by any single company.
@@ -54,12 +57,14 @@ You can:
 The only way quantum-AI computing serves everyone is if everyone can participate in building it.
 
 #FOSS #OpenSource #QuantumComputing
-```
+
+```text
 
 ---
 
 ### Post 3: No VC, No Problem
-```
+
+```text
 💰 Fusion development stats:
 
 VC funding raised: $0
@@ -77,12 +82,14 @@ You don't need millions in funding to build meaningful software. You need clarit
 GitHub: [link]
 
 #FOSS #IndieDev #OpenSource
-```
+
+```text
 
 ---
 
 ### Post 4: Technical Transparency
-```
+
+```text
 🔍 Full transparency on Fusion:
 
 Source code: 100% on GitHub
@@ -101,12 +108,14 @@ This is how open source should work.
 [link to GitHub]
 
 #FOSS #Transparency #OpenSource
-```
+
+```text
 
 ---
 
 ### Post 5: Quantum + FOSS
-```
+
+```text
 ⚛️ Quantum computing meets open source.
 
 Most quantum tools are:
@@ -123,18 +132,22 @@ Quantum computing benefits should be accessible to everyone — not just BigTech
 
 Run your first quantum program today:
 ```fusion
+
 let q = Qubit::new()
 h(q)  // Superposition
 print(measure(q))
-```
+
+```text
 
 #QuantumComputing #FOSS #OpenScience
-```
+
+```text
 
 ---
 
 ### Post 6: AI Without Surveillance
-```
+
+```text
 🧠 Train AI models without sending your data to Big Tech.
 
 Fusion v1.0 includes:
@@ -148,12 +161,14 @@ Most "AI tools" are just API wrappers that send your data to OpenAI/Google/Anthr
 Fusion gives you the models. You keep your data.
 
 #FOSS #AI #Privacy #SelfHosted
-```
+
+```text
 
 ---
 
 ### Post 7: Comparison with Proprietary
-```
+
+```text
 📊 Open source vs. proprietary for quantum-AI development:
 
 **Proprietary (Typical)**
@@ -175,12 +190,14 @@ The future of computing should be open.
 GitHub: [link]
 
 #FOSS #OpenSource #QuantumComputing #AI
-```
+
+```text
 
 ---
 
 ### Post 8: Call for Contributors
-```
+
+```text
 🤝 Calling FOSS contributors!
 
 Fusion needs help in:
@@ -205,12 +222,14 @@ No prior quantum/AI experience needed — we'll help you learn!
 Start here: [link to CONTRIBUTING.md]
 
 #FOSS #OpenSource #ContributeToOpenSource
-```
+
+```text
 
 ---
 
 ### Post 9: Sustainability Discussion
-```
+
+```text
 💭 Open question for the FOSS community:
 
 How should projects like Fusion sustain long-term development?
@@ -232,14 +251,16 @@ What's worked for projects you've seen?
 Reply with your thoughts! 👇
 
 #FOSS #OpenSource #Sustainability
-```
+
+```text
 
 ---
 
 ## 🔧 CONTENT VARIATIONS
 
 ### Short Form (for quick boosts)
-```
+
+```text
 🚀 Fusion v1.0: Quantum + AI + Enterprise in one open source language.
 
 141 packages. Apache 2.0 / MIT. No strings attached.
@@ -247,23 +268,27 @@ Reply with your thoughts! 👇
 [link]
 
 #FOSS #QuantumComputing #AI
-```
 
-```
+```text
+
+```text
 ⚛️ Run quantum algorithms on IBM/AWS hardware with this new FOSS language:
 
 ```fusion
+
 let q = Qubit::new()
 h(q)
 print(measure(q))
-```
+
+```text
 
 GitHub: [link]
 
 #QuantumComputing #FOSS
-```
 
-```
+```text
+
+```text
 🧠 Train Llama 3 locally without API calls or cloud dependencies.
 
 Fusion v1.0 includes native LLM support.
@@ -271,13 +296,15 @@ Fusion v1.0 includes native LLM support.
 [link]
 
 #AI #FOSS #Privacy
-```
+
+```text
 
 ---
 
 ## 📊 POSTING SCHEDULE
 
 ### Week 1 (Launch)
+
 | Day  | Time (UTC) | Post                    |
 | :--- | :--------- | :---------------------- |
 | Mon  | 10:00      | Post 1 (Launch)         |
@@ -288,6 +315,7 @@ Fusion v1.0 includes native LLM support.
 | Fri  | 10:00      | Post 8 (Contributors)   |
 
 ### Week 2 (Engagement)
+
 | Day  | Post                    |
 | :--- | :---------------------- |
 | Mon  | Post 4 (Transparency)   |
@@ -295,6 +323,7 @@ Fusion v1.0 includes native LLM support.
 | Fri  | Post 9 (Sustainability) |
 
 ### Ongoing
+
 - 2-3 posts per week
 - Boost community content
 - Reply to mentions
@@ -305,38 +334,50 @@ Fusion v1.0 includes native LLM support.
 ## 🏷️ HASHTAGS
 
 ### Primary (Always Use)
-```
+
+```text
+
 #FOSS #OpenSource
-```
+
+```text
 
 ### Technical
-```
+
+```text
+
 #QuantumComputing #AI #MachineLearning #Rust #ProgrammingLanguages
-```
+
+```text
 
 ### Community
-```
+
+```text
+
 #SelfHosted #Privacy #Decentralization #IndieWeb
-```
+
+```text
 
 ### Events
-```
+
+```text
+
 #FediverseLaunch #NewProject
-```
+
+```text
 
 ---
 
 ## 📝 PROFILE FIELDS (Mastodon)
 
-```
+```text
 Field 1: 🌐 Website → github.com/...
 Field 2: 📦 Version → 1.0.0
 Field 3: 📜 License → Apache 2.0 / MIT
 Field 4: 💬 Discord → [invite link]
-```
+```text
 
 ---
 
-*Document Version: 1.0.0*  
-*Total Posts: 9 + Variations*  
+*Document Version: 1.0.0*
+*Total Posts: 9 + Variations*
 *Last Updated: December 11, 2025*

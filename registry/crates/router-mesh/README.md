@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 router-mesh = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use router_mesh::Router;
 fn main() {
     let router = Router::new();
 }
-```
+```text
 
 ## License
 

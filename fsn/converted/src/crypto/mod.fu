@@ -1,0 +1,12 @@
+// SOURCE: src/crypto/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/crypto/mod.rs - Cryptography Module
+
+mod hybrid;
+
+// These exports are available but currently unused in the compiler
+// Uncomment when integrating hybrid cryptography into the compiler
+// pub use hybrid::{
+//     generate_hybrid_keypair, hybrid_kdf, hybrid_sign, hybrid_verify, AesKey, ClassicalKeypair,
+//     HybridKeypair, HybridSignature, PQCKeypair,
+// };

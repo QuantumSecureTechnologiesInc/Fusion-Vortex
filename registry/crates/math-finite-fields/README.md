@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 math-finite-fields = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use math_finite_fields::FieldElement;
 fn main() {
     let a = FieldElement::new(5);
 }
-```
+```text
 
 ## License
 

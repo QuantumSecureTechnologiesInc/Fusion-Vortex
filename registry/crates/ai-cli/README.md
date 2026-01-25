@@ -1,7 +1,7 @@
 # Fusion AI CLI
 
-**Version:** Workspace  
-**Type:** Command Line Interface  
+**Version:** Workspace
+**Type:** Command Line Interface
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -14,7 +14,7 @@ This crate is typically installed as part of the Fusion toolchain, but can be bu
 
 ```bash
 cargo install --path registry/crates/ai-cli
-```
+```text
 
 ## Commands
 
@@ -30,19 +30,19 @@ cargo install --path registry/crates/ai-cli
 
 ```bash
 fusion ai code "Create a thread-safe LRU cache with generic types"
-```
+```text
 
 ### Explain Complex Logic
 
 ```bash
 fusion ai explain src/algorithm.fu --detail high
-```
+```text
 
 ### Automated Code Review
 
 ```bash
 fusion ai review --branch feature/new-api
-```
+```text
 
 ## Configuration
 
@@ -53,7 +53,7 @@ The CLI uses the standard Fusion AI configuration from `fusion.toml`:
 model = "claude-3-opus"
 temperature = 0.2
 max_tokens = 4096
-```
+```text
 
 ## Integration
 

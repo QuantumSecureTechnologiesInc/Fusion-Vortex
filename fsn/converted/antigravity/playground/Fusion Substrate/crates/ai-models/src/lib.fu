@@ -1,0 +1,8 @@
+// SOURCE: antigravity/playground/Fusion Substrate/crates/ai-models/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod runner;
+
+/// AI models version
+pub const AI_MODELS_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub use runner::LocalModelRunner;

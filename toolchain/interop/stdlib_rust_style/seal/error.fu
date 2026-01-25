@@ -1,0 +1,11 @@
+// Security violation (pure .fu)
+
+struct SecurityViolation {
+    reason: string,
+}
+
+fn security_violation(reason: string) -> SecurityViolation {
+    let v: SecurityViolation = SecurityViolation { reason: reason };
+    return v;
+}
+

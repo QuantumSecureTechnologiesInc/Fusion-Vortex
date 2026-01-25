@@ -1,7 +1,7 @@
 # Fusion KV Cache
 
-**Version:** 0.2.0  
-**Type:** Data Storage  
+**Version:** 0.2.0
+**Type:** Data Storage
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ cache.insert("key", tensor).await;
 if let Some(val) = cache.get("key").await {
     // use val
 }
-```
+```text
 
 ## Dependencies
 

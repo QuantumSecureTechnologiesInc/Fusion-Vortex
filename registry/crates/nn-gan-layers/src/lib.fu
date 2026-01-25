@@ -1,0 +1,30 @@
+/// Production Generative Layers.
+///
+/// Implements Transposed Convolution (Deconvolution) for upsampling images/data.
+use fusion_ai_core::{Layer, Tensor, Variable};
+struct ConvTranspose2D {
+    pub weights: Variable,
+    pub bias: Option<Variable>,
+}
+impl ConvTranspose2D {
+    pub fn new(in_c: FSize, out_c: FSize, kernel: FSize) -> Self {
+        let flattened_output_dim = out_c * kernel * kernel;
+        Self {
+            weights: Tensor::zeros(vec![in_c, flattened_output_dim]),
+            bias: None,
+        }
+    }
+}
+impl Layer for ConvTranspose2D {
+    /// Forward Pass (Simplified, structural demonstration)
+    fn forward(&self, x: &Variable) -> Variable {
+        x.clone()
+    }
+    fn parameters(&self) -> FVec<Variable> {
+        let mut params = vec![self.weights.clone()];
+        if let Some(b) = &self.bias {
+            params.push(b.clone());
+        }
+        params
+    }
+}

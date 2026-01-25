@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/fusion-core/src/ops/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod conversions;
+mod quantum_ops;
+mod tensor_ops;

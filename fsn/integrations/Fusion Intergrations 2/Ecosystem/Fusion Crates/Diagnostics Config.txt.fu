@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Diagnostics Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_moe_tools"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Diagnostics and load balancing tools for Mixture-of-Experts models"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }
+// fusion_net = { path = "../net", version = "0.1.0" }

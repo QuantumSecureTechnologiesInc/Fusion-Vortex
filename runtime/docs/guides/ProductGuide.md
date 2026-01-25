@@ -174,11 +174,12 @@ use fusion_runtime_core::Runtime;
 use fusion_finance::OrderBook;
 
 #[fusion_runtime_core::main(qos = "ultra_low_latency")]
+
 async fn main() {
     let book = OrderBook::new("BTC/USD");
     // Guaranteed <10μs order processing
 }
-```
+```text
 
 ### Scenario 2: AI Research Lab
 
@@ -202,7 +203,7 @@ let tensor = Tensor::zeros([8192, 8192])
 
 // Zero-copy matmul
 let result = tensor.matmul(&tensor).await;
-```
+```text
 
 ### Scenario 3: Pharmaceutical Company (Drug Discovery)
 
@@ -228,7 +229,7 @@ circuit.h(0).cx(0, 1); // ...
 // Classical post-processing on GPU
 let wavefunction = circuit.execute().await;
 let tensor = process_on_gpu(wavefunction).await;
-```
+```text
 
 ## Pricing Model
 
@@ -388,6 +389,6 @@ Fusion Runtime Core represents a paradigm shift in async runtime design, purpose
 
 ---
 
-**Last Updated**: December 2025  
-**Version**: 0.2.0  
+**Last Updated**: December 2025
+**Version**: 0.2.0
 **Licence**: MIT OR Apache-2.0

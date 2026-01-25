@@ -1,0 +1,57 @@
+// SOURCE: src/fusion_sdk/fusion_core.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Fusion Core: variables, ownership, and traits under dual-key verification.
+//!
+//! Explanation:
+//! `FusionAtom<T>` upgrades a variable into a proof-bound value. Reads and mutations
+//! require a valid `SecurityContext`, ensuring the 50/50 consensus is enforced at
+//! the edge of ownership.
+//!
+//! Reference:
+//! - `FusionAtom`: secure variable and ownership wrapper.
+
+
+use super::fusion_data::FusionOutcome;
+use super::SecurityContext;
+
+/// `FusionAtom<T>`: the Fusion version of a variable and ownership boundary.
+/// Mutation is impossible without a valid proof.
+struct FusionAtom<T> {
+    data: RwLock<T>,
+}
+
+impl<T: Clone> FusionAtom<T> {
+    /// Creates a new secure variable.
+    fn new(value: T) -> Self {
+        Self {
+            data: RwLock::new(value),
+        }
+    }
+
+    /// Secure read: returns the value only if the proof validates.
+    fn read(&self, proof: &impl SecurityContext) -> FusionOutcome<T> {
+        if !proof.verify() {
+            return FusionOutcome::partial_failure(proof, "Read denied");
+        }
+
+        match self.data.read() {
+            Ok(guard) => FusionOutcome::Success(guard.clone()),
+            Err(_) => FusionOutcome::TotalCollapse("Read lock poisoned".to_string()),
+        }
+    }
+
+    /// Secure mutation: updates the value only with a valid proof.
+    fn mutate(&self, new_value: T, proof: &impl SecurityContext) -> FusionOutcome<()> {
+        if !proof.verify() {
+            return FusionOutcome::partial_failure(proof, "Mutation denied");
+        }
+
+        match self.data.write() {
+            Ok(mut guard) => {
+                *guard = new_value;
+                FusionOutcome::Success(())
+            }
+            Err(_) => FusionOutcome::TotalCollapse("Write lock poisoned".to_string()),
+        }
+    }
+}

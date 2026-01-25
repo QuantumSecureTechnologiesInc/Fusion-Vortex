@@ -1,7 +1,7 @@
 # Fusion Carver
 
-**Version:** 0.2.0  
-**Type:** Data Recovery / Analysis  
+**Version:** 0.2.0
+**Type:** Data Recovery / Analysis
 **License:** MIT
 
 ## Overview
@@ -26,7 +26,7 @@ let carver = Carver::new();
 for file in carver.scan(&data, Signature::PNG) {
     println!("Found PNG at offset {}", file.offset);
 }
-```
+```text
 
 ## Dependencies
 

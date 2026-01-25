@@ -33,7 +33,7 @@ The **Fusion Core Type System** is the foundational framework that enables Fusio
 let q = Qubit::new();
 let q_copy = q;  // Move, not copy
 // q.measure();  // ❌ Compile error: use of moved value
-```
+```text
 
 ### ✅ Expressiveness
 
@@ -48,7 +48,7 @@ let matrix: Matrix<float> = Matrix::zeros([100, 100]);
 
 // Quantum
 let qubits: QubitRegister = QubitRegister::new(8);
-```
+```text
 
 ### ✅ Interoperability
 
@@ -66,7 +66,7 @@ let quantum_state: QuantumState = QuantumState::from(state_vec);
 // Quantum → Classical (measurement only)
 let qubit: Qubit = Qubit::new();
 let classical_bit: bool = qubit.measure();  // Consumes qubit
-```
+```text
 
 ### ✅ Performance
 
@@ -100,7 +100,7 @@ FusionType
     ├── QuantumGate (unitary operation)
     ├── QuantumCircuit (gate sequence)
     └── QuantumState (amplitude vector)
-```
+```text
 
 ---
 
@@ -115,7 +115,7 @@ fn fibonacci(n: int) -> int {
     }
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
-```
+```text
 
 ### Tensor Programming (ML)
 
@@ -125,7 +125,7 @@ use tensor::{Matrix, matmul};
 fn neural_layer(input: Matrix<float>, weights: Matrix<float>) -> Matrix<float> {
     return matmul(input, weights);
 }
-```
+```text
 
 ### Quantum Programming
 
@@ -144,7 +144,7 @@ fn bell_state() -> (bool, bool) {
 
     return (m1, m2);
 }
-```
+```text
 
 ### Hybrid Programming (Variational Quantum Eigensolver)
 
@@ -172,7 +172,7 @@ fn vqe(hamiltonian: Matrix<complex>, iterations: int) -> float {
 
     return energy;
 }
-```
+```text
 
 ---
 
@@ -183,7 +183,7 @@ fn vqe(hamiltonian: Matrix<complex>, iterations: int) -> float {
 ```fusion
 let q = Qubit::new();
 // let q_copy = q.clone();  // ❌ Compile error: trait Clone not implemented
-```
+```text
 
 ### Measurement Irreversibility
 
@@ -191,7 +191,7 @@ let q = Qubit::new();
 let q = Qubit::new();
 let result: bool = q.measure();  // Quantum → Classical
 // Cannot use q again - it was consumed
-```
+```text
 
 ### Tensor Shape Safety
 
@@ -199,7 +199,7 @@ let result: bool = q.measure();  // Quantum → Classical
 let a = Matrix::zeros([3, 4]);
 let b = Matrix::zeros([5, 6]);
 // let c = a.matmul(b);  // ❌ Compile error: shape mismatch (4 != 5)
-```
+```text
 
 ---
 

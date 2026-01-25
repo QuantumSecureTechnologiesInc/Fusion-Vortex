@@ -1,0 +1,10 @@
+//! src/seal/mod.rs
+//! The Security Module Definition.
+//!
+//! This file organizes the sub-components of the Seal layer.
+mod error;
+mod guards;
+mod sanitiser;
+pub use error::SecurityViolation;
+pub use guards::NeuralGuard;
+pub use sanitiser::NeuralSanitiser;

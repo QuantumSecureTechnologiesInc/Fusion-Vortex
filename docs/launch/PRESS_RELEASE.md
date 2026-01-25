@@ -62,9 +62,10 @@ The Fusion v1.0 ecosystem achieved a remarkable development velocity, with the c
 Fusion v1.0 is available immediately as open-source software under the Apache 2.0 / MIT dual-license.
 
 **Installation**:
-```
+
+```text
 cargo install fusion-lang --version 1.0.0
-```
+```text
 
 **Source Code**: github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
 
@@ -93,6 +94,7 @@ For press inquiries, demos, or interviews:
 **Code Examples**
 
 *Quantum Hello World (Bell State):*
+
 ```fusion
 import quantum.circuits
 
@@ -102,9 +104,10 @@ fn main():
     h(q0)
     cnot(q0, q1)
     print(measure(q0), measure(q1))
-```
+```text
 
 *AI Model Loading:*
+
 ```fusion
 import ai.models.llama
 
@@ -112,15 +115,16 @@ fn main():
     let model = Llama3::load("7b-chat")
     let response = model.generate("Explain quantum entanglement")
     print(response)
-```
+```text
 
 *Enterprise Deployment:*
+
 ```fusion
 import fusion.k8s
 
 fn deploy():
     k8s.deploy("my-app", replicas=3, gpu=true)
-```
+```text
 
 ---
 

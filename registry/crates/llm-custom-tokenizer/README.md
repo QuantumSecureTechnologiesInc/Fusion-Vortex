@@ -1,7 +1,7 @@
 # Fusion LLM Custom Tokenizer
 
-**Version:** 0.2.0  
-**Type:** Tools  
+**Version:** 0.2.0
+**Type:** Tools
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use llm_custom_tokenizer::Trainer;
 let trainer = Trainer::new();
 let tokenizer = trainer.train_from_files(&["corpus.txt"], 32000)?;
 tokenizer.save("custom.model")?;
-```
+```text
 
 ## Dependencies
 

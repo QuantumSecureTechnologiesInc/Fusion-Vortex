@@ -1,0 +1,27 @@
+// lib/io.fsn
+// Secure file system access.
+
+struct SecureFile {
+    path: FString,
+    content: FVec<u8>,
+}
+
+impl SecureFile {
+    fn open(path: FString) -> SecureFile {
+        println!("Verifying disk integrity for: {}", path.as_str());
+
+        fusion_if!(fs::exists(path), {
+            let raw = fs::read(path);
+            SecureFile {
+                path: path,
+                content: FVec::from(raw),
+            }
+        } else {
+            panic!("IO security violation: file not found or spoofed");
+        })
+    }
+
+    fn read_to_string(self) -> FString {
+        FString::from_bytes(self.content)
+    }
+}

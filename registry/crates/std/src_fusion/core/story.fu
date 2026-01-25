@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: core/story (stub)
+fn _core_story_stub() -> void { }

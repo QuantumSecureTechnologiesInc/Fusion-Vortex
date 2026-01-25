@@ -77,7 +77,7 @@ The workflow for a single function call (e.g., running one iteration of a VQE op
 │     └─ Returns control to Actor                                 │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Step-by-Step Breakdown
 
@@ -99,11 +99,11 @@ pub async fn matmul(&self, other: &Tensor) -> Tensor {
         device_hint: DeviceType::Gpu(0),
         qos_hint: QoSHint::Throughput,
     };
-    
+
     // Submit to runtime
     RUNTIME.submit_task(task).await
 }
-```
+```text
 
 **Cost**: ~100ns (struct creation + function call)
 
@@ -119,17 +119,17 @@ fn classify_task(&self, task: &RuntimeTask) -> (TaskPriority, DeviceQueue) {
         QoSHint::Throughput => TaskPriority::Normal,        // Best-effort
         QoSHint::Background => TaskPriority::Low,           // Idle time
     };
-    
+
     let queue = match task.task_type {
         TaskType::CpuBound => DeviceQueue::Cpu,
         TaskType::GpuKernel => DeviceQueue::Gpu(task.device_hint),
         TaskType::QpuCircuit => DeviceQueue::Qpu(task.device_hint),
         TaskType::NetworkIo => DeviceQueue::Network,
     };
-    
+
     (priority, queue)
 }
-```
+```text
 
 **Decision Tree**:
 
@@ -142,7 +142,7 @@ Task Type?
 │       └─ Normal → Work-Stealing Pool
 ├─ QPU Circuit → External Device Queue (async polling)
 └─ Network I/O → Fused I/O Reactor
-```
+```text
 
 **Cost**: ~50ns (enum matching + queue selection)
 
@@ -153,19 +153,19 @@ Task Type?
 ```rust
 fn attest_and_prepare(&self, task: &RuntimeTask) -> Result<MemoryPlan, MemError> {
     let mut transfers = Vec::new();
-    
+
     for input in &task.inputs {
         // Check current location
         let current_location = self.query_location(input.ptr)?;
         let target_location = task.device_hint;
-        
+
         if current_location != target_location {
             // Need transfer
             match (current_location, target_location) {
                 (DeviceType::Cpu, DeviceType::Gpu(id)) => {
                     // Reserve VRAM
                     let vram_ptr = self.allocate(input.size, target_location)?;
-                    
+
                     // Schedule DMA transfer
                     transfers.push(DmaTransfer {
                         src: input.ptr,
@@ -178,10 +178,10 @@ fn attest_and_prepare(&self, task: &RuntimeTask) -> Result<MemoryPlan, MemError>
             }
         }
     }
-    
+
     Ok(MemoryPlan { transfers, ..Default::default() })
 }
-```
+```text
 
 **Performance**:
 - **Cache Hit** (data already on target device): ~200ns
@@ -198,7 +198,7 @@ pub fn launch_kernel(&self, kernel: GpuKernel) -> Result<KernelHandle, GpuError>
     // Calculate grid/block dimensions
     let (grid_x, grid_y) = calculate_grid_dims(kernel.output_shape);
     let (block_x, block_y) = (16, 16);  // Optimal for matmul
-    
+
     // Prepare kernel parameters
     let params = [
         &kernel.inputs[0].ptr,
@@ -207,7 +207,7 @@ pub fn launch_kernel(&self, kernel: GpuKernel) -> Result<KernelHandle, GpuError>
         &kernel.output_shape[0],
         &kernel.output_shape[1],
     ];
-    
+
     // Direct CUDA/Metal/Vulkan call
     match self.backend {
         GpuBackend::Cuda => unsafe {
@@ -224,10 +224,10 @@ pub fn launch_kernel(&self, kernel: GpuKernel) -> Result<KernelHandle, GpuError>
         GpuBackend::Vulkan => { /* Vulkan implementation */ },
         _ => unreachable!(),
     }
-    
+
     Ok(KernelHandle { stream: self.stream, event: create_event() })
 }
-```
+```text
 
 **Cost**: ~500ns (direct FFI call to GPU driver)
 
@@ -241,11 +241,11 @@ pub fn launch_kernel(&self, kernel: GpuKernel) -> Result<KernelHandle, GpuError>
 fn suspend_future(&self, future: PinnedFuture, handle: KernelHandle) {
     // Store future in waiting queue
     self.waiting_futures.lock().insert(handle.event, future);
-    
+
     // Yield CPU thread back to pool
     // Thread is now free to work on other tasks
 }
-```
+```text
 
 **Cost**: ~50ns (hash map insertion + context switch)
 
@@ -258,7 +258,7 @@ fn suspend_future(&self, future: PinnedFuture, handle: KernelHandle) {
 ```rust
 fn poll_events(&self) -> Vec<CompletionEvent> {
     let mut completions = Vec::new();
-    
+
     // Poll GPU events
     for stream in &self.gpu_streams {
         if stream.query_event_ready() {
@@ -268,7 +268,7 @@ fn poll_events(&self) -> Vec<CompletionEvent> {
             });
         }
     }
-    
+
     // Poll QPU results
     for job in &self.qpu_jobs {
         if let Some(result) = job.poll_result() {
@@ -278,13 +278,13 @@ fn poll_events(&self) -> Vec<CompletionEvent> {
             });
         }
     }
-    
+
     // Poll network packets (if DPDK enabled)
     // ...
-    
+
     completions
 }
-```
+```text
 
 **Timing**:
 - GPU Kernel: 100μs - 100ms (depends on workload)
@@ -301,21 +301,21 @@ fn poll_events(&self) -> Vec<CompletionEvent> {
 fn resume_future(&self, event: CompletionEvent) {
     // Retrieve waiting future
     let future = self.waiting_futures.lock().remove(&event.id).unwrap();
-    
+
     // Update result
     future.set_result(event.result_ptr);
-    
+
     // Re-schedule future for execution
     match future.priority {
         TaskPriority::High => self.high_priority_queue.push(future),
         TaskPriority::Normal => self.normal_priority_queue.push(future),
         _ => self.low_priority_queue.push(future),
     }
-    
+
     // Wake a worker thread
     self.wake_tx.send(()).unwrap();
 }
-```
+```text
 
 **Cost**: ~100ns (hash map lookup + queue push + notification)
 
@@ -338,7 +338,7 @@ for epoch in 0..1000 {
     optimizer.step(grads).await;                 // Context switch #4
 }
 // Total: 4,000 context switches! (~400,000ns = 400μs overhead)
-```
+```text
 
 **Problem**: Each `.await` suspends the future, yields the CPU, and requires scheduler intervention to resume.
 
@@ -392,7 +392,7 @@ The VLC executes entire loops **on the hardware layer**, bypassing the OS schedu
 │  └────────────────────────────────────────────┘                │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
-```
+```text
 
 **VLC Control Flow Table**
 
@@ -432,14 +432,14 @@ impl VariationalLoopController {
         let pinned_data = self.pin_to_vram(data)?;
         let pinned_weights = self.pin_to_vram(&model.weights)?;
         let pinned_grads = self.allocate_vram(model.num_params)?;
-        
+
         // Step 2: Create GPU stream for kernel chaining
         let stream = self.gpu_executor.create_stream()?;
-        
+
         // Step 3: Execute loop at hardware level
         let mut loss = f64::INFINITY;
         let mut iteration = 0;
-        
+
         while iteration < config.max_iterations && loss > config.epsilon {
             // Forward pass (launch kernel, don't wait)
             let forward_event = self.gpu_executor.launch_kernel_async(
@@ -447,37 +447,37 @@ impl VariationalLoopController {
                 &[pinned_data.ptr, pinned_weights.ptr],
                 stream,
             )?;
-            
+
             // Loss calculation (depends on forward_event)
             let loss_event = self.gpu_executor.launch_kernel_async(
                 Kernel::Loss,
                 &[forward_event.output, pinned_data.labels],
                 stream,
             )?;
-            
+
             // Backward pass (depends on loss_event)
             let backward_event = self.gpu_executor.launch_kernel_async(
                 Kernel::Backward,
                 &[loss_event.output, pinned_weights.ptr, pinned_grads.ptr],
                 stream,
             )?;
-            
+
             // Optimizer step (depends on backward_event)
             let optimizer_event = self.gpu_executor.launch_kernel_async(
                 Kernel::OptimizerStep,
                 &[pinned_weights.ptr, pinned_grads.ptr, &config.learning_rate],
                 stream,
             )?;
-            
+
             // Synchronize stream (hardware-level wait)
             stream.synchronize()?;
-            
+
             // Check convergence (read loss from GPU)
             loss = self.read_scalar_from_vram(loss_event.output)?;
-            
+
             iteration += 1;
         }
-        
+
         // Step 4: Return final result
         TrainingResult {
             final_weights: self.read_tensor_from_vram(pinned_weights.ptr)?,
@@ -487,7 +487,7 @@ impl VariationalLoopController {
         }
     }
 }
-```
+```text
 
 ### Performance Impact
 
@@ -509,37 +509,37 @@ pub fn execute_vqe_loop(
     let mut params = config.initial_params;
     let mut energy = f64::INFINITY;
     let mut iteration = 0;
-    
+
     while iteration < config.max_iterations && energy_change > config.epsilon {
         // Step 1: Submit circuit to QPU (async)
         let job_id = self.qpu_interface.submit_circuit_async(
             ansatz.with_params(&params)
         )?;
-        
+
         // Step 2: Poll for result (direct polling, no scheduler)
         let measurements = self.qpu_interface.poll_until_ready(job_id)?;
-        
+
         // Step 3: Calculate energy on CPU (fast)
         energy = hamiltonian.expectation_value(&measurements);
-        
+
         // Step 4: Calculate gradients (parameter shift rule)
         let grads = self.calculate_gradients(&params, &measurements);
-        
+
         // Step 5: Update parameters
         for (p, g) in params.iter_mut().zip(grads.iter()) {
             *p -= config.learning_rate * g;
         }
-        
+
         iteration += 1;
     }
-    
+
     VqeResult {
         ground_state_energy: energy,
         optimal_params: params,
         iterations: iteration,
     }
 }
-```
+```text
 
 **Key Benefit**: The entire VQE loop runs without returning to the main scheduler, eliminating 1000s of context switches.
 
@@ -586,7 +586,7 @@ pub fn execute_vqe_loop(
 │  └──────────────────────────────────────────────────────┘│
 │                                                            │
 └───────────────────────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -600,44 +600,45 @@ use fusion_quantum::Circuit;
 use fusion_ai_core::Tensor;
 
 #[fusion_runtime_core::main]
+
 async fn quantum_ml_example() {
     let runtime = Runtime::builder()
         .enable_gpu()
         .enable_qpu()
         .enable_vlc()  // Enable Variational Loop Controller
         .build();
-    
+
     // Prepare classical data on GPU
     let train_data = Tensor::load("mnist_train.npy")
         .device("cuda:0")      // Step 3: Memory pinned to VRAM
         .requires_grad(false);
-    
+
     // Create hybrid quantum-classical model
     let quantum_layer = Circuit::new(4)  // 4 qubits
         .ry_parameterized(0..4);          // Variational circuit
-    
+
     let classical_model = Model::new()
         .linear(784, 16)
         .quantum(quantum_layer)  // Embeds quantum circuit
         .linear(4, 10);
-    
+
     // Training loop (uses VLC internally)
     let config = VlcConfig {
         max_iterations: 1000,
         learning_rate: 0.01,
         epsilon: 1e-4,
     };
-    
+
     // This entire loop runs without scheduler intervention!
     let result = runtime.vlc().execute_hybrid_training(
         &classical_model,
         &train_data,
         config,
     );
-    
+
     println!("Final accuracy: {:.2}%", result.accuracy * 100.0);
 }
-```
+```text
 
 **Execution Timeline**:
 
@@ -657,7 +658,7 @@ T=2.6ms:  Check convergence (continue)
 T=2600ms: Iteration 1000 complete or converged
 T=2600ms: VLC signals scheduler ONCE
 T=2600ms: CPU thread resumes with final model
-```
+```text
 
 **Total overhead**: ~100ns (1 context switch) instead of ~400μs (4000 context switches)
 
@@ -668,34 +669,35 @@ use fusion_finance::OrderBook;
 use fusion_runtime_core::{Runtime, QoSMode};
 
 #[fusion_runtime_core::main(qos = "ultra_low_latency")]
+
 async fn hft_example() {
     let runtime = Runtime::builder()
         .enable_qos(QoSMode::UltraLowLatency)
         .worker_threads(1)  // Dedicated core
         .build();
-    
+
     let book = OrderBook::new("BTC/USD");
-    
+
     // This task goes to Low-Jitter Queue (Priority 0)
     // Guaranteed <10μs execution
     runtime.spawn_high_priority(async move {
         loop {
             // Receive market data (Step 1: <1μs)
             let update = receive_market_data().await;
-            
+
             // Make trading decision (Step 2: <2μs)
             let decision = trading_strategy(update);
-            
+
             // Place order (Step 3: <7μs)
             if let Some(order) = decision {
                 book.place_order(order).await;
             }
-            
+
             // Total loop time: <10μs guaranteed
         }
     });
 }
-```
+```text
 
 **QoS Guarantee**: The scheduler ensures this task preempts all others, achieving <10μs latency.
 
@@ -720,6 +722,6 @@ This architecture enables true hybrid Quantum/AI/Classical computing at producti
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-08  
+**Document Version**: 1.0
+**Last Updated**: 2025-12-08
 **Related**: See `Architecture.md` for system overview

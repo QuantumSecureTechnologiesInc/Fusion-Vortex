@@ -79,14 +79,14 @@ use fusion_quantum_sdk::Qubit
 fn main() {
     // Create a qubit in the |0⟩ state
     let q = Qubit::zero()
-    
+
     // Create a qubit in the |1⟩ state
     let q1 = Qubit::one()
-    
+
     // The qubit type is non-copyable (enforces no-cloning)
     // let q_copy = q  // Error! Cannot move out of `q` after use
 }
-```
+```text
 
 ### 17.2.2 No-Cloning Enforcement
 
@@ -97,7 +97,7 @@ fn try_to_clone(q: Qubit) -> (Qubit, Qubit) {
     // (q, q)  // Error! Cannot use `q` more than once
     //         // (it was moved into the first tuple position)
 }
-```
+```text
 
 This is not a limitation—it's a feature. The compiler catches violations of quantum mechanics before your code ever runs.
 
@@ -111,11 +111,11 @@ use fusion_quantum_sdk::QubitRegister
 fn main() {
     // Create a register of 5 qubits (all initialised to |0⟩)
     let register = QubitRegister::new(5)
-    
+
     println("Number of qubits: {}", register.size())  // 5
     println("State: {}", register.state())  // |00000⟩
 }
-```
+```text
 
 ### 17.2.4 QuantumState Representation
 
@@ -127,16 +127,16 @@ use fusion_quantum_sdk::QuantumState
 fn main() {
     // Create a 2-qubit state
     let state = QuantumState::new(2)  // |00⟩
-    
+
     println("Number of qubits: {}", state.num_qubits())        // 2
     println("Dimension: {}", state.dimension())                // 2^2 = 4
     println("Amplitudes: {:?}", state.amplitudes())  // [1+0i, 0, 0, 0]
-    
+
     // Check probabilities
     println("P(|00⟩): {}", state.probability(0))  // 1.0
     println("P(|01⟩): {}", state.probability(1))  // 0.0
 }
-```
+```text
 
 ---
 
@@ -169,7 +169,7 @@ let rz = RotationZ::new(PI)         // Rotate around Z by π
 
 // General single-qubit rotation (Euler angles)
 let u = UGate::new(theta: PI/2.0, phi: 0.0, lambda: PI)
-```
+```text
 
 ### 17.3.2 Understanding Gate Effects
 
@@ -180,20 +180,20 @@ use fusion_quantum_sdk::*
 
 fn main() {
     let mut circuit = QuantumCircuit::new(1)
-    
+
     // Start: |0⟩
     circuit.h(0)        // After H: (|0⟩ + |1⟩) / √2
     circuit.z(0)        // After Z: (|0⟩ - |1⟩) / √2 = |-⟩
     circuit.h(0)        // After H: |1⟩ (H converts |+⟩↔|0⟩, |-⟩↔|1⟩)
-    
+
     circuit.measure(0, 0)
-    
+
     let sim = Simulator::new()
     let result = sim.run(&circuit)
-    
+
     println("Result: {}", result.bits()[0])  // Always 1
 }
-```
+```text
 
 ### 17.3.3 Two-Qubit Gates
 
@@ -217,7 +217,7 @@ let crz = ControlledRz::new(PI)
 
 // ZZ interaction (used in QAOA)
 let rzz = RZZ::new(PI / 4.0)
-```
+```text
 
 ### 17.3.4 Multi-Qubit Gates
 
@@ -230,7 +230,7 @@ let fredkin = Fredkin::new()
 
 // MCX: Multi-controlled X (generalised Toffoli)
 let mcx = MultiControlledX::new(num_controls: 3)
-```
+```text
 
 ### 17.3.5 Custom Gates
 
@@ -247,7 +247,7 @@ let matrix = [
 ]
 
 let custom = CustomGate::from_matrix(&matrix)?  // Validates unitarity
-```
+```text
 
 ---
 
@@ -263,33 +263,33 @@ use fusion_quantum_sdk::QuantumCircuit
 fn main() {
     // Create a circuit with 3 qubits
     let mut circuit = QuantumCircuit::new(3)
-    
+
     // Apply gates by qubit index
     circuit.h(0)           // Hadamard on qubit 0
     circuit.x(1)           // X on qubit 1
     circuit.y(2)           // Y on qubit 2
-    
+
     // Two-qubit gates take (control, target) or (qubit1, qubit2)
     circuit.cnot(0, 1)     // CNOT: control=0, target=1
     circuit.cz(1, 2)       // CZ between qubits 1 and 2
-    
+
     // Parameterised gates
     circuit.rx(0, PI / 4.0)
     circuit.ry(1, PI / 2.0)
     circuit.rz(2, PI)
-    
+
     // Multi-qubit gates
     circuit.ccnot(0, 1, 2)  // Toffoli: controls=0,1, target=2
-    
+
     // Measurements
     circuit.measure(0, 0)   // Measure qubit 0, store in classical bit 0
     circuit.measure(1, 1)
     circuit.measure(2, 2)
-    
+
     // Or measure all at once
     circuit.measure_all()
 }
-```
+```text
 
 ### 17.4.2 Circuit Visualisation
 
@@ -298,17 +298,18 @@ let circuit = /* ... build circuit ... */
 
 // Text-based diagram
 println("{}", circuit.draw())
-```
+```text
 
 Output:
-```
+
+```text
      ┌───┐          ┌────────┐┌─┐
 q_0: ┤ H ├───●──────┤ Rx(π/4)├┤M├
      └───┘┌──┴──┐   └────────┘└╥┘
 q_1: ─────┤ NOT ├──────────────╫─
           └─────┘              ║
 c: 1/══════════════════════════╩═
-```
+```text
 
 ### 17.4.3 Circuit Composition
 
@@ -324,26 +325,26 @@ fn bell_state_circuit() -> QuantumCircuit {
 
 fn teleportation_circuit() -> QuantumCircuit {
     let mut circuit = QuantumCircuit::new(3)
-    
+
     // Prepare state to teleport (optional)
     circuit.rx(0, PI / 3.0)
-    
+
     // Create Bell pair between qubits 1 and 2
     circuit.append(&bell_state_circuit(), qubits: [1, 2])
-    
+
     // Bell measurement on qubits 0 and 1
     circuit.cnot(0, 1)
     circuit.h(0)
     circuit.measure(0, 0)
     circuit.measure(1, 1)
-    
+
     // Conditional corrections on qubit 2
     circuit.x(2).c_if(classical_bit: 1, value: 1)
     circuit.z(2).c_if(classical_bit: 0, value: 1)
-    
+
     circuit
 }
-```
+```text
 
 ### 17.4.4 Parameterised Circuits
 
@@ -352,33 +353,33 @@ For variational algorithms:
 ```fusion
 fn ansatz(params: &[f64]) -> QuantumCircuit {
     let mut circuit = QuantumCircuit::new(4)
-    
+
     // Layer of rotation gates
     for (i, &theta) in params[0..4].iter().enumerate() {
         circuit.ry(i, theta)
     }
-    
+
     // Entangling layer
     for i in 0..3 {
         circuit.cnot(i, i + 1)
     }
-    
+
     // Another rotation layer
     for (i, &theta) in params[4..8].iter().enumerate() {
         circuit.ry(i, theta)
         circuit.rz(i, params[8 + i])
     }
-    
+
     circuit
 }
 
 fn main() {
     let params = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
     let circuit = ansatz(&params)
-    
+
     println("{}", circuit.draw())
 }
-```
+```text
 
 ---
 
@@ -396,19 +397,19 @@ fn main() {
     circuit.h(0)
     circuit.cnot(0, 1)
     circuit.measure_all()
-    
+
     let sim = Simulator::new()
-    
+
     // Single execution
     let result = sim.run(&circuit)
     println("Result: {:?}", result.bits())  // e.g., [0, 0] or [1, 1]
-    
+
     // Multiple executions (for probabilistic results)
     let results = sim.run_shots(&circuit, shots: 1000)
     println("Counts: {:?}", results.counts())
     // e.g., {"00": 498, "11": 502}
 }
-```
+```text
 
 ### 17.5.2 Accessing the State Vector
 
@@ -420,10 +421,10 @@ fn main() {
     circuit.h(0)
     circuit.cnot(0, 1)
     // No measurement—preserve superposition
-    
+
     let sim = Simulator::new()
     let state = sim.simulate_state(&circuit)
-    
+
     println("State vector:")
     for (i, amp) in state.amplitudes().iter().enumerate() {
         if amp.norm() > 1e-10 {
@@ -433,11 +434,11 @@ fn main() {
     // Output:
     //   |00⟩: 0.7071+0i
     //   |11⟩: 0.7071+0i
-    
+
     println("P(|00⟩) = {:.4}", state.probability(0))  // 0.5
     println("P(|11⟩) = {:.4}", state.probability(3))  // 0.5
 }
-```
+```text
 
 ### 17.5.3 Expectation Values
 
@@ -451,13 +452,13 @@ fn main() {
 
     // Define observable (as Pauli string)
     let z0_z1 = Observable::from_pauli("ZZ")  // Z₀ ⊗ Z₁
-    
+
     let sim = Simulator::new()
     let expectation = sim.expectation_value(&circuit, &z0_z1)
-    
+
     println("⟨ZZ⟩ = {:.4}", expectation)
 }
-```
+```text
 
 ### 17.5.4 Noise Models
 
@@ -478,7 +479,7 @@ let sim = Simulator::with_noise(noise)
 let results = sim.run_shots(&circuit, shots: 10000)
 println("Noisy counts: {:?}", results.counts())
 // Results will show errors compared to ideal simulation
-```
+```text
 
 ---
 
@@ -492,27 +493,28 @@ Fusion connects to real quantum computers through cloud providers.
 use fusion_quantum_sdk::backends::IBMQuantum
 
 #[tokio::main]
+
 async fn main() {
     // Authenticate with IBM Quantum
     let backend = IBMQuantum::new(api_key: env!("IBM_QUANTUM_API_KEY"))
         .await
         .device("ibm_brisbane")  // Choose a device
-    
+
     // Build circuit
     let mut circuit = QuantumCircuit::new(2)
     circuit.h(0)
     circuit.cnot(0, 1)
     circuit.measure_all()
-    
+
     // Submit job
     let job = backend.submit(&circuit).await?
     println("Job ID: {}", job.id())
-    
+
     // Wait for results
     let result = job.wait().await?
     println("Results: {:?}", result.counts())
 }
-```
+```text
 
 ### 17.6.2 AWS Braket
 
@@ -520,15 +522,16 @@ async fn main() {
 use fusion_quantum_sdk::backends::AWSBraket
 
 #[tokio::main]
+
 async fn main() {
     let backend = AWSBraket::new()
         .await
         .device("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-    
+
     let result = backend.run(&circuit, shots: 1000).await?
     println("Results: {:?}", result.counts())
 }
-```
+```text
 
 ### 17.6.3 Backend Abstraction
 
@@ -546,6 +549,7 @@ async fn run_on_any_backend(
 }
 
 #[tokio::main]
+
 async fn main() {
     let circuit = /* ... */
 
@@ -560,7 +564,7 @@ async fn main() {
     // Compare results
     compare_distributions(&sim_result, &hw_result)
 }
-```
+```text
 
 ---
 
@@ -584,11 +588,11 @@ fn bell_state() -> QuantumCircuit {
 fn main() {
     let sim = Simulator::new()
     let results = sim.run_shots(&bell_state(), 1000)
-    
+
     // Expect roughly 50% |00⟩, 50% |11⟩, never |01⟩ or |10⟩
     println("{:?}", results.counts())
 }
-```
+```text
 
 ### 17.7.2 Quantum Teleportation
 
@@ -597,29 +601,29 @@ Transfer a quantum state using entanglement:
 ```fusion
 fn quantum_teleportation() {
     let mut circuit = QuantumCircuit::new(3)
-    
+
     // Qubit 0: State to teleport (prepare arbitrary state)
     circuit.rx(0, PI / 4.0)
     circuit.rz(0, PI / 3.0)
-    
+
     // Qubits 1 and 2: Create Bell pair
     circuit.h(1)
     circuit.cnot(1, 2)
-    
+
     // Bell measurement on qubits 0 and 1
     circuit.cnot(0, 1)
     circuit.h(0)
     circuit.measure(0, 0)
     circuit.measure(1, 1)
-    
+
     // Classical communication and correction
     // (In real teleportation, this happens after classical bits are transmitted)
     circuit.x(2).c_if(1, 1)  // Apply X if classical bit 1 is 1
     circuit.z(2).c_if(0, 1)  // Apply Z if classical bit 0 is 1
-    
+
     circuit
 }
-```
+```text
 
 ### 17.7.3 Grover's Search Algorithm
 
@@ -628,30 +632,30 @@ Quantum search with quadratic speedup:
 ```fusion
 fn grover_search(n_qubits: int, target: int) -> QuantumCircuit {
     let mut circuit = QuantumCircuit::new(n_qubits + 1)  // +1 for ancilla
-    
+
     // Initialise
     for i in 0..n_qubits {
         circuit.h(i)
     }
     circuit.x(n_qubits)
     circuit.h(n_qubits)
-    
+
     // Grover iterations (optimal: ~π/4 * √N)
     let iterations = ((PI / 4.0) * (2.0_f64).powi(n_qubits / 2)).round() as int
-    
+
     for _ in 0..iterations {
         // Oracle (marks target state)
         oracle(&mut circuit, target, n_qubits)
-        
+
         // Diffusion (amplitude amplification)
         diffusion(&mut circuit, n_qubits)
     }
-    
+
     // Measure
     for i in 0..n_qubits {
         circuit.measure(i, i)
     }
-    
+
     circuit
 }
 
@@ -662,12 +666,12 @@ fn oracle(circuit: &mut QuantumCircuit, target: int, n_qubits: int) {
             circuit.x(i)
         }
     }
-    
+
     // Multi-controlled Z (implemented via H-Toffoli-H on ancilla)
     circuit.h(n_qubits)
     circuit.mcx((0..n_qubits).collect(), n_qubits)
     circuit.h(n_qubits)
-    
+
     // Undo X gates
     for i in 0..n_qubits {
         if (target >> i) & 1 == 0 {
@@ -681,17 +685,17 @@ fn diffusion(circuit: &mut QuantumCircuit, n_qubits: int) {
         circuit.h(i)
         circuit.x(i)
     }
-    
+
     circuit.h(n_qubits - 1)
     circuit.mcx((0..n_qubits - 1).collect(), n_qubits - 1)
     circuit.h(n_qubits - 1)
-    
+
     for i in 0..n_qubits {
         circuit.x(i)
         circuit.h(i)
     }
 }
-```
+```text
 
 ### 17.7.4 Quantum Fourier Transform
 
@@ -700,22 +704,22 @@ Foundation for many quantum algorithms:
 ```fusion
 fn qft(n_qubits: int) -> QuantumCircuit {
     let mut circuit = QuantumCircuit::new(n_qubits)
-    
+
     for i in 0..n_qubits {
         circuit.h(i)
-        
+
         for j in (i + 1)..n_qubits {
             let k = j - i + 1
             let phase = PI / (2.0_f64).powi(k as i32)
             circuit.cp(j, i, phase)  // Controlled phase rotation
         }
     }
-    
+
     // Reverse qubit order
     for i in 0..(n_qubits / 2) {
         circuit.swap(i, n_qubits - 1 - i)
     }
-    
+
     circuit
 }
 
@@ -723,7 +727,7 @@ fn inverse_qft(n_qubits: int) -> QuantumCircuit {
     // QFT is unitary, so inverse is the Hermitian conjugate
     qft(n_qubits).inverse()
 }
-```
+```text
 
 ---
 
@@ -750,7 +754,7 @@ circuit.optimise_with([
     OptimisationPass::MergeSingleQubitGates,
     OptimisationPass::CommuteControlledGates,
 ])
-```
+```text
 
 ### 17.8.2 Error Mitigation
 
@@ -766,45 +770,47 @@ let mitigated_counts = mit.apply(&raw_counts)
 // Zero-noise extrapolation
 let zne = ZNE::new(noise_factors: [1.0, 2.0, 3.0])
 let extrapolated = zne.run(&circuit, &backend).await?
-```
+```text
 
 ### 17.8.3 Testing Quantum Code
 
 ```fusion
+
 #[cfg(test)]
+
 mod tests {
     use super::*
-    
+
     #[test]
     fn test_bell_state() {
         let circuit = bell_state()
         let sim = Simulator::new()
         let results = sim.run_shots(&circuit, 10000)
-        
+
         let counts = results.counts()
-        
+
         // Should only have |00⟩ and |11⟩
         assert!(counts.get("01").unwrap_or(&0) < &50)
         assert!(counts.get("10").unwrap_or(&0) < &50)
-        
+
         // Should be roughly 50-50
         let count_00 = *counts.get("00").unwrap_or(&0) as f64
         let count_11 = *counts.get("11").unwrap_or(&0) as f64
         assert!((count_00 / count_11).abs() < 1.2)
     }
-    
+
     #[test]
     fn test_state_vector() {
         let circuit = bell_state()  // Without measurement
         let sim = Simulator::new()
         let state = sim.simulate_state(&circuit)
-        
+
         // |00⟩ and |11⟩ should have amplitude 1/√2 ≈ 0.707
         assert!((state.amplitudes()[0].re - 0.707).abs() < 0.01)
         assert!((state.amplitudes()[3].re - 0.707).abs() < 0.01)
     }
 }
-```
+```text
 
 ---
 

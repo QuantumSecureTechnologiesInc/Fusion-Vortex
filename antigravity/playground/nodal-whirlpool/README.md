@@ -21,44 +21,56 @@ Fusion is a modern programming language designed for the quantum computing era, 
 ### Installation
 
 ```bash
+
 # Install from source (currently the only method)
+
 git clone https://github.com/fusion-lang/fusion-cli.git
 cd fusion-cli
 cargo build --release
 
 # Add to PATH
+
 export PATH="$PATH:$(pwd)/target/release"
-```
+```text
 
 ### Create Your First Project
 
 ```bash
+
 # Create a new project
+
 fusion new my-project
 
 # Navigate to project
+
 cd my-project
 
 # Build and run
+
 fusion build
 fusion run
-```
+```text
 
 ### Try AI-Powered Development
 
 ```bash
+
 # Generate code with AI
+
 fusion ai generate "create a HTTP server with authentication"
 
 # Get code explanations
+
 fusion ai explain src/main.fu
 
 # Review code for issues
+
 fusion ai review --focus security
 
 # Interactive AI assistant
+
 fusion ai assist
-```
+```text
 
 ## Features
 
@@ -108,7 +120,7 @@ The AI subsystem includes comprehensive safety mechanisms:
 
 ## Architecture
 
-```
+```text
 fusion-cli/
 ├── cmd/fusion           # CLI entry point
 ├── crates/
@@ -130,7 +142,7 @@ fusion-cli/
 ├── docs/                # Documentation
 ├── examples/            # Example projects
 └── tests/e2e            # End-to-end tests
-```
+```text
 
 ## Documentation
 
@@ -151,32 +163,41 @@ fusion-cli/
 ### Building from Source
 
 ```bash
+
 # Clone the repository
+
 git clone https://github.com/fusion-lang/fusion-cli.git
 cd fusion-cli
 
 # Build all crates
+
 cargo build --workspace
 
 # Run tests
+
 cargo test --workspace
 
 # Build release version
+
 cargo build --workspace --release
-```
+```text
 
 ### Running Tests
 
 ```bash
+
 # Unit tests
+
 cargo test --workspace
 
 # Integration tests
+
 cargo test --workspace --test '*'
 
 # End-to-end tests
+
 cd tests/e2e && cargo test
-```
+```text
 
 ## Security
 
@@ -193,18 +214,21 @@ To report security vulnerabilities, please email security@fusionlang.dev.
 ## Roadmap
 
 ### Phase 1: Foundation (Current)
+
 - ✅ Core CLI structure
 - ✅ Basic toolchain (build, run, test)
 - ✅ AI subsystem architecture
 - ✅ Safety engine implementation
 
 ### Phase 2: AI Enhancement
+
 - [ ] Cloud LLM adapters (OpenAI, Anthropic, Azure)
 - [ ] Local model integration (llama.cpp, ONNX)
 - [ ] Advanced code generation
 - [ ] Multi-turn conversations
 
 ### Phase 3: Production Readiness
+
 - [ ] Full compiler implementation
 - [ ] LLVM code generation
 - [ ] Standard library
@@ -212,6 +236,7 @@ To report security vulnerabilities, please email security@fusionlang.dev.
 - [ ] VSCode extension
 
 ### Phase 4: Enterprise Features
+
 - [ ] Team collaboration features
 - [ ] Enterprise policy management
 - [ ] Compliance reporting

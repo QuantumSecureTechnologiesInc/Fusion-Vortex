@@ -1,7 +1,7 @@
 # Fusion K8s Operator
 
-**Version:** 0.2.0  
-**Type:** Infrastructure  
+**Version:** 0.2.0
+**Type:** Infrastructure
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ Deploy the operator to your cluster:
 
 ```bash
 kubectl apply -f deploy/operator.yaml
-```
+```text
 
 Define a Fusion Service:
 
@@ -33,7 +33,7 @@ metadata:
 spec:
   image: my-app:latest
   replicas: 3
-```
+```text
 
 ## Dependencies
 

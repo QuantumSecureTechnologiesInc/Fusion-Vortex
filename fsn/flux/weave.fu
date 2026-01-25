@@ -1,0 +1,18 @@
+// flux/weave.fsn
+// Packet erasure coding: recover lost chunks.
+
+struct TensorPacket {
+    seq: u64,
+    data: FVec<u8>,
+    erasure_code: FVec<u8>,
+}
+
+impl NetworkProtocol {
+    fn recover(packets: FVec<TensorPacket>) -> Tensor {
+        if packets.has_gaps() {
+            Erasure::reconstruct(packets)
+        } else {
+            Tensor::from_packets(packets)
+        }
+    }
+}

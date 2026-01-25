@@ -1,0 +1,15 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Epoch 1 - The Foundation/fusion_bridge_c/C-Bridge Library.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// //! # Fusion C-Bridge
+// //!
+// //! Provides safe abstractions for interacting with the C ABI.
+// //! Handles type marshalling, pointer safety, and string conversions.
+// 
+// pub mod types;
+// pub mod marshalling;
+// pub mod safety;
+// 
+// pub use types::*;
+// pub use marshalling::{ToC, FromC};
+// pub use safety::SafePtr;

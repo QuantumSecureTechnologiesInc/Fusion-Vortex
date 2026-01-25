@@ -1,7 +1,7 @@
 # Fusion AI Models
 
-**Version:** Workspace  
-**Type:** AI Model Runtime  
+**Version:** Workspace
+**Type:** AI Model Runtime
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -28,11 +28,11 @@ use fusion_ai_models::{ModelLoader, Backend};
 async fn load_model() -> Result<(), anyhow::Error> {
     let loader = ModelLoader::new();
     let model = loader.load("llama-2-7b.gguf", Backend::LlamaCpp).await?;
-    
+
     // Ready for inference
     Ok(())
 }
-```
+```text
 
 ## Configuration
 
@@ -41,7 +41,7 @@ Supports feature flags to enable specific backends:
 ```toml
 [dependencies]
 fusion-ai-models = { workspace = true, features = ["llama-cpp", "onnx"] }
-```
+```text
 
 ## Dependencies
 

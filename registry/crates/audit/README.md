@@ -1,7 +1,7 @@
 # Fusion Audit
 
-**Version:** Workspace  
-**Type:** Security Tool  
+**Version:** Workspace
+**Type:** Security Tool
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -23,13 +23,13 @@ use fusion_audit::audit;
 fn main() -> anyhow::Result<()> {
     // Run audit and print report
     let result = audit(true)?;
-    
+
     for vuln in result.vulnerabilities {
         println!("Found vulnerability: {} in {}", vuln.title, vuln.package);
     }
     Ok(())
 }
-```
+```text
 
 ## Integration
 

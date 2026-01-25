@@ -18,7 +18,7 @@ The first collection type we’ll look at is `Vec<T>`, also known as a **vector*
 
 ```fusion
 let v: Vec<i32> = Vec::new()
-```
+```text
 
 Note that we added a type annotation here. Since we aren't inserting any values into this vector, Fusion doesn't know what kind of elements we intend to store.
 
@@ -26,7 +26,7 @@ If we insert values instantly, Fusion infers the type:
 
 ```fusion
 let v = vec![1, 2, 3]
-```
+```text
 
 The `vec!` macro is a convenient initialization shorthand.
 
@@ -41,7 +41,7 @@ v.push(5)
 v.push(6)
 v.push(7)
 v.push(8)
-```
+```text
 
 The variable `v` must be `mut`able to change it.
 
@@ -61,7 +61,7 @@ match v.get(2) {
     Some(third) => println("The third element is {}", third),
     None => println("There is no third element."),
 }
-```
+```text
 
 When handling user input or data where the index might be invalid, always use `.get()` to handle the error gracefully.
 
@@ -77,7 +77,7 @@ let first = &v[0] // Immutable borrow
 v.push(6) // Mutable borrow (potentially reallocates memory)
 
 // println("The first element is: {}", first) // Error!
-```
+```text
 
 Why? Adding a new element might require allocating new memory and copying the old elements to the new space (if there isn't enough capacity). If that happens, the reference `first` would point to deallocated memory. Fusion prevents this.
 
@@ -90,7 +90,7 @@ let v = vec![100, 32, 57]
 for i in &v {
     println("{}", i)
 }
-```
+```text
 
 We can also iterate over mutable references to change values:
 
@@ -99,7 +99,7 @@ let mut v = vec![100, 32, 57]
 for i in &mut v {
     *i += 50 // Use dereference operator (*) to get to the value
 }
-```
+```text
 
 ### 8.1.6 Using an Enum to Store Multiple Types
 
@@ -117,7 +117,7 @@ let row = vec![
     SpreadsheetCell::Text(String::from("blue")),
     SpreadsheetCell::Float(10.12),
 ]
-```
+```text
 
 This works because every element in the vector is of type `SpreadsheetCell`.
 
@@ -136,7 +136,7 @@ let data = "initial contents"
 let s = data.to_string()
 
 let s = String::from("initial contents")
-```
+```text
 
 ### 8.2.2 Updating a String
 
@@ -146,7 +146,7 @@ You can grow a `String` by pushing more data into it.
 let mut s = String::from("foo")
 s.push_str("bar") // Appends a string slice
 s.push('!')       // Appends a single char
-```
+```text
 
 You can also use the `+` operator or the `format!` macro for concatenation.
 
@@ -154,7 +154,7 @@ You can also use the `+` operator or the `format!` macro for concatenation.
 let s1 = String::from("Hello, ")
 let s2 = String::from("world!")
 let s3 = s1 + &s2 // s1 is moved and can no longer be used
-```
+```text
 
 For more complex formatting without taking ownership:
 
@@ -164,7 +164,7 @@ let s2 = String::from("tac")
 let s3 = String::from("toe")
 
 let s = format!("{}-{}-{}", s1, s2, s3)
-```
+```text
 
 `format!` works like `println!` but returns a `String`.
 
@@ -175,11 +175,11 @@ In many languages, you can access characters by index (`s[0]`). **In Fusion, you
 ```fusion
 let s = String::from("hello")
 // let h = s[0] // Error!
-```
+```text
 
 Why?
-1.  **UTF-8 Variable Width**: A character can be 1 to 4 bytes. Indexing `s[0]` on a multi-byte char (like `Здравствуйте`) would return the first byte, which is often not a valid character on its own.
-2.  **Performance expectation**: Indexing implies O(1) random access. But to find the Nth "character" in UTF-8, you must traverse the string, which is O(N).
+1. **UTF-8 Variable Width**: A character can be 1 to 4 bytes. Indexing `s[0]` on a multi-byte char (like `Здравствуйте`) would return the first byte, which is often not a valid character on its own.
+2. **Performance expectation**: Indexing implies O(1) random access. But to find the Nth "character" in UTF-8, you must traverse the string, which is O(N).
 
 ### 8.2.4 Slicing Strings
 
@@ -188,7 +188,8 @@ If you really want a byte slice, use a range:
 ```fusion
 let hello = "Здравствуйте"
 let s = &hello[0..4] // Returns "Зд" (first 4 bytes)
-```
+```text
+
 If you slice in the middle of a character boundary, Fusion will panic.
 
 ### 8.2.5 Iterating Over Strings
@@ -210,7 +211,7 @@ for b in "Зд".bytes() {
 // 208
 // 151
 // ...
-```
+```text
 
 ---
 
@@ -227,7 +228,7 @@ let mut scores = HashMap::new()
 
 scores.insert(String::from("Blue"), 10)
 scores.insert(String::from("Yellow"), 50)
-```
+```text
 
 Like vectors, hashmaps store their data on the heap. All keys must have the same type, and all values must have the same type.
 
@@ -236,7 +237,7 @@ Like vectors, hashmaps store their data on the heap. All keys must have the same
 ```fusion
 let team_name = String::from("Blue")
 let score = scores.get(&team_name) // Returns Option<&i32>
-```
+```text
 
 ### 8.3.3 Hash Maps and Ownership
 
@@ -249,7 +250,7 @@ let field_value = String::from("Blue")
 let mut map = HashMap::new()
 map.insert(field_name, field_value)
 // field_name and field_value are invalid here
-```
+```text
 
 ### 8.3.4 Updating a Hash Map
 
@@ -260,7 +261,7 @@ If you insert a key that already exists, the old value is replaced.
 scores.insert(String::from("Blue"), 10)
 scores.insert(String::from("Blue"), 25)
 // "Blue" is now 25
-```
+```text
 
 **Only Inserting If the Key Has No Value**:
 We check if a key exists using `entry`.
@@ -268,7 +269,8 @@ We check if a key exists using `entry`.
 ```fusion
 scores.entry(String::from("Yellow")).or_insert(50)
 scores.entry(String::from("Blue")).or_insert(50)
-```
+```text
+
 The return value of `entry` is an enum `Entry` that represents a value that might or might not exist. `or_insert` returns a mutable reference to the value if it exists, or inserts the parameter and returns a reference to the new value if it doesn't.
 
 **Updating a Value Based on the Old Value**:
@@ -284,7 +286,7 @@ for word in text.split_whitespace() {
 
 println!("{:?}", map)
 // {"world": 2, "hello": 1, "wonderful": 1}
-```
+```text
 
 ### 8.3.5 Hashing Functions
 
@@ -305,9 +307,9 @@ We will revisit collections when we look at **iterators** and **closures** in la
 
 ## 8.5 Exercises
 
-1.  **Median and Mode**: Given a list of integers, use a vector and calculate the median (when sorted, the value in the middle position) and mode (the value that occurs most often; a hash map will be helpful here).
-2.  **Pig Latin**: Convert strings to pig latin. The first consonant of each word is moved to the end of the word and "ay" is added, so "first" becomes "irst-fay". Words that start with a vowel have "hay" added to the end instead ("apple" becomes "apple-hay").
-3.  **Employee Directory**: Using a hash map and vectors, create a text interface to allow a user to add employee names to a department in a company. For example, "Add Sally to Engineering" or "Add Amir to Sales". Then let the user retrieve a list of all people in a department or all people in the company by department, sorted alphabetically.
+1. **Median and Mode**: Given a list of integers, use a vector and calculate the median (when sorted, the value in the middle position) and mode (the value that occurs most often; a hash map will be helpful here).
+2. **Pig Latin**: Convert strings to pig latin. The first consonant of each word is moved to the end of the word and "ay" is added, so "first" becomes "irst-fay". Words that start with a vowel have "hay" added to the end instead ("apple" becomes "apple-hay").
+3. **Employee Directory**: Using a hash map and vectors, create a text interface to allow a user to add employee names to a department in a company. For example, "Add Sally to Engineering" or "Add Amir to Sales". Then let the user retrieve a list of all people in a department or all people in the company by department, sorted alphabetically.
 
 ---
 

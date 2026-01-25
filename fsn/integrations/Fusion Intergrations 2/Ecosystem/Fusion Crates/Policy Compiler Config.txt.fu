@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Policy Compiler Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_sec_policy_compiler"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Compiles declarative security policies (Rego/Datalog) into runtime bytecode"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" } # Compiles logic

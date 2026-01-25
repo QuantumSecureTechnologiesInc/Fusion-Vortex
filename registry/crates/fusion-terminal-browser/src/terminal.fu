@@ -1,0 +1,173 @@
+//! Terminal UI using ratatui
+use crate::{BrowserError, Result};
+use crossterm::{
+    event::{self, Event, KeyCode, KeyModifiers},
+    execute,
+    terminal::{
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+    },
+};
+use ratatui::{
+    backend::CrosstermBackend, layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
+    Terminal as RatatuiTerminal,
+};
+use tracing::debug;
+/// Terminal UI manager
+struct TerminalUI {
+    terminal: RatatuiTerminal<CrosstermBackend<io::Stdout>>,
+}
+/// UI state
+struct UIState {
+    pub url: FString,
+    pub title: FString,
+    pub status: FString,
+    pub loading: FBool,
+    pub cursor_visible: FBool,
+}
+impl Default for UIState {
+    fn default() -> Self {
+        Self {
+            url: String::new(),
+            title: String::from("Fusion Terminal Browser"),
+            status: String::from("Ready"),
+            loading: false,
+            cursor_visible: false,
+        }
+    }
+}
+impl TerminalUI {
+    /// Create a new terminal UI
+    pub fn new() -> Result<Self> {
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen)?;
+        let backend = CrosstermBackend::new(stdout);
+        let terminal = RatatuiTerminal::new(backend)
+            .map_err(|e| BrowserError::Terminal(
+                io::Error::new(io::ErrorKind::Other, e),
+            ))?;
+        Ok(Self { terminal })
+    }
+    /// Draw the UI
+    pub fn draw(&mut self, state: &UIState, content: &[Line]) -> Result<()> {
+        self.terminal
+            .draw(|f| {
+                let size = f.area();
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(3),
+                        Constraint::Min(0),
+                        Constraint::Length(3),
+                    ])
+                    .split(size);
+                let header = Paragraph::new(
+                        vec![
+                            Line::from(vec![Span::styled("Fusion Terminal Browser",
+                            Style::default().fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),), Span::raw(" | "),
+                            Span::styled(& state.title, Style::default()
+                            .fg(Color::Yellow)),]), Line::from(vec![Span::styled("URL: ",
+                            Style::default().fg(Color::Green)), Span::raw(& state
+                            .url),]),
+                        ],
+                    )
+                    .block(Block::default().borders(Borders::ALL).title("Browser"));
+                f.render_widget(header, chunks[0]);
+                let content_widget = Paragraph::new(content.to_vec())
+                    .block(Block::default().borders(Borders::ALL).title("Page"))
+                    .wrap(Wrap { trim: false });
+                f.render_widget(content_widget, chunks[1]);
+                let status_text = if state.loading {
+                    "⏳ Loading..."
+                } else {
+                    &state.status
+                };
+                let footer = Paragraph::new(
+                        vec![
+                            Line::from(vec![Span::styled(status_text, Style::default()
+                            .fg(Color::White),)]), Line::from(vec![Span::styled("Ctrl+G",
+                            Style::default().fg(Color::Green)), Span::raw(": Go | "),
+                            Span::styled("Ctrl+R", Style::default().fg(Color::Green)),
+                            Span::raw(": Reload | "), Span::styled("Ctrl+Q",
+                            Style::default().fg(Color::Red)), Span::raw(": Quit | "),
+                            Span::styled("←/→", Style::default().fg(Color::Yellow)),
+                            Span::raw(": Back/Forward"),]),
+                        ],
+                    )
+                    .block(Block::default().borders(Borders::ALL).title("Status"));
+                f.render_widget(footer, chunks[2]);
+            })
+            .map_err(|e| BrowserError::Terminal(
+                io::Error::new(io::ErrorKind::Other, e),
+            ))?;
+        Ok(())
+    }
+    /// Handle terminal events
+    pub fn handle_events() -> Result<Option<UIEvent>> {
+        if event::poll(std::time::Duration::from_millis(100))? {
+            match event::read()? {
+                Event::Key(key) => {
+                    match (key.code, key.modifiers) {
+                        (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
+                            return Ok(Some(UIEvent::Quit));
+                        }
+                        (KeyCode::Char('g'), KeyModifiers::CONTROL) => {
+                            return Ok(Some(UIEvent::Navigate));
+                        }
+                        (KeyCode::Char('r'), KeyModifiers::CONTROL) => {
+                            return Ok(Some(UIEvent::Reload));
+                        }
+                        (KeyCode::Left, KeyModifiers::NONE) => {
+                            return Ok(Some(UIEvent::Back));
+                        }
+                        (KeyCode::Right, KeyModifiers::NONE) => {
+                            return Ok(Some(UIEvent::Forward));
+                        }
+                        (KeyCode::Esc, KeyModifiers::NONE) => {
+                            return Ok(Some(UIEvent::Escape));
+                        }
+                        _ => {}
+                    }
+                }
+                Event::Mouse(mouse) => {
+                    debug!("Mouse event: {:?}", mouse);
+                }
+                Event::Resize(width, height) => {
+                    return Ok(Some(UIEvent::Resize(width, height)));
+                }
+                _ => {}
+            }
+        }
+        Ok(None)
+    }
+    /// Clear the terminal
+    pub fn clear(&mut self) -> Result<()> {
+        self.terminal
+            .clear()
+            .map_err(|e| BrowserError::Terminal(
+                io::Error::new(io::ErrorKind::Other, e),
+            ))?;
+        Ok(())
+    }
+}
+impl Drop for TerminalUI {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+    }
+}
+/// UI events
+#[derive(Debug, Clone, PartialEq)]
+enum UIEvent {
+    Quit,
+    Navigate,
+    Reload,
+    Back,
+    Forward,
+    Escape,
+    Resize(u16, u16),
+}

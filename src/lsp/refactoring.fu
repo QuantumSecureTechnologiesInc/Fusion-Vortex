@@ -1,0 +1,220 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+use tower_lsp::lsp_types::{Position, Range, TextEdit, Url, WorkspaceEdit};
+/// Refactoring engine for advanced code transformations
+struct RefactoringEngine {
+    workspace_root: Option<FString>,
+}
+impl RefactoringEngine {
+    pub fn new() -> Self {
+        RefactoringEngine {
+            workspace_root: None,
+        }
+    }
+    pub fn set_workspace_root(&mut self, root: FString) {
+        self.workspace_root = Some(root);
+    }
+    /// Extract function refactoring
+    pub fn extract_function(
+        &self,
+        uri: &Url,
+        range: Range,
+        new_name: &str,
+        code: &str,
+    ) -> Result<WorkspaceEdit, FString> {
+        let selected_code = self.get_text_in_range(code, range)?;
+        let (input_vars, output_vars) = self.analyze_variables(&selected_code);
+        let signature = self
+            .generate_function_signature(new_name, &input_vars, &output_vars);
+        let function_call = self.generate_function_call(new_name, &input_vars);
+        let mut changes = HashMap::new();
+        changes
+            .insert(
+                uri.clone(),
+                vec![
+                    TextEdit { range, new_text : function_call, }, TextEdit { range :
+                    Range { start : Position { line : 0, character : 0, }, end : Position
+                    { line : 0, character : 0, }, }, new_text : format!("{}\n\n",
+                    signature), },
+                ],
+            );
+        Ok(WorkspaceEdit {
+            changes: Some(changes),
+            document_changes: None,
+            change_annotations: None,
+        })
+    }
+    /// Inline variable refactoring
+    pub fn inline_variable(
+        &self,
+        uri: &Url,
+        position: Position,
+        code: &str,
+    ) -> Result<WorkspaceEdit, FString> {
+        let (var_name, var_value, decl_range) = self
+            .find_variable_at_position(code, position)?;
+        let usages = self.find_variable_usages(code, &var_name);
+        let mut edits = Vec::new();
+        edits
+            .push(TextEdit {
+                range: decl_range,
+                new_text: String::new(),
+            });
+        for usage_range in usages {
+            edits
+                .push(TextEdit {
+                    range: usage_range,
+                    new_text: var_value.clone(),
+                });
+        }
+        let mut changes = HashMap::new();
+        changes.insert(uri.clone(), edits);
+        Ok(WorkspaceEdit {
+            changes: Some(changes),
+            document_changes: None,
+            change_annotations: None,
+        })
+    }
+    /// Extract variable refactoring
+    pub fn extract_variable(
+        &self,
+        uri: &Url,
+        range: Range,
+        new_name: &str,
+        code: &str,
+    ) -> Result<WorkspaceEdit, FString> {
+        let expression = self.get_text_in_range(code, range)?;
+        let declaration = format!("let {} = {};\n", new_name, expression.trim());
+        let mut changes = HashMap::new();
+        changes
+            .insert(
+                uri.clone(),
+                vec![
+                    TextEdit { range : Range { start : Position { line : range.start
+                    .line, character : 0, }, end : Position { line : range.start.line,
+                    character : 0, }, }, new_text : declaration, }, TextEdit { range,
+                    new_text : new_name.to_string(), },
+                ],
+            );
+        Ok(WorkspaceEdit {
+            changes: Some(changes),
+            document_changes: None,
+            change_annotations: None,
+        })
+    }
+    /// Move function to another file
+    pub fn move_function(
+        &self,
+        source_uri: &Url,
+        target_uri: &Url,
+        function_range: Range,
+        code: &str,
+    ) -> Result<WorkspaceEdit, FString> {
+        let function_code = self.get_text_in_range(code, function_range)?;
+        let mut changes = HashMap::new();
+        changes
+            .insert(
+                source_uri.clone(),
+                vec![TextEdit { range : function_range, new_text : String::new(), }],
+            );
+        changes
+            .insert(
+                target_uri.clone(),
+                vec![
+                    TextEdit { range : Range { start : Position { line : u32::MAX,
+                    character : 0, }, end : Position { line : u32::MAX, character : 0, },
+                    }, new_text : format!("\n{}\n", function_code), }
+                ],
+            );
+        Ok(WorkspaceEdit {
+            changes: Some(changes),
+            document_changes: None,
+            change_annotations: None,
+        })
+    }
+    fn get_text_in_range(&self, code: &str, range: Range) -> Result<FString, FString> {
+        let lines: FVec<&str> = code.lines().collect();
+        let start_line = range.start.line as FSize;
+        let end_line = range.end.line as FSize;
+        if start_line >= lines.len() || end_line >= lines.len() {
+            return Err("Range out of bounds".to_string());
+        }
+        if start_line == end_line {
+            let line = lines[start_line];
+            let start_char = range.start.character as FSize;
+            let end_char = range.end.character as FSize;
+            Ok(line[start_char..end_char].to_string())
+        } else {
+            let mut result = String::new();
+            for i in start_line..=end_line {
+                result.push_str(lines[i]);
+                if i < end_line {
+                    result.push('\n');
+                }
+            }
+            Ok(result)
+        }
+    }
+    fn analyze_variables(&self, code: &str) -> (FVec<FString>, FVec<FString>) {
+        let mut input_vars = Vec::new();
+        let output_vars = Vec::new();
+        for word in code.split_whitespace() {
+            if word.chars().all(|c| c.is_alphanumeric() || c == '_')
+                && !word.chars().next().unwrap().is_numeric()
+            {
+                input_vars.push(word.to_string());
+            }
+        }
+        (input_vars, output_vars)
+    }
+    fn generate_function_signature(
+        &self,
+        name: &str,
+        inputs: &[FString],
+        outputs: &[FString],
+    ) -> FString {
+        let params = if inputs.is_empty() {
+            String::new()
+        } else {
+            inputs.iter().map(|v| format!("{}: T", v)).collect::<FVec<_>>().join(", ")
+        };
+        let return_type = if outputs.is_empty() {
+            String::new()
+        } else {
+            format!(" -> {}", outputs[0])
+        };
+        format!(
+            "fn {}({}) {} {{\n    // TODO: Extracted code\n}}", name, params, return_type
+        )
+    }
+    fn generate_function_call(&self, name: &str, inputs: &[FString]) -> FString {
+        let args = inputs.join(", ");
+        format!("{}({})", name, args)
+    }
+    fn find_variable_at_position(
+        &self,
+        code: &str,
+        position: Position,
+    ) -> Result<(FString, FString, Range), FString> {
+        Err("Not implemented".to_string())
+    }
+    fn find_variable_usages(&self, code: &str, var_name: &str) -> FVec<Range> {
+        Vec::new()
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_extract_variable() {
+        let engine = RefactoringEngine::new();
+        let uri = Url::parse("file:///test.fu").unwrap();
+        let range = Range {
+            start: Position { line: 0, character: 8 },
+            end: Position { line: 0, character: 14 },
+        };
+        let code = "let x = 5 + 10;";
+        let result = engine.extract_variable(&uri, range, "sum", code);
+        assert!(result.is_ok());
+    }
+}

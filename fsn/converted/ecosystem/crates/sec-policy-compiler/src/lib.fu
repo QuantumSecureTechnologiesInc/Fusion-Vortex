@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/sec-policy-compiler/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing sec-policy-compiler...");
+}

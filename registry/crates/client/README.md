@@ -1,7 +1,7 @@
 # Fusion Client
 
-**Version:** 0.2.0  
-**Type:** SDK Core  
+**Version:** 0.2.0
+**Type:** SDK Core
 **License:** MIT
 
 ## Overview
@@ -21,18 +21,19 @@ Fusion Client (`fusion_client`) is the primary entry point for applications inte
 use fusion_client::Client;
 
 #[tokio::main]
+
 async fn main() -> anyhow::Result<()> {
     let client = Client::connect("127.0.0.1:9000").await?;
-    
+
     // Submit a job
     let job_id = client.submit_code("print('Hello Fusion')").await?;
-    
+
     // Await result
     let result = client.wait_for_job(job_id).await?;
     println!("Output: {}", result.stdout);
     Ok(())
 }
-```
+```text
 
 ## Dependencies
 

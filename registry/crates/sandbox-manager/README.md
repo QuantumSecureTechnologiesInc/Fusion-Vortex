@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sandbox-manager = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sandbox_manager::Manager;
 fn main() {
     let mgr = Manager::new();
 }
-```
+```text
 
 ## License
 

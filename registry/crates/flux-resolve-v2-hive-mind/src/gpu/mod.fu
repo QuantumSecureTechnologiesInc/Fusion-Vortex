@@ -1,0 +1,3 @@
+//! GPU module placeholder
+//!
+//! The actual GPU kernel is in kernel.cu and compiled via build.rs

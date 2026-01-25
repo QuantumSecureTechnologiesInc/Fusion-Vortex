@@ -1,0 +1,5 @@
+// SOURCE: crates/fusion-monolith-core/benches/orchestrator_bench.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn main() {
+    println!("Benchmark placeholder");
+}

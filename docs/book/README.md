@@ -99,15 +99,15 @@ This book is meant to be read sequentially. Each chapter builds on concepts from
 
 All code examples in this book are available in the Fusion repository:
 
-```
+```text
 https://github.com/fusion-lang/fusion
-```
+```text
 
 You can run any example with:
 
 ```bash
 fusion run examples/<chapter>/<example>.fu
-```
+```text
 
 ---
 

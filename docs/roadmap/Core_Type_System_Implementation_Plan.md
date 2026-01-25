@@ -39,7 +39,7 @@ fusion_core/
 │   └── traits.rs
 └── tests/
     └── type_system_tests.rs
-```
+```text
 
 **Code Skeleton**:
 
@@ -52,7 +52,7 @@ pub mod runtime;
 
 pub use types::{ClassicalType, TensorType, QuantumType, FusionType};
 pub use traits::{Numeric, Measurable, Unitary};
-```
+```text
 
 ### Week 2: Classical Type System
 
@@ -126,11 +126,11 @@ pub struct EnumVariant {
     pub name: String,
     pub data: Option<ClassicalType>,
 }
-```
+```text
 
 **Tests**:
 
-```
+```text
 
 #[test]
 
@@ -139,7 +139,7 @@ fn test_classical_type_creation() {
     let vec_type = ClassicalType::Vector(Box::new(int_type.clone()));
     assert_eq!(vec_type, ClassicalType::Vector(Box::new(ClassicalType::Int(IntType::I64))));
 }
-```
+```text
 
 ---
 
@@ -241,7 +241,7 @@ impl<T: Numeric, const RANK: usize> Tensor<T, RANK> {
             .sum()
     }
 }
-```
+```text
 
 ### Week 4: Tensor Operations
 
@@ -322,7 +322,7 @@ impl<T: Numeric, const RANK: usize> Tensor<T, RANK> {
         total.div(count)
     }
 }
-```
+```text
 
 ---
 
@@ -460,7 +460,7 @@ impl QubitRegister {
         self.qubits.into_iter().map(|q| q.measure()).collect()
     }
 }
-```
+```text
 
 ### Week 6: Quantum Gates & Circuits
 
@@ -654,7 +654,7 @@ fn apply_single_qubit_gate(state: &mut QuantumState, gate: &QuantumGate, target:
 
     state.amplitudes = new_amplitudes;
 }
-```
+```text
 
 ---
 
@@ -723,7 +723,7 @@ impl FusionType {
         }
     }
 }
-```
+```text
 
 ### Week 8: Compiler Integration
 
@@ -795,7 +795,7 @@ impl TypeChecker {
         }
     }
 }
-```
+```text
 
 ---
 
@@ -812,7 +812,7 @@ impl TypeChecker {
 
 **Example Tests**:
 
-```
+```text
 
 #[test]
 
@@ -849,7 +849,7 @@ fn test_matmul_correctness() {
     assert_eq!(c.get([1, 0]), 43.0);
     assert_eq!(c.get([1, 1]), 50.0);
 }
-```
+```text
 
 ### Week 10: Documentation
 

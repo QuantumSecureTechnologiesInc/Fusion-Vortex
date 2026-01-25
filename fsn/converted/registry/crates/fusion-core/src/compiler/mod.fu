@@ -1,0 +1,21 @@
+// SOURCE: registry/crates/fusion-core/src/compiler/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Compiler infrastructure modules from old fusion-compiler crate
+mod ast;
+mod chunk;
+mod compiler;
+mod error;
+mod function;
+mod lexer;
+mod parser;
+mod semantic;
+mod token;
+mod type_checker;
+mod typechecker;
+mod value;
+
+// Re-exports for backwards compatibility
+pub use self::compiler::Compiler;
+pub use self::error::CompilerError;
+pub use self::lexer::Lexer;
+pub use self::parser::Parser;

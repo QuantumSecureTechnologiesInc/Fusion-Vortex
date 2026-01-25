@@ -1,0 +1,402 @@
+// SOURCE: src/ml/gpu/backend.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/ml/gpu/backend.rs - Production GPU Backend Interface
+
+use parking_lot::Mutex;
+
+/// Generic GPU Backend Trait
+pub trait GPUBackend: Send + Sync {
+    /// Allocate memory on device
+    fn allocate(&self, size: usize) -> Result<DevicePtr, GPUError>;
+
+    /// Free memory on device
+    fn free(&self, ptr: DevicePtr) -> Result<(), GPUError>;
+
+    /// Copy data from host to device
+    fn copy_to_device(&self, src: &[f32], dst_ptr: DevicePtr) -> Result<(), GPUError>;
+
+    /// Copy data from device to host
+    fn copy_to_host(&self, src_ptr: DevicePtr, dst: &mut [f32]) -> Result<(), GPUError>;
+
+    /// Execute computation kernel
+    fn launch_kernel(
+        &self,
+        name: &str,
+        args: &[KernelArg],
+        grid: GridDim,
+        block: BlockDim,
+    ) -> Result<(), GPUError>;
+
+    /// Synchronize device
+    fn synchronize(&self) -> Result<(), GPUError>;
+
+    /// Get device properties
+    fn device_properties(&self) -> DeviceProperties;
+}
+
+/// Device pointer wrapper
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct DevicePtr(pub usize);
+
+/// GPU error types
+#[derive(Debug, thiserror::Error)]
+enum GPUError {
+    #[error("Allocation failed: {0}")]
+    AllocationFailed(FString),
+    #[error("Memory copy failed: {0}")]
+    MemoryCopyFailed(FString),
+    #[error("Kernel launch failed: {0}")]
+    KernelLaunchFailed(FString),
+    #[error("Device not available: {0}")]
+    DeviceNotAvailable(FString),
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(FString),
+}
+
+/// Argument type for GPU kernels
+#[derive(Debug, Clone)]
+enum KernelArg {
+    Float(f32),
+    Int(FInt),
+    Pointer(DevicePtr),
+    Buffer { ptr: DevicePtr, size: usize },
+}
+
+/// Grid dimensions for kernel launch
+#[derive(Debug, Clone, Copy)]
+struct GridDim {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+}
+
+impl GridDim {
+    fn new_1d(x: u32) -> Self {
+        Self { x, y: 1, z: 1 }
+    }
+
+    fn new_2d(x: u32, y: u32) -> Self {
+        Self { x, y, z: 1 }
+    }
+
+    fn new_3d(x: u32, y: u32, z: u32) -> Self {
+        Self { x, y, z }
+    }
+}
+
+/// Block dimensions for kernel launch
+#[derive(Debug, Clone, Copy)]
+struct BlockDim {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+}
+
+impl BlockDim {
+    fn new_1d(x: u32) -> Self {
+        Self { x, y: 1, z: 1 }
+    }
+
+    fn new_2d(x: u32, y: u32) -> Self {
+        Self { x, y, z: 1 }
+    }
+
+    fn new_3d(x: u32, y: u32, z: u32) -> Self {
+        Self { x, y, z }
+    }
+}
+
+/// Device properties
+#[derive(Debug, Clone)]
+struct DeviceProperties {
+    pub name: FString,
+    pub total_memory: usize,
+    pub compute_capability: (u32, u32),
+    pub multiprocessor_count: u32,
+    pub max_threads_per_block: u32,
+}
+
+/// CUDA Backend Implementation
+struct CudaBackend {
+    device_id: usize,
+    allocations: Arc<Mutex<FVec<DevicePtr>>>,
+    properties: DeviceProperties,
+}
+
+impl CudaBackend {
+    fn new(device_id: usize) -> Result<Self, GPUError> {
+        // In production, this would call cudaGetDeviceProperties
+        let properties = DeviceProperties {
+            name: format!("CUDA Device {}", device_id),
+            total_memory: 8 * 1024 * 1024 * 1024, // 8GB
+            compute_capability: (8, 0),           // Ampere
+            multiprocessor_count: 108,
+            max_threads_per_block: 1024,
+        };
+
+        Ok(Self {
+            device_id,
+            allocations: Arc::new(Mutex::new(Vec::new())),
+            properties,
+        })
+    }
+
+    /// Initialize CUDA runtime
+    fn initialize() -> Result<(), GPUError> {
+        // In production: cudaSetDevice, cudaDeviceReset, etc.
+        println!("✓ CUDA runtime initialized");
+        Ok(())
+    }
+
+    /// Get number of available devices
+    fn device_count() -> Result<usize, GPUError> {
+        // In production: cudaGetDeviceCount
+        Ok(1) // Simulate 1 device
+    }
+}
+
+impl GPUBackend for CudaBackend {
+    fn allocate(&self, size: usize) -> Result<DevicePtr, GPUError> {
+        // In production: cudaMalloc
+        // Simulate allocation with a unique pointer value
+        let ptr = DevicePtr(0x1000_0000 + (size as usize));
+
+        self.allocations.lock().push(ptr);
+
+        println!(
+            "✓ Allocated {} bytes on CUDA device {}",
+            size, self.device_id
+        );
+        Ok(ptr)
+    }
+
+    fn free(&self, ptr: DevicePtr) -> Result<(), GPUError> {
+        // In production: cudaFree
+        let mut allocs = self.allocations.lock();
+        if let Some(pos) = allocs.iter().position(|&p| p == ptr) {
+            allocs.remove(pos);
+            println!(
+                "✓ Freed memory at {:?} on CUDA device {}",
+                ptr, self.device_id
+            );
+            Ok(())
+        } else {
+            Err(GPUError::InvalidArgument(format!(
+                "Invalid pointer: {:?}",
+                ptr
+            )))
+        }
+    }
+
+    fn copy_to_device(&self, src: &[f32], dst_ptr: DevicePtr) -> Result<(), GPUError> {
+        // In production: cudaMemcpy with cudaMemcpyHostToDevice
+        let bytes = src.len() * std::mem::size_of::<f32>();
+        println!("✓ Copied {} bytes from host to device {:?}", bytes, dst_ptr);
+        Ok(())
+    }
+
+    fn copy_to_host(&self, src_ptr: DevicePtr, dst: &mut [f32]) -> Result<(), GPUError> {
+        // In production: cudaMemcpy with cudaMemcpyDeviceToHost
+        let bytes = dst.len() * std::mem::size_of::<f32>();
+        println!("✓ Copied {} bytes from device {:?} to host", bytes, src_ptr);
+        Ok(())
+    }
+
+    fn launch_kernel(
+        &self,
+        name: &str,
+        args: &[KernelArg],
+        grid: GridDim,
+        block: BlockDim,
+    ) -> Result<(), GPUError> {
+        // In production: cudaLaunchKernel or kernel<<<grid, block>>>(args)
+        println!(
+            "✓ Launching CUDA kernel '{}' on device {}",
+            name, self.device_id
+        );
+        println!(
+            "  Grid: ({}, {}, {}), Block: ({}, {}, {})",
+            grid.x, grid.y, grid.z, block.x, block.y, block.z
+        );
+        println!("  Arguments: {} kernel args", args.len());
+        Ok(())
+    }
+
+    fn synchronize(&self) -> Result<(), GPUError> {
+        // In production: cudaDeviceSynchronize
+        println!("✓ Synchronized CUDA device {}", self.device_id);
+        Ok(())
+    }
+
+    fn device_properties(&self) -> DeviceProperties {
+        self.properties.clone()
+    }
+}
+
+/// WGPU Backend Implementation (Cross-platform)
+struct WgpuBackend {
+    device: Arc<Mutex<Option<()>>>, // Placeholder for wgpu::Device
+    queue: Arc<Mutex<Option<()>>>,  // Placeholder for wgpu::Queue
+    properties: DeviceProperties,
+}
+
+impl WgpuBackend {
+    pub async fn new() -> Result<Self, GPUError> {
+        // In production: create wgpu instance, request adapter, request device
+        let properties = DeviceProperties {
+            name: "WGPU Device".to_string(),
+            total_memory: 4 * 1024 * 1024 * 1024, // 4GB
+            compute_capability: (1, 0),
+            multiprocessor_count: 32,
+            max_threads_per_block: 256,
+        };
+
+        println!("✓ WGPU backend initialized");
+
+        Ok(Self {
+            device: Arc::new(Mutex::new(None)),
+            queue: Arc::new(Mutex::new(None)),
+            properties,
+        })
+    }
+}
+
+impl GPUBackend for WgpuBackend {
+    fn allocate(&self, size: usize) -> Result<DevicePtr, GPUError> {
+        // In production: create wgpu::Buffer
+        let ptr = DevicePtr(0x2000_0000 + size);
+        println!("✓ Allocated {} bytes on WGPU device", size);
+        Ok(ptr)
+    }
+
+    fn free(&self, ptr: DevicePtr) -> Result<(), GPUError> {
+        // In production: drop wgpu::Buffer
+        println!("✓ Freed memory at {:?} on WGPU device", ptr);
+        Ok(())
+    }
+
+    fn copy_to_device(&self, src: &[f32], dst_ptr: DevicePtr) -> Result<(), GPUError> {
+        // In production: queue.write_buffer
+        let bytes = src.len() * std::mem::size_of::<f32>();
+        println!("✓ Copied {} bytes to WGPU device {:?}", bytes, dst_ptr);
+        Ok(())
+    }
+
+    fn copy_to_host(&self, src_ptr: DevicePtr, dst: &mut [f32]) -> Result<(), GPUError> {
+        // In production: buffer.slice(..).map_async
+        let bytes = dst.len() * std::mem::size_of::<f32>();
+        println!("✓ Copied {} bytes from WGPU device {:?}", bytes, src_ptr);
+        Ok(())
+    }
+
+    fn launch_kernel(
+        &self,
+        name: &str,
+        _args: &[KernelArg],
+        grid: GridDim,
+        _block: BlockDim,
+    ) -> Result<(), GPUError> {
+        // In production: create compute pipeline, dispatch workgroups
+        println!("✓ Dispatching WGPU compute shader '{}'", name);
+        println!("  Workgroups: ({}, {}, {})", grid.x, grid.y, grid.z);
+        Ok(())
+    }
+
+    fn synchronize(&self) -> Result<(), GPUError> {
+        // In production: device.poll
+        println!("✓ Synchronized WGPU device");
+        Ok(())
+    }
+
+    fn device_properties(&self) -> DeviceProperties {
+        self.properties.clone()
+    }
+}
+
+/// CPU Fallback Backend
+struct CpuBackend {
+    properties: DeviceProperties,
+}
+
+impl CpuBackend {
+    fn new() -> Self {
+        let properties = DeviceProperties {
+            name: "CPU Fallback".to_string(),
+            total_memory: 16 * 1024 * 1024 * 1024, // 16GB
+            compute_capability: (0, 0),
+            multiprocessor_count: num_cpus::get() as u32,
+            max_threads_per_block: 1,
+        };
+
+        Self { properties }
+    }
+}
+
+impl GPUBackend for CpuBackend {
+    fn allocate(&self, size: usize) -> Result<DevicePtr, GPUError> {
+        // Use heap allocation
+        let ptr = DevicePtr(0x3000_0000 + size);
+        Ok(ptr)
+    }
+
+    fn free(&self, _ptr: DevicePtr) -> Result<(), GPUError> {
+        Ok(())
+    }
+
+    fn copy_to_device(&self, _src: &[f32], _dst_ptr: DevicePtr) -> Result<(), GPUError> {
+        // No-op for CPU
+        Ok(())
+    }
+
+    fn copy_to_host(&self, _src_ptr: DevicePtr, _dst: &mut [f32]) -> Result<(), GPUError> {
+        // No-op for CPU
+        Ok(())
+    }
+
+    fn launch_kernel(
+        &self,
+        name: &str,
+        _args: &[KernelArg],
+        _grid: GridDim,
+        _block: BlockDim,
+    ) -> Result<(), GPUError> {
+        println!("✓ Executing '{}' on CPU (fallback)", name);
+        Ok(())
+    }
+
+    fn synchronize(&self) -> Result<(), GPUError> {
+        Ok(())
+    }
+
+    fn device_properties(&self) -> DeviceProperties {
+        self.properties.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cuda_backend() {
+        let backend = CudaBackend::new(0).unwrap();
+        let ptr = backend.allocate(1024).unwrap();
+        assert_ne!(ptr.0, 0);
+
+        backend.free(ptr).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_wgpu_backend() {
+        let backend = WgpuBackend::new().await.unwrap();
+        let ptr = backend.allocate(2048).unwrap();
+        assert_ne!(ptr.0, 0);
+    }
+
+    #[test]
+    fn test_cpu_fallback() {
+        let backend = CpuBackend::new();
+        let ptr = backend.allocate(512).unwrap();
+        backend.free(ptr).unwrap();
+    }
+}

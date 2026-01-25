@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/llm-inference-graph/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing llm-inference-graph...");
+}

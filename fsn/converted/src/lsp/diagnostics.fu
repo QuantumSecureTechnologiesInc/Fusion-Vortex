@@ -1,0 +1,213 @@
+// SOURCE: src/lsp/diagnostics.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+
+/// Enhanced diagnostic system
+struct DiagnosticEngine {
+    diagnostics: FMap<FString, FVec<EnhancedDiagnostic>>,
+}
+
+#[derive(Debug, Clone)]
+struct EnhancedDiagnostic {
+    pub diagnostic: Diagnostic,
+    pub category: DiagnosticCategory,
+    pub quick_fixes: FVec<QuickFix>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum DiagnosticCategory {
+    Syntax,
+    Type,
+    Borrow,
+    Ownership,
+    Unused,
+    Style,
+    Performance,
+    Security,
+}
+
+#[derive(Debug, Clone)]
+struct QuickFix {
+    pub title: FString,
+    pub edit: TextEdit,
+}
+
+#[derive(Debug, Clone)]
+struct TextEdit {
+    pub range: Range,
+    pub new_text: FString,
+}
+
+impl DiagnosticEngine {
+    fn new() -> Self {
+        DiagnosticEngine {
+            diagnostics: HashMap::new(),
+        }
+    }
+
+    /// Add diagnostic with quick fixes
+    fn add_diagnostic(&mut self, file_uri: FString, diagnostic: EnhancedDiagnostic) {
+        self.diagnostics
+            .entry(file_uri)
+            .or_insert_with(Vec::new)
+            .push(diagnostic);
+    }
+
+    /// Get all diagnostics for a file
+    fn get_diagnostics(&self, file_uri: &str) -> FVec<Diagnostic> {
+        self.diagnostics
+            .get(file_uri)
+            .map(|diags| diags.iter().map(|d| d.diagnostic.clone()).collect())
+            .unwrap_or_default()
+    }
+
+    /// Get quick fixes for diagnostic at position
+    fn get_quick_fixes(&self, file_uri: &str, position: Position) -> FVec<QuickFix> {
+        if let Some(diagnostics) = self.diagnostics.get(file_uri) {
+            for diag in diagnostics {
+                if position_in_range(position, diag.diagnostic.range) {
+                    return diag.quick_fixes.clone();
+                }
+            }
+        }
+        Vec::new()
+    }
+
+    /// Clear diagnostics for a file
+    fn clear_file(&mut self, file_uri: &str) {
+        self.diagnostics.remove(file_uri);
+    }
+
+    /// Create common diagnostics with quick fixes
+
+    fn create_unused_variable_diagnostic(name: &str, range: Range) -> EnhancedDiagnostic {
+        EnhancedDiagnostic {
+            diagnostic: Diagnostic {
+                range,
+                severity: Some(DiagnosticSeverity::WARNING),
+                message: format!("Unused variable '{}'", name),
+                source: Some("fusion".to_string()),
+                ..Default::default()
+            },
+            category: DiagnosticCategory::Unused,
+            quick_fixes: vec![
+                QuickFix {
+                    title: format!("Prefix with underscore: _{}", name),
+                    edit: TextEdit {
+                        range: Range {
+                            start: range.start,
+                            end: Position {
+                                line: range.start.line,
+                                character: range.start.character + name.len() as u32,
+                            },
+                        },
+                        new_text: format!("_{}", name),
+                    },
+                },
+                QuickFix {
+                    title: "Remove variable".to_string(),
+                    edit: TextEdit {
+                        range,
+                        new_text: FString::new(),
+                    },
+                },
+            ],
+        }
+    }
+
+    fn create_type_mismatch_diagnostic(
+        expected: &str,
+        found: &str,
+        range: Range,
+    ) -> EnhancedDiagnostic {
+        EnhancedDiagnostic {
+            diagnostic: Diagnostic {
+                range,
+                severity: Some(DiagnosticSeverity::ERROR),
+                message: format!("Type mismatch: expected '{}', found '{}'", expected, found),
+                source: Some("fusion".to_string()),
+                ..Default::default()
+            },
+            category: DiagnosticCategory::Type,
+            quick_fixes: vec![QuickFix {
+                title: format!("Cast to {}", expected),
+                edit: TextEdit {
+                    range,
+                    new_text: format!("({} as {})", found, expected),
+                },
+            }],
+        }
+    }
+
+    fn create_missing_semicolon_diagnostic(range: Range) -> EnhancedDiagnostic {
+        EnhancedDiagnostic {
+            diagnostic: Diagnostic {
+                range,
+                severity: Some(DiagnosticSeverity::ERROR),
+                message: "Missing semicolon".to_string(),
+                source: Some("fusion".to_string()),
+                ..Default::default()
+            },
+            category: DiagnosticCategory::Syntax,
+            quick_fixes: vec![QuickFix {
+                title: "Add semicolon".to_string(),
+                edit: TextEdit {
+                    range: Range {
+                        start: range.end,
+                        end: range.end,
+                    },
+                    new_text: ";".to_string(),
+                },
+            }],
+        }
+    }
+}
+
+fn position_in_range(position: Position, range: Range) -> FBool {
+    if position.line < range.start.line || position.line > range.end.line {
+        return false;
+    }
+
+    if position.line == range.start.line && position.character < range.start.character {
+        return false;
+    }
+
+    if position.line == range.end.line && position.character > range.end.character {
+        return false;
+    }
+
+    true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_diagnostic_engine() {
+        let mut engine = DiagnosticEngine::new();
+
+        let diag = DiagnosticEngine::create_unused_variable_diagnostic(
+            "foo",
+            Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 3,
+                },
+            },
+        );
+
+        engine.add_diagnostic("file:///test.fu".to_string(), diag);
+
+        let diagnostics = engine.get_diagnostics("file:///test.fu");
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].message, "Unused variable 'foo'");
+    }
+}

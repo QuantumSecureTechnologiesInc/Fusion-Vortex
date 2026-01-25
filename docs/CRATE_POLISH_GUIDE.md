@@ -23,6 +23,7 @@ readme = "README.md"
 default = []
 
 [dependencies]
+
 # Minimal dependencies only
 
 [dev-dependencies]
@@ -31,7 +32,7 @@ criterion = { workspace = true }
 [[bench]]
 name = "{crate_name}_bench"
 harness = false
-```
+```text
 
 **Source code requirements**:
 - Add `#![forbid(unsafe_code)]` where possible
@@ -57,6 +58,7 @@ readme = "README.md"
 
 [dependencies]
 fusion_core = { workspace = true }
+
 # Algorithm-specific deps
 
 [dev-dependencies]
@@ -65,7 +67,7 @@ criterion = { workspace = true }
 [[bench]]
 name = "{algorithm}_bench"
 harness = false
-```
+```text
 
 **Documentation requirements**:
 - Big-O complexity in description
@@ -97,11 +99,12 @@ tls = ["{tls_dep}"]
 [dependencies]
 fusion_runtime_core = { workspace = true }
 tokio = { workspace = true, optional = true }
+
 # Service-specific dependencies
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-```
+```text
 
 **Documentation requirements**:
 - Feature matrix table
@@ -133,11 +136,14 @@ memory = []
 
 [dependencies]
 fusion_core = { workspace = true }
+
 # Framework dependencies
 
 [dev-dependencies]
+
 # Framework test dependencies
-```
+
+```text
 
 **Documentation requirements**:
 - Getting Started guide
@@ -168,12 +174,13 @@ path = "src/main.rs"
 [dependencies]
 clap = { workspace = true }
 anyhow = { workspace = true }
+
 # Tool-specific deps
 
 [dev-dependencies]
 assert_cmd = "2.0"
 predicates = "3.0"
-```
+```text
 
 **CLI requirements**:
 - Human-readable output by default
@@ -199,11 +206,12 @@ readme = "README.md"
 
 [dependencies]
 fusion_core = { workspace = true }
+
 # Research dependencies
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "experimental-warning.html"]
-```
+```text
 
 **Documentation requirements**:
 - Prominent EXPERIMENTAL warning

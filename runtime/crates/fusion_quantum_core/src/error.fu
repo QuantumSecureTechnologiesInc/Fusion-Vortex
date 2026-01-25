@@ -1,0 +1,20 @@
+//! Error types for quantum operations
+#[derive(Debug, Clone)]
+enum QuantumError {
+    GateArityMismatch { gate: FString, required: FSize, provided: FSize },
+    InvalidQubitAccess(FSize),
+}
+impl fmt::Display for QuantumError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::GateArityMismatch { gate, required, provided } => {
+                write!(f, "Gate {} requires {} qubits, got {}", gate, required, provided)
+            }
+            Self::InvalidQubitAccess(id) => {
+                write!(f, "Invalid qubit access: qubit {} does not exist", id)
+            }
+        }
+    }
+}
+impl std::error::Error for QuantumError {}
+type QuantumResult<T> = Result<T, QuantumError>;

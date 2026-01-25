@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 sec-threat-intel = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use sec_threat_intel::Client;
 fn main() {
     Client::new().fetch();
 }
-```
+```text
 
 ## License
 

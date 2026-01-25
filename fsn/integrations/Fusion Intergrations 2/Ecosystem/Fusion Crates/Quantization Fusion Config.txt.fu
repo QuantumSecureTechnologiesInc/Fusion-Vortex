@@ -1,0 +1,13 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Quantization Fusion Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_quant_fusion"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Runtime fusion of MatMul and Quantization/Dequantization operations"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_llm_quantization = { path = "../llm-quantization", version = "0.1.0" }
+// fusion_core = { path = "../core", version = "0.1.0" }

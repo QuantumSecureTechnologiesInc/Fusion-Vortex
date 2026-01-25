@@ -181,7 +181,7 @@ Fusion Compiler Components
     - Semantic Analyzer
     ↓ Results
 Diagnostics, Completions, Navigation
-```
+```text
 
 **Key Features**:
 
@@ -227,7 +227,7 @@ use utils::helper;  // Imports specific function
 fn main() -> int {
     return helper();
 }
-```
+```text
 
 ---
 
@@ -264,7 +264,7 @@ fn main() -> int {
 
 ### LSP Server Tests
 
-```
+```text
 
 #[tokio::test]
 
@@ -274,7 +274,7 @@ async fn test_lsp_creation() {
     ).finish();
     // ✅ PASSING
 }
-```
+```text
 
 ### Module Parser Tests
 
@@ -287,7 +287,7 @@ use lib::math::*;
 fn main() -> int {
     return 0;
 }
-```
+```text
 
 **Result**: ✅ Parsed successfully, generated LLVM IR
 

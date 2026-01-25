@@ -1,0 +1,8 @@
+# FusionSentinel configuration
+disallowed-methods = [
+  { path = "std::result::Result::unwrap", reason = "Fusion Protocol Violation: Unsafe panic on error." },
+  { path = "std::option::Option::unwrap", reason = "Fusion Protocol Violation: Unsafe panic on None." },
+]
+forbidden-unsafe = true
+doc-valid-idents = ["FusionContext", "FusionSentinel", "FusionScribe", "FusionOracle"]
+arithmetic-side-effects-allowed = []

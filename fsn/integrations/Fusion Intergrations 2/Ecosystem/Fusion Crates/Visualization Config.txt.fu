@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Visualization Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_q_visualization"
+// version = "0.1.0"
+// edition = "2021"
+// description = "Tools for visualizing quantum state and circuit diagrams"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_core = { path = "../core", version = "0.1.0" }

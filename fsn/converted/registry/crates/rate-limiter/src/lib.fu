@@ -1,0 +1,41 @@
+// SOURCE: registry/crates/rate-limiter/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Production Distributed Rate Limiter.
+/// Implements the Sliding Window Log algorithm (requires external Redis/DB).
+
+const WINDOW_SECONDS: FU64 = 60;
+const MAX_REQUESTS: u32 = 100;
+
+struct RateLimiter {
+    // Key (IP/UserID) -> Log of timestamps
+    request_log: Arc<Mutex<FMap<FString, FVec<Instant>>>>,
+}
+
+impl RateLimiter {
+    fn new() -> Self {
+        Self {
+            request_log: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    /// Check if the request should be allowed based on a sliding window.
+    fn check_limit(&self, key: &str) -> FBool {
+        let mut log = self.request_log.lock().unwrap();
+        let now = Instant::now();
+        let window_start = now - Duration::from_secs(WINDOW_SECONDS);
+
+        let entry = log.entry(key.to_string()).or_insert_with(Vec::new);
+
+        // 1. Remove timestamps outside the window
+        entry.retain(|t| *t > window_start);
+
+        // 2. Check current count
+        if entry.len() >= MAX_REQUESTS as usize {
+            return false; // Limit exceeded
+        }
+
+        // 3. Record new request
+        entry.push(now);
+        true
+    }
+}

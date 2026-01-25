@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "fusion-ai-core"
 version = "0.2.0"
 edition = "2021"
@@ -9,29 +9,27 @@ repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming
 keywords = ["fusion", "framework", "ai", "infrastructure", "framework"]
 categories = ["development-tools", "framework"]
 readme = "README.md"
+
+[dependencies]
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = { version = "1.0.133" }
+fusion_core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
+fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }
+fusion_runtime_core = { path = "/mnt/c/Projects/Fusion - Programming Language/registry/crates/fusion_runtime_core", version = "0.2.0" }
+async-trait = { version = "0.1.83" }
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"] }
+tracing = { version = "0.1.41" }
+pqcrypto-mldsa = { version = "0.1.0" }
+blake3 = { version = "1.5.0" }
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+ndarray = { version = "0.15" }
+futures = { version = "0.3.31" }
+walkdir = { version = "2.5.0" }
+bytes = { version = "1.9.0" }
+tempfile = { version = "3.14.0" }
+
 [lib]
 name = "fusion_ai_core"
 path = "src/lib.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-fusion_core = { workspace = true }
-fusion_std = { workspace = true }
-fusion_runtime_core = { workspace = true }
-async-trait = { workspace = true }
-reqwest = { workspace = true }
-tracing = { workspace = true }
-pqcrypto-mldsa = { workspace = true }
-blake3 = { workspace = true }
-tokio = { workspace = true }
-ndarray = { workspace = true }
-
-futures = "0.3"
-walkdir = "2.4"
-bytes = "1.5"
-tempfile = "3.8"
-
-[dev-dependencies]

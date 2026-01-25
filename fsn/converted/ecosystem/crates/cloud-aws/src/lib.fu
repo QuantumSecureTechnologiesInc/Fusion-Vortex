@@ -1,0 +1,5 @@
+// SOURCE: ecosystem/crates/cloud-aws/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+fn init() {
+    println!("Initializing cloud-aws...");
+}

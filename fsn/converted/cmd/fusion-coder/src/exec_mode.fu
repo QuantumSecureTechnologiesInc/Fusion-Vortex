@@ -1,0 +1,7 @@
+// SOURCE: cmd/fusion-coder/src/exec_mode.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Exec mode implementation stub
+fn execute(task: &str, _json: FBool) {
+    // TODO: Execute task in non-interactive mode
+    println!("Executing task: {}", task);
+}

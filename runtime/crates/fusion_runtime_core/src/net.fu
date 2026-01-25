@@ -1,0 +1,242 @@
+//! Network I/O - Tokio-Compatible API
+//!
+//! Provides async TCP and UDP networking with the same API as tokio::net
+use crate::io::{AsyncRead, AsyncWrite};
+struct TcpListener {
+    inner: mio::net::TcpListener,
+    local_addr: SocketAddr,
+}
+impl TcpListener {
+    /// Create a new TCP listener bound to the specified address
+    pub async fn bind<A: Into<SocketAddr>>(addr: A) -> Result<Self> {
+        let addr = addr.into();
+        let listener = mio::net::TcpListener::bind(addr)?;
+        Ok(Self {
+            local_addr: listener.local_addr()?,
+            inner: listener,
+        })
+    }
+    /// Accept a new incoming connection
+    pub async fn accept(&self) -> Result<(TcpStream, SocketAddr)> {
+        loop {
+            match self.inner.accept() {
+                Ok((stream, addr)) => {
+                    return Ok((TcpStream::new(stream)?, addr));
+                }
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Returns the local address that this listener is bound to
+    pub fn local_addr(&self) -> Result<SocketAddr> {
+        Ok(self.local_addr)
+    }
+    /// Get the value of the `SO_REUSEADDR` option
+    pub fn set_reuseaddr(&self, reuseaddr: FBool) -> Result<()> {
+        self.inner.set_reuseaddr(reuseaddr)
+    }
+}
+struct TcpStream {
+    inner: mio::net::TcpStream,
+}
+impl TcpStream {
+    fn new(stream: mio::net::TcpStream) -> Result<Self> {
+        stream.set_nodelay(true)?;
+        Ok(Self { inner: stream })
+    }
+    /// Open a TCP connection to a remote host
+    pub async fn connect<A: Into<SocketAddr>>(addr: A) -> Result<Self> {
+        let addr = addr.into();
+        let stream = mio::net::TcpStream::connect(addr)?;
+        loop {
+            match stream.peer_addr() {
+                Ok(_) => return Self::new(stream),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Returns the socket address of the remote peer
+    pub fn peer_addr(&self) -> Result<SocketAddr> {
+        self.inner.peer_addr()
+    }
+    /// Returns the socket address of the local half
+    pub fn local_addr(&self) -> Result<SocketAddr> {
+        self.inner.local_addr()
+    }
+    /// Set the value of the `TCP_NODELAY` option
+    pub fn set_nodelay(&self, nodelay: FBool) -> Result<()> {
+        self.inner.set_nodelay(nodelay)
+    }
+    /// Split the stream into a read and write half
+    pub fn split(&mut self) -> (ReadHalf<'_>, WriteHalf<'_>) {
+        (ReadHalf { stream: self }, WriteHalf { stream: self })
+    }
+    /// Wait for read readiness
+    pub async fn readable(&self) -> Result<()> {
+        loop {
+            yield_now().await;
+            match self.inner.peek(&mut [0u8; 1]) {
+                Ok(_) => return Ok(()),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => continue,
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Wait for write readiness
+    pub async fn writable(&self) -> Result<()> {
+        yield_now().await;
+        Ok(())
+    }
+}
+impl AsyncRead for TcpStream {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<Result<FSize>> {
+
+        match (&mut self.inner).read(buf) {
+            Ok(n) => Poll::Ready(Ok(n)),
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => Poll::Pending,
+            Err(e) => Poll::Ready(Err(e)),
+        }
+    }
+}
+impl AsyncWrite for TcpStream {
+    fn poll_write(
+        mut self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<Result<FSize>> {
+
+        match (&mut self.inner).write(buf) {
+            Ok(n) => Poll::Ready(Ok(n)),
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => Poll::Pending,
+            Err(e) => Poll::Ready(Err(e)),
+        }
+    }
+    fn poll_flush(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+
+        match (&mut self.inner).flush() {
+            Ok(()) => Poll::Ready(Ok(())),
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => Poll::Pending,
+            Err(e) => Poll::Ready(Err(e)),
+        }
+    }
+    fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+        Poll::Ready(Ok(()))
+    }
+}
+struct ReadHalf<'a> {
+    stream: &'a TcpStream,
+}
+struct WriteHalf<'a> {
+    stream: &'a TcpStream,
+}
+struct UdpSocket {
+    inner: mio::net::UdpSocket,
+}
+impl UdpSocket {
+    /// Create a new UDP socket bound to the specified address
+    pub async fn bind<A: Into<SocketAddr>>(addr: A) -> Result<Self> {
+        let addr = addr.into();
+        let socket = mio::net::UdpSocket::bind(addr)?;
+        Ok(Self { inner: socket })
+    }
+    /// Send data to the given address
+    pub async fn send_to(&self, buf: &[u8], target: SocketAddr) -> Result<FSize> {
+        loop {
+            match self.inner.send_to(buf, target) {
+                Ok(n) => return Ok(n),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Receive a single datagram message
+    pub async fn recv_from(&self, buf: &mut [u8]) -> Result<(FSize, SocketAddr)> {
+        loop {
+            match self.inner.recv_from(buf) {
+                Ok((n, addr)) => return Ok((n, addr)),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Connect the UDP socket to a remote address
+    pub async fn connect<A: Into<SocketAddr>>(&self, addr: A) -> Result<()> {
+        self.inner.connect(addr.into())
+    }
+    /// Send data to the connected peer
+    pub async fn send(&self, buf: &[u8]) -> Result<FSize> {
+        loop {
+            match self.inner.send(buf) {
+                Ok(n) => return Ok(n),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Receive data from the connected peer
+    pub async fn recv(&self, buf: &mut [u8]) -> Result<FSize> {
+        loop {
+            match self.inner.recv(buf) {
+                Ok(n) => return Ok(n),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    yield_now().await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+    /// Returns the local address that this socket is bound to
+    pub fn local_addr(&self) -> Result<SocketAddr> {
+        self.inner.local_addr()
+    }
+    /// Set broadcast flag
+    pub fn set_broadcast(&self, on: FBool) -> Result<()> {
+        self.inner.set_broadcast(on)
+    }
+}
+async fn yield_now() {
+    struct YieldNow {
+        yielded: FBool,
+    }
+    impl std::future::Future for YieldNow {
+        type Output = ();
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+            if self.yielded {
+                Poll::Ready(())
+            } else {
+                self.yielded = true;
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            }
+        }
+    }
+    YieldNow { yielded: false }.await
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_tcp_listener_creation() {}
+}

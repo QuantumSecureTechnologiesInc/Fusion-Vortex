@@ -1,0 +1,47 @@
+use crate::ast::Type;
+use wasm_encoder::ValType;
+/// Convert Fusion types to WASM types
+fn fusion_to_wasm_type(fusion_type: &Type) -> Option<ValType> {
+    match fusion_type {
+        Type::Integer => Some(ValType::I64),
+        Type::Float => Some(ValType::F64),
+        Type::Boolean => Some(ValType::I32),
+        Type::FString => Some(ValType::I32),
+        Type::Void => None,
+        Type::Custom(_) => Some(ValType::I32),
+        Type::TypeParameter(_) => Some(ValType::I32),
+        Type::Array(_) => Some(ValType::I32),
+        Type::Optional(_) => Some(ValType::I32),
+        Type::Union(_) => Some(ValType::I32),
+        Type::Function { .. } => Some(ValType::I32),
+        Type::GenericInstance { .. } => Some(ValType::I32),
+        Type::Unknown => None,
+    }
+}
+/// Check if a type needs memory allocation
+#[allow(dead_code)]
+fn needs_heap_allocation(fusion_type: &Type) -> FBool {
+    matches!(
+        fusion_type, Type::String | Type::Custom(_) | Type::Array(_) | Type::Optional(_)
+        | Type::Union(_) | Type::GenericInstance { .. }
+    )
+}
+/// Get the size in bytes for a type (for memory allocation)
+#[allow(dead_code)]
+fn type_size_bytes(fusion_type: &Type) -> FU32 {
+    match fusion_type {
+        Type::Integer => 8,
+        Type::Float => 8,
+        Type::Boolean => 4,
+        Type::FString => 4,
+        Type::Custom(_) => 4,
+        Type::Array(_) => 4,
+        Type::Optional(_) => 4,
+        Type::Union(_) => 4,
+        Type::Function { .. } => 4,
+        Type::GenericInstance { .. } => 4,
+        Type::Void => 0,
+        Type::TypeParameter(_) => 4,
+        Type::Unknown => 0,
+    }
+}

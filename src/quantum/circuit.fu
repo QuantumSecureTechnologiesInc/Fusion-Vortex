@@ -1,0 +1,229 @@
+use super::gates::Gate;
+use super::{Complex, QuantumError, QuantumStats, StateVector};
+/// Quantum circuit
+struct QuantumCircuit {
+    /// Number of qubits
+    num_qubits: FSize,
+    /// Gates in the circuit
+    pub(crate) gates: FVec<CircuitGate>,
+    /// Circuit name
+    name: FString,
+    /// Statistics
+    stats: QuantumStats,
+}
+/// Gate applied to circuit
+#[derive(Debug, Clone)]
+struct CircuitGate {
+    pub gate: Gate,
+    pub target_qubits: FVec<FSize>,
+    pub control_qubits: FVec<FSize>,
+}
+impl QuantumCircuit {
+    /// Create a new quantum circuit
+    pub fn new(num_qubits: FSize) -> Self {
+        Self {
+            num_qubits,
+            gates: Vec::new(),
+            name: format!("Circuit_{}_qubits", num_qubits),
+            stats: QuantumStats::default(),
+        }
+    }
+    /// Create named circuit
+    pub fn with_name(num_qubits: FSize, name: impl Into<FString>) -> Self {
+        let mut circuit = Self::new(num_qubits);
+        circuit.name = name.into();
+        circuit.stats.circuits_created += 1;
+        circuit
+    }
+    /// Get number of qubits
+    pub fn num_qubits(&self) -> FSize {
+        self.num_qubits
+    }
+    /// Get number of gates
+    pub fn num_gates(&self) -> FSize {
+        self.gates.len()
+    }
+    /// Apply a gate to target qubits
+    pub fn apply_gate(
+        &mut self,
+        gate: Gate,
+        targets: FVec<FSize>,
+    ) -> Result<(), QuantumError> {
+        for &qubit in &targets {
+            if qubit >= self.num_qubits {
+                return Err(QuantumError::InvalidQubit(qubit));
+            }
+        }
+        self.gates
+            .push(CircuitGate {
+                gate,
+                target_qubits: targets,
+                control_qubits: Vec::new(),
+            });
+        self.stats.gates_applied += 1;
+        Ok(())
+    }
+    /// Apply controlled gate
+    pub fn apply_controlled_gate(
+        &mut self,
+        gate: Gate,
+        control: FSize,
+        target: FSize,
+    ) -> Result<(), QuantumError> {
+        if control >= self.num_qubits {
+            return Err(QuantumError::InvalidQubit(control));
+        }
+        if target >= self.num_qubits {
+            return Err(QuantumError::InvalidQubit(target));
+        }
+        self.gates
+            .push(CircuitGate {
+                gate,
+                target_qubits: vec![target],
+                control_qubits: vec![control],
+            });
+        self.stats.gates_applied += 1;
+        Ok(())
+    }
+    /// Common gates with helper methods
+    /// Apply Hadamard gate
+    pub fn h(&mut self, qubit: FSize) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::Hadamard, vec![qubit])
+    }
+    /// Apply Pauli-X gate
+    pub fn x(&mut self, qubit: FSize) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::PauliX, vec![qubit])
+    }
+    /// Apply Pauli-Y gate
+    pub fn y(&mut self, qubit: FSize) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::PauliY, vec![qubit])
+    }
+    /// Apply Pauli-Z gate
+    pub fn z(&mut self, qubit: FSize) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::PauliZ, vec![qubit])
+    }
+    /// Apply CNOT gate
+    pub fn cnot(&mut self, control: FSize, target: FSize) -> Result<(), QuantumError> {
+        self.apply_controlled_gate(Gate::PauliX, control, target)
+    }
+    /// Apply rotation around X axis
+    pub fn rx(&mut self, qubit: FSize, angle: f64) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::RotationX(angle), vec![qubit])
+    }
+    /// Apply rotation around Y axis
+    pub fn ry(&mut self, qubit: FSize, angle: f64) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::RotationY(angle), vec![qubit])
+    }
+    /// Apply rotation around Z axis
+    pub fn rz(&mut self, qubit: FSize, angle: f64) -> Result<(), QuantumError> {
+        self.apply_gate(Gate::RotationZ(angle), vec![qubit])
+    }
+    /// Get initial state vector |00...0⟩
+    pub fn initial_state(&self) -> StateVector {
+        let size = 1 << self.num_qubits;
+        let mut state = vec![Complex::zero(); size];
+        state[0] = Complex::one();
+        state
+    }
+    /// Get circuit depth (longest path)
+    pub fn depth(&self) -> FSize {
+        self.gates.len()
+    }
+    /// Print circuit diagram
+    pub fn print_diagram(&self) {
+        println!("\nQuantum Circuit: {}", self.name);
+        println!("Qubits: {} | Gates: {}", self.num_qubits, self.gates.len());
+        println!("{}", "=".repeat(50));
+        for (i, circuit_gate) in self.gates.iter().enumerate() {
+            if circuit_gate.control_qubits.is_empty() {
+                println!(
+                    "Step {}: {:?} on qubits {:?}", i + 1, circuit_gate.gate,
+                    circuit_gate.target_qubits
+                );
+            } else {
+                println!(
+                    "Step {}: {:?} on qubits {:?} (controlled by {:?})", i + 1,
+                    circuit_gate.gate, circuit_gate.target_qubits, circuit_gate
+                    .control_qubits
+                );
+            }
+        }
+        println!("{}", "=".repeat(50));
+    }
+    /// Get statistics
+    pub fn stats(&self) -> &QuantumStats {
+        &self.stats
+    }
+}
+/// Circuit builder for common patterns
+struct CircuitBuilder;
+impl CircuitBuilder {
+    /// Create a new empty circuit
+    pub fn new(num_qubits: FSize) -> QuantumCircuit {
+        QuantumCircuit::new(num_qubits)
+    }
+    /// Bell state circuit: creates entangled pair
+    pub fn bell_state() -> QuantumCircuit {
+        let mut circuit = QuantumCircuit::with_name(2, "Bell State");
+        circuit.h(0).unwrap();
+        circuit.cnot(0, 1).unwrap();
+        circuit
+    }
+    /// Quantum Fourier Transform
+    pub fn qft(num_qubits: FSize) -> QuantumCircuit {
+        let mut circuit = QuantumCircuit::with_name(num_qubits, "QFT");
+        for i in 0..num_qubits {
+            circuit.h(i).unwrap();
+        }
+        circuit
+    }
+    /// Grover's search circuit
+    pub fn grover_search(num_qubits: FSize) -> QuantumCircuit {
+        let mut circuit = QuantumCircuit::with_name(num_qubits, "Grover Search");
+        for i in 0..num_qubits {
+            circuit.h(i).unwrap();
+        }
+        circuit
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_circuit_creation() {
+        let circuit = QuantumCircuit::new(3);
+        assert_eq!(circuit.num_qubits(), 3);
+        assert_eq!(circuit.num_gates(), 0);
+    }
+    #[test]
+    fn test_apply_hadamard() {
+        let mut circuit = QuantumCircuit::new(2);
+        assert!(circuit.h(0).is_ok());
+        assert_eq!(circuit.num_gates(), 1);
+    }
+    #[test]
+    fn test_invalid_qubit() {
+        let mut circuit = QuantumCircuit::new(2);
+        assert!(circuit.h(5).is_err());
+    }
+    #[test]
+    fn test_cnot() {
+        let mut circuit = QuantumCircuit::new(2);
+        assert!(circuit.cnot(0, 1).is_ok());
+        assert_eq!(circuit.num_gates(), 1);
+    }
+    #[test]
+    fn test_bell_state() {
+        let circuit = CircuitBuilder::bell_state();
+        assert_eq!(circuit.num_qubits(), 2);
+        assert_eq!(circuit.num_gates(), 2);
+    }
+    #[test]
+    fn test_initial_state() {
+        let circuit = QuantumCircuit::new(2);
+        let state = circuit.initial_state();
+        assert_eq!(state.len(), 4);
+        assert_eq!(state[0].real, 1.0);
+        assert_eq!(state[1].real, 0.0);
+    }
+}

@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: ops (stub)
+fn _ops_stub() -> void { }

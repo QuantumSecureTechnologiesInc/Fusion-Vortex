@@ -1,0 +1,15 @@
+[package]
+name = "fusion_entry"
+version = "1.0.0"
+edition = "2024"
+description = "Procedural macro for bootstrapping the Fusion Security Kernel."
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+fusion_std = "1.0.0"

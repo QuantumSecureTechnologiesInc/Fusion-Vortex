@@ -1,7 +1,7 @@
 # Flux-Resolve v2.0 - Hive Mind
 
-**Version:** 2.0.0  
-**Type:** Distributed Dependency Resolution Engine & Build Accelerator  
+**Version:** 2.0.0
+**Type:** Distributed Dependency Resolution Engine & Build Accelerator
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -22,7 +22,7 @@ Flux-Resolve eliminates redundant dependency calculation across engineering team
 
 ## Architecture
 
-```
+```text
 Fusion Module (stdlib/flux_resolve.fu) - Core logic in Fusion
     ↓ FFI
 Rust Implementation (flux-resolve-v2-hive-mind) - System operations
@@ -32,7 +32,7 @@ fusion-redis Store (DashMap-based cache with TTL)
 fusion_runtime_core (Async runtime, scheduler, HAL)
     ↓
 OS (File I/O, GPU, Network)
-```
+```text
 
 ## Installation
 
@@ -45,13 +45,16 @@ OS (File I/O, GPU, Network)
 ### Building
 
 ```bash
+
 # From workspace root
+
 cd registry
 cargo build -p flux-resolve-v2-hive-mind --release
 
 # With GPU acceleration
+
 cargo build -p flux-resolve-v2-hive-mind --release --features gpu
-```
+```text
 
 ## Configuration
 
@@ -77,7 +80,7 @@ let manifest = Manifest {
 };
 
 let solution = runtime.block_on(engine.resolve(manifest))?;
-```
+```text
 
 ## Performance Benchmarks
 

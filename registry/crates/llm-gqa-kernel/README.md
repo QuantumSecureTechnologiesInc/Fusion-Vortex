@@ -1,7 +1,7 @@
 # Fusion LLM GQA Kernel
 
-**Version:** 0.2.0  
-**Type:** Evaluation Kernel  
+**Version:** 0.2.0
+**Type:** Evaluation Kernel
 **License:** MIT
 
 ## Overview
@@ -20,10 +20,10 @@ Fusion LLM GQA Kernel (`fusion_llm_gqa_kernel`) provides highly optimized, fused
 use fusion_llm_gqa_kernel::gqa_forward;
 
 let output = gqa_forward(
-    query, key, value, 
+    query, key, value,
     num_query_heads, num_kv_heads
 )?;
-```
+```text
 
 ## Dependencies
 

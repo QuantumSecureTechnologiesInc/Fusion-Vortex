@@ -7,23 +7,27 @@ This directory contains everything needed for external security auditors and cry
 ## Contents
 
 ### 1. Source Code
+
 - `src/` - All implementation files
-- `include/` - Public API headers  
+- `include/` - Public API headers
 - `impl/` - Internal implementation helpers
 
 ### 2 Documentation
+
 - `docs/` - Technical whitepapers, research papers, compliance docs
 - `README.md` - Comprehensive usage guide
 - `SECURITY.md` - Security policy and vulnerability reporting
 - `LICENSE` - Copyright and licensing terms
 
 ### 3. Test Infrastructure
+
 - `tests/` - Test suite with Known Answer Tests (KATs)
 - `tests/comprehensive_test.c` - Full feature test suite
--  `tools/lint_ct.py` - Constant-time linter
+- `tools/lint_ct.py` - Constant-time linter
 
 ### 4. Build System
-- `CMakeLists.txt` - Cross-platform build configuration  
+
+- `CMakeLists.txt` - Cross-platform build configuration
 - `build_linux.sh`, `build_mac.sh`, `build_windows.bat` - Platform scripts
 
 ## Quick Audit Checklist
@@ -74,47 +78,55 @@ This directory contains everything needed for external security auditors and cry
 ## Building for Audit
 
 ### Linux/macOS
+
 ```bash
+
 # Debug build with all diagnostics
+
 mkdir audit-build && cd audit-build
 cmake .. -DCMAKE_BUILD_TYPE=Debug \
          -DCEMQC_SELFTEST=ON \
          -DCMAKE_C_FLAGS="-Wall -Wextra -Werror -fsanitize=address,undefined"
 make -j$(nproc)
 ./cemqc_selftest_runner
-```
+```text
 
 ### Windows
+
 ```cmd
 mkdir audit-build && cd audit-build
 cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCEMQC_SELFTEST=ON
 nmake
 cemqc_selftest_runner.exe
-```
+```text
 
 ## Running Tests
 
 ### Self-Tests
+
 ```bash
 ./cemqc_selftest_runner
-```
+```text
 
 ### Comprehensive Tests
+
 ```bash
 gcc -std=c11 -I include tests/comprehensive_test.c libcemqc_v2_enhanced.a -o comprehensive_test
 ./comprehensive_test
-```
+```text
 
 ### Known Answer Tests (KATs)
+
 ```bash
 cd tests
 QST_LIB_PATH=../build/libcemqc_core.a python3 run_kat.py --kat kat/kat_vectors_native_L1.json
-```
+```text
 
 ### Constant-Time Verification
+
 ```bash
 python tools/lint_ct.py --paths src include
-```
+```text
 
 ## Audit Tools Recommended
 
@@ -132,18 +144,19 @@ python tools/lint_ct.py --paths src include
 
 3. **Fuzzing**
    - AFL++
-   - LibFuzzer  
+   - LibFuzzer
    - Honggfuzz
 
 4. **Side-Channel Analysis**
    - dudect (constant-time testing)
-   - ctgrind  
+   - ctgrind
    - valgrind-based timing analysis
    - Power analysis (if hardware available)
 
 ## Key Files for Review
 
 ### Critical Security Files
+
 | File | Purpose | Priority |
 |------|---------|----------|
 | `src/cemqc_kem_core.c` | KEM implementation | CRITICAL |
@@ -155,6 +168,7 @@ python tools/lint_ct.py --paths src include
 | `Include/cemqc_internal.h` | Crypto constants | MEDIUM |
 
 ### Documentation for Context
+
 | File | Purpose |
 |------|---------|
 | `docs/Technical_Whitepapers/` | Cryptographic design |
@@ -165,12 +179,14 @@ python tools/lint_ct.py --paths src include
 ## Known Considerations
 
 ### Design Decisions
+
 1. **Chaos Mixing** - Deterministic but adds entropy to SHAKE256 output
 2. **Dual Modes** - Native (with chaos) and FIPS (SHAKE-only)
 3. **Small Key Sizes** - 64-byte public/secret keys (verify security level)
 4. **Domain Separation** - Prevents cross-protocol attacks
 
 ### Potential Review Points
+
 1. Is the quaternion arithmetic cryptographically sound?
 2. Does chaos mixing provide security benefit or just complexity?
 3. Are 64-byte keys sufficient for post-quantum security?
@@ -180,11 +196,13 @@ python tools/lint_ct.py --paths src include
 ## Testing Profiles
 
 ### Profile: Native (Default)
+
 - Chaos mixing: ENABLED
 - Randomness: SHAKE256 + Chaos
 - Use case: General deployment
 
 ### Profile: FIPS
+
 - Chaos mixing: DISABLED
 - Randomness: SHAKE256 only
 - Use case: Compliance-focused
@@ -193,13 +211,15 @@ python tools/lint_ct.py --paths src include
 ## Reporting Findings
 
 ### Severity Classification
+
 - **Critical**: Key recovery, RCE, authentication bypass
 - **High**: Information disclosure, DoS, side-channel attacks
 - **Medium**: Implementation weaknesses, best practice violations
 - **Low**: Code quality, documentation issues
 
 ### Report Template
-```
+
+```text
 **Title**: [Concise description]
 **Severity**: Critical | High | Medium | Low
 **Component**: [File/module affected]
@@ -208,9 +228,10 @@ python tools/lint_ct.py --paths src include
 **Proof of Concept**: [Reproduction steps/code]
 **Recommendation**: [How to fix]
 **References**: [Related CVEs, papers, etc.]
-```
+```text
 
 ### Submission
+
 - Email: security@qst-neuralseal.com
 - PGP: [Key to be published]
 - Response SLA: 48 hours acknowledgment
@@ -238,6 +259,6 @@ See `LICENSE` file for copyright and usage terms.
 
 ---
 
-**Audit Environment Version**: 2.0  
-**Last Updated**: 2025-11-29  
+**Audit Environment Version**: 2.0
+**Last Updated**: 2025-11-29
 **Maintainer**: QST NeuralSeal Security Team

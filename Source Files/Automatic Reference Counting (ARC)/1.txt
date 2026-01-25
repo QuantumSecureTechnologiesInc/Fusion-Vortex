@@ -1,0 +1,129 @@
+The Proposal: Scoped ARC (Automatic Reference Counting)
+We will introduce a distinct type of pointer dedicated to heap-allocated data. Let's call it a Reference (ref).
+
+Unlike a raw pointer (*T in C), a Reference (ref T) is smart. It knows how many variables are currently pointing to the data it holds.
+
+The User Experience (The "Best of Both Worlds")
+1. Allocation is explicit (like C++/Java): You use a keyword to put something on the heap. Let's use new.
+
+Rust
+
+struct Point { x: int, y: int }
+
+fn main() {
+    // Allocate a Point on the heap.
+    // 'p1' is a reference (ref Point) living on the stack, 
+    // pointing to the heap data.
+    // Reference Count = 1.
+    let p1: ref Point = new Point { x: 10, y: 20 }; 
+}
+2. Sharing is cheap (like Java/C#): Assigning references just copies the pointer and bumps the counter. It does not copy the underlying struct data.
+
+Rust
+
+fn main() {
+    let p1 = new Point { x: 10, y: 20 }; // RC = 1
+
+    // p2 now points to the exact same heap memory as p1.
+    // The compiler automatically inserts code to increment the ref count.
+    // RC = 2.
+    let p2 = p1; 
+    
+    p2.x = 999;
+    // prints 999, because they share data.
+    printf("%d\n", p1.x); 
+}
+3. Deallocation is automatic and deterministic (like Rust/C++ RAII): You never call free or delete. When a reference variable goes out of scope (at the end of a {} block), the compiler automatically inserts code to decrement the counter. If it hits zero, the memory is freed immediately.
+
+Rust
+
+fn main() {
+    {
+        let p1 = new Point { x: 10, y: 20 }; // RC = 1
+        {
+            let p2 = p1; // RC = 2
+            // do stuff with p2...
+        } // <--- End of block. p2 goes out of scope. RC decrements to 1.
+        
+        // do stuff with p1...
+
+    } // <--- End of block. p1 goes out of scope. RC decrements to 0. 
+      //      Heap memory is freed immediately here.
+}
+Why this is the right choice for your compiler
+It's Safe: User-after-free and double-free bugs are impossible because the compiler manages the lifetime.
+
+It's Deterministic: Unlike a tracing GC (Java/Go), memory is cleaned up exactly at the end of scopes. This is crucial for systems programming where predictable latency matters.
+
+It's Implementable: Implementing a full borrow checker (Rust) is a PhD-level task. Implementing a good tracing GC is extremely hard. Implementing ARC is largely a frontend compiler task (injecting inc/dec calls at the right places) combined with a small runtime library.
+
+The Implementation Roadmap (How to build it)
+This is a major feature that will touch every part of your compiler again.
+
+Phase 5.1: The Runtime & Object Header
+We need a C runtime library to manage the heap. Every object on the heap needs a hidden "header" to store its reference count.
+
+runtime.c (Draft):
+
+C
+
+#include <stdlib.h>
+#include <stdint.h>
+
+// Every heap object looks like this in memory:
+// [ RefCount (64-bit) | Actual Data... ]
+
+void* fu_alloc(size_t size) {
+    // Allocate requested size + space for the header
+    uint64_t* ptr = malloc(sizeof(uint64_t) + size);
+    // Initialize count to 1
+    *ptr = 1;
+    // Return pointer to the data area, skipping header
+    return (void*)(ptr + 1);
+}
+
+void fu_retain(void* data_ptr) {
+    if (data_ptr == NULL) return;
+    // Back up to find header
+    uint64_t* header = ((uint64_t*)data_ptr) - 1;
+    // Increment count (needs to be atomic for multi-threading later)
+    (*header)++;
+}
+
+void fu_release(void* data_ptr) {
+    if (data_ptr == NULL) return;
+    uint64_t* header = ((uint64_t*)data_ptr) - 1;
+    (*header)--;
+    if (*header == 0) {
+        // Free the whole block including header
+        free(header);
+    }
+}
+Phase 5.2: Frontend Changes
+Lexer: Add keyword new and maybe ref.
+
+AST: Add Type::Ref(Box<Type>) and Expression::New { ... }.
+
+Parser: Parse the new syntax.
+
+Sema (The hard part):
+
+Typecheck new expressions.
+
+Scope Analysis: The compiler needs to identify every point where a variable of type ref T goes out of scope. It must inject a "drop" or "release" operation into the AST or IR at that exact point. This is the core magic of ARC.
+
+Phase 5.3: IR and Backend
+IR: Introduce intrinsics like CallRetain(ptr) and CallRelease(ptr).
+
+Lowering:
+
+Lower new T { ... } to a call to fu_alloc(sizeof(T)) followed by initialization stores.
+
+Lower assignments a = b (where types are refs) to store(dest, src); CallRetain(src);.
+
+At the end of blocks, emit CallRelease(var) for every ref variable defined in that scope.
+
+Backend: Translate fu_alloc, fu_retain, and fu_release into calls to your C runtime library.
+
+Summary
+This approach gives you a modern, safe language feel without the overwhelming complexity of Rust or the runtime weight of Java. It's the practical choice for the next stage of your compiler's evolution.

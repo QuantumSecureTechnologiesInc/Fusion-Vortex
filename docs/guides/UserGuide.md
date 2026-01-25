@@ -13,13 +13,13 @@ Fusion allows you to write safe and fast code.
 fn add(a: Int, b: Int) : Int {
     return a + b;
 }
-```
+```text
 
 ### Variables
 
 ```rust
 let x: Int = 10;
-```
+```text
 
 ### Control Flow
 
@@ -29,4 +29,4 @@ if x > 5 {
 } else {
     return 0;
 }
-```
+```text

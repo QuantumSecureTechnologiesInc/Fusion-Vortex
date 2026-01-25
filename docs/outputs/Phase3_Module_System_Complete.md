@@ -79,7 +79,7 @@ pub fn add(a: int, b: int) -> int {
 pub fn multiply(a: int, b: int) -> int {
     return a * b;
 }
-```
+```text
 
 **test_multi_file_main.fu**:
 
@@ -92,13 +92,13 @@ fn main() -> int {
     let y = test_multi_file_utils::multiply(x, 2);
     return y;
 }
-```
+```text
 
 ### Compilation Command
 
 ```bash
 cargo run -- -i test_multi_file_main.fu --multi-file
-```
+```text
 
 ### Output
 
@@ -126,7 +126,7 @@ Compiling module 'test_multi_file_main'...
 
 ✅ Multi-file compilation successful!
 Compiled 2 modules in total.
-```
+```text
 
 ---
 
@@ -136,7 +136,7 @@ Compiled 2 modules in total.
 
 **Algorithm**:
 
-```
+```text
 
 1. Start from entry point (main.fu)
 2. Parse mod declarations
@@ -144,7 +144,7 @@ Compiled 2 modules in total.
 4. Build dependency graph
 5. Topological sort
 6. Detect circular dependencies
-```
+```text
 
 **Example**:
 
@@ -152,7 +152,7 @@ Compiled 2 modules in total.
 pub mod utils;      // Finds utils.fu
 pub mod internal;   // Finds internal.fu
 mod private;        // Private module
-```
+```text
 
 ### 2. Import System
 
@@ -163,7 +163,7 @@ use std::Vector;              // Specific import
 use lib::utils::*;            // Wildcard import
 use async_runtime as rt;      // Aliased import
 use lib::{math, string};      // Multiple imports (parser ready)
-```
+```text
 
 ### 3. Compilation Pipeline
 
@@ -182,7 +182,7 @@ For Each Module (in order):
     - Code Generation (LLVM IR)
     ↓
 Link All Module IRs → Final Binary
-```
+```text
 
 ### 4. Error Handling
 
@@ -194,7 +194,7 @@ error: circular module dependency detected
    |
 1  | pub mod a;
    | ^^^^^^^^^^ creates a cycle: a -> b -> a
-```
+```text
 
 **Missing Module**:
 
@@ -202,7 +202,7 @@ error: circular module dependency detected
 error: Module 'utils' not found. Tried:
   ./utils.fu
   ./utils/mod.fu
-```
+```text
 
 ---
 

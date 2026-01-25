@@ -1,0 +1,25 @@
+// SOURCE: crates/fusion_std/examples/fusion_demo.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use fusion_std::prelude::*;
+
+fn main() {
+    let ctx = FusionContext::new(vec![0x01], vec![0x02]).expect("valid context");
+    set_context(ctx).expect("context set");
+
+    let name = FString::from("NeuralSeal Project");
+    let mut data = fvec![Int::new(10), Int::new(20)];
+
+    fusion_if!(data.get(0).unwrap().val() == 10, {
+        println!("Accessing: {}", name.as_str());
+        data.push(Int::new(30));
+    } else {
+        println!("Access denied.");
+    });
+
+    let status = Int::new(200);
+    fusion_match!(status.val(), {
+        200 => println!("System nominal"),
+        404 => println!("Fusion module not found"),
+        _ => println!("Unknown state"),
+    });
+}

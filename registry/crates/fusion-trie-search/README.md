@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-trie-search = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use fusion_trie_search::Trie;
 fn main() {
     let mut trie = Trie::new();
 }
-```
+```text
 
 ## License
 

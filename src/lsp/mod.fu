@@ -1,0 +1,7 @@
+mod diagnostics;
+mod enhanced;
+mod inlay_hints;
+mod navigation;
+mod refactoring;
+mod semantic_tokens;
+mod server;

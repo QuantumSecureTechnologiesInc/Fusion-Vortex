@@ -1,0 +1,255 @@
+// SOURCE: src/semantic_analyzer/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/semantic_analyzer/mod.rs - Type Checking, Scope, and Borrow Checking (Updated for Generics)
+
+use crate::ast::*;
+
+// New structure to store all available traits and their required methods
+#[allow(dead_code)]
+struct TraitDefinition {
+    name: FString,
+    method_signatures: FMap<FString, MethodSignature>,
+}
+
+struct SemanticAnalyzer {
+    symbol_table: SymbolTable,
+    type_errors: FVec<FString>,
+    // New: Repository of all defined traits
+    trait_definitions: FMap<FString, TraitDefinition>,
+}
+
+struct SymbolTable {
+    scopes: FVec<FMap<FString, Symbol>>,
+}
+
+#[derive(Clone, Debug)]
+#[allow(dead_code)]
+struct Symbol {
+    name: FString,
+    symbol_type: Type,
+    is_mutable: FBool,
+}
+
+impl SemanticAnalyzer {
+    fn new() -> Self {
+        SemanticAnalyzer {
+            symbol_table: SymbolTable::new(),
+            type_errors: Vec::new(),
+            trait_definitions: HashMap::new(),
+        }
+    }
+
+    fn analyze(
+        &mut self,
+        declarations: FVec<Declaration>,
+    ) -> Result<FVec<Declaration>, FVec<FString>> {
+        for decl in declarations.iter() {
+            if let Err(mut errs) = self.check_declaration(decl) {
+                self.type_errors.append(&mut errs);
+            }
+        }
+
+        if self.type_errors.is_empty() {
+            Ok(declarations)
+        } else {
+            Err(self.type_errors.clone())
+        }
+    }
+
+    fn check_declaration(&mut self, decl: &Declaration) -> Result<(), FVec<FString>> {
+        match decl {
+            Declaration::Trait { name, methods } => {
+                // Register the new trait definition for later use in bounds checking
+                let mut method_map = HashMap::new();
+                for method in methods {
+                    method_map.insert(method.name.clone(), method.clone());
+                }
+                self.trait_definitions.insert(
+                    name.clone(),
+                    TraitDefinition {
+                        name: name.clone(),
+                        method_signatures: method_map,
+                    },
+                );
+                Ok(())
+            }
+            Declaration::Function {
+                name: _name,
+                generic_params,
+                where_bounds,
+                params,
+                body,
+                ..
+            } => {
+                self.symbol_table.push_scope();
+
+                // 1. Resolve Generic Constraints
+                let _constraints =
+                    self.resolve_generic_constraints(generic_params, where_bounds)?;
+
+                // 2. Register parameters (which might use TypeParameter types)
+                for param in params {
+                    self.symbol_table
+                        .define(param.name.clone(), param.param_type.clone(), false);
+                }
+
+                // 3. Check function body (now expressions involving generic types must respect constraints)
+                self.check_block(body)?;
+
+                self.symbol_table.pop_scope();
+                Ok(())
+            }
+            // ... (Class and other declarations would go here)
+            _ => Ok(()),
+        }
+    }
+
+    /// Resolves generic constraints and verifies that the required traits exist.
+    fn resolve_generic_constraints(
+        &self,
+        generic_params: &[FString],
+        where_bounds: &[TraitBound],
+    ) -> Result<FMap<FString, TraitBound>, FVec<FString>> {
+        let mut constraints = HashMap::new();
+        let mut errors = Vec::new();
+
+        for bound in where_bounds {
+            // Check that the constraint trait actually exists
+            if !self.trait_definitions.contains_key(&bound.trait_name) {
+                errors.push(format!(
+                    "Trait '{}' required by generic type '{}' is not defined.",
+                    bound.trait_name, bound.type_name
+                ));
+            }
+            // Check that the type being constrained is actually a generic parameter of the function
+            if !generic_params.contains(&bound.type_name) {
+                errors.push(format!(
+                    "Trait bound placed on non-generic type parameter: '{}'.",
+                    bound.type_name
+                ));
+            }
+
+            constraints.insert(bound.type_name.clone(), bound.clone());
+        }
+
+        if errors.is_empty() {
+            Ok(constraints)
+        } else {
+            Err(errors)
+        }
+    }
+
+    fn check_block(&mut self, block: &Block) -> Result<(), FVec<FString>> {
+        for stmt in &block.statements {
+            self.check_statement(stmt)?;
+        }
+        Ok(())
+    }
+
+    fn check_statement(&mut self, stmt: &Statement) -> Result<Type, FVec<FString>> {
+        match stmt {
+            Statement::Expression(expr) => self.check_expression(expr),
+            Statement::VariableDeclaration {
+                name,
+                mutable,
+                var_type,
+                initializer: _,
+            } => {
+                let sym_type = var_type.clone().unwrap_or(Type::Unknown);
+                self.symbol_table.define(name.clone(), sym_type, *mutable);
+                Ok(Type::Void)
+            }
+            _ => Ok(Type::Void), // Placeholder for other statements
+        }
+    }
+
+    fn check_expression(&mut self, expr: &Expression) -> Result<Type, FVec<FString>> {
+        match expr {
+            // 4. Check Method Calls on Generic Types
+            Expression::MethodCall {
+                object,
+                method,
+                // args, // Unused in this snippet
+                ..
+            } => {
+                let object_type = self.check_expression(object)?;
+
+                if let Type::TypeParameter(param_name) = object_type {
+                    // Check if the generic type 'param_name' has a constraint that requires 'method'
+
+                    // Simplified lookup logic:
+                    if let Some(bound) = self.get_constraint(&param_name) {
+                        if let Some(trait_def) = self.trait_definitions.get(&bound.trait_name) {
+                            if trait_def.method_signatures.contains_key(method) {
+                                // Success: The trait bound guarantees the existence of this method.
+                                // We would now check the arguments and return type against the signature.
+                                return Ok(Type::Unknown); // Placeholder for resolved return type
+                            }
+                        }
+                    }
+                    // Failure: Method not guaranteed by bounds
+                    self.type_errors.push(format!("Method '{}' is not available on generic type '{}' because it is not required by any trait bound.", method, param_name));
+                    return Ok(Type::Unknown);
+                }
+
+                Ok(Type::Unknown)
+            }
+            Expression::Variable(name) => self
+                .symbol_table
+                .lookup(name)
+                .map(|sym| sym.symbol_type.clone())
+                .ok_or_else(|| vec![format!("Unknown variable: {}", name)]),
+            _ => self.default_expression_check(expr),
+        }
+    }
+
+    // --- Utility Methods ---
+
+    fn get_constraint(&self, _type_name: &str) -> Option<&TraitBound> {
+        // Placeholder for looking up constraints in the current function scope
+        None
+    }
+
+    fn default_expression_check(&self, _expr: &Expression) -> Result<Type, FVec<FString>> {
+        // ... (existing default checks)
+        Ok(Type::Unknown)
+    }
+}
+
+impl SymbolTable {
+    fn new() -> Self {
+        SymbolTable {
+            scopes: vec![HashMap::new()],
+        }
+    }
+
+    fn push_scope(&mut self) {
+        self.scopes.push(HashMap::new());
+    }
+
+    fn pop_scope(&mut self) {
+        self.scopes.pop();
+    }
+
+    fn define(&mut self, name: FString, symbol_type: Type, is_mutable: FBool) {
+        if let Some(scope) = self.scopes.last_mut() {
+            scope.insert(
+                name.clone(),
+                Symbol {
+                    name,
+                    symbol_type,
+                    is_mutable,
+                },
+            );
+        }
+    }
+
+    fn lookup(&self, name: &str) -> Option<&Symbol> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(symbol) = scope.get(name) {
+                return Some(symbol);
+            }
+        }
+        None
+    }
+}

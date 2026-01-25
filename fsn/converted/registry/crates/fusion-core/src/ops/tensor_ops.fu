@@ -1,0 +1,4 @@
+// SOURCE: registry/crates/fusion-core/src/ops/tensor_ops.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Reductions and advanced math could go here
+// For now, matmul is on the Tensor struct for ergonomics

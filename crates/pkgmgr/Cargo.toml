@@ -1,19 +1,20 @@
 [package]
 name = "fusion-pkgmgr"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
 description = "Fusion package manager - Dependency resolution and PQC signing"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
 
 [dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-toml = { workspace = true }
-reqwest = { workspace = true }
-pqcrypto = { workspace = true }
-pqcrypto-mlkem = { workspace = true }
-pqcrypto-mldsa = { workspace = true }
-sha3 = { workspace = true }
-blake3 = { workspace = true }
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+toml = { version = "0.8.19" }
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"] }
+pqcrypto = { version = "0.17.0" }
+pqcrypto-mlkem = { version = "0.1" }
+pqcrypto-mldsa = { version = "0.1.0" }
+sha3 = { version = "0.10.8" }
+blake3 = { version = "1.5.0" }
+fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }

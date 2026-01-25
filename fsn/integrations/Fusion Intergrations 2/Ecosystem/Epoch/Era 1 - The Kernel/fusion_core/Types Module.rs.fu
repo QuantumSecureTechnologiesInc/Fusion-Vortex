@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Types Module.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// pub mod classical;
+// pub mod tensor;
+// pub mod quantum; 
+// pub mod hybrid; // Phase 4: Now active
+// 
+// pub use classical::{ClassicalType, IntType, FloatType, StructType, EnumType};
+// pub use tensor::{Tensor, Matrix, Vector1D, Scalar, DataType};
+// pub use quantum::{Qubit, QubitRegister, QuantumGate, QuantumCircuit, QuantumState};
+// pub use hybrid::{FusionType, HybridValue, TensorTypeMeta, QuantumTypeMeta};

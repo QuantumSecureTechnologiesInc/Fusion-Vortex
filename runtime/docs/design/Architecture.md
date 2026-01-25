@@ -23,7 +23,7 @@ The top layer consists of specialised crates for different workload types:
          └──────────────────┴──────────────────┴──────────────────┘
                                      │
                                      ▼
-```
+```text
 
 **Responsibilities**:
 - Provide domain-specific APIs
@@ -47,7 +47,7 @@ The middle layer contains the core runtime components:
 │  │ • External       │  │ • QPU Pool       │                    │
 │  └──────────────────┘  └──────────────────┘                    │
 └────────────────────────────────────────────────────────────────┘
-```
+```text
 
 **Components**:
 
@@ -90,7 +90,7 @@ The bottom layer provides direct hardware access:
 │  │ARM   │  │AMD/Apple │  │       │  │Rigetti   │              │
 │  └──────┘  └──────────┘  └───────┘  └──────────┘              │
 └────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ## Core Components Deep Dive
 
@@ -108,7 +108,7 @@ enum TaskPriority {
     External,  // Async I/O - QPU, network
     Low,       // Background tasks
 }
-```
+```text
 
 **Scheduling Algorithm**:
 
@@ -137,7 +137,7 @@ Address Space (64-bit):
 │ 0x8000_0000 - 0xBFFF_FFFF : QPU Memory           │
 │ 0xC000_0000 - 0xFFFF_FFFF : Shared (Unified)     │
 └──────────────────────────────────────────────────┘
-```
+```text
 
 **Allocator**:
 - Buddy system for O(log n) alloc/dealloc
@@ -152,7 +152,7 @@ let cpu_mem = mem_mgr.allocate(1024, DeviceType::Cpu);
 let gpu_mem = mem_mgr.zero_copy_transfer(&cpu_mem, DeviceType::Gpu(0));
 
 assert_eq!(cpu_mem.ptr, gpu_mem.ptr);  // Same address!
-```
+```text
 
 **Performance**:
 - Transfer latency: 12μs (vs 1.2ms traditional)
@@ -172,7 +172,7 @@ pub enum GpuBackend {
     Vulkan,   // Cross-platform
     Hip,      // AMD ROCm
 }
-```
+```text
 
 **GPU Kernel Launch**:
 
@@ -186,7 +186,7 @@ let kernel = GpuKernel {
 };
 
 hal.gpu().launch_kernel(kernel)?;
-```
+```text
 
 **Performance**:
 - Kernel launch: <1μs
@@ -207,7 +207,7 @@ let circuit = QuantumCircuit {
 
 let job_id = qpu.submit_circuit(circuit).await?;
 let results = qpu.poll_results(&job_id).await?;
-```
+```text
 
 ## Data Flow
 
@@ -217,35 +217,35 @@ let results = qpu.poll_results(&job_id).await?;
 1. User Code
    ↓
    tensor = Tensor::zeros([1024, 1024]).device("cuda:0")
-   
+
 2. fusion_ai_core
    ↓
    Converts to TensorType (metadata + device hint)
-   
+
 3. fusion_runtime_core
    ↓
    Spawns task with Normal priority
-   
+
 4. Scheduler
    ↓
    Enqueues to high-throughput queue
-   
+
 5. Memory Manager
    ↓
    Allocates GPU VRAM in unified address space
-   
+
 6. HAL - GPU Executor
    ↓
    Launches CUDA kernel for initialization
-   
+
 7. Physical GPU
    ↓
    Executes kernel, zeros VRAM
-   
+
 8. Result
    ↓
    Returns tensor reference (no copy!)
-```
+```text
 
 ### Example: HFT Order Matching
 
@@ -253,27 +253,27 @@ let results = qpu.poll_results(&job_id).await?;
 1. User Code
    ↓
    book.place_order(Order::limit_buy(50000.0, 1.0)).await
-   
+
 2. fusion_finance
    ↓
    Validates order, creates task
-   
+
 3. fusion_runtime_core
    ↓
    Spawns with High priority (QoS)
-   
+
 4. Scheduler
    ↓
    Immediately executes on dedicated low-jitter thread
-   
+
 5. Order Book
    ↓
    Matches against existing orders atomically
-   
+
 6. Result
    ↓
    Returns OrderId in <10μs
-```
+```text
 
 ### Example: Quantum Circuit Execution
 
@@ -281,35 +281,35 @@ let results = qpu.poll_results(&job_id).await?;
 1. User Code
    ↓
    circuit.execute().await
-   
+
 2. fusion_quantum
    ↓
    Builds QuantumCircuit specification
-   
+
 3. fusion_runtime_core
    ↓
    Spawns with External priority
-   
+
 4. Scheduler
    ↓
    Enqueues to external device queue
-   
+
 5. HAL - QPU Interface
    ↓
    Submits to IBM Quantum API
-   
+
 6. QPU (IBM Quantum)
    ↓
    Executes circuit on real quantum hardware
-   
+
 7. HAL
    ↓
    Polls for completion (async)
-   
+
 8. Result
    ↓
    Returns measurement counts
-```
+```text
 
 ## Concurrency Model
 
@@ -328,7 +328,7 @@ runtime.spawn_high_priority(async {
     // Guaranteed <10μs latency
     process_hft_order().await
 });
-```
+```text
 
 ### Worker Thread Pool
 
@@ -472,6 +472,6 @@ runtime.spawn_high_priority(async {
 
 ---
 
-**Last Updated**: 2025-12-08  
-**Version**: 0.2.0  
+**Last Updated**: 2025-12-08
+**Version**: 0.2.0
 **Authors**: Quantum Secure Technologies Inc. Engineering Team

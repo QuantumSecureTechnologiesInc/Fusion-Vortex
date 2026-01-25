@@ -1,0 +1,22 @@
+// sys/reactor.fsn
+// HyperRing Reactor: custom event loop.
+
+struct Reactor {
+    ring: HyperRing,
+    waker: AtomicFWaker,
+}
+
+impl Reactor {
+    fn run(self) {
+        println!("Supernova Kernel Active");
+
+        fusion_loop!({
+            match self.ring.poll() {
+                Event::Ready(task) => task.wake(),
+                Event::Empty => {
+                    self.waker.park();
+                }
+            }
+        });
+    }
+}

@@ -38,7 +38,7 @@ Safe AST
     └─→ WASM CodeGen (new)
          ↓
     WebAssembly Binary (.wasm)
-```
+```text
 
 ### Module Structure
 
@@ -50,7 +50,7 @@ src/
     ├── builder.rs       # WASM instruction builder
     ├── types.rs         # WASM type mappings
     └── module.rs        # WASM module structure
-```
+```text
 
 ---
 
@@ -95,7 +95,7 @@ src/
 fn add(a: int, b: int) -> int {
     return a + b;
 }
-```
+```text
 
 **WASM Output** (WAT format):
 
@@ -108,7 +108,7 @@ fn add(a: int, b: int) -> int {
   )
   (export "add" (func $add))
 )
-```
+```text
 
 **Implementation**:
 
@@ -137,7 +137,7 @@ fn max(a: int, b: int) -> int {
         return b;
     }
 }
-```
+```text
 
 ### Phase 3: Memory Management (Est. 45 min)
 
@@ -156,7 +156,7 @@ fn max(a: int, b: int) -> int {
 fn create_string() -> string {
     return "Hello, WASM!";
 }
-```
+```text
 
 ### Phase 4: Function Calls (Est. 30 min)
 
@@ -224,13 +224,13 @@ Add to `Cargo.toml`:
 
 wasm-encoder = "0.219"  # Build WASM binary format
 wasmparser = "0.219"    # Parse and validate WASM
-```
+```text
 
 Optional (for text format):
 
 ```toml
 wat = "1.216"  # Convert WAT ↔ WASM
-```
+```text
 
 ---
 
@@ -238,7 +238,7 @@ wat = "1.216"  # Convert WAT ↔ WASM
 
 ### Compilation
 
-```
+```text
 
 # Compile to WASM
 
@@ -247,7 +247,7 @@ fusion_lang -i program.fu --target wasm -o program.wasm
 # Compile to WAT (text format)
 
 fusion_lang -i program.fu --target wasm --emit wat -o program.wat
-```
+```text
 
 ### Running in Browser
 
@@ -265,7 +265,7 @@ fusion_lang -i program.fu --target wasm --emit wat -o program.wat
 </script>
 </body>
 </html>
-```
+```text
 
 ### Running in Node.js
 
@@ -277,7 +277,7 @@ WebAssembly.instantiate(wasmBuffer).then(obj => {
   const result = obj.instance.exports.add(5, 3);
   console.log('Result:', result); // 8
 });
-```
+```text
 
 ---
 
@@ -285,7 +285,7 @@ WebAssembly.instantiate(wasmBuffer).then(obj => {
 
 ### Unit Tests
 
-```
+```text
 
 #[test]
 
@@ -305,7 +305,7 @@ fn test_wasm_simple_function() {
     let result = execute_wasm(&wasm, "add", &[5, 3]).unwrap();
     assert_eq!(result, 8);
 }
-```
+```text
 
 ### Integration Tests
 
@@ -354,7 +354,7 @@ extern fn fd_write(fd: int, iovs: int, iovs_len: int, nwritten: int) -> int;
 fn println(msg: string) {
     // Use WASI fd_write
 }
-```
+```text
 
 ---
 

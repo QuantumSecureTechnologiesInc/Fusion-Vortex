@@ -1,7 +1,7 @@
 # Fusion Trusted Anchor
 
-**Version:** 0.2.0  
-**Type:** Security  
+**Version:** 0.2.0
+**Type:** Security
 **License:** MIT
 
 ## Overview
@@ -21,7 +21,7 @@ use fusion_sec_trust_anchor::{Tpm, PcrBank};
 
 let tpm = Tpm::open()?;
 let quote = tpm.quote(PcrBank::Sha256, &[0, 1, 2], nonce)?;
-```
+```text
 
 ## Dependencies
 

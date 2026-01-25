@@ -1,0 +1,14 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn main() -> int {
+    let a: string = "alpha";
+    let b: string = "alpha";
+    let c: string = "beta";
+
+    if (a == b) { printf("eq1\n"); }
+    if (a != c) { printf("neq1\n"); }
+    if (a == c) { printf("eq2\n"); }
+    if (b != c) { printf("neq2\n"); }
+
+    return 0;
+}

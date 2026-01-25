@@ -1,0 +1,12 @@
+// SOURCE: registry/crates/fusion-runtime-core-v2-nebula/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Library exports for Fusion Runtime Core v2.0 Nebula
+
+mod engine;
+
+// Re-export the generated proto types
+mod fusion_proto {
+    tonic::include_proto!("fusion_core_v2");
+}
+
+pub use engine::WasmEngine;

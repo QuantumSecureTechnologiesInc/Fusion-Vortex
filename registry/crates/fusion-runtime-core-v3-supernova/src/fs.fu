@@ -1,0 +1,83 @@
+use crate::reactor::{HyperRing, RingOp};
+struct File {
+    fd: FU32,
+    reactor: Arc<HyperRing>,
+}
+impl File {
+    pub async fn open(path: impl Into<FString>) -> Self {
+        let path = path.into();
+        let reactor = crate::executor::get_reactor();
+        struct OpenFuture {
+            path: FString,
+            reactor: Arc<HyperRing>,
+            state: Option<FU64>,
+        }
+        impl Future for OpenFuture {
+            type Output = FU32;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                if self.state.is_some() {
+                    Poll::Ready(101)
+                } else {
+                    let id = self
+                        .reactor
+                        .submit(
+                            RingOp::FileOpen {
+                                path: self.path.clone(),
+                            },
+                            cx.waker().clone(),
+                        );
+                    self.state = Some(id);
+                    Poll::Pending
+                }
+            }
+        }
+        let fd = OpenFuture {
+            path,
+            reactor: reactor.clone(),
+            state: None,
+        }
+            .await;
+        File { fd, reactor }
+    }
+    pub async fn read(&self, len: FSize) -> FVec<u8> {
+        struct ReadFuture {
+            fd: FU32,
+            len: FSize,
+            reactor: Arc<HyperRing>,
+            state: Option<FU64>,
+        }
+        impl Future for ReadFuture {
+            type Output = FVec<u8>;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                if self.state.is_some() {
+                    Poll::Ready(vec![0u8; self.len])
+                } else {
+                    let id = self
+                        .reactor
+                        .submit(
+                            RingOp::FileRead {
+                                fd: self.fd,
+                                len: self.len,
+                            },
+                            cx.waker().clone(),
+                        );
+                    self.state = Some(id);
+                    Poll::Pending
+                }
+            }
+        }
+        ReadFuture {
+            fd: self.fd,
+            len,
+            reactor: self.reactor.clone(),
+            state: None,
+        }
+            .await
+    }
+}

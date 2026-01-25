@@ -1,7 +1,7 @@
 # The Fusion Programming Language Book - Generation Prompts
 
-**Version**: 1.0  
-**Date**: December 11, 2025  
+**Version**: 1.0
+**Date**: December 11, 2025
 **Purpose**: Sequential prompts to generate a complete Fusion language book
 
 ---
@@ -75,7 +75,7 @@ Once the AI acknowledges the role, feed it these prompts one by one.
 >
 > Cover the syntax basics of Fusion:
 > 1.  **Variables & Mutability:** Explain that variables are immutable by default. Show `let` vs `let mut`. Show constants (`const`).
-> 2.  **Data Types:** 
+> 2.  **Data Types:**
 >     - Scalar types: `int`, `i32`, `i64`, `float`, `f32`, `f64`, `bool`, `char`, `string`
 >     - Compound types: Tuples, Arrays, Vectors
 > 3.  **Functions:** Parameters, return values (using `->`), and statements vs. expressions.
@@ -89,7 +89,7 @@ Once the AI acknowledges the role, feed it these prompts one by one.
 > This is a critical chapter explaining how Fusion manages memory without garbage collection.
 > 1.  **The Stack and Heap:** Explain memory regions and why they matter.
 > 2.  **Ownership:** Each value in Fusion has a single owner. When the owner goes out of scope, the value is dropped.
-> 3.  **The Ownership Rules:** 
+> 3.  **The Ownership Rules:**
 >     - Each value has exactly one owner
 >     - Only one owner at a time
 >     - When the owner goes out of scope, the value is freed
@@ -299,10 +299,10 @@ These chapters cover Fusion's unique Tri-brid features.
 
 ## Phase 3: The Assembly Instructions
 
-1.  **Consistency Check:** If the AI starts inventing new syntax, correct it: *"In Chapter 3 you established that Fusion uses `fn` keyword, stick to that."*
-2.  **Code Block Formatting:** Tell the AI to format all code blocks with ```fusion for syntax highlighting.
-3.  **PDF Creation:** Once the AI generates the text, copy the Markdown output into a document converter (like Pandoc) to export as PDF.
-4.  **Review Against Codebase:** Verify code examples work with the actual Fusion compiler.
+1. **Consistency Check:** If the AI starts inventing new syntax, correct it: *"In Chapter 3 you established that Fusion uses `fn` keyword, stick to that."*
+2. **Code Block Formatting:** Tell the AI to format all code blocks with ```fusion for syntax highlighting.
+3. **PDF Creation:** Once the AI generates the text, copy the Markdown output into a document converter (like Pandoc) to export as PDF.
+4. **Review Against Codebase:** Verify code examples work with the actual Fusion compiler.
 
 ---
 
@@ -330,7 +330,7 @@ impl Point {
     fn new(x: float, y: float) -> Point {
         Point { x, y }
     }
-    
+
     fn distance(self, other: &Point) -> float {
         // implementation
     }
@@ -368,12 +368,12 @@ match value {
     Some(x) => println!("Got {}", x),
     None => println!("Nothing"),
 }
-```
+```text
 
 ---
 
-**Document Status**: ✅ Ready for Use  
-**Created**: December 11, 2025  
+**Document Status**: ✅ Ready for Use
+**Created**: December 11, 2025
 **Purpose**: Generate comprehensive Fusion language documentation
 
 End of Book Generation Prompts

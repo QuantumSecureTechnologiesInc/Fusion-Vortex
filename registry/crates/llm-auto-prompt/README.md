@@ -1,7 +1,7 @@
 # Fusion LLM Auto Prompt
 
-**Version:** 0.2.0  
-**Type:** AI Utility  
+**Version:** 0.2.0
+**Type:** AI Utility
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use llm_auto_prompt::{Optimizer, Task};
 let task = Task::new("summarization", dataset);
 let optimizer = Optimizer::new(task);
 let best_prompt = optimizer.run().await?;
-```
+```text
 
 ## Dependencies
 

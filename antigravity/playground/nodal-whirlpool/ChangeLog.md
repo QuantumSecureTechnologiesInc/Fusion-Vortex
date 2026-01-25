@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial project structure and mono-repository setup
 - Cargo workspace with 16 crates
 - CLI entry point with comprehensive command structure
@@ -35,12 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Local model runner interface
 
 ### Security
+
 - Post-quantum cryptography dependencies (CRYSTALS-Kyber, CRYSTALS-Dilithium)
 - Safety engine for detecting secrets and PII in generated code
 - Offline-first AI mode for sensitive codebases
 - Audit trail metadata for all AI operations
 
 ### Documentation
+
 - Comprehensive README with architecture overview
 - Quick Start Guide
 - Project structure documentation
@@ -49,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-12-08
 
 ### Added
+
 - Initial skeleton release
 - Foundation for Phase 1 development
 - Complete crate structure

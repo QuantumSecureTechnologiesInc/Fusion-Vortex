@@ -46,25 +46,25 @@ fn main() {
     let v = Tensor::from_vec(vec![1.0, 2.0, 3.0, 4.0])
     println("Vector: {:?}", v)
     println("Shape: {:?}", v.shape())  // [4]
-    
+
     // Tensor with explicit shape
     let m = Tensor::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
         .reshape([2, 3])
     println("Matrix shape: {:?}", m.shape())  // [2, 3]
-    
+
     // Convenience constructors
     let zeros = Tensor::<f32>::zeros([3, 4])       // All zeros
     let ones = Tensor::<f32>::ones([2, 2])         // All ones
     let random = Tensor::<f32>::rand([100, 100])   // Uniform [0, 1)
     let randn = Tensor::<f32>::randn([64, 128])    // Normal distribution
-    
+
     // Identity matrix
     let eye = Tensor::<f32>::eye(4)  // 4×4 identity
-    
+
     // Range tensor
     let range = Tensor::arange(0.0, 10.0, 0.5)  // [0.0, 0.5, 1.0, ..., 9.5]
 }
-```
+```text
 
 ### 16.1.3 Tensor Properties
 
@@ -93,7 +93,7 @@ let strides: Vec<usize> = t.strides()  // [12, 4, 1]
 
 // Does this tensor track gradients?
 let requires_grad: bool = t.requires_grad()  // false
-```
+```text
 
 ### 16.1.4 Data Types
 
@@ -115,7 +115,7 @@ let bool_tensor = Tensor::<bool>::zeros([10, 10])
 
 // Complex (for quantum computing integration)
 let complex_tensor = Tensor::<Complex<f64>>::zeros([10, 10])
-```
+```text
 
 **Choosing a data type:**
 - Use `f32` for most training (good balance of precision and speed)
@@ -157,7 +157,7 @@ let cos = a.cos()
 let tanh = a.tanh()
 let abs = a.abs()
 let neg = a.neg()         // Negate all elements
-```
+```text
 
 ### 16.2.2 Matrix Operations
 
@@ -189,7 +189,7 @@ let trace = a.trace()            // Sum of diagonal elements
 let (u, s, v) = a.svd()          // Singular Value Decomposition
 let (q, r) = a.qr()              // QR decomposition
 let eigenvalues = a.eigenvalues() // Eigenvalue decomposition
-```
+```text
 
 ### 16.2.3 Reduction Operations
 
@@ -214,7 +214,7 @@ let max_vals, max_indices = t.max_dim(2)  // Max with indices
 
 // Keep dimensions (useful for broadcasting)
 let row_sum = t.sum_dim(1, keep_dim: true)  // Shape: [3, 1, 5]
-```
+```text
 
 ### 16.2.4 Shape Manipulation
 
@@ -249,7 +249,7 @@ let parts = t.split([1, 1, 1], dim: 0) // Explicit sizes
 
 // Permute dimensions
 let permuted = t.permute([2, 0, 1])   // Reorder dimensions
-```
+```text
 
 ### 16.2.5 Broadcasting
 
@@ -270,7 +270,7 @@ let c = &a + &b  // Result: [3, 4]
 let x = Tensor::<f32>::rand([1, 3, 1])
 let y = Tensor::<f32>::rand([2, 1, 4])
 let z = &x + &y  // Result: [2, 3, 4]
-```
+```text
 
 ---
 
@@ -288,7 +288,7 @@ fn main() {
     if Device::cuda_is_available() {
         println("CUDA available!")
         println("GPU count: {}", Device::cuda_device_count())
-        
+
         // Get device properties
         let props = Device::cuda_get_device_properties(0)
         println("GPU 0: {}", props.name)
@@ -296,13 +296,13 @@ fn main() {
     } else {
         println("Running on CPU")
     }
-    
+
     // Device types
     let cpu = Device::CPU
     let gpu0 = Device::CUDA(0)
     let gpu1 = Device::CUDA(1)
 }
-```
+```text
 
 ### 16.3.2 Moving Tensors to GPU
 
@@ -326,11 +326,12 @@ let c = a.matmul(&b)  // Computed on GPU; result stays on GPU
 
 // Move back to CPU (for saving, printing, etc.)
 let cpu_result = c.to(Device::CPU)
-```
+```text
 
 ### 16.3.3 Performance Considerations
 
 **Memory Management:**
+
 ```fusion
 // GPU memory is limited; be mindful of allocations
 {
@@ -340,9 +341,10 @@ let cpu_result = c.to(Device::CPU)
 
 // Explicit memory clearing
 Device::cuda_empty_cache()
-```
+```text
 
 **Asynchronous Execution:**
+
 ```fusion
 // GPU operations are asynchronous by default
 let a = Tensor::<f32>::rand([1000, 1000]).to(Device::CUDA(0))
@@ -350,7 +352,7 @@ let b = a.matmul(&a)  // Queued, may not be complete yet
 
 // Synchronise when needed
 Device::cuda_synchronize()  // Wait for all GPU operations
-```
+```text
 
 **Best Practices:**
 1. **Batch operations**: GPU efficiency increases with larger batch sizes
@@ -378,7 +380,7 @@ println("Requires grad: {}", x.requires_grad())  // true
 
 // Alternative: set during creation
 let x = Tensor::from_vec_with_grad(vec![1.0, 2.0, 3.0], true)
-```
+```text
 
 ### 16.4.2 Computing Gradients
 
@@ -395,13 +397,13 @@ z.backward()
 
 // Access gradients
 println("x.grad: {:?}", x.grad())  // [4.0, 6.0] = 2x
-```
+```text
 
 ### 16.4.3 The Computation Graph
 
 Fusion builds a **computation graph** as you perform operations:
 
-```
+```text
    x (requires_grad=true)
    │
    ├─────┐
@@ -414,7 +416,7 @@ Fusion builds a **computation graph** as you perform operations:
    │
    ▼
    z
-```
+```text
 
 When you call `z.backward()`, Fusion traverses this graph in reverse, applying the chain rule to compute gradients.
 
@@ -435,7 +437,7 @@ x.grad().zero_()
 
 // In-place gradient zeroing on optimizer
 optimizer.zero_grad()
-```
+```text
 
 ### 16.4.5 Higher-Order Gradients
 
@@ -450,7 +452,7 @@ let dy_dx = grad(y, x, create_graph: true)  // dy/dx = 3x²
 
 let d2y_dx2 = grad(dy_dx.sum(), x)  // d²y/dx² = 6x
 println("Second derivative: {:?}", d2y_dx2)  // [12.0]
-```
+```text
 
 ---
 
@@ -469,11 +471,12 @@ trait Module {
     fn train(&mut self)
     fn eval(&mut self)
 }
-```
+```text
 
 ### 16.5.2 Common Layers
 
 **Dense (Fully Connected):**
+
 ```fusion
 use fusion_ai_core::nn::Dense
 
@@ -485,9 +488,10 @@ let layer = Dense::new(
 
 let input = Tensor::<f32>::rand([32, 784])   // Batch of 32
 let output = layer.forward(&input)            // Shape: [32, 256]
-```
+```text
 
 **Convolutional:**
+
 ```fusion
 use fusion_ai_core::nn::Conv2d
 
@@ -501,9 +505,10 @@ let conv = Conv2d::new(
 
 let images = Tensor::<f32>::rand([32, 3, 224, 224])  // Batch of 32 images
 let features = conv.forward(&images)  // Shape: [32, 64, 224, 224]
-```
+```text
 
 **Recurrent (LSTM):**
+
 ```fusion
 use fusion_ai_core::nn::LSTM
 
@@ -519,9 +524,10 @@ let sequence = Tensor::<f32>::rand([32, 100, 512])  // [batch, seq_len, features
 let (output, (h_n, c_n)) = lstm.forward(&sequence)
 // output: [32, 100, 256]
 // h_n: [2, 32, 256] (hidden state for each layer)
-```
+```text
 
 **Transformer:**
+
 ```fusion
 use fusion_ai_core::nn::TransformerEncoder
 
@@ -535,7 +541,7 @@ let encoder = TransformerEncoder::new(
 
 let tokens = Tensor::<f32>::rand([32, 100, 512])  // [batch, seq_len, d_model]
 let encoded = encoder.forward(&tokens)  // [32, 100, 512]
-```
+```text
 
 ### 16.5.3 Activation Functions
 
@@ -559,7 +565,7 @@ let activated = F::gelu(&x)
 
 // Leaky ReLU
 let activated = F::leaky_relu(&x, negative_slope: 0.01)
-```
+```text
 
 ### 16.5.4 Building a Custom Model
 
@@ -595,31 +601,31 @@ impl ImageClassifier {
 impl Module for ImageClassifier {
     fn forward(&self, x: &Tensor) -> Tensor {
         // x: [batch, 3, 32, 32]
-        
+
         // Conv block 1
         let x = self.conv1.forward(x)
         let x = self.bn1.forward(&x)
         let x = F::relu(&x)
         let x = F::max_pool2d(&x, (2, 2))  // [batch, 32, 16, 16]
-        
+
         // Conv block 2
         let x = self.conv2.forward(&x)
         let x = self.bn2.forward(&x)
         let x = F::relu(&x)
         let x = F::max_pool2d(&x, (2, 2))  // [batch, 64, 8, 8]
-        
+
         // Flatten
         let x = x.flatten(start_dim: 1)  // [batch, 64*8*8]
-        
+
         // Fully connected
         let x = self.fc1.forward(&x)
         let x = F::relu(&x)
         let x = self.dropout.forward(&x)
         let x = self.fc2.forward(&x)
-        
+
         x  // Logits (apply softmax during loss or inference)
     }
-    
+
     fn parameters(&self) -> Vec<&Tensor> {
         vec![
             self.conv1.weight(), self.conv1.bias(),
@@ -631,7 +637,7 @@ impl Module for ImageClassifier {
         ].into_iter().flatten().collect()
     }
 }
-```
+```text
 
 ---
 
@@ -656,7 +662,7 @@ fn custom_loss(pred: &Tensor, target: &Tensor) -> Tensor {
     let diff = pred - target
     (&diff * &diff).mean()  // MSE manually
 }
-```
+```text
 
 ### 16.6.2 Optimisers
 
@@ -680,7 +686,7 @@ let adamw = AdamW::new(
     lr: 0.001,
     weight_decay: 0.01
 )
-```
+```text
 
 ### 16.6.3 Complete Training Loop
 
@@ -693,39 +699,39 @@ fn train(
 ) {
     model.train()  // Set to training mode (enables dropout, etc.)
     let mut optimizer = Adam::new(model.parameters(), lr: 0.001)
-    
+
     for epoch in 0..epochs {
         let mut total_loss = 0.0
         let mut correct = 0
         let mut total = 0
-        
+
         for (images, labels) in train_loader.iter() {
             // Move to device
             let images = images.to(device)
             let labels = labels.to(device)
-            
+
             // Forward pass
             let outputs = model.forward(&images)
             let loss = F::cross_entropy(&outputs, &labels)
-            
+
             // Backward pass
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            
+
             // Track metrics
             total_loss += loss.item()
             let predicted = outputs.argmax(dim: 1)
             correct += predicted.eq(&labels).sum().item() as int
             total += labels.numel()
         }
-        
+
         let avg_loss = total_loss / train_loader.len() as f64
         let accuracy = 100.0 * (correct as f64) / (total as f64)
         println("Epoch {}: Loss = {:.4}, Accuracy = {:.2}%", epoch, avg_loss, accuracy)
     }
 }
-```
+```text
 
 ### 16.6.4 Validation and Testing
 
@@ -736,26 +742,26 @@ fn evaluate(
     device: Device,
 ) -> f64 {
     model.eval()  // Disable dropout, use running stats for batchnorm
-    
+
     let mut correct = 0
     let mut total = 0
-    
+
     with no_grad() {  // No gradient computation during evaluation
         for (images, labels) in test_loader.iter() {
             let images = images.to(device)
             let labels = labels.to(device)
-            
+
             let outputs = model.forward(&images)
             let predicted = outputs.argmax(dim: 1)
-            
+
             correct += predicted.eq(&labels).sum().item() as int
             total += labels.numel()
         }
     }
-    
+
     100.0 * (correct as f64) / (total as f64)
 }
-```
+```text
 
 ---
 
@@ -780,7 +786,7 @@ for epoch in 0..epochs {
     // ... training ...
     scheduler.step()  // Update learning rate
 }
-```
+```text
 
 ### 16.7.2 Gradient Clipping
 
@@ -792,7 +798,7 @@ nn::utils::clip_grad_norm_(model.parameters(), max_norm: 1.0)
 
 // Clip by value
 nn::utils::clip_grad_value_(model.parameters(), clip_value: 0.5)
-```
+```text
 
 ### 16.7.3 Model Checkpointing
 
@@ -804,7 +810,7 @@ fusion_ai_core::save(&state_dict, "model.pt")
 // Load model
 let state_dict = fusion_ai_core::load("model.pt")
 model.load_state_dict(&state_dict)
-```
+```text
 
 ---
 
@@ -818,7 +824,7 @@ fusion_ai_core::manual_seed(42)
 if Device::cuda_is_available() {
     fusion_ai_core::cuda::manual_seed_all(42)
 }
-```
+```text
 
 ### 16.8.2 Memory Efficiency
 
@@ -840,7 +846,7 @@ with amp::autocast() {
 scaler.scale(loss).backward()
 scaler.step(&optimizer)
 scaler.update()
-```
+```text
 
 ### 16.8.3 Profiling
 
@@ -850,7 +856,7 @@ with fusion_ai_core::profiler::profile() as prof {
     model.forward(&input)
 }
 println("{}", prof.key_averages().table())
-```
+```text
 
 ---
 

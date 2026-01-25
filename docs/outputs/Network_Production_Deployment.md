@@ -1,7 +1,7 @@
 # Network Module Production Deployment Guide
 
-**Version:** 1.0  
-**Target:** Production Environments  
+**Version:** 1.0
+**Target:** Production Environments
 **Last Updated:** 2025-12-10
 
 ## Overview
@@ -32,16 +32,20 @@ This guide covers production deployment of Fusion's secure networking layer, inc
 ### From Source
 
 ```bash
+
 # Clone repository
+
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
 cd Fusion-Programming-Language
 
 # Build release binary
+
 cargo build --release -p fusion-lang
 
 # Verify installation
+
 ./target/release/fusion --version
-```
+```text
 
 ### Docker Deployment
 
@@ -60,13 +64,14 @@ COPY --from=builder /app/target/release/fusion /usr/local/bin/
 EXPOSE 8080
 
 CMD ["fusion", "server", "--bind", "0.0.0.0:8080"]
-```
+```text
 
 Build and run:
+
 ```bash
 docker build -t fusion-network:latest .
 docker run -p 8080:8080 fusion-network:latest
-```
+```text
 
 ### Kubernetes Deployment
 
@@ -121,7 +126,7 @@ spec:
   - protocol: TCP
     port: 8080
     targetPort: 8080
-```
+```text
 
 ## Configuration
 
@@ -151,41 +156,50 @@ enable_structured_logging = true
 enable_metrics = true
 metrics_port = 9090
 enable_tracing = true
-```
+```text
 
 ### Environment Variables
 
 ```bash
+
 # Server configuration
+
 export FUSION_BIND_ADDR="0.0.0.0:8080"
 export FUSION_MAX_CONNECTIONS=1000
 export FUSION_LOG_LEVEL=info
 
 # Security
+
 export FUSION_ENABLE_TLS=true
 export FUSION_TLS_CERT_PATH=/etc/fusion/certs/server.crt
 export FUSION_TLS_KEY_PATH=/etc/fusion/certs/server.key
 
 # Monitoring
+
 export FUSION_METRICS_ENABLED=true
 export FUSION_METRICS_PORT=9090
-```
+```text
 
 ## Security Hardening
 
 ### Network Security
 
 1. **Firewall Rules:**
+
 ```bash
+
 # Allow only RPC port
+
 sudo ufw allow 8080/tcp
 
 # Allow metrics (internal only)
+
 sudo ufw allow from 10.0.0.0/8 to any port 9090
 
 # Enable firewall
+
 sudo ufw enable
-```
+```text
 
 2. **TLS Termination:**
 Use a reverse proxy (nginx/HAProxy) for TLS termination:
@@ -212,9 +226,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-```
+```text
 
 3. **Network Policies (Kubernetes):**
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -243,7 +258,7 @@ spec:
     ports:
     - protocol: TCP
       port: 5432
-```
+```text
 
 ### Authentication
 
@@ -254,7 +269,7 @@ Implement client authentication using pre-shared keys:
 fn authenticate_client(channel: &mut SecureChannel) -> NetResult<String> {
     // Receive authentication message
     let msg = channel.recv_message()?;
-    
+
     match msg {
         Message::Authenticate { client_id, token } => {
             if verify_token(&client_id, &token) {
@@ -266,7 +281,7 @@ fn authenticate_client(channel: &mut SecureChannel) -> NetResult<String> {
         _ => Err(NetworkError::Handshake("Expected authentication".into()))
     }
 }
-```
+```text
 
 ### Rate Limiting
 
@@ -284,13 +299,13 @@ impl RateLimiter {
         let now = Instant::now();
         let entry = self.limits.entry(client_id.to_string())
             .or_insert((self.max_per_second, now));
-        
+
         let elapsed = now.duration_since(entry.1);
         if elapsed >= Duration::from_secs(1) {
             entry.0 = self.max_per_second;
             entry.1 = now;
         }
-        
+
         if entry.0 > 0 {
             entry.0 -= 1;
             true
@@ -299,7 +314,7 @@ impl RateLimiter {
         }
     }
 }
-```
+```text
 
 ## Monitoring
 
@@ -312,12 +327,12 @@ use prometheus::{Counter, Histogram, Registry};
 
 lazy_static! {
     static ref REGISTRY: Registry = Registry::new();
-    
+
     static ref MESSAGES_RECEIVED: Counter = Counter::new(
         "fusion_messages_received_total",
         "Total messages received"
     ).unwrap();
-    
+
     static ref MESSAGE_LATENCY: Histogram = Histogram::new(
         "fusion_message_latency_seconds",
         "Message processing latency"
@@ -329,7 +344,7 @@ MESSAGES_RECEIVED.inc();
 let timer = MESSAGE_LATENCY.start_timer();
 // Process message
 timer.observe_duration();
-```
+```text
 
 ### Logging
 
@@ -339,9 +354,10 @@ Use structured logging with `tracing`:
 use tracing::{info, warn, error, instrument};
 
 #[instrument(skip(channel))]
+
 fn handle_client(mut channel: SecureChannel, client_id: String) -> NetResult<()> {
     info!(client_id = %client_id, "Client connected");
-    
+
     loop {
         match channel.recv_message() {
             Ok(msg) => {
@@ -355,7 +371,7 @@ fn handle_client(mut channel: SecureChannel, client_id: String) -> NetResult<()>
         }
     }
 }
-```
+```text
 
 ### Health Checks
 
@@ -367,12 +383,12 @@ fn health_check() -> Result<(), String> {
     if !database_connected() {
         return Err("Database unreachable".into());
     }
-    
+
     // Check resource usage
     if memory_usage() > 0.9 {
         return Err("Memory usage critical".into());
     }
-    
+
     Ok(())
 }
 
@@ -383,29 +399,34 @@ async fn health_endpoint() -> impl Responder {
         Err(e) => HttpResponse::ServiceUnavailable().json(json!({ "status": "unhealthy", "reason": e })),
     }
 }
-```
+```text
 
 ## Performance Tuning
 
 ### TCP Tuning (Linux)
 
 ```bash
+
 # Increase TCP buffer sizes
+
 sudo sysctl -w net.core.rmem_max=16777216
 sudo sysctl -w net.core.wmem_max=16777216
 sudo sysctl -w net.ipv4.tcp_rmem='4096 87380 16777216'
 sudo sysctl -w net.ipv4.tcp_wmem='4096 65536 16777216'
 
 # Enable TCP fast open
+
 sudo sysctl -w net.ipv4.tcp_fastopen=3
 
 # Increase connection backlog
+
 sudo sysctl -w net.core.somaxconn=4096
 
 # Make changes persistent
+
 echo "net.core.rmem_max=16777216" >> /etc/sysctl.conf
 echo "net.core.wmem_max=16777216" >> /etc/sysctl.conf
-```
+```text
 
 ### Application Tuning
 
@@ -414,12 +435,13 @@ echo "net.core.wmem_max=16777216" >> /etc/sysctl.conf
 use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::main]
+
 async fn main() -> NetResult<()> {
     let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    
+
     loop {
         let (socket, addr) = listener.accept().await?;
-        
+
         tokio::spawn(async move {
             if let Err(e) = handle_connection(socket).await {
                 eprintln!("Connection error: {}", e);
@@ -427,7 +449,7 @@ async fn main() -> NetResult<()> {
         });
     }
 }
-```
+```text
 
 ### Connection Pooling
 
@@ -461,7 +483,7 @@ let pool = Pool::builder(ChannelManager { addr: "server:8080".into() })
 
 let mut conn = pool.get().await?;
 conn.send_message(&msg).await?;
-```
+```text
 
 ## High Availability
 
@@ -490,7 +512,7 @@ backend fusion_servers
     server fusion1 10.0.1.10:8080 check
     server fusion2 10.0.1.11:8080 check
     server fusion3 10.0.1.12:8080 check
-```
+```text
 
 ### Failover
 
@@ -509,7 +531,7 @@ impl ConnectionPool {
             Ok(channel) => return Ok(channel),
             Err(e) => warn!("Primary failed: {}", e),
         }
-        
+
         // Try fallbacks
         for addr in &self.fallback {
             match FusionNetwork::async_connect(addr).await {
@@ -517,60 +539,76 @@ impl ConnectionPool {
                 Err(e) => warn!("Fallback {} failed: {}", addr, e),
             }
         }
-        
+
         Err(NetworkError::Io(std::io::Error::new(
             std::io::ErrorKind::ConnectionRefused,
             "All servers unavailable"
         )))
     }
 }
-```
+```text
 
 ## Disaster Recovery
 
 ### Backup Strategy
 
 1. **Configuration Backup:**
+
 ```bash
 #!/bin/bash
+
 # Backup configuration daily
+
 tar -czf /backups/fusion-config-$(date +%Y%m%d).tar.gz \
     /etc/fusion/*.toml \
     /etc/fusion/certs/*
-```
+```text
 
 2. **State Backup (if applicable):**
+
 ```bash
+
 # Backup persistent state
+
 rsync -avz /var/lib/fusion/ backup-server:/fusion-backups/
-```
+```text
 
 ### Recovery Procedures
 
 1. **Server Failure:**
+
 ```bash
+
 # Stop failed instance
+
 systemctl stop fusion-network
 
 # Restore configuration from backup
+
 tar -xzf /backups/fusion-config-YYYYMMDD.tar.gz -C /
 
 # Restart service
+
 systemctl start fusion-network
 systemctl status fusion-network
-```
+```text
 
 2. **Data Corruption:**
+
 ```bash
+
 # Validate data integrity
+
 fusion-network --validate-state
 
 # Restore from last known good backup
+
 cp /backups/state-YYYYMMDD/* /var/lib/fusion/
 
 # Restart service
+
 systemctl restart fusion-network
-```
+```text
 
 ## Troubleshooting
 
@@ -589,26 +627,29 @@ Enable verbose logging:
 
 ```bash
 RUST_LOG=fusion_lang::network=debug fusion-network
-```
+```text
 
 Capture network traffic:
 
 ```bash
 sudo tcpdump -i eth0 -w fusion-traffic.pcap port 8080
 wireshark fusion-traffic.pcap
-```
+```text
 
 ### Performance Profiling
 
 ```bash
+
 # CPU profiling
+
 cargo install flamegraph
 cargo flamegraph --bin fusion-network
 
 # Memory profiling
+
 valgrind --tool=massif ./target/release/fusion-network
 ms_print massif.out.* > memory-profile.txt
-```
+```text
 
 ## Compliance & Auditing
 
@@ -617,7 +658,9 @@ ms_print massif.out.* > memory-profile.txt
 Ensure comprehensive audit logs:
 
 ```rust
+
 #[derive(Serialize)]
+
 struct AuditLog {
     timestamp: DateTime<Utc>,
     event_type: String,
@@ -633,7 +676,7 @@ fn log_audit_event(event: AuditLog) {
     let json = serde_json::to_string(&event).unwrap();
     audit_logger.log(&json);
 }
-```
+```text
 
 ### Compliance Checklist
 
@@ -654,5 +697,5 @@ fn log_audit_event(event: AuditLog) {
 
 ---
 
-**Last Reviewed:** 2025-12-10  
+**Last Reviewed:** 2025-12-10
 **Next Review:** 2025-03-10

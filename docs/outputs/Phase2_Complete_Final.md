@@ -39,7 +39,7 @@ class VectorT {
     fn len() -> int
     fn free() -> void
 }
-```
+```text
 
 **Features**: Automatic capacity doubling, generic type support, `malloc`/`realloc` management
 **Status**: ✅ Fully functional
@@ -57,7 +57,7 @@ class LinkedListT {
     fn is_empty() -> int
     fn clear() -> void
 }
-```
+```text
 
 **Features**: Pointer-based traversal, manual memory management
 **Status**: ✅ Fully functional
@@ -74,7 +74,7 @@ class OptionT {
     fn unwrap() -> T
     fn unwrap_or(default: T) -> T
 }
-```
+```text
 
 **Features**: Rust-style optional values, safe unwrapping
 **Status**: ✅ Complete
@@ -92,7 +92,7 @@ class Result<T, E> {
     fn unwrap_err() -> E
     fn unwrap_or(default: T) -> T
 }
-```
+```text
 
 **Features**: Type-safe error handling, ergonomic Result type
 **Status**: ✅ Complete
@@ -111,7 +111,7 @@ class StringUtils {
     fn to_uppercase(s: int) -> int
     fn to_lowercase(s: int) -> int
 }
-```
+```text
 
 **Features**: Complete string operations, ASCII case conversion, logical AND operators
 **Status**: ✅ Complete
@@ -136,7 +136,7 @@ class StringUtils {
 ```fusion
 let truth = true;
 let falsehood = false;
-```
+```text
 
 **Implementation**: `Token::True` and `Token::False` in lexer
 **Code Gen**: `i64 1` for true, `i64 0` for false
@@ -147,7 +147,7 @@ let falsehood = false;
 ```fusion
 let neg = -42;
 let index = -1; // For "not found"
-```
+```text
 
 **Implementation**: Unary minus operator in parser
 **Code Gen**: `sub nsw i64 0, <value>`
@@ -158,7 +158,7 @@ let index = -1; // For "not found"
 ```fusion
 if (a && b) { }
 if (x || y) { }
-```
+```text
 
 **Implementation**: `parse_logical_and()` and `parse_logical_or()`
 **Code Gen**: Convert to i1, perform operation, convert back to i64
@@ -169,7 +169,7 @@ if (x || y) { }
 ```fusion
 let opposite = -value;
 let inverted = !flag;
-```
+```text
 
 **Implementation**: `UnaryOp::Negate` and `UnaryOp::Not`
 **Status**: ✅ Complete
@@ -184,7 +184,7 @@ counter = counter + 1; // ✅ Works!
 
 let immutable = 5;
 immutable = 10; // ❌ Compiler error: cannot assign to immutable variable
-```
+```text
 
 #### Implementation
 
@@ -250,7 +250,7 @@ The hybrid cryptography module combines **classical** and **post-quantum** algor
 
 ```rust
 pub fn hybrid_kdf(ss_classical: &[u8], ss_pqc: &[u8]) -> Result<AesKey, String>
-```
+```text
 
 **Algorithm**: SHA3-256
 **Input**: Classical shared secret + PQC shared secret
@@ -267,7 +267,7 @@ pub fn hybrid_sign(message: &[u8], classical_sk: &[u8], pqc_sk: &[u8])
 pub fn hybrid_verify(message: &[u8], sig: &HybridSignature,
                      classical_pk: &[u8], pqc_pk: &[u8])
     -> Result<bool, String>
-```
+```text
 
 **Defense-in-Depth**: BOTH signatures must validate for verification to succeed
 **Status**: ✅ Complete architecture, Ed25519 fully functional
@@ -282,7 +282,7 @@ test test_hybrid_verify_tampered_message ... ok
 test test_keypair_generation ... ok
 
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
-```
+```text
 
 ### Cryptography Module Metrics
 
@@ -322,7 +322,7 @@ All components compile successfully to valid LLVM IR:
 ✅ test_mutable.fu
 ✅ test_parser_enhancements.fu
 ✅ src/crypto/hybrid.rs
-```
+```text
 
 ### Test Suite Results
 

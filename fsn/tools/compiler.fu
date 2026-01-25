@@ -1,0 +1,35 @@
+// tools/compiler.fsn
+// Source-to-source transpiler.
+
+fn main() {
+    let source_file = env::arg("input");
+    println!("Compiling {}...", source_file);
+
+    let raw_code = File::read_to_string(source_file);
+    let sanitized = transpile(raw_code);
+
+    let build_dir = Workspace::create_temp();
+    build_dir.write("src/main.rs", sanitized);
+
+    let result = Backend::invoke_rustc(build_dir);
+
+    fusion_if!(result.is_ok(), {
+        println!("Binary artifact created");
+    } else {
+        println!("Compilation terminated");
+    });
+}
+
+fn transpile(source: FString) -> FString {
+    let mut output = FString::from("// FUSION AUTO-GENERATED\n");
+
+    output.append("use fusion_std::prelude::*;\n");
+
+    fusion_if!(!source.contains("#[fusion_main]"), {
+        output.append(source.replace("fn main", "#[fusion_main] fn main"));
+    } else {
+        output.append(source);
+    });
+
+    output
+}

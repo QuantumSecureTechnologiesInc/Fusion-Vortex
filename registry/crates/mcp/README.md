@@ -1,7 +1,7 @@
 # Fusion MCP (Model Context Protocol)
 
-**Version:** Workspace  
-**Type:** AI Assistant Integration  
+**Version:** Workspace
+**Type:** AI Assistant Integration
 **License:** MIT / Apache 2.0 Dual License
 
 ## Overview
@@ -18,7 +18,7 @@ Fusion MCP provides integration with the Model Context Protocol, enabling AI ass
 
 ## Architecture
 
-```
+```text
 AI Assistant (Claude, GPT-4, etc.)
     ↓ MCP Protocol
 Fusion MCP Server
@@ -31,7 +31,7 @@ Fusion MCP Server
 fusion_runtime_core
     ↓
 Fusion Project (AST, Types, Symbols)
-```
+```text
 
 ## Installation
 
@@ -40,7 +40,7 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 fusion-mcp = { workspace = true }
-```
+```text
 
 ## Usage
 
@@ -51,16 +51,17 @@ use fusion_mcp::{McpServer, McpConfig};
 use fusion_runtime_core::Runtime;
 
 #[tokio::main]
+
 async fn main() -> Result<(), anyhow::Error> {
     let runtime = Runtime::new();
     let config = McpConfig::default();
-    
+
     let server = McpServer::new(config, runtime);
     server.start().await?;
-    
+
     Ok(())
 }
-```
+```text
 
 ### MCP Protocol Endpoints
 
@@ -83,7 +84,7 @@ let context = client.get_context("src/main.rs", 42).await?;
 
 // Request suggestions
 let suggestions = client.suggest(context).await?;
-```
+```text
 
 ## Configuration
 

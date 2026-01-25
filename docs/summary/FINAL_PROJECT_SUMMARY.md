@@ -177,7 +177,7 @@ fusion-lang/
 ├── README.md                     # ✅ Complete overview
 ├── QuickStartGuide.md            # ✅ Quick start
 └── ChangeLog.md                  # ✅ Development history
-```
+```text
 
 **Total**: **59 files** across the project
 

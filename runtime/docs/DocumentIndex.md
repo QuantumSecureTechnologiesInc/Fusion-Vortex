@@ -48,7 +48,7 @@ docs/
 ├── compliance/          # Regulatory compliance documents
 ├── roadmap/             # Planning and feature timelines
 └── references/          # API docs and external references
-```
+```text
 
 ---
 
@@ -157,12 +157,15 @@ docs/
 All documentation must pass `markdownlint`:
 
 ```bash
+
 # Check all docs
+
 markdownlint docs/**/*.md
 
 # Auto-fix where possible
+
 markdownlint --fix docs/**/*.md
-```
+```text
 
 ### Documentation Review
 
@@ -246,6 +249,6 @@ We welcome feedback on our documentation:
 
 ---
 
-**Maintained by**: Quantum Secure Technologies Inc. Documentation Team  
-**Last Updated**: 2025-12-08  
+**Maintained by**: Quantum Secure Technologies Inc. Documentation Team
+**Last Updated**: 2025-12-08
 **Version**: 0.2.0

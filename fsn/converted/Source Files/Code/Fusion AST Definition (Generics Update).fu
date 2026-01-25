@@ -1,0 +1,60 @@
+// SOURCE: Source Files/Code/Fusion AST Definition (Generics Update).rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/ast/mod.rs - Abstract Syntax Tree Definitions (Updated for Generics and Traits)
+
+#[derive(Debug, Clone)]
+enum Declaration {
+    Function {
+        name: FString,
+        attributes: FVec<Attribute>,
+        generic_params: FVec<FString>, // New: Generic Type Parameters (e.g., T, U)
+        where_bounds: FVec<TraitBound>, // New: Trait Constraints
+        params: FVec<Parameter>,
+        return_type: Type,
+        body: Block,
+    },
+    Class {
+        name: FString,
+        generic_params: FVec<FString>, // New: Generic Type Parameters for the class itself
+        implements: FVec<FString>,
+        fields: FVec<Field>,
+        methods: FVec<Declaration>,
+    },
+    Trait {
+        name: FString,
+        methods: FVec<MethodSignature>,
+    },
+    // ... (other declarations remain the same)
+}
+
+#[derive(Debug, Clone)]
+struct TraitBound {
+    pub type_name: FString,  // The generic type being constrained (e.g., "T")
+    pub trait_name: FString, // The required trait (e.g., "Serializable")
+}
+
+// ... (Parameter, Field, MethodSignature, Block, Statement, Expression, Literal, BinaryOp, UnaryOp enums remain the same) ...
+
+#[derive(Debug, Clone, PartialEq)]
+enum Type {
+    Unknown,
+    Void,
+    Integer,
+    Float,
+    FString,
+    Boolean,
+    Custom(FString),        // Named types (e.g., DataProcessor)
+    TypeParameter(FString), // New: Represents an unresolved generic type (e.g., 'T')
+    Array(Box<Type>),
+    Optional(Box<Type>),
+    Union(FVec<Type>),
+    Function {
+        params: FVec<Type>,
+        return_type: Box<Type>,
+    },
+    // New: A concrete type instantiated with generic arguments (e.g., List<int>)
+    GenericInstance {
+        base_name: FString, // "List"
+        args: FVec<Type>,   // [Integer]
+    },
+}

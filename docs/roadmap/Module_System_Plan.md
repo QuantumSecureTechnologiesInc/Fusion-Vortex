@@ -33,7 +33,7 @@ mod internal;      // Private module (only accessible within lib.fu)
 pub fn library_function() -> int {
     return utils::helper();
 }
-```
+```text
 
 ### Module Import
 
@@ -47,7 +47,7 @@ fn main() -> int {
     let x = utils::helper();
     return x;
 }
-```
+```text
 
 ### Module Files
 
@@ -59,7 +59,7 @@ project/
 ├── lib.fu
 ├── utils.fu        // Corresponds to "mod utils"
 └── types.fu        // Corresponds to "mod types"
-```
+```text
 
 <!-- Option 2: Directory modules -->
 
@@ -71,7 +71,7 @@ project/
     ├── mod.fu      // Module entry point
     ├── string.fu
     └── math.fu
-```
+```text
 
 ---
 
@@ -95,7 +95,7 @@ pub enum Declaration {
         import_all: bool,      // true for "use mod::*"
     },
 }
-```
+```text
 
 ### Phase 2: Module Resolution
 
@@ -110,7 +110,7 @@ pub enum Declaration {
 
 **Algorithm**:
 
-```
+```text
 
 1. Start from entry point (main.fu or lib.fu)
 2. Parse top-level declarations
@@ -121,7 +121,7 @@ pub enum Declaration {
 
 4. Topological sort to get compilation order
 5. Detect cycles (error if found)
-```
+```text
 
 ### Phase 3: Namespace Management
 
@@ -140,7 +140,7 @@ struct Module {
     is_public: bool,
     exports: Vec<String>,  // Public functions, types, etc.
 }
-```
+```text
 
 **Resolution Rules**:
 
@@ -163,7 +163,7 @@ Mod,
 #[token("use")]
 
 Use,
-```
+```text
 
 **Add parsing**:
 
@@ -171,7 +171,7 @@ Use,
 // parser/mod.rs
 fn parse_mod_declaration(&mut self) -> Result<Declaration, String>
 fn parse_use_declaration(&mut self) -> Result<Declaration, String>
-```
+```text
 
 ### Phase 5: Semantic Analyzer Integration
 
@@ -205,7 +205,7 @@ fn compile_project(entry_point: &str) -> Result<(), String> {
 
     Ok(())
 }
-```
+```text
 
 ---
 
@@ -223,7 +223,7 @@ fn main() -> int {
     println("Result: ");
     return result;
 }
-```
+```text
 
 **utils.fu**:
 
@@ -235,7 +235,7 @@ pub fn add(a: int, b: int) -> int {
 pub fn multiply(a: int, b: int) -> int {
     return a * b;
 }
-```
+```text
 
 **Compilation**:
 
@@ -244,7 +244,7 @@ fusion_lang -i main.fu
 
 # Automatically finds and compiles utils.fu
 
-```
+```text
 
 ### Example 2: Multi-Module Library
 
@@ -257,7 +257,7 @@ pub mod string_utils;
 pub fn library_version() -> int {
     return 1;
 }
-```
+```text
 
 **math.fu**:
 
@@ -268,7 +268,7 @@ pub fn abs(x: int) -> int {
     }
     return x;
 }
-```
+```text
 
 **string_utils.fu**:
 
@@ -276,7 +276,7 @@ pub fn abs(x: int) -> int {
 pub fn length(s: string) -> int {
     return strlen(s);
 }
-```
+```text
 
 **main.fu**:
 
@@ -289,7 +289,7 @@ fn main() -> int {
     let len = string_utils::length("hello");
     return x + len;
 }
-```
+```text
 
 ---
 
@@ -303,7 +303,7 @@ use b;
 
 // b.fu
 use a;  // ERROR: Circular dependency detected: a -> b -> a
-```
+```text
 
 **Error Message**:
 
@@ -319,13 +319,13 @@ note: module 'a' was first imported here
    |
 1  | use b;
    | ^^^^^^
-```
+```text
 
 ### Missing Module
 
 ```fusion
 use nonexistent;  // ERROR: Module 'nonexistent' not found
-```
+```text
 
 **Error Message**:
 
@@ -337,7 +337,7 @@ error: could not find module 'nonexistent'
    |     ^^^^^^^^^^^ no file 'nonexistent.fu' found
    |
 help: create a file named 'nonexistent.fu' in the same directory
-```
+```text
 
 ---
 
@@ -378,13 +378,13 @@ tests/multi_file/
 └── circular/
     ├── a.fu
     └── b.fu
-```
+```text
 
 **Test Command**:
 
 ```bash
 cargo test --test multi_file_compilation
-```
+```text
 
 ---
 
@@ -415,7 +415,7 @@ impl ModuleCache {
         None
     }
 }
-```
+```text
 
 ### Parallel Compilation
 
@@ -428,7 +428,7 @@ let irs: Vec<String> = compilation_order
     .par_iter()  // Parallel iterator
     .map(|module_path| compile_module(module_path))
     .collect()?;
-```
+```text
 
 ---
 
@@ -438,7 +438,7 @@ let irs: Vec<String> = compilation_order
 
 **Single-file programs continue to work**:
 
-```
+```text
 
 # Old way (still works)
 
@@ -450,7 +450,7 @@ fusion_lang -i main.fu
 
 # (automatically finds and compiles imported modules)
 
-```
+```text
 
 ### Standard Library
 
@@ -467,7 +467,7 @@ let v = Vector::new();
 // Or use wildcard for convenience
 use std::*;
 let v = Vector::new();
-```
+```text
 
 **Transition**: Provide `--implicit-std` flag for compatibility
 

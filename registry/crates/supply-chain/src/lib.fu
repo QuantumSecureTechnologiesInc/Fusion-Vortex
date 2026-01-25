@@ -1,0 +1,2 @@
+/// supply-chain implementation
+struct SupplyChainModule;

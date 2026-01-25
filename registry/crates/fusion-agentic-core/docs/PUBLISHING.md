@@ -22,21 +22,27 @@ Get your API token from crates.io:
 Ensure all requirements are met:
 
 ```bash
+
 # Navigate to crate directory
+
 cd registry/crates/fusion-agentic-core
 
 # Check the package
+
 cargo package --list
 
 # Verify it builds
+
 cargo build --release
 
 # Run all tests
+
 cargo test
 
 # Check documentation
+
 cargo doc --no-deps
-```
+```text
 
 ## Publication Steps
 
@@ -48,7 +54,7 @@ Verify the version in `Cargo.toml`:
 [package]
 name = "fusion-agentic-core"
 version = "0.1.0"  # Ensure this is correct
-```
+```text
 
 ### Step 2: Package Creation
 
@@ -56,7 +62,7 @@ Create the package:
 
 ```bash
 cargo package
-```
+```text
 
 This creates a `.crate` file in `target/package/`.
 
@@ -66,7 +72,7 @@ Test the publication without actually publishing:
 
 ```bash
 cargo publish --dry-run
-```
+```text
 
 Review the output for any errors or warnings.
 
@@ -76,7 +82,7 @@ Publish the crate:
 
 ```bash
 cargo publish
-```
+```text
 
 **Note**: This action is **permanent** and cannot be undone. The version number can never be reused.
 
@@ -95,12 +101,14 @@ The Fusion global package manager automatically indexes from crates.io. Addition
 ### 1. Register with Fusion Registry
 
 ```bash
+
 # Using Fusion CLI
+
 fusion registry add fusion-agentic-core \
     --version 0.1.0 \
     --category ai-tools \
     --tags "ai,agentic,reasoning,vibe-coding,code-excellence"
-```
+```text
 
 ### 2. Add Metadata
 
@@ -131,13 +139,13 @@ security_audit = "passed"
 [compatibility]
 rust_version = "1.80+"
 platforms = ["windows", "linux", "macos"]
-```
+```text
 
 ### 3. Sync to Fusion Registry
 
 ```bash
 fusion registry sync fusion-agentic-core
-```
+```text
 
 ## Post-Publication
 
@@ -175,16 +183,21 @@ Follow [SemVer](https://semver.org/):
 ### Publishing Updates
 
 ```bash
+
 # Update version in Cargo.toml
+
+
 # Update CHANGELOG.md
 
 # Build and test
+
 cargo build --release
 cargo test
 
 # Publish
+
 cargo publish
-```
+```text
 
 ## Troubleshooting
 
@@ -199,6 +212,7 @@ cargo publish
 **Problem**: Missing required fields in `Cargo.toml`
 
 **Solution**: Add required fields:
+
 ```toml
 [package]
 name = "..."
@@ -207,7 +221,7 @@ authors = ["..."]
 description = "..."
 license = "..."
 repository = "..."
-```
+```text
 
 ### Error: File Too Large
 
@@ -217,10 +231,11 @@ repository = "..."
 - Add large files to `.gitignore`
 - Use `.cargo_vcs_info.json` for VCS metadata
 - Exclude unnecessary files in `Cargo.toml`:
+
   ```toml
   [package]
   exclude = ["tests/fixtures/*", "benches/data/*"]
-  ```
+```text
 
 ### Error: Documentation Build Failed
 
@@ -258,7 +273,7 @@ Add to README.md:
 [![Documentation](https://docs.rs/fusion-agentic-core/badge.svg)](https://docs.rs/fusion-agentic-core)
 [![License](https://img.shields.io/crates/l/fusion-agentic-core.svg)](LICENSE)
 [![Downloads](https://img.shields.io/crates/d/fusion-agentic-core.svg)](https://crates.io/crates/fusion-agentic-core)
-```
+```text
 
 ## Security
 
@@ -267,6 +282,7 @@ Add to README.md:
 Create `SECURITY.md`:
 
 ```markdown
+
 # Security Policy
 
 ## Reporting a Vulnerability
@@ -275,7 +291,7 @@ Please report security vulnerabilities to:
 security@quantum-secure-technologies.com
 
 Do not create public GitHub issues for security vulnerabilities.
-```
+```text
 
 ### Security Advisories
 
@@ -327,6 +343,6 @@ Before publishing, ensure:
 
 ---
 
-**Version**: 0.1.0  
-**Last Updated**: 2025-12-12  
+**Version**: 0.1.0
+**Last Updated**: 2025-12-12
 **Maintainer**: Quantum Secure Technologies Inc.

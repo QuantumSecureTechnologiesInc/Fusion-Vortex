@@ -1,7 +1,7 @@
 # Fusion gRPC
 
-**Version:** 0.2.0  
-**Type:** RPC Framework  
+**Version:** 0.2.0
+**Type:** RPC Framework
 **License:** MIT
 
 ## Overview
@@ -24,6 +24,7 @@ use my_proto::greeter_server::{Greeter, GreeterServer};
 struct MyGreeter;
 
 #[tonic::async_trait]
+
 impl Greeter for MyGreeter {
     async fn say_hello(&self, req: Request<HelloRequest>) -> Result<Response<HelloReply>, Status> {
         Ok(Response::new(HelloReply {
@@ -31,7 +32,7 @@ impl Greeter for MyGreeter {
         }))
     }
 }
-```
+```text
 
 ## Dependencies
 

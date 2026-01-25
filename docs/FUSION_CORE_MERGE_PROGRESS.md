@@ -1,6 +1,6 @@
 # Fusion Core Merge - Progress Report
 
-**Date**: 2025-12-15  
+**Date**: 2025-12-15
 **Status**: ✅ **MERGE COMPLETE** (Build issues in other crates prevent workspace testing)
 
 ---
@@ -8,12 +8,14 @@
 ## ✅ Completed Actions
 
 ### Phase 1: Created Merged Crate ✅
+
 - **Location**: `registry/crates/fusion-core` (new directory)
 - **Package name**: `fusion-core` (hyphen)
 - **Library name**: `fusion_core` (underscore for imports)
 
 **Structure**:
-```
+
+```text
 registry/crates/fusion-core/
 ├── src/
 │   ├── lib.rs                 # Unified exports
@@ -39,21 +41,25 @@ registry/crates/fusion-core/
 │   └── hybrid_vqe.rs
 ├── tests/                     # From old core
 └── Cargo.toml                 # Merged dependencies
-```
+```text
 
 ### Phase 2: Updated Workspace Dependencies ✅
 
 **Root Cargo.toml changes**:
+
 ```toml
+
 # BEFORE (confusing):
+
 fusion_core = { path = "registry/crates/fusion_core", version = "0.2.0" }
 fusion-compiler = { path = "registry/crates/core", version = "0.2.0" }
 fusion-core = { path = "registry/crates/core", version = "0.2.0", package = "fusion-compiler" }
 
 # AFTER (unified):
+
 fusion-core = { path = "registry/crates/fusion-core", version = "0.2.0" }
 fusion_core = { path = "registry/crates/fusion-core", version = "0.2.0", package = "fusion-core" }
-```
+```text
 
 ### Phase 3: Updated Path-Based Dependencies ✅
 
@@ -66,13 +72,14 @@ Fixed manual path references:
 ### Phase 4: Excluded Old Crates ✅
 
 Added to workspace exclusions:
+
 ```toml
 exclude = [
     ...
     "registry/crates/fusion_core",  # Old - replaced by fusion-core
     "registry/crates/core",         # Old - replaced by fusion-core
 ]
-```
+```text
 
 ---
 
@@ -81,6 +88,7 @@ exclude = [
 The merged `fusion-core` crate compiles successfully in isolation, but workspace-level cargo commands fail due to **pre-existing issues with other crates**:
 
 ### Missing Bench Files
+
 Multiple crates reference benchmark files that don't exist:
 - `registry/crates/clustering` - missing `benches/kmeans.rs` ✅ FIXED
 - `registry/crates/tensor-sparse` - missing bench file
@@ -112,6 +120,7 @@ Once workspace builds again, these ~170+ crates will automatically use the new u
 ## 📋 Next Steps
 
 ### Immediate (For Complete Merge)
+
 1. ⬜ Fix or remove bench definitions in remaining problematic crates
 2. ⬜ Test `cargo check --workspace` succeeds
 3. ⬜ Run example: `cargo run -p fusion-core --example hybrid_vqe`
@@ -120,19 +129,22 @@ Once workspace builds again, these ~170+ crates will automatically use the new u
    - `registry/crates/core`
 
 ### Import Statement Migration
+
 Once workspace builds, search and replace in `.rs` files:
 
 **OLD compiler imports**:
+
 ```rust
 use fusion_core_compiler::lexer::Lexer;
 use fusion_core_compiler::parser::Parser;
-```
+```text
 
 **NEW unified imports**:
+
 ```rust
 use fusion_core::compiler::lexer::Lexer;
 use fusion_core::compiler::parser::Parser;
-```
+```text
 
 ---
 
@@ -141,7 +153,7 @@ use fusion_core::compiler::parser::Parser;
 1. **Single Source of Truth**: One `fusion-core` crate with clear responsibilities
 2. **No Name Confusion**: Directory name matches package name
 3. **Backwards Compatible**: Both `fusion-core` and `fusion_core` workspace keys point to same crate
-4. **Clean Architecture**: 
+4. **Clean Architecture**:
    - `fusion_core::types` - Type system
    - `fusion_core::compiler` - Compilation pipeline
    - `fusion_core::vm` - Runtime execution

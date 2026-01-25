@@ -1,0 +1,5 @@
+// SOURCE: registry/crates/offload/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// offload implementation
+
+struct OffloadModule;

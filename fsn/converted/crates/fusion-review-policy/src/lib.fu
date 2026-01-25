@@ -1,0 +1,55 @@
+// SOURCE: crates/fusion-review-policy/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
+//! Fusion Review Policy
+//!
+//! Review policy enforcement for artifacts, terminal commands,
+//! and browser actions.
+
+use serde::{Deserialize, Serialize};
+
+mod browser;
+mod enforcement;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ReviewPolicy {
+    pub artifact: ArtifactPolicy,
+    pub terminal: TerminalPolicy,
+    pub browser: BrowserPolicy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+enum ArtifactPolicy {
+    AlwaysProceed,
+    RequestReview,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TerminalPolicy {
+    mode: TerminalExecutionMode,
+    pub allow_list: FVec<FString>,
+    pub deny_list: FVec<FString>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+enum TerminalExecutionMode {
+    RequestReview,
+    AlwaysProceed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct BrowserPolicy {
+    pub javascript_execution: JavascriptPolicy,
+    pub url_allowlist: FVec<FString>,
+    pub url_denylist: FVec<FString>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+enum JavascriptPolicy {
+    RequestReview,
+    AlwaysProceed,
+}

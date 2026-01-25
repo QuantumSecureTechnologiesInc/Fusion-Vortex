@@ -1,0 +1,12 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Fusion Crates/Beam Search Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// [package]
+// name = "fusion_llm_beam_search"
+// version = "0.1.0"
+// edition = "2021"
+// description = "High-performance Beam Search and diverse beam search implementation"
+// license = "MIT"
+// 
+// [dependencies]
+// fusion_llm_inference_engine = { path = "../llm-inference", version = "0.1.0" }

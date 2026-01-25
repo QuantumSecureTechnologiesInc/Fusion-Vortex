@@ -1,0 +1,24 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 1/Fusion TS Compiler Config.txt
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+//     "allowJs": true,
+//     "skipLibCheck": true,
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true,
+//     "strict": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "noFallthroughCasesInSwitch": true,
+//     "module": "esnext",
+//     "moduleResolution": "node",
+//     "resolveJsonModule": true,
+//     "isolatedModules": true,
+//     "noEmit": true,
+//     "jsx": "react-jsx",
+//     "baseUrl": "./src"
+//   },
+//   "include": ["src"]
+// }

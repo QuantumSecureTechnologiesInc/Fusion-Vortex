@@ -11,13 +11,13 @@ TensorWeave is a production-ready tensor processing engine designed for secure, 
 
 ## Key Features
 
-*   **🔒 Security-First**: Integrity checks prevent corrupted data from propagating
-*   **📊 Numerical Stability**: Automatic NaN/Inf detection and correction
-*   **⚡ SVD Optimization**: Matrix compression using Singular Value Decomposition
-*   **🧠 Learning Support**: SGD-style gradient updates for training pipelines
-*   **🔍 Observable**: Structured JSON logging with distributed tracing
-*   **⚙️ Configurable**: Environment variable-based configuration
-*   **🚀 Parallel Processing**: Rayon-based parallelism for high throughput
+* **🔒 Security-First**: Integrity checks prevent corrupted data from propagating
+* **📊 Numerical Stability**: Automatic NaN/Inf detection and correction
+* **⚡ SVD Optimization**: Matrix compression using Singular Value Decomposition
+* **🧠 Learning Support**: SGD-style gradient updates for training pipelines
+* **🔍 Observable**: Structured JSON logging with distributed tracing
+* **⚙️ Configurable**: Environment variable-based configuration
+* **🚀 Parallel Processing**: Rayon-based parallelism for high throughput
 
 ## Quick Start
 
@@ -28,7 +28,7 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 tensor_weave = { path = "../tensorweave" }
-```
+```text
 
 ### Basic Usage
 
@@ -39,50 +39,57 @@ use tensor_weave::processors::{SecureProcessor, StabilizeProcessor};
 fn main() -> anyhow::Result<()> {
     // Create engine
     let mut engine = TensorWeaveEngine::new(30);
-    
+
     // Add processors
     engine.add_processor(Box::new(SecureProcessor));
     engine.add_processor(Box::new(StabilizeProcessor));
-    
+
     // Create sample tensor
     let tensor = TensorData::new("sample", vec![2, 3], vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-    
+
     // Process batch
     let results = engine.run_batch_sync(vec![tensor]);
-    
+
     Ok(())
 }
-```
+```text
 
 ### CLI Usage
 
 #### Run Benchmark
+
 ```bash
 tensor_weave benchmark --batch-size 10 --matrix-size 100
-```
+```text
 
 #### Process JSON File
+
 ```bash
 tensor_weave process --input data.json --output results.json
-```
+```text
 
 ## Configuration
 
 Configure via environment variables with `TENSOR__` prefix:
 
 ```bash
+
 # SVD compression ratio
+
 export TENSOR__OPTIMIZATION__SVD_KEEP_RATIO=0.95
 
 # Learning rate for SGD
+
 export TENSOR__LEARNING__LEARNING_RATE=0.001
 
 # Momentum for optimizer
+
 export TENSOR__LEARNING__MOMENTUM=0.9
 
 # Logging level
+
 export TENSOR__SERVER__LOG_LEVEL=debug
-```
+```text
 
 ## Processors
 
@@ -115,7 +122,7 @@ Applies gradient descent updates:
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────┐
 │   TensorData        │
 │  - id, trace_id     │
@@ -144,7 +151,7 @@ Applies gradient descent updates:
     ┌──────────┐
     │ Results  │
     └──────────┘
-```
+```text
 
 ## Testing
 
@@ -152,15 +159,16 @@ Run the test suite:
 
 ```bash
 cargo test --lib
-```
+```text
 
 Individual processor tests:
+
 ```bash
 cargo test secure
 cargo test stabilize
 cargo test optimize
 cargo test learn
-```
+```text
 
 ## Performance
 
@@ -176,11 +184,13 @@ Typical performance (100x100 matrices, batch of 10):
 ## Dependencies
 
 ### Core
+
 - `ndarray` - Tensor operations
 - `ndarray-linalg` - Linear algebra (requires OpenBLAS/LAPACK)
 - `rayon` - Parallel processing
 
 ### Utility
+
 - `serde` + `serde_json` - Serialization
 - `config` - Configuration management
 - `uuid` - Unique identifiers
@@ -190,24 +200,31 @@ Typical performance (100x100 matrices, batch of 10):
 ## System Requirements
 
 ### Development
+
 - Rust 1.70+
 - OpenBLAS/LAPACK (for SVD functionality)
 
 ### Linux (Recommended)
+
 ```bash
+
 # Ubuntu/Debian
+
 sudo apt-get install libopenblas-dev liblapack-dev
 
 # Fedora
+
 sudo dnf install openblas-devel lapack-devel
-```
+```text
 
 ### macOS
+
 ```bash
 brew install openblas lapack
-```
+```text
 
 ### Windows
+
 SVD functionality requires OpenBLAS installation. Use Docker for full functionality.
 
 ## Docker
@@ -225,7 +242,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y libopenblas0 liblapack3
 COPY --from=builder /app/target/release/tensor_weave /usr/local/bin/
 CMD ["tensor_weave", "benchmark"]
-```
+```text
 
 ## Contributing
 

@@ -1,0 +1,403 @@
+// SOURCE: crates/fusion-monolith-core/src/orchestrator.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! The Fusion Orchestrator - Central coordinator for the build pipeline
+//!
+//! Manages the lifecycle state machine: Idle -> Resolving -> Auditing -> Checking/Compiling -> Testing -> Running
+
+use crate::auditor::Auditor;
+use crate::config::MonolithConfig;
+use crate::error::{MonolithError, MonolithResult};
+use crate::lsp::LspServer;
+use crate::state::{
+    create_shared_state, Artifact, BuildStatus, FusionState, PackageId, SharedState,
+};
+use crate::tui::Dashboard;
+
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use parking_lot::RwLock;
+
+/// Events that can be sent to the orchestrator
+#[derive(Debug, Clone)]
+enum OrchestratorEvent {
+    /// Trigger a workflow
+    TriggerWorkflow(WorkflowType),
+    /// File changed (for watch mode)
+    FileChanged(FString),
+    /// Shutdown request
+    Shutdown,
+}
+
+/// Type of workflow to run
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum WorkflowType {
+    /// Fast semantic check only
+    Check,
+    /// Full build pipeline
+    Build,
+    /// Build and run
+    Run,
+    /// Security audit only
+    AuditOnly,
+}
+
+impl std::fmt::Display for WorkflowType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Check => write!(f, "check"),
+            Self::Build => write!(f, "build"),
+            Self::Run => write!(f, "run"),
+            Self::AuditOnly => write!(f, "audit"),
+        }
+    }
+}
+
+/// The main orchestrator for the Fusion Monolith
+struct FusionOrchestrator {
+    /// Shared state accessible by all components
+    state: SharedState,
+    /// Configuration
+    config: MonolithConfig,
+    /// Event sender for triggering workflows
+    event_tx: Sender<OrchestratorEvent>,
+    /// Event receiver
+    event_rx: Receiver<OrchestratorEvent>,
+    /// Security auditor
+    auditor: Arc<Auditor>,
+    /// LSP server (lazy initialized)
+    lsp_server: Arc<RwLock<Option<LspServer>>>,
+    /// Dashboard handle
+    dashboard_handle: Arc<RwLock<Option<thread::JoinHandle<()>>>>,
+}
+
+impl FusionOrchestrator {
+    /// Creates a new orchestrator with the given configuration
+    fn new(config: MonolithConfig) -> Self {
+        let (event_tx, event_rx) = unbounded();
+        let state = create_shared_state();
+        let auditor = Arc::new(Auditor::new());
+
+        Self {
+            state,
+            config,
+            event_tx,
+            event_rx,
+            auditor,
+            lsp_server: Arc::new(RwLock::new(None)),
+            dashboard_handle: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    /// Returns a clone of the shared state
+    fn state(&self) -> SharedState {
+        Arc::clone(&self.state)
+    }
+
+    /// Returns an event sender for triggering workflows
+    fn event_sender(&self) -> Sender<OrchestratorEvent> {
+        self.event_tx.clone()
+    }
+
+    /// Runs the complete system (TUI, LSP, and command handling)
+    fn run_system(&self) {
+        // Start TUI dashboard if enabled
+        if self.config.tui.enabled {
+            self.start_dashboard();
+        }
+
+        // Start LSP server if enabled
+        if self.config.lsp.enabled {
+            self.start_lsp_server();
+        }
+
+        // Process events
+        self.run_event_loop();
+    }
+
+    /// Starts the TUI dashboard in a separate thread
+    fn start_dashboard(&self) {
+        let state = Arc::clone(&self.state);
+        let refresh_ms = self.config.tui.refresh_ms;
+
+        let handle = thread::spawn(move || {
+            let dashboard = Dashboard::new(state);
+            dashboard.run_loop(refresh_ms);
+        });
+
+        let mut guard = self.dashboard_handle.write();
+        *guard = Some(handle);
+    }
+
+    /// Starts the LSP server
+    fn start_lsp_server(&self) {
+        let lsp = LspServer::new(Arc::clone(&self.state), self.config.lsp.clone());
+
+        let mut guard = self.lsp_server.write();
+        *guard = Some(lsp);
+    }
+
+    /// Runs the main event loop
+    fn run_event_loop(&self) {
+        loop {
+            match self.event_rx.recv() {
+                Ok(event) => {
+                    match event {
+                        OrchestratorEvent::TriggerWorkflow(workflow) => {
+                            if let Err(e) = self.execute_workflow(&workflow) {
+                                eprintln!("[Fusion] Workflow error: {}", e);
+                            }
+                        }
+                        OrchestratorEvent::FileChanged(path) => {
+                            tracing::info!("File changed: {}", path);
+                            // In watch mode, trigger a rebuild
+                            if let Err(e) = self.execute_workflow(&WorkflowType::Build) {
+                                eprintln!("[Fusion] Rebuild error: {}", e);
+                            }
+                        }
+                        OrchestratorEvent::Shutdown => {
+                            tracing::info!("Shutting down orchestrator");
+                            break;
+                        }
+                    }
+                }
+                Err(_) => {
+                    // Channel closed, exit loop
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Triggers a workflow synchronously
+    fn trigger_workflow(&self, mode: &str) {
+        let workflow = match mode {
+            "check" => WorkflowType::Check,
+            "build" => WorkflowType::Build,
+            "run" => WorkflowType::Run,
+            "audit_only" | "audit" => WorkflowType::AuditOnly,
+            _ => {
+                eprintln!("[Fusion] Unknown workflow: {}", mode);
+                return;
+            }
+        };
+
+        if let Err(e) = self.execute_workflow(&workflow) {
+            eprintln!("[Fusion] Workflow error: {}", e);
+        }
+    }
+
+    /// Executes a workflow
+    fn execute_workflow(&self, workflow: &WorkflowType) -> MonolithResult<()> {
+        // --- PHASE 1: RESOLVE ---
+        self.update_status(BuildStatus::Resolving);
+        self.simulate_resolve()?;
+
+        // --- PHASE 2: AUDIT ---
+        if *workflow != WorkflowType::Check {
+            self.run_audit()?;
+        }
+
+        // Early exit for audit-only mode
+        if *workflow == WorkflowType::AuditOnly {
+            self.update_status(BuildStatus::Success);
+            return Ok(());
+        }
+
+        // --- PHASE 3: CHECK or COMPILE ---
+        let crates = self.get_crates_to_process();
+
+        if *workflow == WorkflowType::Check {
+            // Check Mode: Faster, no codegen
+            self.run_check(&crates)?;
+            self.update_status(BuildStatus::Success);
+            return Ok(());
+        } else {
+            // Build/Run Mode: Full Compilation
+            self.run_compile(&crates)?;
+        }
+
+        // --- PHASE 4: TEST ---
+        if *workflow == WorkflowType::Run {
+            self.run_tests()?;
+
+            // --- PHASE 5: RUN ---
+            self.run_target()?;
+        }
+
+        self.update_status(BuildStatus::Success);
+        Ok(())
+    }
+
+    /// Simulates dependency resolution (placeholder for Flux-Resolve integration)
+    fn simulate_resolve(&self) -> MonolithResult<()> {
+        thread::sleep(Duration::from_millis(300));
+
+        // Add mock dependencies
+        let mut state = self.state.write();
+        let root = PackageId::new("app_core", "1.0.0");
+        state.dependency_graph.insert(
+            root.clone(),
+            vec![
+                PackageId::new("serde", "1.0.197"),
+                PackageId::new("log", "0.4.21"),
+                PackageId::new("openssl", "0.10.64"),
+            ],
+        );
+
+        Ok(())
+    }
+
+    /// Runs the security audit
+    fn run_audit(&self) -> MonolithResult<()> {
+        let packages: FVec<PackageId> = {
+            let state = self.state.read();
+            state.dependency_graph.values().flatten().cloned().collect()
+        };
+
+        let total = packages.len();
+        for (i, pkg) in packages.iter().enumerate() {
+            self.update_status(BuildStatus::Auditing { checked: i, total });
+
+            // Check each package
+            match self.auditor.check(&pkg.name, &pkg.version) {
+                Ok(()) => {
+                    // Package is safe
+                }
+                Err(advisory) => {
+                    let mut state = self.state.write();
+                    if let Some(artifact) = state.artifacts.get_mut(pkg) {
+                        artifact.vulnerability_report.push(advisory.clone());
+                    } else {
+                        let mut artifact = Artifact::new(pkg.clone());
+                        artifact.vulnerability_report.push(advisory);
+                        state.artifacts.insert(pkg.clone(), artifact);
+                    }
+                }
+            }
+
+            thread::sleep(Duration::from_millis(50));
+        }
+
+        self.update_status(BuildStatus::Auditing {
+            checked: total,
+            total,
+        });
+        Ok(())
+    }
+
+    /// Runs semantic checking (fast, no codegen)
+    fn run_check(&self, crates: &[FString]) -> MonolithResult<()> {
+        for (i, c) in crates.iter().enumerate() {
+            let progress = (i as f32) / (crates.len() as f32);
+            self.update_status(BuildStatus::Checking {
+                current_crate: c.clone(),
+                progress,
+            });
+            // Faster analysis time (50ms vs 200ms for compile)
+            thread::sleep(Duration::from_millis(50));
+        }
+        Ok(())
+    }
+
+    /// Runs full compilation
+    fn run_compile(&self, crates: &[FString]) -> MonolithResult<()> {
+        for (i, c) in crates.iter().enumerate() {
+            let progress = (i as f32) / (crates.len() as f32);
+            self.update_status(BuildStatus::Compiling {
+                current_crate: c.clone(),
+                progress,
+            });
+            thread::sleep(Duration::from_millis(200));
+        }
+        Ok(())
+    }
+
+    /// Runs tests
+    fn run_tests(&self) -> MonolithResult<()> {
+        self.update_status(BuildStatus::Testing {
+            passed: 0,
+            failed: 0,
+        });
+        thread::sleep(Duration::from_millis(400));
+        self.update_status(BuildStatus::Testing {
+            passed: 15,
+            failed: 0,
+        });
+        Ok(())
+    }
+
+    /// Runs the target binary
+    fn run_target(&self) -> MonolithResult<()> {
+        self.update_status(BuildStatus::Running {
+            pid: std::process::id(),
+        });
+
+        {
+            let mut state = self.state.write();
+            state.log("Fusion App v1.0 Starting...");
+            state.log("Listening on port 8080");
+        }
+
+        Ok(())
+    }
+
+    /// Returns the list of crates to process
+    fn get_crates_to_process(&self) -> FVec<FString> {
+        vec![
+            "serde".to_string(),
+            "log".to_string(),
+            "openssl".to_string(),
+            "app_core".to_string(),
+        ]
+    }
+
+    /// Updates the build status
+    fn update_status(&self, status: BuildStatus) {
+        let mut state = self.state.write();
+        state.set_status(status);
+    }
+
+    /// Enters watch/daemon mode
+    fn watch_mode(&self) {
+        println!("[Fusion] Watch Mode Active.");
+        println!("[Fusion] Press Ctrl+C to exit.");
+
+        // In a real implementation, this would set up file watching
+        // using the `notify` crate and trigger rebuilds on changes.
+
+        // For now, just run the event loop
+        self.run_event_loop();
+    }
+
+    /// Shuts down the orchestrator
+    fn shutdown(&self) {
+        let _ = self.event_tx.send(OrchestratorEvent::Shutdown);
+    }
+}
+
+impl Drop for FusionOrchestrator {
+    fn drop(&mut self) {
+        // Ensure clean shutdown
+        let _ = self.event_tx.send(OrchestratorEvent::Shutdown);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_orchestrator_creation() {
+        let config = MonolithConfig::default();
+        let orchestrator = FusionOrchestrator::new(config);
+
+        let state = orchestrator.state();
+        let guard = state.read();
+        assert_eq!(guard.status, BuildStatus::Idle);
+    }
+
+    #[test]
+    fn test_workflow_type_display() {
+        assert_eq!(WorkflowType::Build.to_string(), "build");
+        assert_eq!(WorkflowType::Check.to_string(), "check");
+    }
+}

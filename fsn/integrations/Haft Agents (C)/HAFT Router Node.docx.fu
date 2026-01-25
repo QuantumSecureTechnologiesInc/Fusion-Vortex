@@ -1,0 +1,83 @@
+// SOURCE: Source Files/Intergrations/Haft Agents (C)/HAFT Router Node.docx
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// 
+// ======================================================================
+//  * PROJECT: FUSION HAFT (High Availability Flux Tensor)
+//  * MODULE:  NEXUS NODE (Router) - PRODUCTION RELEASE 1.0
+//  * STANDARD: C++20 ======================================================================
+// 
+// #include &lt;iostream&gt;
+// #include &lt;vector&gt;
+// #include &lt;queue&gt;
+// #include &lt;string&gt;
+// #include &lt;memory&gt;
+// #include &lt;thread&gt;
+// #include &lt;mutex&gt;
+// #include &lt;atomic&gt;
+// #include &lt;csignal&gt;
+// #include &lt;cstring&gt;
+// 
+// namespace Infra {
+//     std::atomic&lt;bool&gt; shutdown_requested{false};
+//     std::mutex log_mutex;
+//     void signal_handler(int) { shutdown_requested.store(true); }
+//     void log(const std::string&amp; msg) {
+//         std::lock_guard&lt;std::mutex&gt; lock(log_mutex);
+//         std::cout &lt;&lt; &quot;[Nexus] &quot; &lt;&lt; msg &lt;&lt; std::endl;
+//     }
+// }
+// 
+// struct Task {
+//     std::string id;
+//     int priority; 
+//     bool operator&gt;(const Task&amp; other) const { return priority &gt; other.priority; }
+// };
+// 
+// class NexusLogic {
+//     std::priority_queue&lt;Task, std::vector&lt;Task&gt;, std::greater&lt;Task&gt;&gt; task_queue;
+//     std::mutex q_mutex;
+// 
+// public:
+//     void submit(const std::string&amp; id, int pri) {
+//         std::lock_guard&lt;std::mutex&gt; lock(q_mutex);
+//         task_queue.push({id, pri});
+//         Infra::log(&quot;Enqueued: &quot; + id + &quot; (P&quot; + std::to_string(pri) + &quot;)&quot;);
+//     }
+// 
+//     void process() {
+//         std::lock_guard&lt;std::mutex&gt; lock(q_mutex);
+//         if (task_queue.empty()) return;
+// 
+//         Task t = task_queue.top();
+//         task_queue.pop();
+//         Infra::log(&quot;Dispatching: &quot; + t.id);
+//     }
+// };
+// 
+// int main(int argc, char* argv[]) {
+//     std::signal(SIGINT, Infra::signal_handler);
+//     
+//     NexusLogic nexus;
+//     Infra::log(&quot;Router Online. Waiting for traffic...&quot;);
+// 
+//     // Mock Traffic Generator Thread
+//     std::thread traffic([&amp;]() {
+//         int id = 0;
+//         while (!Infra::shutdown_requested.load()) {
+//             nexus.submit(&quot;Task-&quot; + std::to_string(++id), id % 10);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(400));
+//         }
+//     });
+// 
+//     // Main Dispatch Loop
+//     while (!Infra::shutdown_requested.load()) {
+//         nexus.process();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//     }
+// 
+//     traffic.join();
+//     Infra::log(&quot;Router Offline.&quot;);
+//     return 0;
+// }
+// 

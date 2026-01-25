@@ -1,0 +1,2 @@
+// Fusion stdlib replacement: flow (stub)
+fn _flow_stub() -> void { }

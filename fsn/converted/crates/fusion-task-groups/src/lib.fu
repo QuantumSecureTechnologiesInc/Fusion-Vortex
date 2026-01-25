@@ -1,0 +1,69 @@
+// SOURCE: crates/fusion-task-groups/src/lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// Copyright (c) 2024 QuantumSecure Technologies Inc / Fusion Programming Language Team
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// This file is part of Fusion VSC CLI Coder
+
+//! Fusion Task Groups
+//!
+//! Task group management with subtasks, progress tracking,
+//! and pending step handling.
+
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+mod manager;
+mod ui;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TaskGroup {
+    pub id: FString,
+    pub goal: FString,
+    pub summary: FString,
+    pub subtasks: FVec<Subtask>,
+    pub edited_files: FVec<PathBuf>,
+    pub status: TaskGroupStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Subtask {
+    pub id: FString,
+    pub description: FString,
+    pub progress_updates: FVec<ProgressUpdate>,
+    pub pending_steps: FVec<PendingStep>,
+    pub expanded: FBool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ProgressUpdate {
+    pub action: FString,
+    pub details: Option<FString>,
+    pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+enum PendingStep {
+    BrowserSetup {
+        url: FString,
+    },
+    TerminalCommand {
+        command: FString,
+        needs_approval: FBool,
+    },
+    FileEdit {
+        path: PathBuf,
+        needs_review: FBool,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+enum TaskGroupStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+}
+
+// Re-export UI rendering
+pub use ui::render_task_group_ui;

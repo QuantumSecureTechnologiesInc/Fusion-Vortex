@@ -1,0 +1,7 @@
+// SOURCE: cmd/fusion-coder/src/interactive.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+//! Interactive mode implementation stub
+#[allow(dead_code)]
+fn start() {
+    // TODO: Start interactive session
+}

@@ -1,0 +1,8 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/HAFT Engines/lib.rs
+// NOTE: Integrated into the Fusion FSN tree for migration traceability.
+// CONTENT:
+// pub mod agents;
+// pub mod tensor;
+// 
+// pub use agents::{spawn_agents, Agent, Builder, Optimizer, Researcher};
+// pub use tensor::FluxTensor;

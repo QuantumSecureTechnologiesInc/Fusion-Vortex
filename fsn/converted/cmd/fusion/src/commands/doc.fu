@@ -1,0 +1,15 @@
+// SOURCE: cmd/fusion/src/commands/doc.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+use anyhow::Result;
+use fusion_docgen;
+
+fn doc(open: FBool, private: FBool) -> Result<()> {
+    let _path = fusion_docgen::generate(private)?;
+    if open {
+        println!(
+            "Opening docs is not yet implemented in CLI. Path: {}",
+            _path.display()
+        );
+    }
+    Ok(())
+}

@@ -1,0 +1,2 @@
+/// stream-monitor implementation
+struct StreamMonitorModule;

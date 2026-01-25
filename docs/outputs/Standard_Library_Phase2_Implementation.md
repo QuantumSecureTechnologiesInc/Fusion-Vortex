@@ -22,7 +22,7 @@ extern fn realloc(ptr: int, size: int) -> int;  // NEW
 extern fn memcpy(dest: int, src: int, n: int) -> void;
 extern fn strlen(s: string) -> int;
 "#;
-```
+```text
 
 **Status**: ✅ Complete
 

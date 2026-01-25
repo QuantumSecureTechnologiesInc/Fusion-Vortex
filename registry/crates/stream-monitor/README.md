@@ -1,7 +1,7 @@
 # Fusion Stream Monitor
 
-**Version:** 0.2.0  
-**Type:** Observability  
+**Version:** 0.2.0
+**Type:** Observability
 **License:** MIT
 
 ## Overview
@@ -24,7 +24,7 @@ monitor.on_token_generated(); // Call on each token
 monitor.finish();
 
 println!("Throughput: {} t/s", monitor.throughput());
-```
+```text
 
 ## Dependencies
 

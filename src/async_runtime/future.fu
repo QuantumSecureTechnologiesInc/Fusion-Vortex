@@ -1,0 +1,19 @@
+/// A future that completes after a duration
+#[allow(dead_code)]
+struct Delay {
+    deadline: Instant,
+}
+impl Delay {
+    #[allow(dead_code)]
+    pub fn new(duration: Duration) -> Self {
+        Self {
+            deadline: Instant::now() + duration,
+        }
+    }
+}
+impl Future for Delay {
+    type Output = ();
+    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if Instant::now() >= self.deadline { Poll::Ready(()) } else { Poll::Pending }
+    }
+}

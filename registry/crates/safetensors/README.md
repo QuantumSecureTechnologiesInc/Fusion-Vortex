@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 safetensors = "0.1.0"
-```
+```text
 
 ## Usage
 
@@ -25,7 +25,7 @@ use safetensors::load;
 fn main() {
     load("model.safetensors");
 }
-```
+```text
 
 ## License
 

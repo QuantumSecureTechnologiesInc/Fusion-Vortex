@@ -1,7 +1,7 @@
 # Fusion LLM Beam Search
 
-**Version:** 0.2.0  
-**Type:** Decoding Algorithm  
+**Version:** 0.2.0
+**Type:** Decoding Algorithm
 **License:** MIT
 
 ## Overview
@@ -22,7 +22,7 @@ use llm_beam_search::{BeamSearch, Config};
 let config = Config { beam_width: 5, ..Default::default() };
 let search = BeamSearch::new(model, config);
 let output = search.generate(input_tokens).await?;
-```
+```text
 
 ## Dependencies
 

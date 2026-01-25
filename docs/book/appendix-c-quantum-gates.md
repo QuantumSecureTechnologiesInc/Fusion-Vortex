@@ -18,7 +18,7 @@ This appendix provides a comprehensive reference for quantum gates available in 
 circuit.x(0)      // Apply X to qubit 0
 circuit.y(0)      // Apply Y to qubit 0
 circuit.z(0)      // Apply Z to qubit 0
-```
+```text
 
 ### Hadamard Gate
 
@@ -32,7 +32,7 @@ circuit.h(0)      // |0⟩ → (|0⟩ + |1⟩)/√2
 // Effect:
 // |0⟩ → |+⟩ = (|0⟩ + |1⟩)/√2
 // |1⟩ → |-⟩ = (|0⟩ - |1⟩)/√2
-```
+```text
 
 ### Phase Gates
 
@@ -48,7 +48,7 @@ circuit.s(0)      // S gate
 circuit.sdg(0)    // S-dagger gate
 circuit.t(0)      // T gate
 circuit.tdg(0)    // T-dagger gate
-```
+```text
 
 ### Rotation Gates
 
@@ -64,7 +64,7 @@ use std::f64::consts::PI
 circuit.rx(0, PI / 4.0)   // Rotate around X by π/4
 circuit.ry(0, PI / 2.0)   // Rotate around Y by π/2
 circuit.rz(0, PI)         // Rotate around Z by π
-```
+```text
 
 ### Universal Single-Qubit Gate
 
@@ -76,7 +76,7 @@ $U(\theta, \phi, \lambda) = \begin{pmatrix} \cos(\theta/2) & -e^{i\lambda}\sin(\
 
 ```fusion
 circuit.u(0, theta, phi, lambda)
-```
+```text
 
 ---
 
@@ -97,7 +97,7 @@ circuit.cx(0, 1)      // Alias for CNOT
 circuit.cy(0, 1)      // Controlled-Y
 circuit.cz(0, 1)      // Controlled-Z
 circuit.ch(0, 1)      // Controlled-Hadamard
-```
+```text
 
 **CNOT Matrix (control=0, target=1):**
 
@@ -110,7 +110,7 @@ circuit.crx(0, 1, PI / 4.0)   // Controlled-Rx
 circuit.cry(0, 1, PI / 2.0)   // Controlled-Ry
 circuit.crz(0, 1, PI)         // Controlled-Rz
 circuit.cp(0, 1, PI / 4.0)    // Controlled-Phase
-```
+```text
 
 ### SWAP Gate
 
@@ -125,7 +125,7 @@ $SWAP = \begin{pmatrix} 1 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0
 ```fusion
 circuit.swap(0, 1)
 circuit.iswap(0, 1)
-```
+```text
 
 ### Two-Qubit Rotations
 
@@ -133,7 +133,7 @@ circuit.iswap(0, 1)
 circuit.rxx(0, 1, theta)  // XX rotation
 circuit.ryy(0, 1, theta)  // YY rotation
 circuit.rzz(0, 1, theta)  // ZZ rotation
-```
+```text
 
 ---
 
@@ -149,7 +149,7 @@ circuit.rzz(0, 1, theta)  // ZZ rotation
 circuit.ccnot(0, 1, 2)    // Controls: 0, 1; Target: 2
 circuit.toffoli(0, 1, 2)  // Alias
 circuit.ccx(0, 1, 2)      // Alias
-```
+```text
 
 ### Fredkin Gate (CSWAP)
 
@@ -160,7 +160,7 @@ circuit.ccx(0, 1, 2)      // Alias
 ```fusion
 circuit.cswap(0, 1, 2)    // Control: 0; Swap: 1, 2
 circuit.fredkin(0, 1, 2)  // Alias
-```
+```text
 
 ---
 
@@ -174,7 +174,7 @@ circuit.mcx([0, 1, 2], 3)    // Controls: 0,1,2; Target: 3
 
 // Multi-controlled phase
 circuit.mcp([0, 1], 2, PI / 4.0)
-```
+```text
 
 ### Parameterized Multi-Qubit
 
@@ -186,7 +186,7 @@ for q in 0..n {
 
 // Barrier (prevents optimization across boundary)
 circuit.barrier([0, 1, 2])
-```
+```text
 
 ---
 
@@ -203,7 +203,7 @@ circuit.measure_all()
 
 // Measure subset
 circuit.measure([0, 1, 2], [0, 1, 2])
-```
+```text
 
 ### Reset
 
@@ -213,7 +213,7 @@ circuit.reset(0)
 
 // Reset all qubits
 circuit.reset_all()
-```
+```text
 
 ### Classical Conditioning
 
@@ -224,7 +224,7 @@ circuit.x(1).c_if(0, 1)   // Apply X if classical bit 0 == 1
 
 // Conditional on register value
 circuit.z(2).c_if(classical_reg, 3)
-```
+```text
 
 ---
 
@@ -239,7 +239,7 @@ CNOT can be decomposed into native gates:
 circuit.h(1)
 circuit.cz(0, 1)
 circuit.h(1)
-```
+```text
 
 ### SWAP Decomposition
 
@@ -248,14 +248,14 @@ circuit.h(1)
 circuit.cnot(0, 1)
 circuit.cnot(1, 0)
 circuit.cnot(0, 1)
-```
+```text
 
 ### Toffoli Decomposition
 
 ```fusion
 // Toffoli requires ~6 CNOTs and single-qubit gates
 // Usually provided natively for efficiency
-```
+```text
 
 ---
 
@@ -273,7 +273,7 @@ These gates are their own inverse (G² = I):
 ```fusion
 circuit.h(0)
 circuit.h(0)  // Back to original state
-```
+```text
 
 ### Gate Inverses
 
@@ -285,7 +285,7 @@ let inverse = gate.inverse()  // RY(-theta)
 // Apply inverse
 circuit.ry(0, theta)
 circuit.ry(0, -theta)  // Cancels out
-```
+```text
 
 ### Gate Composition
 
@@ -297,7 +297,7 @@ let composed = gate1.compose(&gate2)  // X * H
 
 // Apply composed gate
 circuit.apply(composed, 0)
-```
+```text
 
 ---
 
@@ -313,7 +313,7 @@ fn bell_state() -> QuantumCircuit {
     circuit
 }
 // Creates: (|00⟩ + |11⟩) / √2
-```
+```text
 
 ### GHZ State
 
@@ -327,14 +327,14 @@ fn ghz_state(n: int) -> QuantumCircuit {
     circuit
 }
 // Creates: (|00...0⟩ + |11...1⟩) / √2
-```
+```text
 
 ### Quantum Fourier Transform
 
 ```fusion
 fn qft(n: int) -> QuantumCircuit {
     let mut circuit = QuantumCircuit::new(n)
-    
+
     for j in 0..n {
         circuit.h(j)
         for k in (j + 1)..n {
@@ -342,15 +342,15 @@ fn qft(n: int) -> QuantumCircuit {
             circuit.cp(k, j, phase)
         }
     }
-    
+
     // Swap qubits for correct output ordering
     for i in 0..(n / 2) {
         circuit.swap(i, n - 1 - i)
     }
-    
+
     circuit
 }
-```
+```text
 
 ### Phase Estimation
 
@@ -358,15 +358,15 @@ fn qft(n: int) -> QuantumCircuit {
 fn phase_estimation(precision: int, unitary: &QuantumCircuit) -> QuantumCircuit {
     let n = precision + 1  // Precision bits + ancilla
     let mut circuit = QuantumCircuit::new(n)
-    
+
     // Initialize ancilla in eigenstate (assumed |1⟩)
     circuit.x(n - 1)
-    
+
     // Hadamard on precision qubits
     for i in 0..precision {
         circuit.h(i)
     }
-    
+
     // Controlled unitary applications
     for i in 0..precision {
         let power = 1 << (precision - 1 - i)
@@ -374,13 +374,13 @@ fn phase_estimation(precision: int, unitary: &QuantumCircuit) -> QuantumCircuit 
             circuit.append_controlled(&unitary, i, precision)
         }
     }
-    
+
     // Inverse QFT on precision qubits
     circuit.append(&qft_inverse(precision))
-    
+
     circuit
 }
-```
+```text
 
 ---
 

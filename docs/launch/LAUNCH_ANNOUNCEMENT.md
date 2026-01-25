@@ -60,7 +60,7 @@ fn quantum_hello():
     h(q)  // Hadamard - create superposition
     let result = measure(q)
     print("Quantum result: " + result)
-```
+```text
 
 - **Multi-cloud Hardware**: Execute on IBM Quantum and AWS Braket directly
 - **High-performance Simulator**: 30+ qubits on commodity hardware
@@ -77,7 +77,7 @@ fn train_llm():
     let trainer = Trainer::new(model)
     trainer.fit("dataset.jsonl", epochs=3)
     model.save("fine-tuned-model")
-```
+```text
 
 - **Native Model Support**: Llama 3, Mistral, BERT architectures
 - **Distributed Training**: RLHF, PPO for alignment
