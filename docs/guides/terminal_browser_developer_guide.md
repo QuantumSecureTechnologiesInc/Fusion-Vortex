@@ -352,7 +352,7 @@ Updates terminal and window dimensions.
 
 #### Step 1: Add Dependency
 
-Add to `cmd/fusion/Cargo.toml`:
+Add to `cmd/fusion/Fusion.toml`:
 
 ```toml
 [dependencies]
@@ -519,19 +519,19 @@ impl WebAutomation {
 
 # Debug build
 
-cargo build
+fusion build
 
 # Release build
 
-cargo build --release
+fusion build --release
 
 # With specific features
 
-cargo build --features webgpu
+fusion build --features webgpu
 
 # Without default features
 
-cargo build --no-default-features
+fusion build --no-default-features
 ```text
 
 ### Testing
@@ -540,19 +540,19 @@ cargo build --no-default-features
 
 # Run all tests
 
-cargo test
+fusion test
 
 # Run with output
 
-cargo test -- --nocapture
+fusion test -- --nocapture
 
 # Run specific test
 
-cargo test test_browser_creation
+fusion test test_browser_creation
 
 # Run integration tests
 
-cargo test --test integration_tests
+fusion test --test integration_tests
 ```text
 
 ### Running Examples
@@ -561,15 +561,15 @@ cargo test --test integration_tests
 
 # Basic example
 
-cargo run --example basic
+fusion run --example basic
 
 # Screenshot example
 
-cargo run --example screenshot
+fusion run --example screenshot
 
 # JavaScript example
 
-cargo run --example javascript
+fusion run --example javascript
 ```text
 
 ### Documentation
@@ -577,7 +577,7 @@ cargo run --example javascript
 Generate and open API documentation:
 
 ```bash
-cargo doc --open
+fusion doc --open
 ```text
 
 ## Performance Optimisation
@@ -649,15 +649,15 @@ Follow Rust standard style guidelines:
 
 # Format code
 
-cargo fmt
+fusion fmt
 
 # Check lints
 
-cargo clippy
+fusion flux check
 
 # Fix simple issues
 
-cargo clippy --fix
+fusion flux check --fix
 ```text
 
 ### Adding Features
@@ -703,9 +703,9 @@ When reporting bugs, please include:
 
 Before submitting a pull request:
 
-- [ ] All tests pass (`cargo test`)
-- [ ] Code is formatted (`cargo fmt`)
-- [ ] No clippy warnings (`cargo clippy`)
+- [ ] All tests pass (`fusion test`)
+- [ ] Code is formatted (`fusion fmt`)
+- [ ] No flux warnings (`fusion flux check`)
 - [ ] Documentation is updated
 - [ ] Examples still work
 - [ ] Changelog is updated

@@ -18,7 +18,7 @@ Create a complete, production-ready HAFT (Hot-Adaptive Flux Tensors) engine impl
 
 ### Crate Files Created (in `crates\haft-fusion\`)
 
-1. **Cargo.toml** - Package configuration with dependencies
+1. **Fusion.toml** - Package configuration with dependencies
 2. **src/lib.rs** - Library root
 3. **src/tensor.rs** - FluxTensor module
 4. **src/agents.rs** - Agent implementations

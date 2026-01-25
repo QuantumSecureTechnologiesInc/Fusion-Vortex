@@ -931,7 +931,7 @@ spec:
 
 **Package Managers**:
 
-- Cargo converter (Cargo.toml → fusion.toml)
+- Cargo converter (Fusion.toml → fusion.toml)
 - Python package converter (requirements.txt → fusion.toml)
 - NPM dependency analyzer
 

@@ -93,10 +93,10 @@
 
 ## Files to Modify
 
-1. `Cargo.toml` (workspace dependencies)
-2. `registry/crates/vscode-runtime/Cargo.toml`
-3. `registry/crates/wasm-server/Cargo.toml`
-4. `Cargo.toml` (pqcrypto replacements)
+1. `Fusion.toml` (workspace dependencies)
+2. `registry/crates/vscode-runtime/Fusion.toml`
+3. `registry/crates/wasm-server/Fusion.toml`
+4. `Fusion.toml` (pqcrypto replacements)
 
 ## Timeline
 

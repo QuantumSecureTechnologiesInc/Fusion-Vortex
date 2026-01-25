@@ -31,7 +31,7 @@ Is it copyable to other projects?
                                 └─ NO → Experimental
 ```text
 
-## Cargo.toml Patterns
+## Fusion.toml Patterns
 
 ### Foundation
 

@@ -1117,7 +1117,7 @@ cd "Fusion - Programming Language"
 
 # Build Fusion compiler
 
-cargo build --release -p fusion
+fusion build --release -p fusion
 
 # Add to PATH (Linux/macOS)
 

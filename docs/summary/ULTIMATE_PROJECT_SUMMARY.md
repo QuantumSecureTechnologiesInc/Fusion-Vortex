@@ -269,7 +269,7 @@ fusion-lang/
 │       ├── Phase4_Development_Plan.md
 │       └── Phase4_Foundation_Complete.md
 │
-├── Cargo.toml
+├── Fusion.toml
 ├── LICENSE (MIT)
 ├── CONTRIBUTING.md
 ├── SECURITY.md

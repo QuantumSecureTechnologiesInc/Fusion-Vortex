@@ -4,16 +4,18 @@ Welcome to the Fusion VSC CLI! This guide will get you up and running with the b
 
 ## Prerequisites
 
-* **Rust Toolchain**: 1.75+
+* **Fusion Toolchain**: Use `./install.sh` to provision `dist/`
 * **Node.js**: (Optional) For running external extension processors if needed.
 * **VS Code**: Installed (for extension discovery).
 
 ## Installation
 
 ```bash
-git clone https://github.com/fusion-lang/fusion-vsc-cli.git
-cd fusion-vsc-cli
-cargo build --release -p fusion
+git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
+cd "Fusion - Programming Language"
+./install.sh
+
+export PATH="$PATH:$(pwd)/dist/bin"
 ```text
 
 ## Core Workflows
@@ -26,7 +28,7 @@ The MCP server acts as the gateway.
 
 # Start server on port 3000
 
-./target/release/fusion mcp serve --port 3000
+fusion mcp serve --port 3000
 ```text
 
 ### 2. Validating the Bridge
@@ -34,7 +36,7 @@ The MCP server acts as the gateway.
 Check if the CLI can see your extensions:
 
 ```bash
-./target/release/fusion extensions list
+fusion extensions list
 ```text
 
 ### 3. Using AI Assistance
@@ -42,7 +44,7 @@ Check if the CLI can see your extensions:
 To ask the AI to perform a task using available tools:
 
 ```bash
-./target/release/fusion ai assist "Refactor the current file using the VS Code formatter"
+fusion ai assist "Refactor the current file using the VS Code formatter"
 ```text
 
 ## Troubleshooting

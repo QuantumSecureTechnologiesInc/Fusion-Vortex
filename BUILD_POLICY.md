@@ -12,9 +12,9 @@ By default, the project operates in **strict mode** which prevents direct `cargo
 
 # ❌ PROHIBITED
 
-cargo build
-cargo test
-cargo run
+fusion build
+fusion test
+fusion run
 
 # ✅ REQUIRED
 
@@ -76,7 +76,7 @@ The `.scripts/enforce-flux-build.*` scripts automatically intercept build comman
 
 # When you run:
 
-cargo build
+fusion build
 
 # The script:
 
@@ -110,7 +110,7 @@ If Fusion Flux Engine is not working:
 export FUSION_STRICT_MODE=false
 export ALLOW_CARGO_FALLBACK=true
 
-cargo build  # Now allowed (with warning)
+fusion build  # Now allowed (with warning)
 ```text
 
 ## CI/CD Integration
@@ -138,7 +138,7 @@ jobs:
       - name: Build Fusion Flux Engine
         run: |
           cd runtime
-          cargo build -p fusion_flux_resolve
+          fusion build -p fusion_flux_resolve
 
       - name: Build Project (via Fusion)
         run: |
@@ -173,14 +173,14 @@ alias cargo='$HOME/Projects/Fusion/scripts/enforce-flux-build.sh'
 
    ```bash
    cd runtime
-   cargo build -p fusion_flux_resolve  # OK - building the engine
+   fusion build -p fusion_flux_resolve  # OK - building the engine
 ```text
 
 2. **Emergency maintenance:**
 
    ```bash
    export FUSION_STRICT_MODE=false  # Temporary disable
-   cargo build  # Allowed with warning
+   fusion build  # Allowed with warning
 ```text
 
 3. **External dependencies:**
@@ -188,7 +188,7 @@ alias cargo='$HOME/Projects/Fusion/scripts/enforce-flux-build.sh'
    ```bash
    # Building Rust crates that aren't Fusion projects
    cd external/some-rust-crate
-   cargo build  # OK - not a Fusion project
+   fusion build  # OK - not a Fusion project
 ```text
 
 ## Enforcement Levels
@@ -199,7 +199,7 @@ alias cargo='$HOME/Projects/Fusion/scripts/enforce-flux-build.sh'
 ⚠️  WARNING: Using cargo directly
    Consider using 'fusion build' instead
 
-Proceeding with cargo build...
+Proceeding with fusion build...
 ```text
 
 ### Level 2: Strict (FUSION_STRICT_MODE=true, ALLOW_CARGO_FALLBACK=false)
@@ -207,7 +207,7 @@ Proceeding with cargo build...
 ```text
 ❌ POLICY VIOLATION: Direct cargo usage detected!
 
-   Command attempted: cargo build
+   Command attempted: fusion build
 
    ✅ USE INSTEAD:
       fusion build
@@ -221,7 +221,7 @@ Build blocked. Exiting.
 ⚠️  Fusion Flux Engine not available
    Falling back to cargo (ALLOW_CARGO_FALLBACK=true)
 
-Proceeding with cargo build...
+Proceeding with fusion build...
 ```text
 
 ## Rollout Plan
@@ -286,7 +286,7 @@ cat .fusion/build-audit.log
 # Build the engine first
 
 cd runtime
-cargo build -p fusion_flux_resolve
+fusion build -p fusion_flux_resolve
 
 # Verify it's built
 
@@ -300,12 +300,12 @@ ls runtime/target/debug/fusion_flux_resolve*
 # Temporary disable (this session only)
 
 export FUSION_STRICT_MODE=false
-cargo build
+fusion build
 
 # Or allow fallback
 
 export ALLOW_CARGO_FALLBACK=true
-cargo build
+fusion build
 ```text
 
 ### "Fusion command not found"
@@ -315,7 +315,7 @@ cargo build
 # Build Fusion CLI
 
 cd cmd/fusion
-cargo build --release
+fusion build --release
 
 # Add to PATH
 
@@ -338,10 +338,10 @@ A: Use `ALLOW_CARGO_FALLBACK=true` temporarily while the bug is fixed.
 A: No in strict mode. Fusion Flux handles everything cargo does, but better.
 
 **Q: How do I migrate existing builds?**
-A: Replace `cargo build` → `fusion build`. Flux handles the rest automatically.
+A: Replace `fusion build` → `fusion build`. Flux handles the rest automatically.
 
 **Q: Does this break IDE integration?**
-A: No. Configure your IDE to use `fusion build` instead of `cargo build`.
+A: No. Configure your IDE to use `fusion build` instead of `fusion build`.
 
 ## Support
 

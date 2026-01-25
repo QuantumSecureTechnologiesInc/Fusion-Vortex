@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Flux-Resolve** (now `fusion_flux_resolve`) is Fusion's **intelligent dependency resolution and build engine**. It replaces traditional build tools like `cargo build` for Fusion projects, providing GPU-accelerated, self-optimizing package resolution with quantum-inspired algorithms.
+**Flux-Resolve** (now `fusion_flux_resolve`) is Fusion's **intelligent dependency resolution and build engine**. It replaces traditional build tools like `fusion build` for Fusion projects, providing GPU-accelerated, self-optimizing package resolution with quantum-inspired algorithms.
 
 ---
 
@@ -516,7 +516,7 @@ Metrics:
 ✅ **Fast** - Milliseconds for fresh, microseconds for cached
 ✅ **Fusion-native** - Written in Fusion, not a Rust tool
 
-**It replaces:** `cargo build` (for Fusion projects)
+**It replaces:** `fusion build` (for Fusion projects)
 **Located in:** `runtime/crates/fusion_flux_resolve`
 **Version:** 0.3.0 (part of Fusion Runtime)
 

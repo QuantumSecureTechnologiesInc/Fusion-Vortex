@@ -29,7 +29,7 @@ Welcome to the **Fusion VSC CLI Coder**, a production-ready advanced agent orche
 
 ### Prerequisites
 
-* **Rust Toolchain**: Ensure you have Rust installed (`cargo`).
+* **Fusion Toolchain**: Ensure you have the toolchain installed (`./install.sh`).
 * **Fusion Workspace**: Access to the Fusion Programming Language project.
 
 ### Installation
@@ -37,7 +37,7 @@ Welcome to the **Fusion VSC CLI Coder**, a production-ready advanced agent orche
 Build the CLI binary from the project root:
 
 ```bash
-cargo build --release -p fusion-coder
+fusion build --release -p fusion-coder
 ```text
 
 The binary will be available at `./target/release/fusion-coder`.
@@ -189,8 +189,8 @@ Settings are hierarchical, meaning a specific project setting overrides a global
     "default_mode": "planning"
   },
   "permissions": {
-    "allow": ["git status", "cargo check"],
-    "deny": ["cargo publish"]
+    "allow": ["git status", "fusion check"],
+    "deny": ["fusion publish"]
   },
   "hooks": {
     "session_start": ["git fetch"]

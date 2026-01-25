@@ -19,7 +19,7 @@ The **TensorWeave** crate has been **successfully created and verified** as a pr
 
 ```text
 crates/tensorweave/
-├── Cargo.toml                 ✅ All dependencies configured
+├── Fusion.toml                 ✅ All dependencies configured
 ├── README.md                  ✅ Comprehensive documentation
 ├── src/
 │   ├── lib.rs                ✅ Library exports

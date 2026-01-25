@@ -11,7 +11,7 @@ BuildGuardian is an autonomous agent responsible for maintaining the structural 
 
 1. **Build Verification**: Ensures the codebase compiles across all target platforms (Windows, Linux, macOS) and architectures (x86_64, aarch64, wasm32).
 2. **Code Quality Enforcement**: Runs linters (`clippy`, `rustfmt`) to enforce style guides and catch idiomatic errors.
-3. **Dependency Management**: Validates `Cargo.toml` configurations, resolves versions, and audits dependencies for security vulnerabilities.
+3. **Dependency Management**: Validates `Fusion.toml` configurations, resolves versions, and audits dependencies for security vulnerabilities.
 4. **Test Orchestration**: Executes unit tests, integration tests, and documentation tests, reporting failures with actionable context.
 5. **Benchmark Tracking**: Monitors performance benchmarks to prevent regressions in critical paths.
 

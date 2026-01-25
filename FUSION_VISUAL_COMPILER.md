@@ -10,7 +10,7 @@
 
 ```bash
 cd cmd/fusion-visual
-cargo run
+fusion run
 ```text
 
 ### 2. **Native Backend** (`fusion-visual-native`)
@@ -22,7 +22,7 @@ cargo run
 
 ```bash
 cd cmd/fusion-visual-native
-cargo run --release
+fusion run --release
 ```text
 
 ### 3. **Desktop App** (`fusion-visual-desktop`) ⭐ **RECOMMENDED**

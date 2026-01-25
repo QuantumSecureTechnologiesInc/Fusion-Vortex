@@ -260,7 +260,7 @@ fusion_lang --lsp
 - `src/wasm/types.rs` (60 lines)
 - `src/wasm/mod.rs` (5 lines)
 - `src/module_resolver/mod.rs` (270 lines)
-- Updated: `src/main.rs`, `src/lib.rs`, `Cargo.toml`
+- Updated: `src/main.rs`, `src/lib.rs`, `Fusion.toml`
 
 ### Standard Library (Fusion)
 

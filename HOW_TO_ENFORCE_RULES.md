@@ -34,8 +34,8 @@ rg "fn.*\{\s*\}" --type rust  # Empty function bodies
 
 # Run linters
 
-cargo clippy --all-targets --all-features
-cargo fmt -- --check
+fusion flux check --all-targets --all-features
+fusion fmt -- --check
 
 # Check complexity
 
@@ -100,7 +100,7 @@ if ($placeholders) {
 # Rule 5: Run linters
 
 Write-Host "Checking Rule 5: Lint-Free..." -ForegroundColor Yellow
-$clippy = cargo clippy --all-targets 2>&1
+$clippy = fusion flux check --all-targets 2>&1
 if ($LASTEXITCODE -ne 0) {
     $errors += "RULE 5 VIOLATION: Clippy errors`n$clippy"
 }
@@ -201,7 +201,7 @@ description: Enforce coding rules before delivery
 ## Step 1: Self-Audit
 
 - [ ] Check for placeholders (rg "todo|fixme|stub")
-- [ ] Run clippy (cargo clippy)
+- [ ] Run clippy (fusion flux check)
 - [ ] Verify folder structure
 - [ ] Confirm 7-step response format
 
@@ -302,7 +302,7 @@ When I deliver code with violations:
 ❌ REJECTED - Rule 2 Violation
 
 Found placeholders in:
-- cmd/fusion-visual-pure/src/intent_engine.fsn:15
+- cmd/fusion-visual-pure/src/intent_engine.fu:15
   `parser: NeuralParser::load("fusion-intent-model")`
 
 This is a STUB. Deliver real implementation or remove this file.
@@ -321,7 +321,7 @@ Acknowledged. Fixing Rule 2 violation.
 
 Compliance Proof:
 ✅ Rule 2: No placeholders (validated with rg)
-✅ Rule 5: Lint-free (cargo clippy passed)
+✅ Rule 5: Lint-free (fusion flux check passed)
 ✅ Complexity: All functions < 10
 
 Re-delivered.

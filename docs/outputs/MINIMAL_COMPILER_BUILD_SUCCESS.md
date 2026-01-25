@@ -33,7 +33,7 @@ exclude = [
 
 ### 1. Missing `thiserror` Dependency
 
-**File**: `registry/crates/core/Cargo.toml`
+**File**: `registry/crates/core/Fusion.toml`
 **Problem**: Compilation failed due to unresolved `thiserror::Error` import
 **Solution**: Added `thiserror = { workspace = true }` to dependencies
 

@@ -18,7 +18,7 @@
 7. [Essential Components](#essential-components)
 8. [Phased Development Roadmap](#phased-development-roadmap)
 9. [Skeleton Code Implementation](#skeleton-code-implementation)
-10. [Success Metrics & Timeline](#success-metrics--timeline)
+10. [Success Metrics & Timeline](#success-metrics-and-timeline)
 
 ---
 

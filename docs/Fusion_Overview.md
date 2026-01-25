@@ -439,7 +439,7 @@ cd "Fusion - Programming Language"
 
 # Build the compiler
 
-cargo build --release -p fusion
+fusion build --release -p fusion
 
 # Add to PATH
 
@@ -568,7 +568,7 @@ fusion run
 - 📚 **Documentation**: [docs/DocumentIndex.md](./DocumentIndex.md)
 - 🚀 **Quick Start**: [QuickStartGuide.md](../QuickStartGuide.md)
 - 👨‍💻 **Developer Guide**: [guides/DeveloperGuide.md](./guides/DeveloperGuide.md)
-- 📖 **API Reference**: Generate with `cargo doc --workspace --open`
+- 📖 **API Reference**: Generate with `fusion doc --workspace --open`
 
 ### Get Help
 
@@ -602,4 +602,4 @@ Whether you're building quantum algorithms, training large language models, deve
 ---
 
 **QuantumSecure Technologies Ltd** © 2026
-**Built with ❤️ by the Fusion Team**
+### Built with ❤️ by the Fusion Team

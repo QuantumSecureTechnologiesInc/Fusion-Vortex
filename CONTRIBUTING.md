@@ -15,10 +15,10 @@ By participating in this project, you agree to maintain a respectful, inclusive,
    - Clear, descriptive title
    - Steps to reproduce
    - Expected vs. actual behaviour
-   - Environment information (OS, Rust version, etc.)
+   - Environment information (OS, Fusion toolchain version, etc.)
    - Error messages/logs if applicable
 
-###Suggesting Enhancements
+### Suggesting Enhancements
 
 1. **Check the roadmap** in `docs/roadmap/` to see if it's already planned
 2. **Create an issue** describing:
@@ -32,9 +32,9 @@ By participating in this project, you agree to maintain a respectful, inclusive,
 2. **Create a feature branch**: `git checkout -b feature/my-feature`
 3. **Make your changes** following our coding standards
 4. **Add tests** for new functionality
-5. **Run the test suite**: `cargo test --workspace`
-6. **Run the linter**: `cargo clippy --workspace -- -D warnings`
-7. **Format your code**: `cargo fmt --all`
+5. **Run the test suite**: `fusion test`
+6. **Run the linter**: `fusion flux check`
+7. **Format your code**: `fusion fmt`
 8. **Commit with descriptive messages** following conventional commits
 9. **Push to your fork**
 10. **Create a pull request** with:
@@ -46,7 +46,7 @@ By participating in this project, you agree to maintain a respectful, inclusive,
 
 ### Prerequisites
 
-- **Rust** 1.75 or higher
+- **Fusion toolchain** (use `./install.sh` to provision `dist/`)
 - **Git**
 - **LLVM 15+** (optional, for full compiler features)
 
@@ -56,30 +56,30 @@ By participating in this project, you agree to maintain a respectful, inclusive,
 
 # Clone your fork
 
-git clone https://github.com/YOUR_USERNAME/fusion-cli.git
-cd fusion-cli
+git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
+cd "Fusion - Programming Language"
 
 # Build all crates
 
-cargo build --workspace
+./install.sh
 
 # Run tests
 
-cargo test --workspace
+fusion test
 
 # Run linter
 
-cargo clippy --workspace
+fusion flux check
 
 #Format code
 
-cargo fmt --all
+fusion fmt
 ```text
 
 ### Project Structure
 
 ```text
-fusion-cli/
+Fusion - Programming Language/
 ├── cmd/fusion           # CLI entry point
 ├── crates/             # Core crates
 │   ├── core            # Compiler (lexer, parser, typechecker)
@@ -93,18 +93,17 @@ fusion-cli/
 
 ## Coding Standards
 
-### Rust Style
+### Fusion Style
 
-- Follow **Rust API Guidelines**
-- Use `cargo fmt` for consistent formatting
-- Run `cargo clippy` and fix all warnings
-- Write rustdoc comments for public APIs
+- Use `fusion fmt` for consistent formatting
+- Run `fusion flux check` and fix all warnings
+- Write doc comments for public APIs
 - British English in all documentation
 
 ### Code Organisation
 
 - One module per file when possible
-- Public APIs in `lib.rs`, implementation in separate modules
+- Public APIs in `main.fu`, implementation in separate modules
 - Clear separation of concerns
 - Minimal public surface area
 
@@ -112,7 +111,7 @@ fusion-cli/
 
 - **Unit tests**: In the same file as the code (`#[cfg(test)]`)
 - **Integration tests**: In `tests/` directory
-- **Documentation tests**: In rustdoc comments
+- **Documentation tests**: In doc comments
 - Aim for >80% code coverage for new code
 
 ### Commit Messages
@@ -164,24 +163,24 @@ in rustdoc
 
 # All tests
 
-cargo test --workspace
+fusion test
 
 # Specific crate
 
-cargo test -p fusion-core
+fusion test -p fusion-core
 
 # With output
 
-cargo test --workspace -- --nocapture
+fusion test -- --nocapture
 
 # End-to-end tests
 
-cd tests/e2e && cargo test
+cd tests/e2e && fusion test
 ```text
 
 ### Writing Tests
 
-```rust
+```text
 
 #[cfg(test)]
 
@@ -224,7 +223,7 @@ When contributing to the AI subsystem:
 
 (For maintainers)
 
-1. Update version in `Cargo.toml`
+1. Update version in `Fusion.toml`
 2. Update `ChangeLog.md`
 3. Create git tag: `v0.x.0`
 4. Build release binaries

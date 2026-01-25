@@ -40,12 +40,12 @@ cd "Fusion - Programming Language"
 # Build desktop app
 
 cd cmd/fusion-visual-desktop
-cargo tauri build
+fusion build --release
 
 # Or run web version
 
 cd ../fusion-visual
-cargo run --release
+fusion run
 ```text
 
 ## Step 2: First Launch
@@ -88,7 +88,7 @@ fusion_build_123456/
 ├── Fusion.toml      # Project manifest
 ├── Flux.lock        # Dependency lock
 ├── src/
-│   └── main.fsn     # Your code!
+│   └── main.fu     # Your code!
 └── README.md        # Documentation
 ```text
 

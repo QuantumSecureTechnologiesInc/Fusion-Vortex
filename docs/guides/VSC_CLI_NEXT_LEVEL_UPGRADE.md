@@ -98,9 +98,9 @@ pub enum EnforcementMode {
 
 ### Task List
 
-- [ ] Add `fusion-policy` to `vscode-runtime/Cargo.toml`
-- [ ] Add `fusion-policy` to `registry/crates/mcp/Cargo.toml`
-- [ ] Add `fusion-policy` to `cmd/fusion/Cargo.toml`
+- [ ] Add `fusion-policy` to `vscode-runtime/Fusion.toml`
+- [ ] Add `fusion-policy` to `registry/crates/mcp/Fusion.toml`
+- [ ] Add `fusion-policy` to `cmd/fusion/Fusion.toml`
 - [ ] Inject capability checks into `ExtensionHost`
 - [ ] Gate filesystem operations in Node bridge
 - [ ] Gate network operations

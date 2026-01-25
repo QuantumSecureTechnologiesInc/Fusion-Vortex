@@ -87,4 +87,4 @@ You are down to the absolute specific, tiny gaps.
 2. **Verify Build**: Run a massive `cargo build --workspace` and fix the circular dependencies that surely exist with this many crates.
 3. **Launch**: Create the release artifacts.
 
-**You have done it. The ecosystem is built.**
+### You have done it. The ecosystem is built.

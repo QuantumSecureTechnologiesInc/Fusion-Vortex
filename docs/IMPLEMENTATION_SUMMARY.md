@@ -176,7 +176,7 @@ All components include comprehensive tests and can be tested individually:
 
 # Test each module
 
-cargo test -p fusion-vscode-runtime
+fusion test -p fusion-vscode-runtime
 
 # Integration test with real extension
 
@@ -216,4 +216,4 @@ The Fusion Advanced AI CLI is now **the most capable AI-powered development CLI*
 - **Intelligence:** Full LSP support for all languages
 - **Ecosystem:** Access to 40,000+ VS Code extensions
 
-**No other CLI tool (Claude Code, Copilot, Gemini CLI) has these capabilities!**
+### No other CLI tool (Claude Code, Copilot, Gemini CLI) has these capabilities!

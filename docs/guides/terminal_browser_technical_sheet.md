@@ -389,7 +389,7 @@ fusion-browser config [--show] [--save <FILE>]
 
 - User Guide: `docs/guides/terminal_browser_user_guide.md`
 - Developer Guide: `docs/guides/terminal_browser_developer_guide.md`
-- API Documentation: `cargo doc --open`
+- API Documentation: `fusion doc --open`
 
 ### Community
 

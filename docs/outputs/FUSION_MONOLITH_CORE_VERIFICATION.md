@@ -31,7 +31,7 @@ The Fusion Unified Core has been successfully upgraded and integrated as `fusion
 ## Integration
 
 - **Crate Location:** `crates/fusion-monolith-core`
-- **Workspace:** Added to `Cargo.toml` as `fusion-monolith-core`.
+- **Workspace:** Added to `Fusion.toml` as `fusion-monolith-core`.
 - **Dependencies:** Correctly linked in the workspace.
 
 ## Build Status

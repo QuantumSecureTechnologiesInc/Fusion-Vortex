@@ -1,0 +1,38 @@
+// __FU_COMPAT_START__
+#![allow(missing_docs)]
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
+use crate::tool::McpTool;
+use serde::{Deserialize, Serialize};
+/// High-level resource type combining Tools and LSP servers
+pub enum McpResource {
+    /// A standard MCP tool
+    Tool(McpTool),
+    /// An LSP server exposed as a resource
+    LspServer(LspResource),
+}
+/// Represents an LSP server exposed as an MCP resource
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LspResource {
+    /// The language ID (e.g., "rust", "python")
+    pub language: FString,
+    /// LSP capabilities supported by this server
+    pub capabilities: FVec<FString>,
+}
+impl LspResource {
+    pub fn new(language: impl Into<FString>, capabilities: FVec<FString>) -> Self {
+        Self {
+            language: language.into(),
+            capabilities,
+        }
+    }
+    /// Common LSP endpoints exposed by this resource
+    pub fn exposed_endpoints(&self) -> FVec<FString> {
+        vec![
+            format!("lsp.{}.diagnostics", self.language), format!("lsp.{}.symbols", self
+            .language), format!("lsp.{}.references", self.language),
+            format!("lsp.{}.codeActions", self.language),
+        ]
+    }
+}

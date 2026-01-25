@@ -15,7 +15,7 @@ Thank you for your interest in contributing to the Fusion Programming Language! 
 
 ### Prerequisites
 
-- Rust 1.70+ with Cargo
+- Fusion toolchain (use `./install.sh` to provision `dist/`)
 - LLVM 14+ (for native compilation)
 - Node.js 18+ (for VS Code extension development)
 - Git
@@ -31,11 +31,11 @@ cd fusion-lang
 
 # Build the compiler
 
-cargo build --release
+fusion build --release
 
 # Run tests
 
-cargo test
+fusion test
 
 # Build VS Code extension
 
@@ -87,21 +87,21 @@ We welcome contributions in these areas:
 
 ## Code Style
 
-### Rust Code
+### Fusion Code
 
 The Fusion project enforces comprehensive linting standards to ensure code quality and consistency:
 
 #### Formatting
 
-- Run `cargo fmt` before committing
-- Configuration is defined in `rustfmt.toml` (max width: 100, 4 spaces)
+- Run `fusion fmt` before committing
+- Formatting rules are driven by Fusion defaults
 - Format on save is recommended in your editor
 
 #### Linting
 
-- Run `cargo clippy --workspace --all-targets` before submitting PRs
-- All Clippy warnings must be addressed or explicitly allowed with justification
-- Configuration is defined in `.clippy.toml` and workspace lints in `Cargo.toml`
+- Run `fusion flux check --workspace --all-targets` before submitting PRs
+- All Flux warnings must be addressed or explicitly allowed with justification
+- Lint configuration is defined in `Fusion.toml`
 
 #### Customizing Your Lint Level
 
@@ -113,31 +113,31 @@ You can choose your preferred lint strictness:
 
 # Minimal (fewer warnings)
 
-Copy-Item .lint-profiles\minimal-lints.toml .\Cargo.toml -Force
+Copy-Item .lint-profiles\minimal-lints.toml .\Fusion.toml -Force
 
 # Standard (default, balanced)
 
-Copy-Item .lint-profiles\standard-lints.toml .\Cargo.toml -Force
+Copy-Item .lint-profiles\standard-lints.toml .\Fusion.toml -Force
 
 # Strict (maximum quality)
 
-Copy-Item .lint-profiles\strict-lints.toml .\Cargo.toml -Force
+Copy-Item .lint-profiles\strict-lints.toml .\Fusion.toml -Force
 ```text
 
 **Option 2: Per-Crate Customization**
-Add `[lints]` to your crate's `Cargo.toml`:
+Add `[lints]` to your crate's `Fusion.toml`:
 
 ```toml
-[lints.clippy]
+[lints.flux]
 unwrap_used = "allow"  # Override for this crate
 ```text
 
 **Option 3: Local Developer Settings**
-Create `~/.cargo/config.toml` (or `%USERPROFILE%\.cargo\config.toml` on Windows):
+Create `~/.fusion/config.toml` (or `%USERPROFILE%\\.fusion\\config.toml` on Windows):
 
 ```toml
 [build]
-rustflags = ["-W", "clippy::all"]
+flags = ["-W", "flux::all"]
 ```text
 
 See [`.lint-profiles/README.md`](../.lint-profiles/README.md) for details.
@@ -147,7 +147,7 @@ See [`.lint-profiles/README.md`](../.lint-profiles/README.md) for details.
 
 - **Safety**: Unsafe code requires awareness (`unsafe_code` warning)
 - **Code Quality**: No unused imports, variables, or dead code
-- **Clippy**: Standard lint set enabled
+- **Flux**: Standard lint set enabled
 
 #### Best Practices
 
@@ -191,8 +191,8 @@ All contributions must include appropriate tests:
 Run tests before submitting:
 
 ```bash
-cargo test
-cargo test --workspace
+fusion test
+fusion test --workspace
 ```text
 
 ## Documentation

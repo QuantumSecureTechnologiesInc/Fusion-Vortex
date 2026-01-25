@@ -226,7 +226,7 @@ fusion_ai_core = { path = "registry/crates/fusion_ai_core" }
 ### Full Workspace Build
 
 ```bash
-cargo build --workspace --release
+fusion build --workspace --release
 ```text
 
 ### Targeted Testing
@@ -235,11 +235,11 @@ cargo build --workspace --release
 
 # Test specific archetype
 
-cargo test -p fusion_core -p fusion_std
+fusion test -p fusion_core -p fusion_std
 
 # Test all quantum crates
 
-cargo test -p q-sim -p qaoa -p q-error-correction
+fusion test -p q-sim -p qaoa -p q-error-correction
 ```text
 
 ### Benchmarking
@@ -248,11 +248,11 @@ cargo test -p q-sim -p qaoa -p q-error-correction
 
 # Run all benchmarks
 
-cargo bench --workspace
+fusion bench --workspace
 
 # Specific crate benchmarks
 
-cargo bench -p fusion_attention
+fusion bench -p fusion_attention
 ```text
 
 ## Documentation Standards
@@ -271,7 +271,7 @@ Each crate should include:
 1. Determine the correct archetype
 2. Use appropriate template from `CRATE_POLISH_GUIDE.md`
 3. Follow naming conventions (`archetype-name` or `fusion_archetype_component`)
-4. Add workspace dependency in root `Cargo.toml`
+4. Add workspace dependency in root `Fusion.toml`
 5. Run polish scripts for consistency
 
 ### Archetype-Specific Guidelines

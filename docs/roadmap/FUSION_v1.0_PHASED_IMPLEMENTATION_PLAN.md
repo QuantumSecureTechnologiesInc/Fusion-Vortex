@@ -49,7 +49,7 @@ Core + AI + Quantum → Connect → Specialize → Platform (Interwoven)
    mkdir -p cmd/fusion/src
 ```text
 
-2. **Root Cargo.toml** (Day 2-3)
+2. **Root Fusion.toml** (Day 2-3)
    - Create workspace configuration
    - Define 11 member crates
    - Set up workspace dependencies
@@ -58,7 +58,7 @@ Core + AI + Quantum → Connect → Specialize → Platform (Interwoven)
    - `src/lib.rs` - Module exports
    - `src/error.rs` - `FusionError` enum
    - `src/traits.rs` - Core traits
-   - `Cargo.toml` - Dependencies
+   - `Fusion.toml` - Dependencies
 
 4. **Type System** (Day 6-10)
    - `src/types/mod.rs` - Type module
@@ -751,7 +751,7 @@ Core + AI + Quantum → Connect → Specialize → Platform (Interwoven)
 - [ ] Benchmarks run successfully
 - [ ] README.md complete
 - [ ] Examples included
-- [ ] Cargo.toml metadata correct
+- [ ] Fusion.toml metadata correct
 - [ ] No unsafe code (or justified)
 - [ ] Miri tests pass
 - [ ] Published to registry

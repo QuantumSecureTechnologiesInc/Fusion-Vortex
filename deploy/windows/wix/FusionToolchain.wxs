@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Fusion Toolchain" Language="1033" Version="1.0.0" Manufacturer="QuantumSecure Technologies" UpgradeCode="6F8B6F5D-9F5C-4B1E-A3D1-7C5C4F9E8A10">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Fusion Toolchain is already installed." />
+    <MediaTemplate />
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="Fusion">
+          <Directory Id="DistDir" Name="dist">
+            <Directory Id="BinDir" Name="bin" />
+            <Directory Id="LibDir" Name="lib" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="BinDir">
+      <Component Id="FusionExe" Guid="*">
+        <File Id="fusionExe" Source="dist\bin\fusion.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="FucExe" Guid="*">
+        <File Id="fucExe" Source="dist\bin\fuc.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="AddPath" Guid="*">
+        <Environment Id="FusionPath" Name="PATH" Value="[BinDir]" Permanent="no" Part="last" Action="set" System="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="LibDir">
+      <Component Id="StdLib" Guid="*">
+        <File Id="runtimeObj" Source="dist\lib\fusion\runtime.o" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="FusionToolchain" Title="Fusion Toolchain" Level="1">
+      <ComponentRef Id="FusionExe" />
+      <ComponentRef Id="FucExe" />
+      <ComponentRef Id="AddPath" />
+      <ComponentRef Id="StdLib" />
+    </Feature>
+  </Product>
+</Wix>

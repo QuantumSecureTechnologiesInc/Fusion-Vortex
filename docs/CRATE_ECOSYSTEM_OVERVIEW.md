@@ -366,7 +366,7 @@ esnet**: ResNet implementation
 
 ### Using a Crate
 
-Add to your Cargo.toml:
+Add to your Fusion.toml:
 
 `	oml
 [dependencies]
@@ -383,15 +383,15 @@ fusion_ai_core = "0.2.0"
 
 # Build entire workspace
 
-cargo build --workspace
+fusion build --workspace
 
 # Build specific crate
 
-cargo build -p fusion_runtime_core
+fusion build -p fusion_runtime_core
 
 # Run tests
 
-cargo test --workspace
+fusion test --workspace
 `
 
 ### Documentation
@@ -399,9 +399,9 @@ cargo test --workspace
 Generate docs for all crates:
 
 `ash
-cargo doc --workspace --no-deps --open
+fusion doc --workspace --no-deps --open
 `
 
 ---
 
-**For detailed crate documentation, see individual README.md files in each crate directory.**
+### For detailed crate documentation, see individual README.md files in each crate directory.

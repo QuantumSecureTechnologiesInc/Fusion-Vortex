@@ -21,7 +21,7 @@ This document defines **what Fusion guarantees** and **what it does not**. It is
    - Stdlib entry points are `lib.fu` and `main.fu` and are valid Fusion syntax.
 
 5. **Sysroot‑based build resolution**
-   - `fusion build` uses sysroot discovery for stdlib/runtime and does **not** consult `Cargo.toml`.
+   - `fusion build` uses sysroot discovery for stdlib/runtime and does **not** consult `Fusion.toml`.
 
 ## Explicit Limits (v1.0)
 

@@ -51,7 +51,7 @@ The system cannot find the path specified. (os error 3)
 ```text
 
 **Investigation**:
-- All workspace members in `Cargo.toml` appear to exist on disk
+- All workspace members in `Fusion.toml` appear to exist on disk
 - `ecosystem/crates/llm-model-server` exists and is listed
 - Error message truncated, exact missing path unknown
 
@@ -124,13 +124,13 @@ The system cannot find the path specified. (os error 3)
 
 ```toml
 
-# ecosystem/crates/ai-core/Cargo.toml
+# ecosystem/crates/ai-core/Fusion.toml
 
 [lib]
 name = "fusion_ai_core_adapters"
 path = "src/lib.rs"
 
-# crates/core/Cargo.toml
+# crates/core/Fusion.toml
 
 [lib]
 name = "fusion_core_compiler"
@@ -153,8 +153,8 @@ use fusion_core_compiler::{...};
 1. `ecosystem/crates/ai-cli/src/lib.rs`
 2. `ecosystem/crates/agents/src/builtin.rs`
 3. `crates/core/tests/integration_functions.rs`
-4. `ecosystem/crates/ai-core/Cargo.toml`
-5. `crates/core/Cargo.toml`
+4. `ecosystem/crates/ai-core/Fusion.toml`
+5. `crates/core/Fusion.toml`
 
 ---
 
@@ -165,7 +165,7 @@ use fusion_core_compiler::{...};
 1. **Resolve workspace manifest error**
    - Full error message needed
    - Check for circular dependencies
-   - Verify all `Cargo.toml` files are valid
+   - Verify all `Fusion.toml` files are valid
 
 2. **Complete collision fix verification**
    - Search for any remaining `use fusion_core::` in files depending on `fusion-core` package

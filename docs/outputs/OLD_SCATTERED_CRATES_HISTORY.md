@@ -52,7 +52,7 @@ Old Structure (Pre-Monolith):
    - Total: 3+ processes doing the same work
 
 4. **Maintenance Burden**
-   - 20+ `Cargo.toml` files to maintain
+   - 20+ `Fusion.toml` files to maintain
    - Version coordination nightmares
    - Duplicate dependency trees
    - Inconsistent error handling across tools
@@ -77,7 +77,7 @@ fusion_ai_core  → libfusion_ai_core.rlib  (AI runtime)
 Cargo couldn't handle this - both crates produced identical `.rlib` files!
 
 **Fix Applied:**
-- Renamed library targets explicitly in `Cargo.toml`:
+- Renamed library targets explicitly in `Fusion.toml`:
 
   ```toml
   [lib]
@@ -237,7 +237,7 @@ $ # LSP sees everything in real-time, zero-copy
 ### Why Monolith?
 
 The Fusion team realized that **most developer tools share 90% of their logic**:
-1. Parse `Cargo.toml`/`Fusion.toml`
+1. Parse `Fusion.toml`/`Fusion.toml`
 2. Resolve dependencies
 3. Load type information
 4. Traverse AST

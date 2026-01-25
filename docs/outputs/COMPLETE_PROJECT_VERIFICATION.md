@@ -360,7 +360,7 @@ Located in `docs/tutorials/`:
 
 ### Cargo Configuration - ✅ VERIFIED
 
-- ✅ `Cargo.toml` - 911 bytes - Complete dependencies
+- ✅ `Fusion.toml` - 911 bytes - Complete dependencies
 - ✅ `Cargo.lock` - 43,764 bytes - Dependency lockfile
 - ✅ Build system functional
 

@@ -5,7 +5,7 @@ Complete API documentation for all public interfaces.
 ## Table of Contents
 
 1. [Core Types](#core-types)
-2. [Runtime & Builder](#runtime--builder)
+2. [Runtime & Builder](#runtime-and-builder)
 3. [Task Spawning](#task-spawning)
 4. [Device Execution](#device-execution)
 5. [WASM Plugins](#wasm-plugins)

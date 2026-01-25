@@ -166,7 +166,7 @@ tensor_weave process --input data.json --output results.json
 
 ```text
 crates/tensorweave/
-├── Cargo.toml                  ✅ Created with all dependencies
+├── Fusion.toml                  ✅ Created with all dependencies
 ├── src/
 │   ├── lib.rs                 ✅ Library exports
 │   ├── main.rs                ✅ CLI implementation

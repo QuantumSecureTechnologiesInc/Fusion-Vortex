@@ -323,7 +323,7 @@ For each crate, ensure:
 ### When Adding New Crates
 
 1. **Categorize First**: Determine archetype before writing code
-2. **Apply Template**: Use archetype-specific Cargo.toml template
+2. **Apply Template**: Use archetype-specific Fusion.toml template
 3. **Structure Docs**: Follow archetype documentation pattern
 4. **Add to Index**: Update CRATE_CATEGORIZATION.md
 

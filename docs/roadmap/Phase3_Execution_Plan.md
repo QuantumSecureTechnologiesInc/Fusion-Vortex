@@ -497,7 +497,7 @@ trait IteratorT {
 
 ## Dependencies
 
-### Rust Crates (add to Cargo.toml)
+### Rust Crates (add to Fusion.toml)
 
 ```text
 

@@ -571,7 +571,7 @@ replicas = 3
 ```text
 
 **Replaces:**
-- ❌ Cargo.toml
+- ❌ Fusion.toml
 - ❌ package.json
 - ❌ requirements.txt
 - ❌ CMakeLists.txt
@@ -730,7 +730,7 @@ cd "Fusion - Programming Language"
 
 # Build compiler
 
-cargo build --release -p fusion
+fusion build --release -p fusion
 
 # Add to PATH
 

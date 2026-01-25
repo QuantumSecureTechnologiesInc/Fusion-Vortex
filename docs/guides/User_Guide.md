@@ -27,7 +27,7 @@ Fusion is a revolutionary programming language that combines the ease of Python 
 
 # Install Fusion toolchain
 
-cargo install fusion-lang --version 1.0.0
+./install.sh
 
 # Verify installation
 

@@ -623,7 +623,7 @@ let valid = ml_dsa_65::verify(message, &sig, &verify_key)?;
 ```bash
 git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
 cd "Fusion - Programming Language"
-cargo build --release -p fusion
+fusion build --release -p fusion
 export PATH="$PATH:$(pwd)/target/release"
 ```text
 

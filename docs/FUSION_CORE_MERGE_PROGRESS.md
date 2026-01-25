@@ -40,12 +40,12 @@ registry/crates/fusion-core/
 ├── examples/
 │   └── hybrid_vqe.rs
 ├── tests/                     # From old core
-└── Cargo.toml                 # Merged dependencies
+└── Fusion.toml                 # Merged dependencies
 ```text
 
 ### Phase 2: Updated Workspace Dependencies ✅
 
-**Root Cargo.toml changes**:
+**Root Fusion.toml changes**:
 
 ```toml
 
@@ -64,10 +64,10 @@ fusion_core = { path = "registry/crates/fusion-core", version = "0.2.0", package
 ### Phase 3: Updated Path-Based Dependencies ✅
 
 Fixed manual path references:
-1. ✅ `crates/toolchain/Cargo.toml` → `registry/crates/fusion-core`
-2. ✅ `crates/analyzer/Cargo.toml` → `registry/crates/fusion-core`
-3. ✅ `registry/crates/std/Cargo.toml` → `../fusion-core` (with package = "fusion-core")
-4. ✅ `registry/crates/toolchain-ext/Cargo.toml` → replaced `fusion-compiler` with `fusion-core`
+1. ✅ `crates/toolchain/Fusion.toml` → `registry/crates/fusion-core`
+2. ✅ `crates/analyzer/Fusion.toml` → `registry/crates/fusion-core`
+3. ✅ `registry/crates/std/Fusion.toml` → `../fusion-core` (with package = "fusion-core")
+4. ✅ `registry/crates/toolchain-ext/Fusion.toml` → replaced `fusion-compiler` with `fusion-core`
 
 ### Phase 4: Excluded Old Crates ✅
 
@@ -122,8 +122,8 @@ Once workspace builds again, these ~170+ crates will automatically use the new u
 ### Immediate (For Complete Merge)
 
 1. ⬜ Fix or remove bench definitions in remaining problematic crates
-2. ⬜ Test `cargo check --workspace` succeeds
-3. ⬜ Run example: `cargo run -p fusion-core --example hybrid_vqe`
+2. ⬜ Test `fusion check --workspace` succeeds
+3. ⬜ Run example: `fusion run -p fusion-core --example hybrid_vqe`
 4. ⬜ Delete old directories:
    - `registry/crates/fusion_core`
    - `registry/crates/core`
@@ -170,4 +170,4 @@ use fusion_core::compiler::parser::Parser;
 - **Path Deps Fixed**: ✅ **4/4** manual path updates complete
 - **Old Crates**: ⏳ **Excluded** (ready for deletion after workspace fix)
 
-**The merge is functionally complete. The fusion-core crate is ready to use once the workspace bench issues are resolved.**
+### The merge is functionally complete. The fusion-core crate is ready to use once the workspace bench issues are resolved.

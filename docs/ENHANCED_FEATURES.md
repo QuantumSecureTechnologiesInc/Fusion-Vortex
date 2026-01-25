@@ -546,7 +546,7 @@ fusion ai analyze src/ --use-ext rust-analyzer
 1. **Install the CLI**
 
    ```bash
-   cargo build --release
+   fusion build --release
 ```text
 
 2. **Configure AI providers**

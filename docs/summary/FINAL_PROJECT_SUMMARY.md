@@ -169,7 +169,7 @@ fusion-lang/
 │   ├── test_collections.fu       # ✅ Original tests
 │   └── test_collections_complete.fu  # ✅ 320+ lines, 16 tests
 │
-├── Cargo.toml                    # ✅ Rust dependencies
+├── Fusion.toml                    # ✅ Rust dependencies
 ├── LICENSE                       # ✅ MIT License
 ├── CONTRIBUTING.md               # ✅ Contribution guide
 ├── SECURITY.md                   # ✅ Security policy

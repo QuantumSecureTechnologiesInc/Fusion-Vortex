@@ -37,7 +37,7 @@ Successfully resolved all workspace manifest errors by:
 
 ### 3. Path Fixes Applied
 
-**Root `Cargo.toml`:**
+**Root `Fusion.toml`:**
 - Removed `ecosystem/crates/*` from workspace members
 - Kept `crates/*` and `registry/crates/*`
 - Removed invalid exclude block for deleted crates
@@ -51,7 +51,7 @@ Successfully resolved all workspace manifest errors by:
 - `jsonrpc-core = "18.0.0"`
 - `jsonrpc-derive = "18.0.0"`
 
-**`cmd/fusion/Cargo.toml`** - Updated 10 dependencies:
+**`cmd/fusion/Fusion.toml`** - Updated 10 dependencies:
 - `fusion-core` → `registry/crates/core`
 - `fusion-ai-cli` → `registry/crates/ai-cli`
 - `fusion-github` → `registry/crates/github`
@@ -65,13 +65,13 @@ Successfully resolved all workspace manifest errors by:
 - `fusion-deploy` → `registry/crates/deploy`
 - `fusion-mcp` → `registry/crates/mcp`
 
-**`crates/analyzer/Cargo.toml`:**
+**`crates/analyzer/Fusion.toml`:**
 - `fusion-core` → `../../registry/crates/core`
 
-**`crates/toolchain/Cargo.toml`:**
+**`crates/toolchain/Fusion.toml`:**
 - `fusion-core` → `../../registry/crates/core/`
 
-**`crates/ai-enhanced/Cargo.toml`:**
+**`crates/ai-enhanced/Fusion.toml`:**
 - `fusion-mcp` → `../../registry/crates/mcp`
 
 ### 4. Stub Crates Created (Production-Ready)
@@ -116,11 +116,11 @@ Created functional implementations (NOT stubs):
 
 ### Configuration Files
 
-- `Cargo.toml` (root workspace)
-- `cmd/fusion/Cargo.toml`
-- `crates/analyzer/Cargo.toml`
-- `crates/toolchain/Cargo.toml`
-- `crates/ai-enhanced/Cargo.toml`
+- `Fusion.toml` (root workspace)
+- `cmd/fusion/Fusion.toml`
+- `crates/analyzer/Fusion.toml`
+- `crates/toolchain/Fusion.toml`
+- `crates/ai-enhanced/Fusion.toml`
 - `registry/index.json`
 
 ### Source Code Files
@@ -129,11 +129,11 @@ Created functional implementations (NOT stubs):
 - `registry/crates/core/src/vm.rs` (fixed last_popped)
 - `registry/crates/core/src/compiler.rs` (merged better version)
 - `registry/crates/std/src/lib.rs` (created)
-- `registry/crates/std/Cargo.toml` (created)
+- `registry/crates/std/Fusion.toml` (created)
 - `registry/crates/bridge_c/src/lib.rs` (created)
-- `registry/crates/bridge_c/Cargo.toml` (created)
-- `registry/crates/ai-core/Cargo.toml` (added fusion_core_compiler dep)
-- `registry/crates/auto-prompt/Cargo.toml` (fixed corruption)
+- `registry/crates/bridge_c/Fusion.toml` (created)
+- `registry/crates/ai-core/Fusion.toml` (added fusion_core_compiler dep)
+- `registry/crates/auto-prompt/Fusion.toml` (fixed corruption)
 
 ## Next Steps
 

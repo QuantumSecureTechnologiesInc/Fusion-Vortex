@@ -206,11 +206,11 @@
 1. Keep `registry/crates/fusion_core` as location
 2. Rename package to `fusion-core` (hyphen)
 3. Merge compiler modules from `registry/crates/core`
-4. Update Cargo.toml with all necessary dependencies
+4. Update Fusion.toml with all necessary dependencies
 
 ### Phase 2: Update Workspace Dependencies
 
-Update root `Cargo.toml`:
+Update root `Fusion.toml`:
 
 ```toml
 [workspace.dependencies]
@@ -302,10 +302,10 @@ use fusion_core::compiler::parser::Parser;
 
 1. ✅ **Audit Complete** (this document)
 2. ⬜ Merge crate contents
-3. ⬜ Update root Cargo.toml workspace.dependencies
+3. ⬜ Update root Fusion.toml workspace.dependencies
 4. ⬜ Fix path-based dependencies (toolchain, analyzer)
 5. ⬜ Search and replace import statements in .rs files
-6. ⬜ Run `cargo check --workspace`
+6. ⬜ Run `fusion check --workspace`
 7. ⬜ Delete old `registry/crates/core`
 8. ⬜ Run full test suite
 

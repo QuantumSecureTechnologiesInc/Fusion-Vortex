@@ -6,11 +6,11 @@ Welcome to Fusion! This tutorial will guide you through the basics of the Fusion
 
 ## Table of Contents
 
-1. [Installation & Setup](#installation--setup)
+1. [Installation & Setup](#installation-and-setup)
 2. [Your First Program](#your-first-program)
 3. [Language Basics](#language-basics)
 4. [Multi-file Projects](#multi-file-projects)
-5. [Collections & Iterators](#collections--iterators)
+5. [Collections & Iterators](#collections-and-iterators)
 6. [WebAssembly Deployment](#webassembly-deployment)
 7. [IDE Integration](#ide-integration)
 

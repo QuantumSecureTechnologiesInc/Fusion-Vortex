@@ -215,7 +215,7 @@ fn create_string() -> string {
 
 ## Dependencies
 
-Add to `Cargo.toml`:
+Add to `Fusion.toml`:
 
 ```toml
 [dependencies]

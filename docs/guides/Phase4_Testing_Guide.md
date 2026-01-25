@@ -1,13 +1,15 @@
 # Phase 4 Testing Guide
 
-**Status**: ✅ Infrastructure Complete
-**Coverage**: Package Manager, ML Library, Integration
+## Status
+
+- **Status**: ✅ Infrastructure Complete
+- **Coverage**: Package Manager, ML Library, Integration
 
 ---
 
 ## Test Organization
 
-### Rust Tests (Package Manager)
+### Fusion Tests (Package Manager)
 
 **Location**: `tests/test_package_manager.rs`
 **Framework**: Rust built-in testing
@@ -29,15 +31,15 @@
 
 # Run all package manager tests
 
-cargo test test_package_manager
+fusion test test_package_manager
 
 # Run specific test
 
-cargo test test_version_parsing
+fusion test test_version_parsing
 
 # Run with output
 
-cargo test test_package_manager -- --nocapture
+fusion test test_package_manager -- --nocapture
 ```text
 
 ### Expected Results
@@ -214,8 +216,8 @@ jobs:
         with:
           toolchain: stable
 
-      - run: cargo test
-      - run: cargo test --package fusion_lang
+      - run: fusion test
+      - run: fusion test --package fusion_lang
 ```text
 
 ---

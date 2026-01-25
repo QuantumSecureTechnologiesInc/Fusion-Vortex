@@ -15,7 +15,7 @@
 | Rust Tool    | Fusion Equivalent | Features                                                         |
 | ------------ | ----------------- | ---------------------------------------------------------------- |
 | Cargo        | **Fusion Forge**  | Polyglot builds (Rust/C++/Python/JS), SAT solver, FFI generation |
-| `Cargo.toml` | **Fusion.toml**   | Enhanced manifest with quantum/ML features                       |
+| `Fusion.toml` | **Fusion.toml**   | Enhanced manifest with quantum/ML features                       |
 | `Cargo.lock` | **Flux.lock**     | Advanced dependency resolution via Flux Resolve                  |
 | cargo-edit   | **Forge CLI**     | Built-in dependency management                                   |
 | cargo-watch  | **ReactorCLI**    | Live reload + interactive REPL                                   |
@@ -90,7 +90,7 @@
 
 | Rust Tool    | Fusion Equivalent      | Features                 |
 | ------------ | ---------------------- | ------------------------ |
-| `cargo test` | **fusion test**        | Built-in test runner     |
+| `fusion test` | **fusion test**        | Built-in test runner     |
 | `criterion`  | **fusion bench**       | Statistical benchmarking |
 | `proptest`   | **fusion::quickcheck** | Property-based testing   |
 | `mockall`    | **fusion::mock**       | Mocking framework        |

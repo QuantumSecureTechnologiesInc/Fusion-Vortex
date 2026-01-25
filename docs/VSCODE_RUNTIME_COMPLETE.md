@@ -443,7 +443,7 @@ pub extern "C" fn execute_command(cmd: *const u8) {
 
 # Compile to WASM
 
-cargo build --target wasm32-unknown-unknown --release
+fusion build --target wasm32-unknown-unknown --release
 
 # Install locally
 
@@ -493,19 +493,19 @@ All components include comprehensive tests:
 
 # Test Node.js runtime
 
-cargo test -p fusion-vscode-runtime --lib node_bridge
+fusion test -p fusion-vscode-runtime --lib node_bridge
 
 # Test WASM runtime
 
-cargo test -p fusion-vscode-runtime --lib wasm_runtime
+fusion test -p fusion-vscode-runtime --lib wasm_runtime
 
 # Test LSP client
 
-cargo test -p fusion-vscode-runtime --lib lsp_client
+fusion test -p fusion-vscode-runtime --lib lsp_client
 
 # Test marketplace
 
-cargo test -p fusion-vscode-runtime --lib marketplace
+fusion test -p fusion-vscode-runtime --lib marketplace
 ```text
 
 ---

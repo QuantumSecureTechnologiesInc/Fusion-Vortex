@@ -9,6 +9,7 @@ mod lexer;
 mod lib_integration;
 mod lsp;
 mod ml;
+mod mcp;
 mod module_resolver;
 mod network;
 mod optimization;

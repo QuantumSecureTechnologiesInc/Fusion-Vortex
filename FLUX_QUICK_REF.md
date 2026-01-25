@@ -15,9 +15,9 @@ fusion check              # Quick validation
 ### ❌ PROHIBITED (don't use these)
 
 ```bash
-cargo build      # BLOCKED in strict mode
-cargo test       # BLOCKED in strict mode
-cargo run        # BLOCKED in strict mode
+fusion build      # BLOCKED in strict mode
+fusion test       # BLOCKED in strict mode
+fusion run        # BLOCKED in strict mode
 ```text
 
 ---
@@ -88,7 +88,7 @@ chmod +x .scripts/setup-flux-enforcement.sh
 # 1. Build Flux Engine
 
 cd runtime
-cargo build -p fusion_flux_resolve --release
+fusion build -p fusion_flux_resolve --release
 
 # 2. Install Git hooks
 
@@ -153,7 +153,7 @@ echo $FUSION_STRICT_MODE
 
 # Should show policy violation
 
-cargo build
+fusion build
 
 # Should work
 
@@ -168,7 +168,7 @@ fusion build
 
 ```bash
 cd cmd/fusion
-cargo build --release
+fusion build --release
 export PATH="$PATH:$PWD/target/release"
 ```text
 
@@ -176,8 +176,8 @@ export PATH="$PATH:$PWD/target/release"
 
 ```bash
 cd runtime
-cargo build -p fusion_flux_resolve --release
-cargo test -p fusion_flux_resolve
+fusion build -p fusion_flux_resolve --release
+fusion test -p fusion_flux_resolve
 ```text
 
 ### "Policy violation but I need cargo"
@@ -202,10 +202,10 @@ export FUSION_STRICT_MODE=false  # Temporary
 ### Speed
 
 ```text
-cargo build (cold):   Minutes
+fusion build (cold):   Minutes
 fusion build (cold):  Seconds
 
-cargo build (cached): Seconds
+fusion build (cached): Seconds
 fusion build (cached): Milliseconds
 ```text
 

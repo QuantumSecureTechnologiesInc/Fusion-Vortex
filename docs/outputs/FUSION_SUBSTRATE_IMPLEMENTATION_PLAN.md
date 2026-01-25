@@ -47,7 +47,7 @@
 - [ ] Implement fusion-runtime with crash-only model
 - [ ] Add comprehensive tests in fusion-tests
 - [ ] Configure CI pipeline (.github/workflows/ci.yml)
-- [ ] Update root Cargo.toml with new workspace members
+- [ ] Update root Fusion.toml with new workspace members
 
 ## Phase 2: Agent Execution Layer
 

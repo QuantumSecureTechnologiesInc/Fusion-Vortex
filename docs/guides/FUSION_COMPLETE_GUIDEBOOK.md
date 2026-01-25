@@ -27,94 +27,94 @@ This comprehensive guidebook combines all official Fusion documentation, tutoria
 
 ### Part I: Introduction & Getting Started
 
-1. [Welcome to Fusion](#part-i-welcome-to-fusion)
-2. [Installation and Setup](#installation-and-setup)
-3. [Quick Start Guide](#quick-start-guide)
-4. [Your First Program](#your-first-program)
+1. Welcome to Fusion
+2. Installation and Setup
+3. Quick Start Guide
+4. Your First Program
 
 ### Part II: Language Fundamentals
 
-5. [Syntax and Structure](#syntax-and-structure)
-6. [Variables and Types](#variables-and-types)
-7. [Control Flow](#control-flow)
-8. [Functions](#functions)
-9. [Classes and OOP](#classes-and-oop)
-10. [Modules and Packages](#modules-and-packages)
+5. Syntax and Structure
+6. Variables and Types
+7. Control Flow
+8. Functions
+9. Classes and OOP
+10. Modules and Packages
 
 ### Part III: Advanced Language Features
 
-11. [Generics and Traits](#generics-and-traits)
-12. [Pattern Matching](#pattern-matching)
-13. [Error Handling](#error-handling)
-14. [Closures and Higher-Order Functions](#closures-and-higher-order-functions)
+11. Generics and Traits
+12. Pattern Matching
+13. Error Handling
+14. Closures and Higher-Order Functions
 
 ### Part IV: Memory Management & Safety
 
-15. [Understanding Memory Safety](#understanding-memory-safety)
-16. [The Borrow Checker](#the-borrow-checker)
-17. [Ownership and Lifetimes](#ownership-and-lifetimes)
-18. [Garbage Collection Mode](#garbage-collection-mode)
+15. Understanding Memory Safety
+16. The Borrow Checker
+17. Ownership and Lifetimes
+18. Garbage Collection Mode
 
 ### Part V: Standard Library
 
-19. [Collections (Vector, HashMap, HashSet)](#collections)
-20. [String Processing](#string-processing)
-21. [Option and Result Types](#option-and-result-types)
-22. [File I/O](#file-io)
-23. [Iterator Patterns](#iterator-patterns)
+19. Collections (Vector, HashMap, HashSet)
+20. String Processing
+21. Option and Result Types
+22. File I/O
+23. Iterator Patterns
 
 ### Part VI: Security & Cryptography
 
-24. [Hybrid Cryptography System](#hybrid-cryptography-system)
-25. [Post-Quantum Cryptography](#post-quantum-cryptography)
-26. [Zero-Knowledge Proofs](#zero-knowledge-proofs)
-27. [Secure Coding Practices](#secure-coding-practices)
+24. Hybrid Cryptography System
+25. Post-Quantum Cryptography
+26. Zero-Knowledge Proofs
+27. Secure Coding Practices
 
 ### Part VII: AI/ML & GPU Computing
 
-28. [Tensor Operations](#tensor-operations)
-29. [Neural Networks](#neural-networks)
-30. [GPU Acceleration](#gpu-acceleration)
-31. [Model Deployment](#model-deployment)
+28. Tensor Operations
+29. Neural Networks
+30. GPU Acceleration
+31. Model Deployment
 
 ### Part VIII: Quantum Computing
 
-32. [Quantum Circuits](#quantum-circuits)
-33. [Quantum Algorithms](#quantum-algorithms)
-34. [Hybrid Classical-Quantum Programming](#hybrid-classical-quantum-programming)
+32. Quantum Circuits
+33. Quantum Algorithms
+34. Hybrid Classical-Quantum Programming
 
 ### Part IX: Tools & Development
 
-35. [Build System](#build-system)
-36. [Package Manager](#package-manager)
-37. [LSP and IDE Integration](#lsp-and-ide-integration)
-38. [Testing Framework](#testing-framework)
-39. [Debugging and Profiling](#debugging-and-profiling)
+35. Build System
+36. Package Manager
+37. LSP and IDE Integration
+38. Testing Framework
+39. Debugging and Profiling
 
 ### Part X: Advanced Topics
 
-40. [WebAssembly Deployment](#webassembly-deployment)
-41. [Multi-File Projects](#multi-file-projects)
-42. [FFI and Unsafe Code](#ffi-and-unsafe-code)
-43. [Compiler Internals](#compiler-internals)
-44. [Performance Optimization](#performance-optimization)
+40. WebAssembly Deployment
+41. Multi-File Projects
+42. FFI and Unsafe Code
+43. Compiler Internals
+44. Performance Optimization
 
 ### Part XI: Real-World Applications
 
-45. [Web Applications](#web-applications)
-46. [System Programming](#system-programming)
-47. [Blockchain Applications](#blockchain-applications)
-48. [Embedded Systems](#embedded-systems)
+45. Web Applications
+46. System Programming
+47. Blockchain Applications
+48. Embedded Systems
 
 ### Appendices
 
-- [Appendix A: Complete Language Reference](#appendix-a-language-reference)
-- [Appendix B: Standard Library API](#appendix-b-standard-library-api)
-- [Appendix C: Compiler Flags and Options](#appendix-c-compiler-flags)
-- [Appendix D: Migration Guides](#appendix-d-migration-guides)
-- [Appendix E: v0.2.0 Roadmap](#appendix-e-roadmap)
-- [Appendix F: Example Programs](#appendix-f-examples)
-- [Appendix G: Glossary](#appendix-g-glossary)
+- Appendix A: Complete Language Reference
+- Appendix B: Standard Library API
+- Appendix C: Compiler Flags and Options
+- Appendix D: Migration Guides
+- Appendix E: v0.2.0 Roadmap
+- Appendix F: Example Programs
+- Appendix G: Glossary
 
 ---
 
@@ -187,7 +187,7 @@ git clone https://github.com/fusion-lang/fusion-vsc-cli.git
 
 # Build the CLI
 
-cargo build --release -p fusion
+fusion build --release -p fusion
 
 # Add to PATH
 
@@ -278,7 +278,7 @@ cargo tauri build
 # Or run web version
 
 cd ../fusion-visual
-cargo run --release
+fusion run --release
 ```text
 
 ## Step 2: First Launch
@@ -321,7 +321,7 @@ fusion_build_123456/
 ├── Fusion.toml      # Project manifest
 ├── Flux.lock        # Dependency lock
 ├── src/
-│   └── main.fsn     # Your code!
+│   └── main.fu     # Your code!
 └── README.md        # Documentation
 ```text
 
@@ -427,7 +427,7 @@ Fusion is a revolutionary programming language that combines the ease of Python 
 
 # Install Fusion toolchain
 
-cargo install fusion-lang --version 1.0.0
+./install.sh
 
 # Verify installation
 
@@ -846,7 +846,7 @@ model = "qwen2.5-72b-instruct"
 
 # System requirements
 
-- Rust 1.75+ (nightly toolchain)
+- Fusion toolchain (install.sh)
 - LLVM 18+
 - CUDA 12+ (optional, for GPU support)
 - CMake 3.25+
@@ -879,15 +879,15 @@ cd Fusion-Programming-Language
 
 # Build entire workspace
 
-cargo build --workspace --release
+fusion build --workspace --release
 
 # Build specific crate
 
-cargo build -p fusion_lang --release
+fusion build -p fusion_lang --release
 
 # Run tests
 
-cargo test --workspace
+fusion test --workspace
 ```text
 
 ### Build Profiles
@@ -896,15 +896,15 @@ cargo test --workspace
 
 # Development (fast compilation, symbols)
 
-cargo build
+fusion build
 
 # Release (optimizations, no symbols)
 
-cargo build --release
+fusion build --release
 
 # Profiling (optimizations + symbols)
 
-cargo build --profile profiling
+fusion build --profile profiling
 ```text
 
 ---
@@ -931,12 +931,12 @@ Fusion-Programming-Language/
 ├── docs/                 # All documentation
 ├── examples/             # Example projects
 ├── .scripts/             # Build and automation scripts
-└── Cargo.toml            # Workspace manifest
+└── Fusion.toml            # Workspace manifest
 ```text
 
 ### Key Files
 
-* `Cargo.toml` - Workspace configuration with glob patterns
+* `Fusion.toml` - Workspace configuration with glob patterns
 * `registry/manifest.yml` - Package registry index
 * `.scripts/update-deps-to-registry.ps1` - Dependency sync script
 
@@ -965,7 +965,7 @@ The workspace uses glob patterns, so new crates are automatically detected:
 
 ```toml
 
-# Cargo.toml (already configured)
+# Fusion.toml (already configured)
 
 [workspace]
 members = [
@@ -994,19 +994,19 @@ fusion resolve --update
 
 # Check syntax across workspace
 
-cargo check --workspace
+fusion check --workspace
 
 # Build specific pillar
 
-cargo build -p fusion-ai-core -p ai-models -p ai-training
+fusion build -p fusion-ai-core -p ai-models -p ai-training
 
 # Run unit tests
 
-cargo test --workspace
+fusion test --workspace
 
 # Run integration tests
 
-cargo test --test integration_tests
+fusion test --test integration_tests
 ```text
 
 ---
@@ -1054,7 +1054,7 @@ fn test_llama_fine_tuning() {
 Located in `benches/` directory:
 
 ```bash
-cargo bench --bench tensor_operations
+fusion bench --bench tensor_operations
 ```text
 
 ---
@@ -1067,11 +1067,11 @@ cargo bench --bench tensor_operations
 
 # Run Clippy
 
-cargo clippy --workspace -- -D warnings
+fusion flux check --workspace -- -D warnings
 
 # Auto-fix
 
-cargo clippy --fix --workspace
+fusion flux check --fix --workspace
 ```text
 
 ### Formatting
@@ -1080,11 +1080,11 @@ cargo clippy --fix --workspace
 
 # Check formatting
 
-cargo fmt --check
+fusion fmt --check
 
 # Apply formatting
 
-cargo fmt --all
+fusion fmt --all
 ```text
 
 ### Security Audit
@@ -1097,7 +1097,7 @@ fusion audit --workspace
 
 # Or cargo-audit
 
-cargo audit
+fusion audit
 ```text
 
 ---
@@ -1127,7 +1127,7 @@ fusion debug main.fu
 
 # Build with debug symbols
 
-cargo build --profile debug
+fusion build --profile debug
 
 # Launch debugger
 
@@ -1175,14 +1175,14 @@ nsys profile fusion run gpu-program.fu
 1. **Fork** the repository
 2. **Create feature branch**: `git checkout -b feature/my-feature`
 3. **Implement** changes with tests
-4. **Run checks**: `cargo test && cargo clippy && cargo fmt --check`
+4. **Run checks**: `fusion test && fusion flux check && fusion fmt --check`
 5. **Commit**: `git commit -m "feat: add quantum teleportation"`
 6. **Push**: `git push origin feature/my-feature`
 7. **Open Pull Request** on GitHub
 
 ### Coding Standards
 
-* **Rust Code**: Follow `rustfmt` defaults and Clippy recommendations
+* **Fusion Code**: Follow `fusion fmt` defaults and Flux recommendations
 * **Commit Messages**: Use [Conventional Commits](https://www.conventionalcommits.org/)
     * `feat:` for new features
     * `fix:` for bug fixes
@@ -1207,22 +1207,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cargo build --workspace
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace
+      - run: fusion build --workspace
+      - run: fusion test --workspace
+      - run: fusion flux check --workspace
 ```text
 
 ---
 
 ## Release Process
 
-1. **Update Version**: Bump version in `Cargo.toml` files
+1. **Update Version**: Bump version in `Fusion.toml` files
 2. **Update ChangeLog**: Document changes in `docs/ChangeLog.md`
 3. **Tag Release**: `git tag v1.1.0 && git push --tags`
 4. **Build Artifacts**:
 
     ```bash
-    cargo build --release
+    fusion build --release
     fusion package --all-targets
 ```text
 
@@ -3607,7 +3607,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Backend
 
-- **Language**: Rust 1.80+ / Fusion (pure version)
+- **Language**: Fusion (.fu) + LLVM backend
 - **Runtime**: Supernova v3.0
 - **Web Framework**: Axum 0.7
 - **AI Model**: BERT-tiny (11M parameters)

@@ -26,4 +26,4 @@ The GPMR is implemented in Rust within the `src/registry/` module.
 
 ## Usage
 
-The Fusion CLI and Compiler interact with the GPMR automatically when resolving dependencies in `Cargo.toml` or `Fusion.toml`.
+The Fusion CLI and Compiler interact with the GPMR automatically when resolving dependencies in `Fusion.toml` or `Fusion.toml`.

@@ -31,7 +31,7 @@ runtime/
 | Item            | Source                                        | Destination                                           | Status            |
 | --------------- | --------------------------------------------- | ----------------------------------------------------- | ----------------- |
 | Rust FFI Bridge | `crates/flux-resolve-engine/src/lib.rs`       | `runtime/crates/fusion_flux_resolve/src/lib.rs`       | ✅ Moved           |
-| Package Config  | `crates/flux-resolve-engine/Cargo.toml`       | `runtime/crates/fusion_flux_resolve/Cargo.toml`       | ✅ Moved & Updated |
+| Package Config  | `crates/flux-resolve-engine/Fusion.toml`       | `runtime/crates/fusion_flux_resolve/Fusion.toml`       | ✅ Moved & Updated |
 | Documentation   | `crates/flux-resolve-engine/README.md`        | `runtime/crates/fusion_flux_resolve/README.md`        | ✅ Moved & Updated |
 | Tests           | `crates/flux-resolve-engine/src/lib.rs#tests` | `runtime/crates/fusion_flux_resolve/src/lib.rs#tests` | ✅ Moved           |
 
@@ -45,7 +45,7 @@ runtime/
 
 ### 2. Workspace Integration
 
-Added to `runtime/Cargo.toml`:
+Added to `runtime/Fusion.toml`:
 
 ```toml
 [workspace]
@@ -121,7 +121,7 @@ This enables:
 ### Immediate
 
 - [ ] Remove old `crates/flux-resolve-engine` from main workspace
-- [ ] Update main workspace `Cargo.toml`
+- [ ] Update main workspace `Fusion.toml`
 - [ ] Archive documentation in main workspace
 
 ### Future

@@ -305,7 +305,7 @@ Rather than manually categorizing all 269 crates, we use a **pattern-based appro
 ## Next Steps
 
 1. Apply polish rules to each category systematically
-2. Update Cargo.toml metadata for each crate
+2. Update Fusion.toml metadata for each crate
 3. Standardize documentation structure per category
 4. Add missing features/configuration
 5. Review and consolidate duplicate crates

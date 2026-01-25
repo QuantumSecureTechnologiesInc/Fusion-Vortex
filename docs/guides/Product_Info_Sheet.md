@@ -213,7 +213,7 @@ Users may choose either license for their projects.
 **Compiler & Runtime**:
 
 ```bash
-cargo install fusion-lang --version 1.0.0
+./install.sh
 ```text
 
 **VS Code Extension**:

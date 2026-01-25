@@ -34,7 +34,7 @@
 ### Path Fixes
 
 - Updated all workspace member paths after crates moved to `ecosystem/`
-- Fixed ~30 `Cargo.toml` dependency paths in ecosystem crates
+- Fixed ~30 `Fusion.toml` dependency paths in ecosystem crates
 - Resolved `fusion-core`/`fusion_core` path inconsistencies
 
 ## Known Issues (Non-Blocking)

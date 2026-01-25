@@ -42,7 +42,7 @@ The Fusion Terminal Browser is a powerful terminal-based web browser that brings
    - The browser will automatically detect Chrome/Chromium
    - Custom paths can be specified in configuration
 
-2. **Rust Toolchain** (if building from source)
+2. **Fusion Toolchain** (if building from source)
 
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -52,7 +52,7 @@ The Fusion Terminal Browser is a powerful terminal-based web browser that brings
 
 ```bash
 cd crates/fusion-terminal-browser
-cargo build --release
+fusion build --release
 ```text
 
 The binary will be located at `target/release/fusion-browser` (or `fusion-browser.exe` on Windows).
@@ -539,7 +539,7 @@ jobs:
           echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
           apt-get update && apt-get install -y google-chrome-stable
       - name: Build Browser
-        run: cargo build --release
+        run: fusion build --release
       - name: Capture Screenshots
         run: |
           ./target/release/fusion-browser screenshot https://myapp.com --output before.png

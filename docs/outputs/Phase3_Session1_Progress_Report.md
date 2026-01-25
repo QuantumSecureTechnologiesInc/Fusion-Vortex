@@ -117,7 +117,7 @@ Found existing foundation files:
 
 ### Dependencies Added
 
-Updated `Cargo.toml` with LSP framework:
+Updated `Fusion.toml` with LSP framework:
 
 ```text
 
@@ -285,7 +285,7 @@ async fn test_lsp_creation() {
 
 ### Files Modified
 
-1. **`Cargo.toml`**
+1. **`Fusion.toml`**
    - Added 5 LSP-related dependencies
 
 2. **`src/lib.rs`**

@@ -308,7 +308,7 @@ Fusion Substrate/
 │       ├── fusion-verifier/       ✅ Scaffolding
 │       ├── fusion-blockchain-anchor/ ✅ Scaffolding
 │       └── fusion-compliance/     ✅ Scaffolding
-├── Cargo.toml                     # Workspace manifest
+├── Fusion.toml                     # Workspace manifest
 └── README.md                      # Updated with Substrate branding
 ```text
 
@@ -354,7 +354,7 @@ Fusion Substrate/
 
 ## Issues Resolved During Implementation
 
-1. ✅ Fixed typo in `fusion-agent-spec/Cargo.toml` (`" derive"` → `"derive"`)
+1. ✅ Fixed typo in `fusion-agent-spec/Fusion.toml` (`" derive"` → `"derive"`)
 2. ✅ Added missing `serde_json` dependency to `fusion-policy`
 3. ✅ Resolved borrow checker issue in `fusion-agent-runtime` with `.cloned()`
 
@@ -417,4 +417,4 @@ All 14 integration tests pass, demonstrating the robustness of the core substrat
 **Build Status**: ✅ All crates compile successfully
 **Documentation**: Complete with examples and API docs
 
-**Ready for deployment and further development!**
+### Ready for deployment and further development!

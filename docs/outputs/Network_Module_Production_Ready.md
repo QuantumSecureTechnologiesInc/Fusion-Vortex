@@ -234,7 +234,7 @@ pub fn recv_message(channel: &mut SecureChannel) -> NetResult<Message>;
 
 ### Resolved ✅
 
-1. ✅ Missing `[package]` section in `Cargo.toml` (restored)
+1. ✅ Missing `[package]` section in `Fusion.toml` (restored)
 2. ✅ Missing `bincode` in workspace dependencies (added)
 3. ✅ ChaCha20Poly1305 API mismatch (`NewAead` → `KeyInit`)
 4. ✅ Missing `SharedSecret` trait import (added)

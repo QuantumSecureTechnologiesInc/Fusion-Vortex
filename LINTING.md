@@ -11,7 +11,7 @@
 ### Switch Profiles
 
 ```powershell
-Copy-Item .lint-profiles\<minimal|standard|strict>-lints.toml Cargo.toml -Force
+Copy-Item .lint-profiles\<minimal|standard|strict>-lints.toml Fusion.toml -Force
 ```text
 
 ### Current Workspace Defaults (Standard)

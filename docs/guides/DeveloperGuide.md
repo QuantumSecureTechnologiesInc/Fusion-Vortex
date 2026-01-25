@@ -5,7 +5,7 @@
 Welcome to the Fusion Programming Language development guide. This document provides comprehensive information for contributors and developers working on the Fusion project.
 
 **Prerequisites:**
-- Rust 1.70+ (stable toolchain)
+- Fusion toolchain (use `./install.sh` to provision `dist/`)
 - Python 3.10+ (optional, for interop and tooling)
 - CUDA Toolkit 12.0+ (optional, for GPU acceleration)
 - Git
@@ -86,7 +86,7 @@ fusion/
 
 ### Cargo Workspace
 
-Fusion uses a massive Cargo workspace structure defined in the root `Cargo.toml`. This allows unified dependency management and build orchestration.
+Fusion uses a massive Cargo workspace structure defined in the root `Fusion.toml`. This allows unified dependency management and build orchestration.
 
 **Build Commands:**
 
@@ -94,24 +94,24 @@ Fusion uses a massive Cargo workspace structure defined in the root `Cargo.toml`
 
 # Full workspace build
 
-cargo build --workspace --release
+fusion build --workspace --release
 
 # Build specific crate
 
-cargo build -p fusion-core
+fusion build -p fusion-core
 
 # Build CLI only
 
-cargo build --bin fusion --release
+fusion build --bin fusion --release
 
 # Check without building
 
-cargo check --workspace
+fusion check --workspace
 ```text
 
 ### Build Profiles
 
-Defined in `Cargo.toml`:
+Defined in `Fusion.toml`:
 
 - **dev**: Fast compilation, debug symbols, no optimizations
 - **release**: Full optimizations, no debug info
@@ -121,7 +121,7 @@ Defined in `Cargo.toml`:
 
 # Use distribution profile
 
-cargo build --profile dist
+fusion build --profile dist
 ```text
 
 ### Fusion Build Tool
@@ -160,7 +160,7 @@ fusion build --features quantum-hardware
 3. **Build the project:**
 
    ```bash
-   cargo build --workspace
+   fusion build --workspace
 ```text
 
 ### Running Tests
@@ -171,15 +171,15 @@ fusion build --features quantum-hardware
 
 # All workspace tests
 
-cargo test --workspace
+fusion test --workspace
 
 # Specific crate
 
-cargo test -p fusion-compiler
+fusion test -p fusion-compiler
 
 # With output
 
-cargo test -- --nocapture
+fusion test -- --nocapture
 ```text
 
 **Integration Tests:**
@@ -192,13 +192,13 @@ fusion test integration
 
 # E2E compiler tests
 
-cargo test --test compiler_e2e
+fusion test --test compiler_e2e
 ```text
 
 **Performance Tests:**
 
 ```bash
-cargo bench --workspace
+fusion bench --workspace
 ```text
 
 ### Code Formatting & Linting
@@ -206,24 +206,24 @@ cargo bench --workspace
 **Format code:**
 
 ```bash
-cargo fmt --all
+fusion fmt --all
 ```text
 
 **Lint with Clippy:**
 
 ```bash
-cargo clippy --workspace -- -D warnings
+fusion flux check --workspace -- -D warnings
 ```text
 
 **Custom lint profiles** are defined in `.lint-profiles/`.
 
 ## Coding Standards
 
-### Rust Guidelines
+### Fusion Guidelines
 
-1. **Follow Rust API Guidelines**: https://rust-lang.github.io/api-guidelines/
-2. **Use Clippy**: All code must pass `cargo clippy` without warnings.
-3. **Format with rustfmt**: Use `cargo fmt` before committing.
+1. **Follow Fusion API Guidelines**: Use `.fu` interfaces and minimal externs.
+2. **Use Fusion Flux**: All code must pass `fusion flux check` without warnings.
+3. **Format with fusion fmt**: Use `fusion fmt` before committing.
 4. **Document public APIs**: All public items require doc comments (`///`).
 5. **Error Handling**: Use `thiserror` for error types, `anyhow` for applications.
 
@@ -231,7 +231,7 @@ cargo clippy --workspace -- -D warnings
 
 Every crate in `registry/crates/` must have:
 - **README.md**: Overview, features, usage examples
-- **Cargo.toml**: Accurate description and metadata
+- **Fusion.toml**: Accurate description and metadata
 - **Doc comments**: For all public functions and types
 
 ### Security Practices
@@ -316,8 +316,8 @@ loop {
 
 1. **Fork and branch**: Create a feature branch from `main`
 2. **Implement**: Write code following our standards
-3. **Test**: Run `cargo test --workspace` and ensure all pass
-4. **Lint**: Run `cargo clippy` and `cargo fmt`
+3. **Test**: Run `fusion test --workspace` and ensure all pass
+4. **Lint**: Run `fusion flux check` and `fusion fmt`
 5. **Document**: Update relevant documentation
 6. **Commit**: Use conventional commit messages:
 
@@ -353,7 +353,7 @@ Reviewers check for:
 ## Resources
 
 - **Main Documentation**: `docs/guides/FUSION_COMPLETE_GUIDEBOOK.md`
-- **API Reference**: Generated via `cargo doc --open`
+- **API Reference**: Generated via `fusion doc --open`
 - **Quick Start**: `QuickStartGuide.md`
 - **Contributing**: `CONTRIBUTING.md`
 - **Build Policy**: `BUILD_POLICY.md`

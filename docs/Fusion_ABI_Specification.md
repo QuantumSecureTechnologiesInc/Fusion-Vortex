@@ -186,7 +186,7 @@ int main(void) {
 }
 ```text
 
-- Compile Fusion library with `cargo build --release` producing `fusion_std.dll` (Windows) or `libfusion_std.so` (Linux).
+- Compile Fusion library with `fusion build --release` producing `fusion_std.dll` (Windows) or `libfusion_std.so` (Linux).
 - Link the C program against the generated library.
 
 ---

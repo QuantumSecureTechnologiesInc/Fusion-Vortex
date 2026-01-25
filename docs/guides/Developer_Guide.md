@@ -1,8 +1,10 @@
 # Fusion v1.0: Developer Guide
 
-**Version**: 1.0.0
-**Date**: December 11, 2025
-**Status**: Production Architecture
+## Version
+
+- **Version**: 1.0.0
+- **Date**: December 11, 2025
+- **Status**: Production Architecture
 
 ---
 
@@ -42,7 +44,7 @@ Fusion v1.0 is a **full-stack ecosystem** comprising 141+ crates organized into 
 * **Quantum**: Circuit simulators + Hardware backends (IBM Quantum, AWS Braket)
 * **HAFT**: Hyper-Adaptive Flux Tensor system
 
-**AI provider selection**
+### AI provider selection
 
 ```toml
 [ai]
@@ -70,7 +72,7 @@ model = "qwen2.5-72b-instruct"
 
 # System requirements
 
-- Rust 1.75+ (nightly toolchain)
+- Fusion toolchain (install.sh)
 - LLVM 18+
 - CUDA 12+ (optional, for GPU support)
 - CMake 3.25+
@@ -103,15 +105,15 @@ cd Fusion-Programming-Language
 
 # Build entire workspace
 
-cargo build --workspace --release
+fusion build --workspace --release
 
 # Build specific crate
 
-cargo build -p fusion_lang --release
+fusion build -p fusion_lang --release
 
 # Run tests
 
-cargo test --workspace
+fusion test --workspace
 ```text
 
 ### Build Profiles
@@ -120,15 +122,15 @@ cargo test --workspace
 
 # Development (fast compilation, symbols)
 
-cargo build
+fusion build
 
 # Release (optimizations, no symbols)
 
-cargo build --release
+fusion build --release
 
 # Profiling (optimizations + symbols)
 
-cargo build --profile profiling
+fusion build --profile profiling
 ```text
 
 ---
@@ -155,12 +157,12 @@ Fusion-Programming-Language/
 ├── docs/                 # All documentation
 ├── examples/             # Example projects
 ├── .scripts/             # Build and automation scripts
-└── Cargo.toml            # Workspace manifest
+└── Fusion.toml            # Workspace manifest
 ```text
 
 ### Key Files
 
-* `Cargo.toml` - Workspace configuration with glob patterns
+* `Fusion.toml` - Workspace configuration with glob patterns
 * `registry/manifest.yml` - Package registry index
 * `.scripts/update-deps-to-registry.ps1` - Dependency sync script
 
@@ -189,7 +191,7 @@ The workspace uses glob patterns, so new crates are automatically detected:
 
 ```toml
 
-# Cargo.toml (already configured)
+# Fusion.toml (already configured)
 
 [workspace]
 members = [
@@ -218,19 +220,19 @@ fusion resolve --update
 
 # Check syntax across workspace
 
-cargo check --workspace
+fusion check --workspace
 
 # Build specific pillar
 
-cargo build -p fusion-ai-core -p ai-models -p ai-training
+fusion build -p fusion-ai-core -p ai-models -p ai-training
 
 # Run unit tests
 
-cargo test --workspace
+fusion test --workspace
 
 # Run integration tests
 
-cargo test --test integration_tests
+fusion test --test integration_tests
 ```text
 
 ---
@@ -278,7 +280,7 @@ fn test_llama_fine_tuning() {
 Located in `benches/` directory:
 
 ```bash
-cargo bench --bench tensor_operations
+fusion bench --bench tensor_operations
 ```text
 
 ---
@@ -291,11 +293,11 @@ cargo bench --bench tensor_operations
 
 # Run Clippy
 
-cargo clippy --workspace -- -D warnings
+fusion flux check --workspace -- -D warnings
 
 # Auto-fix
 
-cargo clippy --fix --workspace
+fusion flux check --fix --workspace
 ```text
 
 ### Formatting
@@ -304,11 +306,11 @@ cargo clippy --fix --workspace
 
 # Check formatting
 
-cargo fmt --check
+fusion fmt --check
 
 # Apply formatting
 
-cargo fmt --all
+fusion fmt --all
 ```text
 
 ### Security Audit
@@ -321,7 +323,7 @@ fusion audit --workspace
 
 # Or cargo-audit
 
-cargo audit
+fusion audit
 ```text
 
 ---
@@ -351,7 +353,7 @@ fusion debug main.fu
 
 # Build with debug symbols
 
-cargo build --profile debug
+fusion build --profile debug
 
 # Launch debugger
 
@@ -399,14 +401,14 @@ nsys profile fusion run gpu-program.fu
 1. **Fork** the repository
 2. **Create feature branch**: `git checkout -b feature/my-feature`
 3. **Implement** changes with tests
-4. **Run checks**: `cargo test && cargo clippy && cargo fmt --check`
+4. **Run checks**: `fusion test && fusion flux check && fusion fmt --check`
 5. **Commit**: `git commit -m "feat: add quantum teleportation"`
 6. **Push**: `git push origin feature/my-feature`
 7. **Open Pull Request** on GitHub
 
 ### Coding Standards
 
-* **Rust Code**: Follow `rustfmt` defaults and Clippy recommendations
+* **Fusion Code**: Follow `fusion fmt` defaults and Flux recommendations
 * **Commit Messages**: Use [Conventional Commits](https://www.conventionalcommits.org/)
     * `feat:` for new features
     * `fix:` for bug fixes
@@ -431,22 +433,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cargo build --workspace
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace
+      - run: fusion build --workspace
+      - run: fusion test --workspace
+      - run: fusion flux check --workspace
 ```text
 
 ---
 
 ## Release Process
 
-1. **Update Version**: Bump version in `Cargo.toml` files
+1. **Update Version**: Bump version in `Fusion.toml` files
 2. **Update ChangeLog**: Document changes in `docs/ChangeLog.md`
 3. **Tag Release**: `git tag v1.1.0 && git push --tags`
 4. **Build Artifacts**:
 
     ```bash
-    cargo build --release
+    fusion build --release
     fusion package --all-targets
 ```text
 

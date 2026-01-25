@@ -95,14 +95,14 @@ Next build: Try 0.7.x FIRST (skip known bad versions)
 
 ```text
 Build 1 starts:
-  ├─ Read Cargo.toml
+  ├─ Read Fusion.toml
   ├─ Lock Cargo.lock (exclusive file lock) 🔒
   ├─ Resolve dependencies
   ├─ Write Cargo.lock
   └─ Unlock 🔓
 
 Build 2 starts (same project):
-  ├─ Read Cargo.toml
+  ├─ Read Fusion.toml
   ├─ Try to lock Cargo.lock
   └─ ⏸️  BLOCKED! Wait for Build 1 to finish...
       (can take minutes on large projects)
@@ -144,7 +144,7 @@ Build 3 starts (concurrent with Build 1):
 
 ```text
 Project Directory:
-  Cargo.toml       ← Input
+  Fusion.toml       ← Input
   Cargo.lock       ← Output (SINGLE FILE, locked)
 
 Problem: Two builds → Fight over same file

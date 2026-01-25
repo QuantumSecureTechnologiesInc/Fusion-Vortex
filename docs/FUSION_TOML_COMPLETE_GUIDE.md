@@ -6,7 +6,7 @@
 
 ## Overview
 
-**Fusion.toml** is Fusion's revolutionary all-in-one project manifest that eliminates the need for multiple configuration files. Unlike traditional ecosystems where you need separate files for dependencies (Cargo.toml), package management (package.json), build configuration (CMakeLists.txt), runtime settings, security policies, and more, **Fusion.toml consolidates everything into a single, comprehensive manifest**.
+**Fusion.toml** is Fusion's revolutionary all-in-one project manifest that eliminates the need for multiple configuration files. Unlike traditional ecosystems where you need separate files for dependencies (Fusion.toml), package management (package.json), build configuration (CMakeLists.txt), runtime settings, security policies, and more, **Fusion.toml consolidates everything into a single, comprehensive manifest**.
 
 This unified approach means:
 - ✅ **One file** instead of 5-10 separate configuration files
@@ -511,7 +511,7 @@ unused_imports = "warn"
 dead_code = "warn"
 missing_docs = "warn"
 
-[lints.clippy]
+[lints.flux]
 all = "warn"
 pedantic = "warn"
 nursery = "allow"
@@ -589,7 +589,7 @@ Instead of managing multiple files:
 
 ```text
 ❌ Traditional Project:
-├── Cargo.toml          # Rust dependencies
+├── Fusion.toml          # Fusion dependencies
 ├── package.json        # JavaScript dependencies
 ├── requirements.txt    # Python dependencies
 ├── CMakeLists.txt      # C++ build config
@@ -633,7 +633,7 @@ packages = { react = "^18.0" }
 ```text
 
 Fusion Forge automatically:
-- Determines build order (C++ → Rust → Python/JS)
+- Determines build order (C++ → Fusion → Python/JS)
 - Generates FFI bindings
 - Links everything together
 
@@ -686,7 +686,7 @@ fusion build --features kubernetes,aws
 
 ## Comparison with Other Systems
 
-| Feature           | Fusion.toml | Cargo.toml | package.json | CMakeLists.txt |
+| Feature           | Fusion.toml | Fusion.toml | package.json | CMakeLists.txt |
 | ----------------- | ----------- | ---------- | ------------ | -------------- |
 | Dependencies      | ✅           | ✅          | ✅            | ⚠️ Manual       |
 | Build Config      | ✅           | ⚠️ Limited  | ❌            | ✅              |
@@ -758,7 +758,7 @@ registry = "${CONTAINER_REGISTRY:-ghcr.io/default}"  # With default
 
 **Key Benefits**:
 1. ✅ **One file** for everything
-2. ✅ **Polyglot support** (Rust, C++, Python, JavaScript)
+2. ✅ **Polyglot support** (Fusion, C++, Python, JavaScript)
 3. ✅ **Runtime configuration** (Supernova, HAFT, Sentinel, Cortex)
 4. ✅ **Security policies** built-in
 5. ✅ **Cross-domain validation** prevents configuration errors

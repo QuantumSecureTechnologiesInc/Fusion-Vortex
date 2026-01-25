@@ -1,6 +1,6 @@
 <div align="center">
 
-# Fusion VSC CLI
+# Fusion Toolchain + VSC CLI
 
 <img src="assets/logo.png" alt="Fusion VSC CLI Logo" width="400" />
 
@@ -11,7 +11,7 @@
 <br />
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
+[![Fusion](https://img.shields.io/badge/fusion-.fu-brightgreen.svg)](docs/Fusion_Overview.md)
 [![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/fusion-lang/fusion-vsc-cli)
 [![MCP](https://img.shields.io/badge/MCP-Ready-purple.svg)](https://modelcontextprotocol.io)
 
@@ -25,8 +25,8 @@
 
 ## Overview
 
-**Fusion VSC CLI** is the specialized interface for the Fusion ecosystem, designed to power the IDE experience. It bridges the gap between:
-1. **Fusion Core**: The language compiler and secure runtime.
+**Fusion VSC CLI** is the IDE-facing interface for the Fusion ecosystem. It bridges the gap between:
+1. **Fusion Core**: The `.fu` compiler, runtime, and standard library.
 2. **VS Code**: Via a dedicated Runtime Bridge that allows extensions to execute in a sandboxed, CLI-controlled environment.
 3. **MCP (Model Context Protocol)**: Exposing AI capabilities and context to external models and tools.
 
@@ -48,26 +48,23 @@ graph TD
     Bridge -->|Reflect| Host[Extension Host]
     Host -->|Execute| Node[Node.js / Boa Runtime]
     Node -->|Run| Ext[VS Code Extension]
-```text
+```
 
 ## Quick Start
 
 ### Installation
 
 ```bash
-
 # Clone the repository
+git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
+cd "Fusion - Programming Language"
 
-git clone https://github.com/fusion-lang/fusion-vsc-cli.git
+# Build the full toolchain (compiler, driver, stdlib, runtime)
+./install.sh
 
-# Build the CLI
-
-cargo build --release -p fusion
-
-# Add to PATH
-
-export PATH="$PATH:$(pwd)/target/release"
-```text
+# Add the toolchain to PATH
+export PATH="$PATH:$(pwd)/dist/bin"
+```
 
 ### Usage
 
@@ -75,13 +72,13 @@ export PATH="$PATH:$(pwd)/target/release"
 
 ```bash
 fusion mcp serve --port 3000
-```text
+```
 
 **Run an AI Assistant Session:**
 
 ```bash
 fusion ai assist
-```text
+```
 
 ## Documentation
 

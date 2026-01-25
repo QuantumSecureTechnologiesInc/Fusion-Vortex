@@ -586,13 +586,13 @@ fusion_build_20260113_032230/
 ├── Flux.lock            # Dependency lock file
 ├── README.md            # Generated documentation
 ├── src/
-│   ├── main.fsn         # Entry point
-│   ├── lib.fsn          # Library code
+│   ├── main.fu         # Entry point
+│   ├── lib.fu          # Library code
 │   └── tests/           # Unit tests
 ├── docs/
 │   └── API.md           # API documentation
 └── examples/
-    └── basic.fsn        # Usage examples
+    └── basic.fu        # Usage examples
 ```text
 
 #### Desktop Application Features
@@ -1081,7 +1081,7 @@ cd "Fusion - Programming Language"
 
 # Build the compiler
 
-cargo build --release -p fusion
+fusion build --release -p fusion
 
 # Add to PATH (Windows)
 
@@ -1108,7 +1108,7 @@ async fn main() {
 - 📚 **Documentation**: [docs/DocumentIndex.md](./DocumentIndex.md)
 - 🚀 **Quick Start**: [QuickStartGuide.md](../QuickStartGuide.md)
 - 👨‍💻 **Developer Guide**: [guides/DeveloperGuide.md](./guides/DeveloperGuide.md)
-- 📖 **API Reference**: Generate with `cargo doc --workspace --open`
+- 📖 **API Reference**: Generate with `fusion doc --workspace --open`
 
 ### Community & Support
 

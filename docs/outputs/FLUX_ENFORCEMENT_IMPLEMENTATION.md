@@ -237,7 +237,7 @@ export ALLOW_CARGO_FALLBACK=false    # No cargo fallback
 │
 ├── runtime/crates/fusion_flux_resolve/
 │   ├── src/lib.rs                   # Flux Engine (Rust bridge)
-│   ├── Cargo.toml
+│   ├── Fusion.toml
 │   └── README.md
 │
 └── BUILD_POLICY.md                  # Policy documentation

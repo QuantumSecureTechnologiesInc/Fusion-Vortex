@@ -28,7 +28,7 @@ This document outlines the **step-by-step implementation plan** for the Fusion C
 
 ```text
 fusion_core/
-├── Cargo.toml
+├── Fusion.toml
 ├── src/
 │   ├── lib.rs
 │   ├── types/

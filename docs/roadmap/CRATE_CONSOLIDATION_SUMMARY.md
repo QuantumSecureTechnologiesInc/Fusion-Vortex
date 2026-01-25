@@ -16,7 +16,7 @@
 
 ### 2. Workspace Configuration Updated
 
-- **Root `Cargo.toml`**: Updated `members = ["cmd/fusion", "crates/*", "registry/crates/*"]`
+- **Root `Fusion.toml`**: Updated `members = ["cmd/fusion", "crates/*", "registry/crates/*"]`
 - **Path Dependencies**: Fixed 36+ crates with broken ecosystem paths (`../../ecosystem/crates/` → `../`)
 - **Core Path Issues**: Fixed `cmd/fusion`, `model-server-core`, `python-converter`, `faas`, `cargo-converter`
 
@@ -55,7 +55,7 @@ These are **NOT** defined in the root `[workspace.dependencies]` section.
 
 ### Option 1: Add Workspace Dependencies (Recommended)
 
-Add to root `Cargo.toml` `[workspace.dependencies]`:
+Add to root `Fusion.toml` `[workspace.dependencies]`:
 
 ```toml
 [workspace.dependencies]

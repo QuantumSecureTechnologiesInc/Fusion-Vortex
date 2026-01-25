@@ -114,7 +114,7 @@ pub enum EnforcementMode {
 
 ### Added to Workspace ✅
 
-**File**: `Cargo.toml`
+**File**: `Fusion.toml`
 
 ```toml
 [workspace.dependencies]
@@ -257,7 +257,7 @@ assert_eq!(level, TrustLevel::Trusted);
 
 ### Integration with ExtensionHost
 
-**File**: `crates/vscode-runtime/Cargo.toml`
+**File**: `crates/vscode-runtime/Fusion.toml`
 
 ```toml
 [dependencies]

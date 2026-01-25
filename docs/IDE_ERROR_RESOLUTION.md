@@ -58,7 +58,7 @@ Diagnostics:
 3. Enable the `gpu` feature when building:
 
    ```bash
-   cargo build --features gpu -p flux-resolve-v2-hive-mind
+   fusion build --features gpu -p flux-resolve-v2-hive-mind
 ```text
 
 **If you don't need GPU acceleration:**
@@ -160,11 +160,11 @@ The Fusion project should build successfully regardless of whether CUDA is insta
 
 # Full workspace check (CPU-only)
 
-cargo check --workspace
+fusion check --workspace
 
 # With GPU acceleration (requires CUDA)
 
-cargo check --workspace --features flux-resolve-v2-hive-mind/gpu
+fusion check --workspace --features flux-resolve-v2-hive-mind/gpu
 ```text
 
 ### Generated Files Policy

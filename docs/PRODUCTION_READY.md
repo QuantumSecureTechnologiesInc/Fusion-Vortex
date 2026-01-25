@@ -20,7 +20,7 @@ This sign‑off covers the compiler (fuc), toolchain (fusion), runtime C layer, 
 
 - `dist/bin/` contains `fusion`, `fuc` and related tooling.
 - `dist/lib/fusion/` contains runtime (`runtime.o`), stdlib sources, HAFT nodes, core runtime evolution.
-- **No `.rs` or `.fsn` in dist** (validated).
+- **No `.rs` or `.fu` in dist** (validated).
 
 ## ABI Policy
 

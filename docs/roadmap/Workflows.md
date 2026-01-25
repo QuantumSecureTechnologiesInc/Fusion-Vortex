@@ -9,7 +9,7 @@
 
 ## Release Workflow
 
-1. **Version Bump**: Update version in `Cargo.toml`.
+1. **Version Bump**: Update version in `Fusion.toml`.
 2. **Changelog**: Update `ChangeLog.md`.
 3. **Tag**: Create git tag (e.g., `v0.1.0`).
 4. **Build**: CI pipeline builds release binaries.
