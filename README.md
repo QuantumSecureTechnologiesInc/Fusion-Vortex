@@ -2,7 +2,7 @@
 
 # Fusion v2.0 Vortex Programming Language
 
-<img src="assets/logo.png" alt="Fusion v2.0 Vortex Logo" width="400" />
+<img src="assets/fusion_vortex_logo.png" alt="Fusion v2.0 Vortex Logo" width="400" />
 
 <br />
 
