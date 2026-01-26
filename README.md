@@ -52,6 +52,55 @@ Write code that spans classical and quantum paradigms.
 *   **Memory Safety** without a garbage collector (ownership + borrow checker).
 *   **Heterogeneous Execution**: Seamless CUDA/Metal/Vulkan interoperability.
 
+## System Architecture
+
+The Fusion toolchain orchestrates a complex flow from high-level intent to hardware execution, powered by the **Supernova Tribrid Runtime**.
+
+```mermaid
+graph TD
+    %% Nodes
+    Source[Fusion Source Code .fu]
+    Compiler[Fusion Compiler]
+    Vortex[Vortex Entropy Engine]
+    
+    subgraph Supernova_Runtime [Supernova Runtime v3.0]
+        Scheduler[Work-Stealing Scheduler]
+        CPU_Exec[CPU Executor]
+        GPU_Exec[GPU Executor]
+        QPU_Exec[QPU Executor]
+    end
+    
+    Hardware_CPU[CPU Logic]
+    Hardware_GPU[GPU Tensors]
+    Hardware_QPU[QPU Circuits]
+
+    %% Flow
+    Source -->|Parse & Optimize| Compiler
+    Vortex -->|Inject Entropy| Compiler
+    Compiler -->|Binary| Scheduler
+    
+    Scheduler -->|Dispatch Classical| CPU_Exec
+    Scheduler -->|Dispatch Parallel| GPU_Exec
+    Scheduler -->|Dispatch Quantum| QPU_Exec
+    
+    CPU_Exec --> Hardware_CPU
+    GPU_Exec --> Hardware_GPU
+    QPU_Exec --> Hardware_QPU
+    
+    %% Styling
+    style Vortex fill:#f9f,stroke:#333,stroke-width:2px
+    style Supernova_Runtime fill:#e1f5fe,stroke:#01579b
+```
+
+### Execution Flow
+1.  **Entropy Injection**: The **Vortex Engine** infuses initial chaotic state during compilation for PQC key generation and ASLR protection.
+2.  **Compilation**: Validates quantum circuits and tensor shapes at compile-time.
+3.  **Supernova Dispatch**: The runtime analyzes execution paths to route workloads:
+    *   **CPU**: General logic, I/O, networking.
+    *   **GPU**: Matrix multiplications, neural network inference.
+    *   **QPU**: Quantum gates, entanglement operations (or simulation if hardware is unavailable).
+
+
 ## Example
 
 ```fusion
