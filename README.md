@@ -1,23 +1,23 @@
 <div align="center">
 
-# Fusion v2.0 Vortex Toolchain + VSC CLI
+# Fusion v2.0 Vortex Programming Language
 
-<img src="assets/logo.png" alt="Fusion v2.0 Vortex VSC CLI Logo" width="400" />
+<img src="assets/logo.png" alt="Fusion v2.0 Vortex Logo" width="400" />
 
 <br />
 
-### The unified bridge connecting the Fusion v2.0 Vortex programming language, VS Code Extensions, and the Model Context Protocol (MCP).
+### The first native, post-quantum secure, AI-integrated systems language.
 
 <br />
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
-[![Fusion](https://img.shields.io/badge/fusion-.fu-brightgreen.svg)](docs/Fusion_Overview.md)
-[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/fusion-lang/fusion-vsc-cli)
-[![MCP](https://img.shields.io/badge/MCP-Ready-purple.svg)](https://modelcontextprotocol.io)
+[![Fusion](https://img.shields.io/badge/fusion-.fu-brightgreen.svg)](docs/DocumentIndex.md)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/QuantumSecureTechnologiesInc/Fusion-Vortex)
+[![PQC](https://img.shields.io/badge/security-PQC%20Level%203-purple.svg)](docs/features/Post_Quantum_Cryptography.md)
 
 <br />
 
-[🚀 Quick Start](docs/guides/QuickStartGuide.md) • [📖 Fusion Story](docs/Fusion_Story_and_Features.md) • [✨ Features](#key-features) • [🏛️ Architecture](docs/design/Architecture.md) • [📚 Documentation](docs/DocumentIndex.md)
+[🚀 Quick Start](docs/guides/QuickStartGuide.md) • [📖 Feature Index](docs/features/FEATURES_INDEX.md) • [✨ Vortex Engine](docs/features/Post_Quantum_Cryptography.md) • [📚 Documentation](docs/DocumentIndex.md)
 
 </div>
 
@@ -25,74 +25,89 @@
 
 ## Overview
 
-**Fusion v2.0 Vortex VSC CLI** is the IDE-facing interface for the Fusion v2.0 Vortex ecosystem. It bridges the gap between:
-1. **Fusion Core**: The `.fu` compiler, runtime, and standard library.
-2. **VS Code**: Via a dedicated Runtime Bridge that allows extensions to execute in a sandboxed, CLI-controlled environment.
-3. **MCP (Model Context Protocol)**: Exposing AI capabilities and context to external models and tools.
+**Fusion v2.0 Vortex** is a modern, general-purpose systems programming language designed for the post-quantum era. It abandons legacy paradigms to offer a "secure-by-design" foundation where **Post-Quantum Cryptography (PQC)**, **AI/ML primitives**, and **Quantum Computing** support are first-class citizens, not external libraries.
+
+The language is built on the **Vortex Engine**, a native chaotic entropy generator that ensures all cryptographic operations are resistant to quantum decryption attacks.
 
 ## Key Features
 
-* **🔌 VS Code <-> MCP Bridge**: Seamless routing of tool execution requests from AI models to VS Code extensions.
-* **⚡ Native Fusion Extension Host**: High-performance, secure runtime for executing extension logic (`fusion-vscode-runtime`).
-* **🤖 Advanced AI Integration**: Built-in support for OpenAI, Anthropic, and Local models via `fusion-ai-core`.
-* **🛡️ Post-Quantum Security**: Native PQC signing and verification via the **Vortex Engine** (`src/stdlib/vortex.fu`).
+### 🛡️ Native Post-Quantum Security
+Fusion is the first language to integrate a **NIST-standardized PQC stack** (Kyber/ML-KEM, Dilithium/ML-DSA) directly into the standard library.
+*   **Vortex Entropy Engine**: High-throughput, self-healing entropy generation (`src/stdlib/vortex.fu`).
+*   **Zero-Trust Networking**: TLS 1.3+ with mandatory PQC cipher suites.
 
-## Architecture
+### 🧠 Embedded AI Primitives
+Deep learning is woven into the fabric of the language.
+*   **First-Class Tensors**: Manipulate N-dimensional arrays as easily as integers.
+*   **Neural Runtime**: Built-in support for model inference (LLMs, CNNs) without Python dependencies.
+*   **Visual Compiler**: Generate production code from natural language intents.
 
-The CLI acts as the central hub:
+### ⚛️ Hybrid Quantum Computing
+Write code that spans classical and quantum paradigms.
+*   **Qubits as Types**: Define quantum circuits using native syntax.
+*   **Supernova Runtime**: Automatically dispatches kernels to the optimal hardware (CPU, GPU, or QPU).
 
-```mermaid
-graph TD
-    User[User / AI Model] -->|MCP Protocol| MCP[Fusion MCP Server]
-    MCP -->|Tool Call| Bridge[Extension Bridge]
-    Bridge -->|Reflect| Host[Extension Host]
-    Host -->|Execute| Node[Node.js / Boa Runtime]
-    Node -->|Run| Ext[VS Code Extension]
+### ⚡ Performance & Safety
+*   **Native compilation** via `fusion` compiler.
+*   **Memory Safety** without a garbage collector (ownership + borrow checker).
+*   **Heterogeneous Execution**: Seamless CUDA/Metal/Vulkan interoperability.
+
+## Example
+
+```fusion
+use std::vortex;
+use std::quantum;
+
+#[fusion::main]
+fn main() -> Result<()> {
+    // 1. Initialize PQC Entropy
+    let ctx = vortex::VortexContext::new()?;
+    let seed = ctx.generate_seed_safe()?;
+
+    // 2. Define a Quantum Circuit
+    let q = quantum::Qubit::new();
+    q.hadamard();
+    let result = q.measure();
+
+    println!("Quantum Result: {}", result);
+    
+    // 3. AI Inference
+    let tensor = [1.0, 2.0, 3.0].to_tensor();
+    let prediction = model::predict(tensor).await?;
+    
+    Ok(())
+}
 ```
 
-## Quick Start
+## Getting Started
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language
-cd "Fusion - Programming Language"
+git clone https://github.com/QuantumSecureTechnologiesInc/Fusion-Vortex.git
+cd Fusion-Vortex
 
-# Build the full toolchain (compiler, driver, stdlib, runtime)
+# Build the toolchain (requires pre-existing fusion binary for bootstrap)
+fusion build --release
+
+# Install
 ./install.sh
-
-# Add the toolchain to PATH
-export PATH="$PATH:$(pwd)/dist/bin"
 ```
 
-### Usage
-
-**Start the MCP Server:**
+### Creating a Project
 
 ```bash
-fusion mcp serve --port 3000
-```
-
-**Run an AI Assistant Session:**
-
-```bash
-fusion ai assist
+fusion new my_project
+cd my_project
+fusion run
 ```
 
 ## Documentation
 
-* [Quick Start Guide](docs/guides/QuickStartGuide.md)
-* [Developer Guide](docs/guides/DeveloperGuide.md)
-* [Architecture](docs/design/Architecture.md)
-
-## Status
-
-**Current Version**: 0.2.0 (Bridge Connected)
-
-* ✅ **Bridge**: Fully Operational (Stub removed)
-* ✅ **Host**: In-Memory Command Registry Active
-* ✅ **AI**: Streaming & Tool Use Enabled
+*   **[Feature Index](docs/features/FEATURES_INDEX.md)**: Explore the unique capabilities of Fusion v2.0.
+*   **[Standard Library](docs/book/appendix-b-stdlib.md)**: API reference for `std`.
+*   **[Fusion Story](docs/Fusion_Story_and_Features.md)**: The philosophy behind the language.
 
 ## License
 
