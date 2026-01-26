@@ -88,8 +88,8 @@ graph TD
     QPU_Exec --> Hardware_QPU
     
     %% Styling
-    style Vortex fill:#f9f,stroke:#333,stroke-width:2px
-    style Supernova_Runtime fill:#e1f5fe,stroke:#01579b
+    style Vortex fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style Supernova_Runtime fill:#e1f5fe,stroke:#01579b,color:#000
 ```
 
 ### Execution Flow
