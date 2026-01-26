@@ -11,7 +11,7 @@ categories = ["development-tools", "framework"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
 anyhow = { version = "1.0.94" }
 thiserror = { version = "2.0.6" }
 serde = { version = "1.0.216", features = ["derive", "rc"] }
@@ -23,5 +23,5 @@ tracing = { version = "0.1.41" }
 crossbeam = { version = "0.8" }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 num_cpus = { version = "1.16.0" }
-fusion-ai-core = { path = "registry/crates/ai-core", version = "0.2.0" }
-fusion_std = { path = "registry/crates/std" }
+fusion-ai-core = { path = "../ai-core", version = "0.2.0" }
+fusion_std = { path = "../std" }

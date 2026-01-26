@@ -13,7 +13,7 @@
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Fusion](https://img.shields.io/badge/fusion-.fu-brightgreen.svg)](docs/DocumentIndex.md)
 [![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/QuantumSecureTechnologiesInc/Fusion-Vortex)
-[![PQC](https://img.shields.io/badge/security-PQC%20Level%203-purple.svg)](docs/features/Post_Quantum_Cryptography.md)
+[![PQC](https://img.shields.io/badge/security-PQC%20Level%205-purple.svg)](docs/features/Post_Quantum_Cryptography.md)
 
 <br />
 

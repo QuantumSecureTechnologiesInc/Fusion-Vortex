@@ -11,8 +11,8 @@ categories = ["algorithms", "science"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
-fusion_std = { path = "registry/crates/std" }
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
+fusion_std = { path = "../std" }
 
 [dev-dependencies]
 criterion = { version = "0.5.1" }

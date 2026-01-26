@@ -11,6 +11,12 @@ if [ ! -d "$DIST_PATH" ]; then
   exit 1
 fi
 
+STD_SRC_FALLBACK="$(cd "$(dirname "$0")/../.." && pwd)/registry/crates/std/src"
+if [ -d "$STD_SRC_FALLBACK" ] && [ ! -d "$DIST_PATH/lib/fusion/std/src" ]; then
+  mkdir -p "$DIST_PATH/lib/fusion/std/src"
+  cp -f "$STD_SRC_FALLBACK"/*.fu "$DIST_PATH/lib/fusion/std/src/"
+fi
+
 if ! command -v fpm >/dev/null 2>&1; then
   echo "fpm not found. Install fpm (RubyGem) to build packages." >&2
   exit 1

@@ -133,6 +133,8 @@ enum Expression {
     AddressOf(Box<Spanned<Expression>>),
     /// Dereference expression.
     Dereference(Box<Spanned<Expression>>),
+    /// Logical NOT expression.
+    UnaryNot(Box<Spanned<Expression>>),
 }
 /// Binary operators.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -155,4 +157,6 @@ enum BinaryOp {
     Gt,
     /// Logical or.
     Or,
+    /// Logical and.
+    And,
 }

@@ -314,7 +314,7 @@ mode = "tribrid"
 key_exchange = "hybrid"
 signatures = "hybrid"
 encryption = "aes-256-gcm"
-pq_security_level = 3
+pq_security_level = 5
 
 [sentinel.chaos]
 enabled = true

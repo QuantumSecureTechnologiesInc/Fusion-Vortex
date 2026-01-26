@@ -23,28 +23,13 @@ if [ -f "$ROOT/src/stdlib/arc_runtime.c" ]; then
   cc -c "$DIST/lib/fusion/arc_runtime.c" -o "$DIST/lib/fusion/arc_runtime.o" || true
 fi
 
-# 2. Find bootstrap compiler
-BOOTSTRAP_FUC="${FUC_BOOTSTRAP:-}"
-if [ -z "$BOOTSTRAP_FUC" ] && [ -x "$DIST/bin/fuc" ]; then
-  BOOTSTRAP_FUC="$DIST/bin/fuc"
-fi
-if [ -z "$BOOTSTRAP_FUC" ]; then
-  if command -v fuc >/dev/null 2>&1; then
-    BOOTSTRAP_FUC="$(command -v fuc)"
-  fi
-fi
-if [ -z "$BOOTSTRAP_FUC" ]; then
-  echo ">>> Missing bootstrap compiler. Set FUC_BOOTSTRAP or install fuc on PATH." >&2
-  exit 1
-fi
-
-# 3. Build compiler (fuc) using .fu + Fusion.toml
+# 2. Build compiler (fuc) using Cargo bootstrap from Fusion.toml
 export FUSION_STD_PATH="${FUSION_STD_PATH:-$ROOT/registry/crates/std}"
 export FUSION_SYSROOT="$DIST"
 mkdir -p "$ROOT/target/release"
 
-echo ">>> Building Compiler (native)..."
-"$BOOTSTRAP_FUC" "$ROOT/crates/fuc/src/main.fu" --emit-bin -o "$ROOT/target/release/fuc"
+echo ">>> Building Compiler (bootstrap via cargo)..."
+FUC_SKIP_STD=1 TMPDIR="${TMPDIR:-/tmp}" python3 "$ROOT/tools/build_fuc_from_fu.py"
 cp "$ROOT/target/release/fuc" "$DIST/bin/fuc"
 
 # 4. Install Standard Library Sources
@@ -65,7 +50,7 @@ if [ -d "$ROOT/source_archives/Source Files" ]; then
   python3 - <<'PY'
 from pathlib import Path
 import shutil
-root = Path(__file__).resolve().parent.parent
+root = Path.cwd()
 source_root = root / "source_archives" / "Source Files"
 dist = root / "dist" / "source_files"
 dist.mkdir(parents=True, exist_ok=True)

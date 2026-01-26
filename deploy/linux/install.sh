@@ -21,5 +21,5 @@ if ! grep -q "$BIN_PATH" "$PROFILE" 2>/dev/null; then
   echo "export PATH=\"$BIN_PATH:\$PATH\"" >> "$PROFILE"
 fi
 
-echo "Fusion installed to $INSTALL_ROOT"
-echo "Open a new terminal and run: fusion --version"
+echo "Fusion compiler installed to $INSTALL_ROOT"
+echo "Open a new terminal and run: fuc --version"

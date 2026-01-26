@@ -11,11 +11,11 @@ categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
 anyhow = { version = "1.0.94" }
 thiserror = { version = "2.0.6" }
 serde = { version = "1.0.216", features = ["derive", "rc"] }
 serde_json = { version = "1.0.133" }
 handlebars = { version = "6.2.0" }
-fusion-core = { path = "registry/crates/fusion-core", package = "fusion-core" }
-fusion_std = { path = "registry/crates/std" }
+fusion-core = { path = "../fusion-core", package = "fusion-core" }
+fusion_std = { path = "../std" }

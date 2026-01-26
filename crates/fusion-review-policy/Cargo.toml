@@ -11,4 +11,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.133" }
 anyhow = { version = "1.0.94" }
 glob = { version = "0.3.1" }
-fusion_std = { path = "registry/crates/std" }
+fusion_std = { path = "../../registry/crates/std" }

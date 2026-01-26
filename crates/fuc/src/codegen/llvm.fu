@@ -585,6 +585,18 @@ impl<'ctx> LlvmBackend<'ctx> {
                                     )?
                                     .into()
                             }
+                            ast::BinaryOp::And => {
+                                self.map_builder(
+                                        self
+                                            .builder
+                                            .build_and(
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
+                                                "and",
+                                            ),
+                                    )?
+                                    .into()
+                            }
                         };
                         self.map_builder(self.builder.build_store(dest_ptr, result))?;
                     }

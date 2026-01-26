@@ -11,9 +11,9 @@ categories = ["algorithms", "text-processing"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
 serde = { version = "1.0.216", features = ["derive", "rc"] }
-fusion_std = { path = "registry/crates/std" }
+fusion_std = { path = "../std" }
 
 [dev-dependencies]
 criterion = { version = "0.5.1" }

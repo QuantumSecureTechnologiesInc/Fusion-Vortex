@@ -14,4 +14,4 @@ serde_json = { version = "1.0.133" }
 chrono = { version = "0.4.39", features = ["serde"] }
 rusqlite = { version = "0.31", features = ["bundled"] }
 dirs = { version = "5.0.1" }
-fusion_std = { path = "registry/crates/std" }
+fusion_std = { path = "../../registry/crates/std" }

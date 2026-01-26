@@ -145,7 +145,8 @@ def write_cargo_from_fusion(fusion_toml: Path, cargo_toml: Path, *, stdlib_path:
 def build() -> None:
     if not FUC_DIR.exists():
         raise SystemExit("Missing crates/fuc")
-    if not STD_RUST_DIR.exists():
+    skip_std = os.environ.get("FUC_SKIP_STD", "").lower() in {"1", "true", "yes"}
+    if not skip_std and not STD_RUST_DIR.exists():
         raise SystemExit(f"Missing rust stdlib at {STD_RUST_DIR}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -155,18 +156,23 @@ def build() -> None:
 
     # Generate Cargo.toml for fuc from Fusion.toml, pointing to rust stdlib.
     fuc_cargo = FUC_DIR / "Cargo.toml"
-    write_cargo_from_fusion(FUC_DIR / "Fusion.toml", fuc_cargo, stdlib_path=STD_RUST_DIR)
+    write_cargo_from_fusion(
+        FUC_DIR / "Fusion.toml",
+        fuc_cargo,
+        stdlib_path=None if skip_std else STD_RUST_DIR,
+    )
 
     # Sync .fu -> .rs for compiler only.
     copied = sync_fu_to_rs(FUC_DIR)
     print(f"synced_fu_to_rs={copied}")
 
-    # Build rust stdlib first.
-    subprocess.run(
-        ["cargo", "build", "--release", "--manifest-path", str(STD_RUST_DIR / "Cargo.toml")],
-        check=True,
-        env=build_env,
-    )
+    # Build rust stdlib first (unless skipped for bootstrap).
+    if not skip_std:
+        subprocess.run(
+            ["cargo", "build", "--release", "--manifest-path", str(STD_RUST_DIR / "Cargo.toml")],
+            check=True,
+            env=build_env,
+        )
 
     # Build compiler.
     subprocess.run(

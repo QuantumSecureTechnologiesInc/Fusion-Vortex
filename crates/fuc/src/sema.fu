@@ -734,13 +734,13 @@ impl<'a> Analyzer<'a> {
                         }
                         ast::Type::Bool
                     }
-                    ast::BinaryOp::Or => {
+                    ast::BinaryOp::Or | ast::BinaryOp::And => {
                         if !self.types_compatible(&ast::Type::Bool, &typed_left.ty)
                             || !self.types_compatible(&ast::Type::Bool, &typed_right.ty)
                         {
                             self.report_error(
                                 expr.span.clone(),
-                                "Operator Or requires Bool operands.".to_string(),
+                                format!("Operator {:?} requires Bool operands.", op),
                             );
                         }
                         ast::Type::Bool
@@ -1124,6 +1124,28 @@ impl<'a> Analyzer<'a> {
                         ast::Type::Struct(name),
                     )
                 }
+            }
+            ast::Expression::UnaryNot(inner) => {
+                let typed_inner = self.analyze_expression(*inner);
+                if !self.types_compatible(&ast::Type::Bool, &typed_inner.ty) {
+                    self.report_error(
+                        expr.span.clone(),
+                        "Unary not requires Bool operand.".to_string(),
+                    );
+                }
+                let typed_false = TypedExpression {
+                    node: TypedExpressionKind::BoolLiteral(false),
+                    ty: ast::Type::Bool,
+                    span: expr.span.clone(),
+                };
+                (
+                    TypedExpressionKind::BinaryOperation {
+                        op: ast::BinaryOp::Eq,
+                        left: Box::new(typed_inner),
+                        right: Box::new(typed_false),
+                    },
+                    ast::Type::Bool,
+                )
             }
             ast::Expression::AddressOf(inner) => {
                 let typed_inner = self.analyze_expression(*inner);

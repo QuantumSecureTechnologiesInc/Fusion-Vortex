@@ -27,5 +27,5 @@ if ($envPath -notlike "*$binPath*") {
     [Environment]::SetEnvironmentVariable("Path", "$envPath;$binPath", "User")
 }
 
-Write-Host "Fusion installed to $InstallRoot"
-Write-Host "Open a new terminal and run: fusion --version"
+Write-Host "Fusion compiler installed to $InstallRoot"
+Write-Host "Open a new terminal and run: fuc --version"

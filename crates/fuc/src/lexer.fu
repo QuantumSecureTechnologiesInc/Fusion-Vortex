@@ -59,8 +59,12 @@ enum Token {
     Equals,
     #[token("!=")]
     NotEquals,
+    #[token("!")]
+    Bang,
     #[token("||")]
     Or,
+    #[token("&&")]
+    And,
     #[token("->")]
     Arrow,
     #[token("<")]

@@ -88,6 +88,7 @@ fn constant_fold_block(block: &mut BasicBlock) -> FBool {
                     (Value::BoolConst(b1), Value::BoolConst(b2)) => {
                         match op {
                             ast::BinaryOp::Or => Some(Value::BoolConst(b1 || b2)),
+                            ast::BinaryOp::And => Some(Value::BoolConst(b1 && b2)),
                             ast::BinaryOp::Eq => Some(Value::BoolConst(b1 == b2)),
                             ast::BinaryOp::Neq => Some(Value::BoolConst(b1 != b2)),
                             _ => None,

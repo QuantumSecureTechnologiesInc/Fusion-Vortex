@@ -9,7 +9,7 @@ serde_json = { version = "1.0.133" }
 anyhow = { version = "1.0.94" }
 thiserror = { version = "2.0.6" }
 tracing = { version = "0.1.41" }
-fusion_std = { path = "registry/crates/std" }
+fusion_std = { path = "../../registry/crates/std" }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }

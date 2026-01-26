@@ -11,6 +11,12 @@ if [ ! -d "$DIST_PATH" ]; then
   exit 1
 fi
 
+STD_SRC_FALLBACK="$(cd "$(dirname "$0")/../.." && pwd)/registry/crates/std/src"
+if [ -d "$STD_SRC_FALLBACK" ] && [ ! -d "$DIST_PATH/lib/fusion/std/src" ]; then
+  mkdir -p "$DIST_PATH/lib/fusion/std/src"
+  cp -f "$STD_SRC_FALLBACK"/*.fu "$DIST_PATH/lib/fusion/std/src/"
+fi
+
 STAGE_DIR="/tmp/fusion_pkg_root"
 rm -rf "$STAGE_DIR"
 mkdir -p "$STAGE_DIR/usr/local/fusion"
