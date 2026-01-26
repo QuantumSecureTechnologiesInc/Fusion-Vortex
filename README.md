@@ -1,12 +1,12 @@
 <div align="center">
 
-# Fusion Toolchain + VSC CLI
+# Fusion v2.0 Vortex Toolchain + VSC CLI
 
-<img src="assets/logo.png" alt="Fusion VSC CLI Logo" width="400" />
+<img src="assets/logo.png" alt="Fusion v2.0 Vortex VSC CLI Logo" width="400" />
 
 <br />
 
-### The unified bridge connecting the Fusion programming language, VS Code Extensions, and the Model Context Protocol (MCP).
+### The unified bridge connecting the Fusion v2.0 Vortex programming language, VS Code Extensions, and the Model Context Protocol (MCP).
 
 <br />
 
@@ -25,7 +25,7 @@
 
 ## Overview
 
-**Fusion VSC CLI** is the IDE-facing interface for the Fusion ecosystem. It bridges the gap between:
+**Fusion v2.0 Vortex VSC CLI** is the IDE-facing interface for the Fusion v2.0 Vortex ecosystem. It bridges the gap between:
 1. **Fusion Core**: The `.fu` compiler, runtime, and standard library.
 2. **VS Code**: Via a dedicated Runtime Bridge that allows extensions to execute in a sandboxed, CLI-controlled environment.
 3. **MCP (Model Context Protocol)**: Exposing AI capabilities and context to external models and tools.
@@ -33,9 +33,9 @@
 ## Key Features
 
 * **🔌 VS Code <-> MCP Bridge**: Seamless routing of tool execution requests from AI models to VS Code extensions.
-* **🦀 Rust-Based Extension Host**: High-performance, secure runtime for executing extension logic (`fusion-vscode-runtime`).
+* **⚡ Native Fusion Extension Host**: High-performance, secure runtime for executing extension logic (`fusion-vscode-runtime`).
 * **🤖 Advanced AI Integration**: Built-in support for OpenAI, Anthropic, and Local models via `fusion-ai-core`.
-* **🛡️ Post-Quantum Security**: Native PQC signing and verification for all artifacts.
+* **🛡️ Post-Quantum Security**: Native PQC signing and verification via the **Vortex Engine** (`src/stdlib/vortex.fu`).
 
 ## Architecture
 

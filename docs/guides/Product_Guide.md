@@ -1,4 +1,4 @@
-# Fusion v1.0: Product Guide
+# Fusion v2.0 Vortex v1.0: Product Guide
 
 **Version**: 1.0.0
 **Date**: December 11, 2025

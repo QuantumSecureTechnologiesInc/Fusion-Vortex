@@ -1,4 +1,4 @@
-# Fusion Roadmap: THE REALITY CHECK (100% COMPLETE)
+# Fusion v2.0 Vortex Roadmap: THE REALITY CHECK (100% COMPLETE)
 
 **Generated**: 2025-12-11
 **Current Status**: 🟢 **ALL EPOCHS (1-4) COMPLETE**

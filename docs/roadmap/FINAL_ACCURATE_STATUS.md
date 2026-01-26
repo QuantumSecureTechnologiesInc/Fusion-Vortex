@@ -1,4 +1,4 @@
-# Fusion Roadmap: FINAL CORRECTED Status
+# Fusion v2.0 Vortex Roadmap: FINAL CORRECTED Status
 
 **Generated**: 2025-12-11
 **Current Status**: 🟢 **EPOCHS 1 & 2 COMPLETE!**

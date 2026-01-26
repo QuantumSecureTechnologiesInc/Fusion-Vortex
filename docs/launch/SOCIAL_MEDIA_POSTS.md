@@ -1,4 +1,4 @@
-# Fusion v1.0 - Social Media Posts
+# Fusion v2.0 Vortex v1.0 - Social Media Posts
 
 ## Ready-to-Use Posts for Launch
 
@@ -125,7 +125,7 @@ Welcome to the future. 🌟
 ### Professional Announcement
 
 ```text
-🚀 Excited to announce the release of Fusion Programming Language v1.0 - the world's first quantum-native programming language!
+🚀 Excited to announce the release of Fusion v2.0 Vortex Programming Language v1.0 - the world's first quantum-native programming language!
 
 After an intensive development sprint, we're releasing a complete ecosystem that unifies three computing paradigms:
 
@@ -344,7 +344,7 @@ GitHub: [LINK]
 
 @everyone
 
-We're incredibly excited to announce the official release of **Fusion Programming Language v1.0**!
+We're incredibly excited to announce the official release of **Fusion v2.0 Vortex Programming Language v1.0**!
 
 ## ⚛️ What is Fusion?
 

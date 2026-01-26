@@ -15,7 +15,7 @@ metadata = { integrations = { inventory = "../../../docs/Integrations_Inventory.
 async-trait = { version = "0.1.83" }
 anyhow = { version = "1.0.94" }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
-fusion_core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
+fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
 fusion_ai_core = { path = "../ai-core", package = "fusion-ai-core" }
 fusion_runtime_core = { path = "../fusion_runtime_core" }
 fusion_llm_inference_engine = { path = "../llm-inference" }

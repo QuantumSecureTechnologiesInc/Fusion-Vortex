@@ -1,4 +1,4 @@
-# Fusion v1.0 - Quick Facts
+# Fusion v2.0 Vortex v1.0 - Quick Facts
 
 *One-pager for media and quick reference*
 

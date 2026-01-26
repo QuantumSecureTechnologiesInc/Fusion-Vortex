@@ -1,4 +1,4 @@
-# Fusion v1.0 - YouTube Content Library
+# Fusion v2.0 Vortex v1.0 - YouTube Content Library
 
 **Channel Setup + 6 Content Pieces**
 
@@ -17,7 +17,7 @@
 ### Description
 
 ```text
-Welcome to the official Fusion Programming Language channel! 🚀
+Welcome to the official Fusion v2.0 Vortex Programming Language channel! 🚀
 
 Fusion is the world's first quantum-native programming language, unifying Classical Computing, Quantum Computing, and Artificial Intelligence into a single, production-ready ecosystem.
 

@@ -1,4 +1,4 @@
-# The Complete Fusion Programming Language Guidebook
+# The Complete Fusion v2.0 Vortex Programming Language Guidebook
 
 **Version**: 1.0.0
 **Date**: December 2025
@@ -125,9 +125,9 @@ This comprehensive guidebook combines all official Fusion documentation, tutoria
 
 <div align="center">
 
-# Fusion VSC CLI
+# Fusion v2.0 Vortex VSC CLI
 
-<img src="assets/logo.png" alt="Fusion VSC CLI Logo" width="400" />
+<img src="assets/logo.png" alt="Fusion v2.0 Vortex VSC CLI Logo" width="400" />
 
 <br />
 
@@ -150,7 +150,7 @@ This comprehensive guidebook combines all official Fusion documentation, tutoria
 
 ## Overview
 
-**Fusion VSC CLI** is the specialized interface for the Fusion ecosystem, designed to power the IDE experience. It bridges the gap between:
+**Fusion v2.0 Vortex VSC CLI** is the specialized interface for the Fusion v2.0 Vortex ecosystem, designed to power the IDE experience. It bridges the gap between:
 1. **Fusion Core**: The language compiler and secure runtime.
 2. **VS Code**: Via a dedicated Runtime Bridge that allows extensions to execute in a sandboxed, CLI-controlled environment.
 3. **MCP (Model Context Protocol)**: Exposing AI capabilities and context to external models and tools.
@@ -398,7 +398,7 @@ Open `http://localhost:3000` in your browser!
 
 # Part III: Language Fundamentals
 
-# Fusion Programming Language v1.0: User Guide
+# Fusion v2.0 Vortex Programming Language v1.0: User Guide
 
 **Version**: 1.0.0
 **Date**: December 11, 2025
@@ -774,7 +774,7 @@ fusion build
 
 # Part V: Developer Guide & Internals
 
-# Fusion v1.0: Developer Guide
+# Fusion v2.0 Vortex v1.0: Developer Guide
 
 **Version**: 1.0.0
 **Date**: December 11, 2025
@@ -965,7 +965,7 @@ The workspace uses glob patterns, so new crates are automatically detected:
 
 ```toml
 
-# Fusion.toml (already configured)
+# Fusion v2.0 Vortex.toml (already configured)
 
 [workspace]
 members = [
@@ -1717,7 +1717,7 @@ The Fusion Collections Library is **production-ready** with:
 
 # Part VII: Advanced Type System
 
-# Fusion Core Type System Design
+# Fusion v2.0 Vortex Core Type System Design
 
 **Document Version**: 1.0
 **Date**: December 7, 2025
@@ -2787,7 +2787,7 @@ This makes Fusion the **world's first truly quantum-native programming language*
 
 # Part IX: Technical Specifications
 
-# Fusion v1.0: Technical Specification Sheet
+# Fusion v2.0 Vortex v1.0: Technical Specification Sheet
 
 **Version**: 1.0.0
 **Release Date**: December 11, 2025
@@ -3105,7 +3105,7 @@ Users may choose either license.
 
 ## Product Overview
 
-# Fusion v1.0: Product Guide
+# Fusion v2.0 Vortex v1.0: Product Guide
 
 **Version**: 1.0.0
 **Date**: December 11, 2025
@@ -3416,7 +3416,7 @@ Fusion measures success through:
 
 # FUSION v0.2.0 - INCREMENTAL IMPROVEMENTS ROADMAP
 
-**Fusion Programming Language - Bridge Release**
+**Fusion v2.0 Vortex Programming Language - Bridge Release**
 **Version**: 1.0
 **Date**: December 8, 2025
 **Target Release**: Q2 2026 (6 months)

@@ -1,4 +1,4 @@
-# Fusion VSC CLI Next-Level Upgrade Implementation
+# Fusion v2.0 Vortex VSC CLI Next-Level Upgrade Implementation
 
 **Status**: 🚀 **In Progress - Phase 1 Complete**
 

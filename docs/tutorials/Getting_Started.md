@@ -1,4 +1,4 @@
-# Fusion Language Tutorial - Getting Started
+# Fusion v2.0 Vortex Language Tutorial - Getting Started
 
 Welcome to Fusion! This tutorial will guide you through the basics of the Fusion programming language, from your first program to building real applications.
 

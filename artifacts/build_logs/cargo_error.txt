@@ -1,3 +1,0 @@
-error: two packages named `fusion_llm_moe_tools` in this workspace:
-- C:\Projects\Fusion - Programming Language\registry\crates\diagnostics\Cargo.toml
-- C:\Projects\Fusion - Programming Language\registry\crates\llm-moe-tools\Cargo.toml

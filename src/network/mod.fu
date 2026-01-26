@@ -10,8 +10,9 @@ use chacha20poly1305::{
     aead::{generic_array::GenericArray, Aead, KeyInit},
     ChaCha20Poly1305,
 };
-use pqcrypto_mlkem::mlkem768;
-use pqcrypto_traits::kem::{Ciphertext, PublicKey, SharedSecret};
+use crate::crypto::vortex;
+// use pqcrypto_mlkem::mlkem768;
+// use pqcrypto_traits::kem::{Ciphertext, PublicKey, SharedSecret};
 use rand::RngCore;
 use crate::async_runtime::executor::Executor;
 use crate::async_runtime::task::Task;
@@ -72,13 +73,13 @@ impl SecureChannel {
     fn client_handshake(mut stream: TcpStream) -> NetResult<Self> {
         stream.set_read_timeout(Some(Duration::from_secs(30)))?;
         stream.set_write_timeout(Some(Duration::from_secs(30)))?;
-        let (pk, _sk) = mlkem768::keypair();
+        let (pk, _sk) = vortex::keypair();
         stream.write_all(pk.as_bytes())?;
-        let mut ct_buf = vec![0u8; mlkem768::ciphertext_bytes()];
+        let mut ct_buf = vec![0u8; vortex::ciphertext_bytes()];
         stream.read_exact(&mut ct_buf)?;
-        let ct = Ciphertext::from_bytes(&ct_buf)
+        let ct = vortex::Ciphertext::from_bytes(&ct_buf)
             .map_err(|e| NetworkError::Handshake(format!("Invalid ciphertext: {}", e)))?;
-        let shared = mlkem768::decapsulate(&ct, &_sk);
+        let shared = vortex::decapsulate(&ct, &_sk);
         let key = GenericArray::from_slice(shared.as_bytes());
         Ok(Self {
             stream,
@@ -91,11 +92,11 @@ impl SecureChannel {
     fn server_handshake(mut stream: TcpStream) -> NetResult<Self> {
         stream.set_read_timeout(Some(Duration::from_secs(30)))?;
         stream.set_write_timeout(Some(Duration::from_secs(30)))?;
-        let mut pk_buf = vec![0u8; mlkem768::public_key_bytes()];
+        let mut pk_buf = vec![0u8; vortex::public_key_bytes()];
         stream.read_exact(&mut pk_buf)?;
-        let client_pk = PublicKey::from_bytes(&pk_buf)
+        let client_pk = vortex::PublicKey::from_bytes(&pk_buf)
             .map_err(|e| NetworkError::Handshake(format!("Invalid public key: {}", e)))?;
-        let (shared, ct) = mlkem768::encapsulate(&client_pk);
+        let (shared, ct) = vortex::encapsulate(&client_pk);
         stream.write_all(ct.as_bytes())?;
         let key = GenericArray::from_slice(shared.as_bytes());
         Ok(Self {

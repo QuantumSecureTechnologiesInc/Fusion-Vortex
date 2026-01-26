@@ -1,4 +1,4 @@
-# Fusion Policy System - Quick Reference Guide
+# Fusion v2.0 Vortex Policy System - Quick Reference Guide
 
 ## Overview
 

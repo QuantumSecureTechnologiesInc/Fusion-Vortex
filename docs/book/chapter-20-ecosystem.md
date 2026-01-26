@@ -141,7 +141,7 @@ Install the **Fusion Extension** for VS Code for the best experience.
 
 ## 20.6 Summary
 
-The Fusion ecosystem provides a "batteries-included" experience. You don't need to hunt for a build tool, a doc generator, a test runner, or a linter. They are all standardized and built-in.
+The Fusion v2.0 Vortex ecosystem provides a "batteries-included" experience. You don't need to hunt for a build tool, a doc generator, a test runner, or a linter. They are all standardized and built-in.
 
 In the final chapter, we will combine everything we have learned—Classical structs, AI Tensors, Quantum Circuits, Security, and Ecosystem tools—into one grand project.
 

@@ -244,7 +244,7 @@ Smart pointers are a powerful tool in Fusion:
 - `RefCell<T>`: Interior mutability (runtime borrow checking).
 - `Weak<T>`: Non-owning reference (break cycles).
 
-This chapter completes the "core" Fusion language education. The next chapters will dive into concurrency and advanced application development.
+This chapter completes the "core" Fusion v2.0 Vortex language education. The next chapters will dive into concurrency and advanced application development.
 
 ---
 

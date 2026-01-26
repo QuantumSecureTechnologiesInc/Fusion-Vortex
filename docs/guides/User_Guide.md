@@ -1,4 +1,4 @@
-# Fusion Programming Language v1.0: User Guide
+# Fusion v2.0 Vortex Programming Language v1.0: User Guide
 
 **Version**: 1.0.0
 **Date**: December 11, 2025

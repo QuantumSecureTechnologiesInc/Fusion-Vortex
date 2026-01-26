@@ -1,4 +1,4 @@
-# Fusion v1.0 - Visual Assets Brief
+# Fusion v2.0 Vortex v1.0 - Visual Assets Brief
 
 **Design Specifications for Designers/AI Image Generation**
 
@@ -407,7 +407,7 @@ Style:
 ### Logo Generation Prompt
 
 ```text
-A minimalist logo for "Fusion Programming Language" tech company.
+A minimalist logo for "Fusion v2.0 Vortex Programming Language" tech company.
 Geometric design combining atomic orbital paths and neural network nodes.
 Deep purple (#6B21A8) to electric blue (#3B82F6) gradient.
 Clean lines, scalable design. No text in image.

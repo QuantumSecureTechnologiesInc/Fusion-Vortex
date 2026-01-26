@@ -1,0 +1,113 @@
+use vortex_sys::{
+    hc_ciphertext_t, hc_kem_decaps, hc_kem_encaps, hc_kem_keygen, hc_kem_keypair_t,
+    hc_shared_secret_t, WEAVE_KEM_CIPHERTEXT_SIZE, WEAVE_KEM_PUBLIC_KEY_SIZE,
+    WEAVE_KEM_SECRET_KEY_SIZE, WEAVE_KEM_SHARED_SECRET_SIZE,
+};
+
+// Start wrappers
+#[derive(Debug, Clone)]
+pub struct PublicKey([u8; WEAVE_KEM_PUBLIC_KEY_SIZE]);
+
+impl PublicKey {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        if bytes.len() != WEAVE_KEM_PUBLIC_KEY_SIZE {
+            return Err(format!(
+                "Invalid public key length: expected {}, got {}",
+                WEAVE_KEM_PUBLIC_KEY_SIZE,
+                bytes.len()
+            ));
+        }
+        let mut arr = [0u8; WEAVE_KEM_PUBLIC_KEY_SIZE];
+        arr.copy_from_slice(bytes);
+        Ok(Self(arr))
+    }
+}
+
+pub struct SecretKey([u8; WEAVE_KEM_SECRET_KEY_SIZE]);
+
+impl SecretKey {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+pub struct Ciphertext([u8; WEAVE_KEM_CIPHERTEXT_SIZE]);
+
+impl Ciphertext {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        if bytes.len() != WEAVE_KEM_CIPHERTEXT_SIZE {
+            return Err(format!(
+                "Invalid ciphertext length: expected {}, got {}",
+                WEAVE_KEM_CIPHERTEXT_SIZE,
+                bytes.len()
+            ));
+        }
+        let mut arr = [0u8; WEAVE_KEM_CIPHERTEXT_SIZE];
+        arr.copy_from_slice(bytes);
+        Ok(Self(arr))
+    }
+}
+
+pub struct SharedSecret([u8; WEAVE_KEM_SHARED_SECRET_SIZE]);
+
+impl SharedSecret {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+pub fn keypair() -> (PublicKey, SecretKey) {
+    let mut kp = hc_kem_keypair_t::default();
+    let res = unsafe { hc_kem_keygen(&mut kp) };
+    if res != 0 {
+        panic!("Vortex KEM KeyGen failed");
+    }
+    (
+        PublicKey(kp.public_key),
+        SecretKey(kp.secret_key),
+    )
+}
+
+pub fn encapsulate(pk: &PublicKey) -> (SharedSecret, Ciphertext) {
+    let mut kp = hc_kem_keypair_t::default();
+    kp.public_key.copy_from_slice(&pk.0);
+
+    let mut ct = hc_ciphertext_t::default();
+    let mut ss = hc_shared_secret_t::default();
+
+    let res = unsafe { hc_kem_encaps(&kp, &mut ct, &mut ss) };
+    if res != 0 {
+        panic!("Vortex KEM Encapsulate failed");
+    }
+
+    (SharedSecret(ss.data), Ciphertext(ct.data))
+}
+
+pub fn decapsulate(ct: &Ciphertext, sk: &SecretKey) -> SharedSecret {
+    let mut kp = hc_kem_keypair_t::default();
+    kp.secret_key.copy_from_slice(&sk.0);
+
+    let ct_struct = hc_ciphertext_t { data: ct.0 };
+    let mut ss = hc_shared_secret_t::default();
+
+    let res = unsafe { hc_kem_decaps(&kp, &ct_struct, &mut ss) };
+    if res != 0 {
+        panic!("Vortex KEM Decapsulate failed");
+    }
+
+    SharedSecret(ss.data)
+}
+
+pub fn public_key_bytes() -> usize {
+    WEAVE_KEM_PUBLIC_KEY_SIZE
+}
+
+pub fn ciphertext_bytes() -> usize {
+    WEAVE_KEM_CIPHERTEXT_SIZE
+}

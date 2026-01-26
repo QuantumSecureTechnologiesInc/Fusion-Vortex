@@ -10,5 +10,5 @@ license = "MIT"
 anyhow = { version = "1.0.94" }
 thiserror = { version = "2.0.6" }
 serde = { version = "1.0.216", features = ["derive", "rc"] }
-fusion-core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
-fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }
+fusion-core = { path = "registry/crates/fusion-core", package = "fusion-core" }
+fusion_std = { path = "registry/crates/std" }

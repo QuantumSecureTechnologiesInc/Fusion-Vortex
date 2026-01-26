@@ -1,4 +1,4 @@
-# Fusion Core Type System Design
+# Fusion v2.0 Vortex Core Type System Design
 
 **Document Version**: 1.0
 **Date**: December 7, 2025

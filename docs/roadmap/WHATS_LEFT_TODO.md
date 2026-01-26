@@ -1,4 +1,4 @@
-# Fusion Roadmap: What's Left To Do
+# Fusion v2.0 Vortex Roadmap: What's Left To Do
 
 **Generated**: 2025-12-10
 **Current Status**: 🟡 **Epoch 1-2** in progress

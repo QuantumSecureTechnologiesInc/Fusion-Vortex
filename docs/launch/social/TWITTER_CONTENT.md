@@ -1,4 +1,4 @@
-# Fusion v1.0 - Twitter/X Content Library
+# Fusion v2.0 Vortex v1.0 - Twitter/X Content Library
 
 **18+ Ready-to-Post Tweets (Tripled Content)**
 

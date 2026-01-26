@@ -1,6 +1,6 @@
 # FUSION v0.2.0 - INCREMENTAL IMPROVEMENTS ROADMAP
 
-**Fusion Programming Language - Bridge Release**
+**Fusion v2.0 Vortex Programming Language - Bridge Release**
 **Version**: 1.0
 **Date**: December 8, 2025
 **Target Release**: Q2 2026 (6 months)

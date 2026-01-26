@@ -1,19 +1,19 @@
-# Fusion VSC CLI Coder - Training Manual & User Guide
+# Fusion v2.0 Vortex VSC CLI Coder - Training Manual & User Guide
 
 **Version**: 1.0
 **Date**: December 2024
-**Author**: Fusion Programming Language Team
+**Author**: Fusion v2.0 Vortex Programming Language Team
 
 ---
 
 ## 1. Introduction
 
-Welcome to the **Fusion VSC CLI Coder**, a production-ready advanced agent orchestration CLI designed to revolutionize how you interact with your codebase. By combining the best features of:
+Welcome to the **Fusion v2.0 Vortex VSC CLI Coder**, a production-ready advanced agent orchestration CLI designed to revolutionize how you interact with your codebase. By combining the best features of:
 * **Antigravity IDE** (Planning/Fast modes, Task Groups)
 * **Claude Code** (Hierarchical permissions, Hooks)
 * **Codex** (Interactive workflows, Resume capabilities)
 
-...the Fusion VSC CLI Coder provides an intelligent, secure, and highly capable coding assistant directly in your terminal.
+...the Fusion v2.0 Vortex VSC CLI Coder provides an intelligent, secure, and highly capable coding assistant directly in your terminal.
 
 ### Key Capabilities
 
@@ -30,7 +30,7 @@ Welcome to the **Fusion VSC CLI Coder**, a production-ready advanced agent orche
 ### Prerequisites
 
 * **Fusion Toolchain**: Ensure you have the toolchain installed (`./install.sh`).
-* **Fusion Workspace**: Access to the Fusion Programming Language project.
+* **Fusion Workspace**: Access to the Fusion v2.0 Vortex Programming Language project.
 
 ### Installation
 
@@ -136,7 +136,7 @@ fusion-coder exec "run tests and fix lint errors" --json
 
 ## 5. Security & Review Policies
 
-Fusion VSC CLI Coder is built with security as a priority.
+Fusion v2.0 Vortex VSC CLI Coder is built with security as a priority.
 
 ### Secure Mode
 
@@ -227,4 +227,4 @@ A: Ensure you are running from the correct root directory or use the `--path` fl
 ---
 
 **Copyright (c) 2024 QuantumSecure Technologies Inc**
-Fusion Programming Language Team
+Fusion v2.0 Vortex Programming Language Team

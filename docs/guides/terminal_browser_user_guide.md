@@ -1,4 +1,4 @@
-# Fusion Terminal Browser - User Guide
+# Fusion v2.0 Vortex Terminal Browser - User Guide
 
 ## Table of Contents
 

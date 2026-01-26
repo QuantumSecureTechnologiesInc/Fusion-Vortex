@@ -1,4 +1,4 @@
-# Fusion v1.0 - LinkedIn Content Library
+# Fusion v2.0 Vortex v1.0 - LinkedIn Content Library
 
 **9 Professional Posts for Enterprise & Technical Audiences**
 
@@ -10,7 +10,7 @@
 **Target**: 2000+ impressions
 
 ```text
-🚀 Exciting News: Fusion Programming Language v1.0 is Now Available
+🚀 Exciting News: Fusion v2.0 Vortex Programming Language v1.0 is Now Available
 
 I'm thrilled to announce the public release of Fusion v1.0 — the world's first quantum-native programming language designed for the era of hybrid computing.
 

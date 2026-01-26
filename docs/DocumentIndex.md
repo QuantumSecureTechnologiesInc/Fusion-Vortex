@@ -2,13 +2,13 @@
 
 ## Overview
 
-* **[Fusion_Story_and_Features.md](Fusion_Story_and_Features.md)**: Comprehensive narrative explaining Fusion's origin story, philosophy, and complete feature set with examples and use cases.
-* **[Fusion_Overview.md](Fusion_Overview.md)**: Technical overview of the Fusion programming language and ecosystem.
+* **[Fusion_Story_and_Features.md](Fusion_Story_and_Features.md)**: Comprehensive narrative explaining Fusion v2.0 Vortex's origin story, philosophy, and complete feature set with examples and use cases.
+* **[Fusion_Overview.md](Fusion_Overview.md)**: Technical overview of the Fusion v2.0 Vortex programming language and ecosystem.
 
 ## Guides (`docs/guides/`)
 
 * **[QuickStartGuide.md](guides/QuickStartGuide.md)**: Basic installation and usage instructions.
-* **[Fusion_VSC_CLI_Coder_Training_Manual.md](guides/Fusion_VSC_CLI_Coder_Training_Manual.md)**: Comprehensive training manual and user guide for the Fusion VSC CLI Coder.
+* **[Fusion_VSC_CLI_Coder_Training_Manual.md](guides/Fusion_VSC_CLI_Coder_Training_Manual.md)**: Comprehensive training manual and user guide for the Fusion v2.0 Vortex VSC CLI Coder.
 * *DeveloperGuide.md* (Pending): Architecture and contribution details.
 
 ## Build Logs (`docs/`)
@@ -24,6 +24,6 @@
 
 ## Root Documents
 
-* `README.md`: Project Overview (Fusion VSC CLI).
+* `README.md`: Project Overview (Fusion v2.0 Vortex VSC CLI).
 * `ChangeLog.md`: Version history and cleanup details.
 * `CONTRIBUTING.md`: Rules for contributing.

@@ -1,4 +1,4 @@
-# Fusion Core Type System - Implementation Plan
+# Fusion v2.0 Vortex Core Type System - Implementation Plan
 
 **Version**: 1.0
 **Date**: December 7, 2025

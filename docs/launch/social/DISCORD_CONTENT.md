@@ -1,4 +1,4 @@
-# Fusion v1.0 - Discord Content Library
+# Fusion v2.0 Vortex v1.0 - Discord Content Library
 
 **8 Messages for Community Engagement**
 
@@ -14,7 +14,7 @@
 
 @everyone
 
-We're incredibly excited to announce the official release of **Fusion Programming Language v1.0**!
+We're incredibly excited to announce the official release of **Fusion v2.0 Vortex Programming Language v1.0**!
 
 ## ⚛️ What is Fusion?
 

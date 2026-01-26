@@ -11,9 +11,11 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[1]
 FUSION_DIR = ROOT / "cmd" / "fusion"
 OUT_DIR = ROOT / "target" / "release"
-BUILD_TARGET_DIR = Path("/mnt/c/Projects/fusion_cli_build")
-STD_RUST_DIR = Path("/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std")
-CORE_RUST_DIR = Path("/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core")
+BUILD_TARGET_DIR = Path(os.environ.get("FUSION_CLI_BUILD_TARGET", str(ROOT / "target_fusion_cli"))).expanduser()
+DEFAULT_STD = ROOT / "registry" / "crates" / "std"
+DEFAULT_CORE = ROOT / "registry" / "crates" / "fusion-core"
+STD_RUST_DIR = Path(os.environ.get("FUSION_STD_PATH", "")).expanduser() if os.environ.get("FUSION_STD_PATH") else DEFAULT_STD
+CORE_RUST_DIR = Path(os.environ.get("FUSION_CORE_PATH", "")).expanduser() if os.environ.get("FUSION_CORE_PATH") else DEFAULT_CORE
 
 ALIAS_DEFS = [
     ("FBool", "type FBool = bool;"),

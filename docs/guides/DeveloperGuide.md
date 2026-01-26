@@ -1,8 +1,8 @@
-# Fusion Developer Guide
+# Fusion v2.0 Vortex Developer Guide
 
 ## Introduction
 
-Welcome to the Fusion Programming Language development guide. This document provides comprehensive information for contributors and developers working on the Fusion project.
+Welcome to the Fusion v2.0 Vortex Programming Language development guide. This document provides comprehensive information for contributors and developers working on the Fusion project.
 
 **Prerequisites:**
 - Fusion toolchain (use `./install.sh` to provision `dist/`)

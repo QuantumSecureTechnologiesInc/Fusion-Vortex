@@ -1,6 +1,6 @@
-# Fusion Programming Language: Product Information Sheet
+# Fusion v2.0 Vortex Programming Language: Product Information Sheet
 
-**Product Name**: Fusion Programming Language
+**Product Name**: Fusion v2.0 Vortex Programming Language
 **Version**: 1.0.0 (Gold Master)
 **Release Date**: December 11, 2025
 **Vendor**: QuantumSecure Technologies Inc.

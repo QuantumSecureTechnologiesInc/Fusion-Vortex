@@ -380,7 +380,7 @@ You learned about:
 - **References**: Passing data safely (`&mut guess`).
 - **Result Enum**: Handling success (`Ok`) and failure (`Err`).
 
-This project introduced many fundamental concepts. In the following chapters, we will explore these ideas in greater depth, giving you the full power of the Fusion language.
+This project introduced many fundamental concepts. In the following chapters, we will explore these ideas in greater depth, giving you the full power of the Fusion v2.0 Vortex language.
 
 ---
 

@@ -1,6 +1,6 @@
 # Contributing to Fusion
 
-Thank you for your interest in contributing to the Fusion Programming Language! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to the Fusion v2.0 Vortex Programming Language! This document provides guidelines and information for contributors.
 
 ## Getting Started
 

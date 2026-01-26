@@ -1,4 +1,4 @@
-# 📘 Fusion Programming Language - Complete Guidebook
+# 📘 Fusion v2.0 Vortex Programming Language - Complete Guidebook
 
 **Status**: ✅ **COMPLETE**
 **Version**: 1.0.0
@@ -11,7 +11,7 @@
 
 ## 🎯 Overview
 
-This is the **definitive, comprehensive guide** to the Fusion Programming Language. It combines all official documentation, tutorials, design specifications, examples, and best practices into a single authoritative reference.
+This is the **definitive, comprehensive guide** to the Fusion v2.0 Vortex Programming Language. It combines all official documentation, tutorials, design specifications, examples, and best practices into a single authoritative reference.
 
 ### What's Included
 
@@ -287,7 +287,7 @@ Written by experts, reviewed for accuracy, production-ready content.
 
 ## 📜 License
 
-This documentation is part of the Fusion Programming Language project, licensed under the MIT License.
+This documentation is part of the Fusion v2.0 Vortex Programming Language project, licensed under the MIT License.
 
 ---
 

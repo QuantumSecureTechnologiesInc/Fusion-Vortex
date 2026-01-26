@@ -1,4 +1,4 @@
-# Fusion v1.0 - 30-Day Content Calendar
+# Fusion v2.0 Vortex v1.0 - 30-Day Content Calendar
 
 **Launch Week + 3 Weeks of Sustained Engagement**
 

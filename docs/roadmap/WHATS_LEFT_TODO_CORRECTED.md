@@ -1,4 +1,4 @@
-# Fusion Roadmap: CORRECTED Status - What's Actually Left
+# Fusion v2.0 Vortex Roadmap: CORRECTED Status - What's Actually Left
 
 **Generated**: 2025-12-11
 **Current Status**: 🟢 **Epoch 1 Complete!** Epoch 2-3 in progress
@@ -17,7 +17,7 @@
    - `audit`, `debug`, `profile`, `doc`, `settings`
 
 2. ✅ **fusion_std** - **EXISTS** in TWO locations:
-   - `stdlib/` - Fusion language stdlib (`.fu` files):
+   - `stdlib/` - Fusion v2.0 Vortex language stdlib (`.fu` files):
      - Collections: hashmap, hashset, vector, linkedlist
      - Utilities: string, stringutils, iterator
      - Types: option, result

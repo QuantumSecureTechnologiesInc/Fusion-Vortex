@@ -5,7 +5,7 @@
 
 ## Overview
 
-BuildGuardian is an autonomous agent responsible for maintaining the structural integrity, compilation status, and code quality of the Fusion Programming Language project. It acts as the gatekeeper for all code changes, ensuring they meet the project's rigorous standards before acceptance.
+BuildGuardian is an autonomous agent responsible for maintaining the structural integrity, compilation status, and code quality of the Fusion v2.0 Vortex Programming Language project. It acts as the gatekeeper for all code changes, ensuring they meet the project's rigorous standards before acceptance.
 
 ## Responsibilities
 

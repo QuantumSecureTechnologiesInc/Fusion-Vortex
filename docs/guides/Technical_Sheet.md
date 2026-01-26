@@ -1,4 +1,4 @@
-# Fusion v1.0: Technical Specification Sheet
+# Fusion v2.0 Vortex v1.0: Technical Specification Sheet
 
 **Version**: 1.0.0
 **Release Date**: December 11, 2025

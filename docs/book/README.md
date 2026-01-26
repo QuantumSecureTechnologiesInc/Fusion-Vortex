@@ -1,4 +1,4 @@
-# The Fusion Programming Language
+# The Fusion v2.0 Vortex Programming Language
 
 **The Complete Guide to Tri-brid Computing**
 
@@ -6,7 +6,7 @@
 
 ## About This Book
 
-Welcome to *The Fusion Programming Language*, the official guide to learning Fusion—the world's first programming language that seamlessly unifies Classical computing, Quantum computing, and Artificial Intelligence into a single, cohesive platform.
+Welcome to *The Fusion v2.0 Vortex Programming Language*, the official guide to learning Fusion—the world's first programming language that seamlessly unifies Classical computing, Quantum computing, and Artificial Intelligence into a single, cohesive platform.
 
 This book will take you from your first "Hello, World!" program to building sophisticated applications that leverage all three computing paradigms. Whether you're a systems programmer curious about quantum computing, a machine learning engineer seeking better performance, or a quantum researcher wanting practical tooling, Fusion has something for you.
 

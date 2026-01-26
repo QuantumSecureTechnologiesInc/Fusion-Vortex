@@ -1,6 +1,6 @@
 # Chapter 1: Getting Started
 
-Welcome to *The Fusion Programming Language*! This book will teach you everything you need to know to become a proficient Fusion developer, from writing your first program to building sophisticated applications that leverage classical computing, artificial intelligence, and quantum computing—all from a single, unified codebase.
+Welcome to *The Fusion v2.0 Vortex Programming Language*! This book will teach you everything you need to know to become a proficient Fusion developer, from writing your first program to building sophisticated applications that leverage classical computing, artificial intelligence, and quantum computing—all from a single, unified codebase.
 
 Fusion represents a new paradigm in programming language design. While most languages specialise in one domain—systems programming, data science, or web development—Fusion is built from the ground up to handle the computational challenges of tomorrow. It combines the ergonomics and readability of Python with the performance and memory safety of Rust, whilst adding native support for tensors, quantum circuits, and post-quantum cryptography.
 

@@ -9,9 +9,10 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 FUC_DIR = ROOT / "crates" / "fuc"
-STD_RUST_DIR = Path("/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std")
+DEFAULT_STD = ROOT / "registry" / "crates" / "std"
+STD_RUST_DIR = Path(os.environ.get("FUSION_STD_PATH", "")).expanduser() if os.environ.get("FUSION_STD_PATH") else DEFAULT_STD
 OUT_DIR = ROOT / "target" / "release"
-BUILD_TARGET_DIR = Path("/mnt/c/Projects/fuc_build")
+BUILD_TARGET_DIR = Path(os.environ.get("FUC_BUILD_TARGET", str(ROOT / "target_fuc"))).expanduser()
 
 ALIAS_DEFS = [
     ("FBool", "type FBool = bool;"),
@@ -145,7 +146,7 @@ def build() -> None:
     if not FUC_DIR.exists():
         raise SystemExit("Missing crates/fuc")
     if not STD_RUST_DIR.exists():
-        raise SystemExit("Missing rust stdlib at /mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std")
+        raise SystemExit(f"Missing rust stdlib at {STD_RUST_DIR}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     BUILD_TARGET_DIR.mkdir(parents=True, exist_ok=True)

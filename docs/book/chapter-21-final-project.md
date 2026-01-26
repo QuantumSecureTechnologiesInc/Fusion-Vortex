@@ -1,6 +1,6 @@
 # Chapter 21: Final Project: A Tri-brid Portfolio Optimizer
 
-Congratulations! You have journeyed through the entire Fusion language, from basic variables to quantum circuits. Now, we will prove the power of **Tri-brid Computing** by building a single application that leverages all three paradigms:
+Congratulations! You have journeyed through the entire Fusion v2.0 Vortex language, from basic variables to quantum circuits. Now, we will prove the power of **Tri-brid Computing** by building a single application that leverages all three paradigms:
 
 1. **Classical**: A web API to fetch stock data and manage user requests.
 2. **AI/ML**: A Neural Network to predict future stock returns based on historical trends.

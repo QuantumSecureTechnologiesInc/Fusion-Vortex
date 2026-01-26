@@ -1,4 +1,4 @@
-# Fusion v1.0 - GitHub Organisation Profile
+# Fusion v2.0 Vortex v1.0 - GitHub Organisation Profile
 
 **README for GitHub Organisation/Repository**
 
@@ -9,7 +9,7 @@
 ```markdown
 <div align="center">
 
-# ⚛️ Fusion Programming Language
+# ⚛️ Fusion v2.0 Vortex Programming Language
 
 **The World's First Quantum-Native Programming Language**
 
@@ -50,7 +50,7 @@ Fusion unifies **Classical Computing**, **Quantum Computing**, and **Artificial 
 cargo install fusion-lang --version 1.0.0
 fusion --version
 
-# Fusion 1.0.0
+# Fusion v2.0 Vortex 1.0.0
 
 ```text
 

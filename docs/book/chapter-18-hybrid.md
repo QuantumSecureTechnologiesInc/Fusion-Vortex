@@ -235,7 +235,7 @@ optimizer.set_stochastic(true)
 
 ## 18.5 Summary
 
-Hybrid Quantum-Classical computing is a key workflow in the Fusion ecosystem.
+Hybrid Quantum-Classical computing is a key workflow in the Fusion v2.0 Vortex ecosystem.
 - **Unified Autograd**: Gradients flow seamlessly between Classical Tensors and Quantum Parameters (via parameter-shift rules).
 - **VQE/QAOA**: Standard algorithms are easy to implement using the AI optimizer library.
 - **QML**: Quantum circuits can act as layers in neural networks.

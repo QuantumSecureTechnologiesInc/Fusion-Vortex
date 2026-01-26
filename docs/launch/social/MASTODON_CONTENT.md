@@ -1,4 +1,4 @@
-# Fusion v1.0 - Mastodon/FOSS Community Content
+# Fusion v2.0 Vortex v1.0 - Mastodon/FOSS Community Content
 
 **9 Posts for Open Source Communities**
 

@@ -1,4 +1,4 @@
-# Fusion v1.0 - FAQ for Launch
+# Fusion v2.0 Vortex v1.0 - FAQ for Launch
 
 *Frequently Asked Questions for community, media, and investors*
 

@@ -1,6 +1,6 @@
-# Fusion VSC CLI Quick Start Guide
+# Fusion v2.0 Vortex VSC CLI Quick Start Guide
 
-Welcome to the Fusion VSC CLI! This guide will get you up and running with the bridge between your AI models and VS Code extensions.
+Welcome to the Fusion v2.0 Vortex VSC CLI! This guide will get you up and running with the bridge between your AI models and VS Code extensions.
 
 ## Prerequisites
 

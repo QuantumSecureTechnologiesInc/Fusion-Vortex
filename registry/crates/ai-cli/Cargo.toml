@@ -11,7 +11,7 @@ categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
+fusion_core = { path = "registry/crates/fusion-core", package = "fusion-core" }
 anyhow = { version = "1.0.94" }
 thiserror = { version = "2.0.6" }
 serde = { version = "1.0.216", features = ["derive", "rc"] }
@@ -21,8 +21,8 @@ tracing = { version = "0.1.41" }
 similar = { version = "2.6.0" }
 diff = { version = "0.1.13" }
 git2 = { version = "0.19.0", default-features = false }
-fusion-core = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/fusion-core", package = "fusion-core" }
-fusion-ai-core = { path = "/mnt/c/Projects/Fusion - Programming Language/registry/crates/ai-core", version = "0.2.0" }
+fusion-core = { path = "registry/crates/fusion-core", package = "fusion-core" }
+fusion-ai-core = { path = "registry/crates/ai-core", version = "0.2.0" }
 blake3 = { version = "1.5.0" }
 chrono = { version = "0.4.39", features = ["serde"] }
-fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }
+fusion_std = { path = "registry/crates/std" }

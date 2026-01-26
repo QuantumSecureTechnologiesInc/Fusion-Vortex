@@ -1,4 +1,4 @@
-# Fusion Terminal Browser - Technical Sheet
+# Fusion v2.0 Vortex Terminal Browser - Technical Sheet
 
 ## Product Overview
 

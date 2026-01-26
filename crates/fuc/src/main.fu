@@ -105,22 +105,21 @@ fn build_and_link_stdlib(output_bin: &Path, obj_path: &Path) -> Result<(), FStri
     let workspace_root = find_workspace_root()
         .ok_or_else(|| "Could not locate workspace root".to_string())?;
     let target_dir = workspace_root.join("target");
-    let status = Command::new("cargo")
-        .arg("build")
-        .arg("-p")
-        .arg("fusion_std")
-        .arg("--release")
-        .current_dir(&workspace_root)
-        .status()
-        .map_err(|e| format!("Failed to invoke cargo: {}", e))?;
-    if !status.success() {
-        return Err("Failed to build fusion_std".to_string());
-    }
-    let stdlib_path = target_dir.join("release").join("libfusion_std.a");
-    if !stdlib_path.exists() {
-        return Err(
-            format!("fusion_std staticlib not found at {}", stdlib_path.display()),
-        );
+    let stdlib_src = resolve_stdlib_source(&workspace_root)?;
+    let stdlib_obj = target_dir.join("std.o");
+    if !stdlib_obj.exists() {
+        let fuc_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to locate fuc binary: {}", e))?;
+        let status = Command::new(fuc_path)
+            .arg(&stdlib_src)
+            .arg("--lib")
+            .arg("-o")
+            .arg(&stdlib_obj)
+            .status()
+            .map_err(|e| format!("Failed to compile stdlib: {}", e))?;
+        if !status.success() {
+            return Err("Failed to compile stdlib".to_string());
+        }
     }
     let tmp_dir = std::env::temp_dir().join("fusion_runtime");
     let _ = fs::create_dir_all(&tmp_dir);
@@ -179,7 +178,7 @@ fn build_and_link_stdlib(output_bin: &Path, obj_path: &Path) -> Result<(), FStri
                 .map(|p| vec![p])
                 .unwrap_or_else(|| Vec::new()),
         )
-        .arg(&stdlib_path)
+        .arg(&stdlib_obj)
         .arg("-o")
         .arg(output_bin)
         .arg("-no-pie")
@@ -190,6 +189,36 @@ fn build_and_link_stdlib(output_bin: &Path, obj_path: &Path) -> Result<(), FStri
         return Err("Linker failed".to_string());
     }
     Ok(())
+}
+fn resolve_stdlib_source(workspace_root: &Path) -> Result<PathBuf, FString> {
+    if let Ok(std_path) = std::env::var("FUSION_STD_PATH") {
+        let candidate = PathBuf::from(std_path);
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+        if candidate.is_dir() {
+            let main = candidate.join("src").join("main.fu");
+            if main.exists() {
+                return Ok(main);
+            }
+            let lib = candidate.join("src").join("lib.fu");
+            if lib.exists() {
+                return Ok(lib);
+            }
+        }
+    }
+    let candidates = [
+        workspace_root.join("registry").join("crates").join("std").join("src").join("main.fu"),
+        workspace_root.join("registry").join("crates").join("std").join("src").join("lib.fu"),
+        workspace_root.join("stdlib").join("src").join("main.fu"),
+        workspace_root.join("stdlib").join("src").join("lib.fu"),
+    ];
+    for candidate in candidates {
+        if candidate.exists() {
+            return Ok(candidate);
+        }
+    }
+    Err("Stdlib source not found (set FUSION_STD_PATH)".to_string())
 }
 fn find_workspace_root() -> Option<PathBuf> {
     let mut dir = std::env::current_dir().ok()?;

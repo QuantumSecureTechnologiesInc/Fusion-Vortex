@@ -1,4 +1,4 @@
-# Fusion v1.0: Developer Guide
+# Fusion v2.0 Vortex v1.0: Developer Guide
 
 ## Version
 
@@ -191,7 +191,7 @@ The workspace uses glob patterns, so new crates are automatically detected:
 
 ```toml
 
-# Fusion.toml (already configured)
+# Fusion v2.0 Vortex.toml (already configured)
 
 [workspace]
 members = [

@@ -1,10 +1,10 @@
-# Fusion v1.0 - Press Release
+# Fusion v2.0 Vortex v1.0 - Press Release
 
 **FOR IMMEDIATE RELEASE**
 
 ---
 
-## Fusion Programming Language v1.0 Launches with World's First Quantum-Native Development Ecosystem
+## Fusion v2.0 Vortex Programming Language v1.0 Launches with World's First Quantum-Native Development Ecosystem
 
 *Revolutionary language delivers 141 production packages unifying Classical, Quantum, and AI computing*
 

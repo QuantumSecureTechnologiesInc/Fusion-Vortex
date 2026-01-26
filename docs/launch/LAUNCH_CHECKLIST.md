@@ -1,4 +1,4 @@
-# Fusion v1.0 - Launch Checklist
+# Fusion v2.0 Vortex v1.0 - Launch Checklist
 
 **Launch Target**: December 2025
 **Status**: 🟢 READY FOR LAUNCH

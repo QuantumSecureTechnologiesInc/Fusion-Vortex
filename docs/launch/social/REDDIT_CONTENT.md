@@ -1,4 +1,4 @@
-# Fusion v1.0 - Reddit Content Library
+# Fusion v2.0 Vortex v1.0 - Reddit Content Library
 
 **12 Posts Across r/programming, r/rust, r/QuantumComputing, and More**
 

@@ -1,4 +1,4 @@
-# Fusion Phase Build Plans
+# Fusion v2.0 Vortex Phase Build Plans
 
 ## Phase 1: Foundation & Core Language (Months 1-6)
 

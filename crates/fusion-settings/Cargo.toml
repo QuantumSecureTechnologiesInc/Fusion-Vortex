@@ -14,4 +14,4 @@ anyhow = { version = "1.0.94" }
 dirs = { version = "5.0.1" }
 glob = { version = "0.3.1" }
 fusion-review-policy = { path = "../fusion-review-policy" }
-fusion_std = { path = "/mnt/c/Projects/fusion_v0_1_all_features/registry/crates/std" }
+fusion_std = { path = "registry/crates/std" }
