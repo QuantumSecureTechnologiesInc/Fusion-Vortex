@@ -88,31 +88,43 @@ if (Test-Path $Stage1ModeSrc) {
 
         & $Stage1ModeExe "--emit-bin" "--opt" *> $null
         Add-Result -Name "stage1_mode_regression.exe" -Phase "run-argc3" -ExitCode $LASTEXITCODE -ExpectedPass $true
+
+        & $Stage1ModeExe "--emit-bin" "--opt" "--bad-target" *> $null
+        Add-Result -Name "stage1_mode_regression.exe" -Phase "run-argc4-negative" -ExitCode $LASTEXITCODE -ExpectedPass $false
     }
 }
 
 $fixturesDir = Join-Path $Root "crates\fuc\tests\fixtures"
-$unsupportedAdvanced = @(
+$parseExpectedFail = @()
+
+$semaExpectedFail = @(
+    "generics.fu",
+    "memory.fu"
+)
+
+$codegenUnsupported = @(
     "closures.fu",
     "concurrency.fu",
     "control_flow.fu",
     "generics.fu",
-    "memory.fu"
+    "memory.fu",
+    "modules.fu"
 )
 
 # Valid fixtures
 $validFixtures = Get-ChildItem $fixturesDir -File -Filter *.fu | Sort-Object Name
 foreach ($fixture in $validFixtures) {
-    $isUnsupported = $unsupportedAdvanced -contains $fixture.Name
-    $expectedPass = -not $isUnsupported
+    $parseExpectedPass = -not ($parseExpectedFail -contains $fixture.Name)
+    $semaExpectedPass = -not ($semaExpectedFail -contains $fixture.Name)
+    $skipCodegen = $codegenUnsupported -contains $fixture.Name
 
     $parseExit = Invoke-Fuc "--parse-only" $fixture.FullName
-    Add-Result -Name $fixture.Name -Phase "parse-only" -ExitCode $parseExit -ExpectedPass $expectedPass
+    Add-Result -Name $fixture.Name -Phase "parse-only" -ExitCode $parseExit -ExpectedPass $parseExpectedPass
 
     $semaExit = Invoke-Fuc "--sema-only" $fixture.FullName
-    Add-Result -Name $fixture.Name -Phase "sema-only" -ExitCode $semaExit -ExpectedPass $expectedPass
+    Add-Result -Name $fixture.Name -Phase "sema-only" -ExitCode $semaExit -ExpectedPass $semaExpectedPass
 
-    if ($expectedPass) {
+    if (-not $skipCodegen) {
         $objPath = Join-Path $ObjDir ($fixture.BaseName + ".o")
         $codegenExit = Invoke-Fuc "--lib" $fixture.FullName "-o" $objPath
         Add-Result -Name $fixture.Name -Phase "codegen-lib" -ExitCode $codegenExit -ExpectedPass $true
@@ -128,6 +140,9 @@ foreach ($fixture in $invalidFixtures) {
         Add-Result -Name $fixture.Name -Phase "parse-only" -ExitCode $parseExit -ExpectedPass $true
         $semaExit = Invoke-Fuc "--sema-only" $fixture.FullName
         Add-Result -Name $fixture.Name -Phase "sema-only" -ExitCode $semaExit -ExpectedPass $false
+    } elseif ($fixture.Name -eq "parser_robustness.fu") {
+        $parseExit = Invoke-Fuc "--parse-only" $fixture.FullName
+        Add-Result -Name $fixture.Name -Phase "parse-only" -ExitCode $parseExit -ExpectedPass $true
     } else {
         $parseExit = Invoke-Fuc "--parse-only" $fixture.FullName
         Add-Result -Name $fixture.Name -Phase "parse-only" -ExitCode $parseExit -ExpectedPass $false

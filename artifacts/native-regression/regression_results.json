@@ -1,6 +1,6 @@
 ﻿{
     "summary":  {
-                    "timestamp":  "2026-03-06T01:24:11.5455609+00:00",
+                    "timestamp":  "2026-03-06T04:43:37.4393855+00:00",
                     "compiler":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\target\\release\\fuc.exe",
                     "total":  44,
                     "passed":  44,
@@ -50,6 +50,13 @@
                         "passed":  true
                     },
                     {
+                        "name":  "stage1_mode_regression.exe",
+                        "phase":  "run-argc4-negative",
+                        "exit_code":  1,
+                        "expected_pass":  false,
+                        "passed":  true
+                    },
+                    {
                         "name":  "arrays.fu",
                         "phase":  "parse-only",
                         "exit_code":  0,
@@ -73,15 +80,15 @@
                     {
                         "name":  "closures.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
                         "name":  "closures.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
@@ -108,29 +115,29 @@
                     {
                         "name":  "concurrency.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
                         "name":  "concurrency.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
                         "name":  "control_flow.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
                         "name":  "control_flow.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
@@ -157,8 +164,8 @@
                     {
                         "name":  "generics.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
@@ -192,8 +199,8 @@
                     {
                         "name":  "memory.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {
@@ -213,13 +220,6 @@
                     {
                         "name":  "modules.fu",
                         "phase":  "sema-only",
-                        "exit_code":  0,
-                        "expected_pass":  true,
-                        "passed":  true
-                    },
-                    {
-                        "name":  "modules.fu",
-                        "phase":  "codegen-lib",
                         "exit_code":  0,
                         "expected_pass":  true,
                         "passed":  true
@@ -297,8 +297,8 @@
                     {
                         "name":  "parser_robustness.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {

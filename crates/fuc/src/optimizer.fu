@@ -1,5 +1,5 @@
 //! IR optimization passes.
-use crate::ast;
+use crate::ast::{self, BinaryOp};
 use crate::ir::{Address, BasicBlock, Function, Instruction, Module, TypedValue, Value};
 use generational_arena::Index;
 /// Applies optimization passes to the module.

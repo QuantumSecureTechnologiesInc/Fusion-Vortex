@@ -409,11 +409,43 @@ def write_cargo_from_fusion(
     cargo_toml.write_text(content, encoding="utf-8")
 
 
+def refresh_stage0_from_source() -> Path:
+    print(">>> Refreshing stage0 from patched .fu sources (.fu -> .rs -> Cargo)")
+    copied = sync_fu_to_rs(FUC_DIR)
+    print(f">>> Synced {copied} Fusion source files to Rust stubs")
+    patch_generated_rust_sources(FUC_DIR)
+    write_cargo_from_fusion(
+        FUC_DIR / "fusion.toml",
+        FUC_DIR / "Cargo.toml",
+        stdlib_path=None,
+    )
+    env = os.environ.copy()
+    env["CARGO_TARGET_DIR"] = str(BUILD_TARGET_DIR)
+    subprocess.run(
+        [
+            "cargo",
+            "build",
+            "--manifest-path",
+            str(FUC_DIR / "Cargo.toml"),
+            "--release",
+        ],
+        check=True,
+        cwd=ROOT,
+        env=env,
+    )
+    out_name = "fuc.exe" if os.name == "nt" else "fuc"
+    stage0 = BUILD_TARGET_DIR / "release" / out_name
+    if not stage0.exists():
+        raise SystemExit(f"Refreshed stage0 binary not found: {stage0}")
+    return stage0
+
+
 def build() -> None:
     if not FUC_DIR.exists():
         raise SystemExit("Missing crates/fuc")
+    refresh_stage0 = env_flag("FUC_REFRESH_STAGE0_FROM_SOURCE")
     allow_cargo = env_flag("FUC_ALLOW_CARGO")
-    if allow_cargo:
+    if allow_cargo and not refresh_stage0:
         raise SystemExit(
             "Strict native mode forbids Cargo bootstrap. "
             "Unset FUC_ALLOW_CARGO and provide a stage0 fuc binary."
@@ -425,14 +457,16 @@ def build() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     BUILD_TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
-    stage0 = find_stage0_binary()
-    if stage0 is None:
-        raise SystemExit(
-            "Strict no-Cargo mode is active. Missing stage0 compiler binary "
-            "(set FUC_STAGE0 or provide target/release/fuc[.exe])."
-        )
-
-    print(f">>> Strict no-Cargo mode: reusing stage0 compiler {stage0}")
+    if refresh_stage0:
+        stage0 = refresh_stage0_from_source()
+    else:
+        stage0 = find_stage0_binary()
+        if stage0 is None:
+            raise SystemExit(
+                "Strict no-Cargo mode is active. Missing stage0 compiler binary "
+                "(set FUC_STAGE0 or provide target/release/fuc[.exe])."
+            )
+        print(f">>> Strict no-Cargo mode: reusing stage0 compiler {stage0}")
     if stage0.suffix.lower() == ".exe":
         out_bin = OUT_DIR / "fuc.exe"
     else:

@@ -55,7 +55,86 @@ fn main() {
         eprintln!("{}: Parsing failed due to errors.", "error".red().bold());
         std::process::exit(1);
     }
-    let ast = parse_result.program.unwrap();
+    let mut ast = parse_result.program.unwrap();
+    let src_path = PathBuf::from(&src_path_str);
+    let src_parent_opt = src_path.parent();
+    if src_parent_opt.is_some() {
+        let src_parent = src_parent_opt.unwrap();
+        let mut mod_idx = 0;
+        while mod_idx < ast.mods.len() {
+            let mod_decl = ast.mods[mod_idx].clone();
+            mod_idx = mod_idx + 1;
+
+            if mod_decl.has_body {
+                continue;
+            }
+
+            let mut mod_file = src_parent.join(format!("{}.fu", mod_decl.name));
+            if !mod_file.exists() {
+                mod_file = src_parent.join(&mod_decl.name).join("mod.fu");
+            }
+
+            if !mod_file.exists() {
+                eprintln!(
+                    "{}: Module source for '{}' not found.",
+                    "error".red().bold(),
+                    mod_decl.name
+                );
+                std::process::exit(1);
+            }
+
+            let mod_read_result = fs::read_to_string(&mod_file);
+            if mod_read_result.is_err() {
+                eprintln!(
+                    "{}: Failed to read module '{}': {}",
+                    "error".red().bold(),
+                    mod_file.display(),
+                    mod_read_result.err().unwrap()
+                );
+                std::process::exit(1);
+            }
+            let mod_src = mod_read_result.unwrap();
+            let mod_parse_result = parser::parse_output(&mod_src);
+
+            let mod_error_count = mod_parse_result.errors.len();
+            let mut mod_err_idx = 0;
+            while mod_err_idx < mod_error_count {
+                let err = &mod_parse_result.errors[mod_err_idx];
+                Report::build(ariadne::ReportKind::Error, (), err.span().start)
+                    .with_message(err.to_string())
+                    .with_label(
+                        ariadne::Label::new(err.span()).with_message(err.to_string()),
+                    )
+                    .finish()
+                    .print(Source::from(&mod_src))
+                    .unwrap();
+                mod_err_idx = mod_err_idx + 1;
+            }
+
+            if mod_parse_result.program.is_none() {
+                eprintln!(
+                    "{}: Parsing module '{}' failed.",
+                    "error".red().bold(),
+                    mod_file.display()
+                );
+                std::process::exit(1);
+            }
+
+            let mod_ast = mod_parse_result.program.unwrap();
+            ast.functions.extend(mod_ast.functions.into_iter());
+            ast.externs.extend(mod_ast.externs.into_iter());
+            ast.structs.extend(mod_ast.structs.into_iter());
+            ast.enums.extend(mod_ast.enums.into_iter());
+            ast.type_aliases.extend(mod_ast.type_aliases.into_iter());
+            ast.consts.extend(mod_ast.consts.into_iter());
+            ast.statics.extend(mod_ast.statics.into_iter());
+            ast.uses.extend(mod_ast.uses.into_iter());
+            ast.mods.extend(mod_ast.mods.into_iter());
+            ast.traits.extend(mod_ast.traits.into_iter());
+            ast.impls.extend(mod_ast.impls.into_iter());
+        }
+        ast.mods.clear();
+    }
 
     if args.parse_only {
         print_status("Finished", "parse [ok]");

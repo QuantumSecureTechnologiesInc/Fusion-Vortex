@@ -1,8 +1,9 @@
 //! IR lowering and definitions.
-use crate::ast;
+use crate::ast::{self, BinaryOp, Type};
 use crate::sema::{self, TypedExpressionKind};
 use generational_arena::{Arena, Index};
 /// IR module with functions, string constants, and externs.
+#[derive(Clone, Debug)]
 struct Module {
     /// IR functions.
     pub functions: FVec<Function>,
@@ -14,6 +15,7 @@ struct Module {
     pub structs: FVec<sema::TypedStructDefinition>,
 }
 /// IR function definition.
+#[derive(Clone, Debug)]
 struct Function {
     /// Name of the function.
     pub name: FString,
@@ -27,6 +29,7 @@ struct Function {
     pub entry_block: Index,
 }
 /// Basic block of IR instructions.
+#[derive(Clone, Debug)]
 struct BasicBlock {
     /// Block label.
     pub label: FString,
@@ -36,6 +39,7 @@ struct BasicBlock {
     pub terminator: Terminator,
 }
 /// Value with type information.
+#[derive(Clone, Debug)]
 struct TypedValue {
     /// Raw value.
     pub val: Value,
@@ -43,6 +47,7 @@ struct TypedValue {
     pub ty: Type,
 }
 /// IR values.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum Value {
     /// Integer constant.
     IntConst(FI64),
@@ -56,6 +61,7 @@ enum Value {
     Temporary(FSize),
 }
 /// Address forms for loads/stores.
+#[derive(Clone, Debug)]
 enum Address {
     /// Variable address with declared type.
     Variable { name: FString, ty: Type },
@@ -72,6 +78,7 @@ enum Address {
     },
 }
 /// IR instructions.
+#[derive(Clone, Debug)]
 enum Instruction {
     /// Stack allocation for a local.
     Alloca { name: FString, ty: Type },
@@ -109,6 +116,7 @@ enum Instruction {
     BoundsFail { message: FString },
 }
 /// Terminator instructions.
+#[derive(Clone, Debug)]
 enum Terminator {
     /// Return from function.
     Return(Option<TypedValue>),

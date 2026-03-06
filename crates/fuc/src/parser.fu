@@ -65,11 +65,13 @@ fn type_parser() -> impl Parser<Token, ast::Type, Error = ParserError> + Clone {
         pointer
     })
 }
+#[derive(Clone, Debug)]
 enum PostfixOp {
     Index(Spanned<ast::Expression>),
     Member(FString),
     MethodCall { method: FString, args: FVec<Spanned<ast::Expression>> },
 }
+#[derive(Clone, Debug)]
 enum UnaryOp {
     Deref,
     AddrOf,
@@ -494,6 +496,7 @@ fn stmt_parser() -> impl Parser<
             .map_with_span(|node, span| Spanned { node, span })
     })
 }
+#[derive(Clone, Debug)]
 enum TopLevel {
     Function(ast::Function),
     Extern(ast::ExternFunction),
@@ -874,70 +877,44 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let use_decl = visibility.clone()
         .ignore_then(just(Token::KwUse))
         .ignore_then(
-            path
-                .clone()
-                .then(
-                    just(Token::ColonColon)
-                        .ignore_then(just(Token::Star))
-                        .or_not(),
-                )
-                .then(
-                    select! {
-                        Token::Identifier(name) if name == "as" => ()
+            any()
+                .try_map(|t, span| {
+                    if t == Token::Semicolon {
+                        Err(Simple::custom(span, "end of use"))
+                    } else {
+                        Ok(t)
                     }
-                    .ignore_then(ident.clone())
-                    .or_not(),
-                )
-                .map(|((base, star), alias)| {
-                    let mut out = base;
-                    if star.is_some() {
-                        out = format!("{}::*", out);
-                    }
-                    if let Some(alias) = alias {
-                        out = format!("{} as {}", out, alias);
+                })
+                .repeated()
+                .map(|tokens| {
+                    let mut out = String::new();
+                    for token in tokens {
+                        let part = match token {
+                            Token::Identifier(name) => name,
+                            Token::ColonColon => "::".to_string(),
+                            Token::Star => "*".to_string(),
+                            Token::Comma => ",".to_string(),
+                            Token::LBrace => "{".to_string(),
+                            Token::RBrace => "}".to_string(),
+                            _ => "".to_string(),
+                        };
+                        if part.is_empty() {
+                            continue;
+                        }
+                        if !out.is_empty()
+                            && part != "::"
+                            && part != ","
+                            && part != "}"
+                            && !out.ends_with("::")
+                            && !out.ends_with("{")
+                            && !out.ends_with(",")
+                        {
+                            out.push(' ');
+                        }
+                        out.push_str(&part);
                     }
                     out
                 })
-                .or(
-                    any()
-                        .try_map(|t, span| {
-                            if t == Token::Semicolon {
-                                Err(Simple::custom(span, "end of use"))
-                            } else {
-                                Ok(t)
-                            }
-                        })
-                        .repeated()
-                        .map(|tokens| {
-                            let mut out = String::new();
-                            for token in tokens {
-                                let part = match token {
-                                    Token::Identifier(name) => name,
-                                    Token::ColonColon => "::".to_string(),
-                                    Token::Star => "*".to_string(),
-                                    Token::Comma => ",".to_string(),
-                                    Token::LBrace => "{".to_string(),
-                                    Token::RBrace => "}".to_string(),
-                                    _ => "".to_string(),
-                                };
-                                if part.is_empty() {
-                                    continue;
-                                }
-                                if !out.is_empty()
-                                    && part != "::"
-                                    && part != ","
-                                    && part != "}"
-                                    && !out.ends_with("::")
-                                    && !out.ends_with("{")
-                                    && !out.ends_with(",")
-                                {
-                                    out.push(' ');
-                                }
-                                out.push_str(&part);
-                            }
-                            out
-                        }),
-                )
                 .then_ignore(just(Token::Semicolon)),
         )
         .map(|path| TopLevel::Use(ast::UseDefinition { path }));

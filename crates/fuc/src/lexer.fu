@@ -1,6 +1,7 @@
 //! Lexer for the Fusion compiler.
 use std::ops::Range;
 /// Token definitions for the language.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum Token {
     KwFn,
     KwLet,

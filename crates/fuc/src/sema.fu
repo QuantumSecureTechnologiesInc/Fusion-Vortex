@@ -1,7 +1,8 @@
 //! Semantic analysis and type checking for the Fusion compiler.
-use crate::{self, Span, Spanned, StructInfo};
+use crate::ast::*;
 use ariadne::{Color, Label, Report, ReportKind};
 /// Typed program with extern declarations.
+#[derive(Clone, Debug)]
 struct TypedProgram {
     /// Defined functions.
     pub functions: FVec<TypedFunction>,
@@ -11,6 +12,7 @@ struct TypedProgram {
     pub structs: FVec<TypedStructDefinition>,
 }
 /// Typed function definition.
+#[derive(Clone, Debug)]
 struct TypedFunction {
     /// Function name.
     pub name: FString,
@@ -22,6 +24,7 @@ struct TypedFunction {
     pub body: TypedBlock,
 }
 /// Typed external function declaration.
+#[derive(Clone, Debug)]
 struct TypedExternFunction {
     /// Function name.
     pub name: FString,
@@ -33,6 +36,7 @@ struct TypedExternFunction {
     pub is_variadic: FBool,
 }
 /// Typed struct definition.
+#[derive(Clone, Debug)]
 struct TypedStructDefinition {
     /// Struct name.
     pub name: FString,
@@ -42,6 +46,7 @@ struct TypedStructDefinition {
 /// Typed block of statements.
 type TypedBlock = FVec<TypedStatement>;
 /// Typed statements.
+#[derive(Clone, Debug)]
 enum TypedStatement {
     /// Let binding.
     Let { name: FString, ty: Type, value: TypedExpression },
@@ -57,6 +62,7 @@ enum TypedStatement {
     Expression(TypedExpression),
 }
 /// Typed expression wrapper.
+#[derive(Clone, Debug)]
 struct TypedExpression {
     /// Expression node.
     pub node: TypedExpressionKind,
@@ -66,6 +72,7 @@ struct TypedExpression {
     pub span: Span,
 }
 /// Typed expression kinds.
+#[derive(Clone, Debug)]
 enum TypedExpressionKind {
     /// Integer literal.
     IntLiteral(FI64),
@@ -273,6 +280,27 @@ impl<'a> Analyzer<'a> {
         expected == found
             || matches!(expected, Type::Unknown)
             || matches!(found, Type::Unknown)
+    }
+    /// Resolves callable names with a module-qualified fallback.
+    ///
+    /// If `module::func` is referenced but only `func` is known in the current
+    /// symbol table, this returns `func`. Otherwise it returns `raw_name`.
+    fn resolve_callable_name(&self, raw_name: &str) -> FString {
+        if self.symbols.lookup_func(raw_name).is_some() {
+            return raw_name.to_string();
+        }
+
+        if raw_name.contains("::") {
+            let segments: FVec<&str> = raw_name.split("::").collect();
+            if !segments.is_empty() {
+                let leaf = segments[segments.len() - 1];
+                if self.symbols.lookup_func(leaf).is_some() {
+                    return leaf.to_string();
+                }
+            }
+        }
+
+        return raw_name.to_string();
     }
     fn report_error(&mut self, span: Span, msg: FString) {
         let report = Report::build(ReportKind::Error, (), span.start)
@@ -767,10 +795,11 @@ impl<'a> Analyzer<'a> {
                     .into_iter()
                     .map(|arg| self.analyze_expression(arg))
                     .collect();
+                let resolved_name = self.resolve_callable_name(&name);
                 let arg_count = typed_args.len();
                 if let Some((param_types, ret_type, is_variadic, is_extern)) = self
                     .symbols
-                    .lookup_func(&name)
+                    .lookup_func(&resolved_name)
                     .cloned()
                 {
                     let mut coerced_args: FVec<TypedExpression> = Vec::new();
@@ -793,19 +822,19 @@ impl<'a> Analyzer<'a> {
                         coerced_args.push(arg);
                     }
                     if !is_variadic && param_types.len() != arg_count {
-                        self.report_error(
-                            expr.span.clone(),
-                            format!(
-                                "Function '{}' expects {} arguments, got {}.", name,
-                                param_types.len(), arg_count
-                            ),
-                        );
+                            self.report_error(
+                                expr.span.clone(),
+                                format!(
+                                    "Function '{}' expects {} arguments, got {}.", resolved_name,
+                                    param_types.len(), arg_count
+                                ),
+                            );
                     } else if is_variadic && arg_count < param_types.len() {
                         self.report_error(
                             expr.span.clone(),
                             format!(
                                 "Function '{}' expects at least {} arguments, got {}.",
-                                name, param_types.len(), arg_count
+                                resolved_name, param_types.len(), arg_count
                             ),
                         );
                     }
@@ -829,13 +858,17 @@ impl<'a> Analyzer<'a> {
                         {
                             self.report_error(
                                 arg.span.clone(),
-                                format!("Argument {} of '{}' type mismatch.", i + 1, name),
+                                format!(
+                                    "Argument {} of '{}' type mismatch.",
+                                    i + 1,
+                                    resolved_name
+                                ),
                             );
                         }
                     }
                     (
                         TypedExpressionKind::FunctionCall {
-                            name,
+                            name: resolved_name,
                             args: coerced_args,
                         },
                         ret_type,
@@ -857,7 +890,7 @@ impl<'a> Analyzer<'a> {
                 for arg in args {
                     typed_args.push(self.analyze_expression(arg));
                 }
-                let name = method;
+                let name = self.resolve_callable_name(&method);
                 let arg_count = typed_args.len();
                 if let Some((param_types, ret_type, is_variadic, is_extern)) = self
                     .symbols

@@ -4,14 +4,19 @@ use thiserror::Error;
 /// LLVM backend implementation.
 mod llvm;
 /// Errors that can occur during code generation.
+#[derive(Debug, Error)]
 enum CodegenError {
     /// LLVM backend error.
+    #[error("LLVM error: {0}")]
     LlvmError(FString),
     /// IO error during codegen.
+    #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
     /// Target configuration error.
+    #[error("Target error: {0}")]
     TargetError(FString),
     /// Internal compiler error.
+    #[error("Internal compiler error: {0}")]
     InternalError(FString),
 }
 /// Backend interface for code generation.
