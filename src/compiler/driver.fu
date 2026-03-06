@@ -1,0 +1,343 @@
+// src/compiler/driver.fu
+// Compiler Driver - Orchestrates the compilation pipeline
+
+use super::lexer::{Lexer, lex};
+use super::parser::{Parser, parse};
+use super::ast::SourceFile;
+use super::sema::{SemanticAnalyzer, analyze};
+use super::ir::{IRModule, IRBuilder};
+use super::codegen::{generate_bytecode, generate_assembly, Target, Bytecode};
+use super::types::TypeContext;
+
+// Compilation options
+class CompileOptions {
+    input_path: string;
+    output_path: string;
+    target: Target;
+    emit_ir: bool;
+    emit_asm: bool;
+    optimize: bool;
+    verbose: bool;
+}
+
+impl CompileOptions {
+    fn default_options(input: string) -> CompileOptions {
+        return CompileOptions {
+            input_path: input,
+            output_path: "output",
+            target: Target::fusion_vm(),
+            emit_ir: false,
+            emit_asm: false,
+            optimize: false,
+            verbose: false
+        };
+    }
+}
+
+// Compilation result
+class CompileResult {
+    success: bool;
+    errors: Vector<string>;
+    bytecode: Option<Bytecode>;
+    assembly: Option<string>;
+}
+
+impl CompileResult {
+    fn success(bytecode: Bytecode) -> CompileResult {
+        return CompileResult {
+            success: true,
+            errors: Vector::<string>::new(),
+            bytecode: Option::Some(bytecode),
+            assembly: Option::None
+        };
+    }
+    
+    fn failure(errors: Vector<string>) -> CompileResult {
+        return CompileResult {
+            success: false,
+            errors: errors,
+            bytecode: Option::None,
+            assembly: Option::None
+        };
+    }
+}
+
+// Main compiler driver
+class Compiler {
+    options: CompileOptions;
+}
+
+impl Compiler {
+    fn new(options: CompileOptions) -> Compiler {
+        return Compiler { options: options };
+    }
+    
+    fn compile(mut self, source: string) -> CompileResult {
+        let mut errors = Vector::<string>::new();
+        
+        // Phase 1: Lexical Analysis
+        if self.options.verbose {
+            // Log: "Lexing..."
+        }
+        let tokens = lex(source);
+        
+        // Phase 2: Parsing
+        if self.options.verbose {
+            // Log: "Parsing..."
+        }
+        let ast = parse(source, self.options.input_path);
+        
+        // Phase 3: Semantic Analysis
+        if self.options.verbose {
+            // Log: "Analyzing..."
+        }
+        let sema_result = analyze(ast);
+        
+        // Check for semantic errors
+        // Note: In full implementation, collect errors from sema_result
+        
+        // Phase 4: IR Generation
+        if self.options.verbose {
+            // Log: "Generating IR..."
+        }
+        let ir = self.generate_ir(ast);
+        
+        // Phase 5: Optimization (optional)
+        if self.options.optimize {
+            // Apply optimization passes
+        }
+        
+        // Phase 6: Code Generation
+        if self.options.verbose {
+            // Log: "Generating code..."
+        }
+        
+        if self.options.emit_asm {
+            let asm = generate_assembly(ir, self.options.target);
+            let mut result = CompileResult::success(Bytecode::new());
+            result.assembly = Option::Some(asm);
+            return result;
+        }
+        
+        let bytecode = generate_bytecode(ir);
+        return CompileResult::success(bytecode);
+    }
+    
+    fn generate_ir(self, ast: SourceFile) -> IRModule {
+        let mut builder = IRBuilder::new(ast.path);
+        
+        // Process each item
+        let num_items = ast.items.len();
+        let mut i = 0;
+        while i < num_items {
+            let item = ast.items.get(i).unwrap();
+            
+            if item.function.is_some() {
+                let func = item.function.unwrap();
+                self.generate_function_ir(builder, func);
+            }
+            
+            i = i + 1;
+        }
+        
+        return builder.finalize();
+    }
+    
+    fn generate_function_ir(self, mut builder: IRBuilder, func: Function) {
+        use super::ast::Function;
+        
+        builder.start_function(func.name);
+        
+        // Create entry block
+        builder.get_current_function().add_block("entry");
+        
+        // Register parameters as locals
+        let num_params = func.params.len();
+        let mut i = 0;
+        while i < num_params {
+            let param = func.params.get(i).unwrap();
+            builder.get_current_function().add_local(param.name);
+            i = i + 1;
+        }
+        
+        // Generate body statements
+        let num_stmts = func.body.len();
+        i = 0;
+        while i < num_stmts {
+            let stmt = func.body.get(i).unwrap();
+            self.generate_statement_ir(builder, stmt);
+            i = i + 1;
+        }
+        
+        // Ensure return
+        builder.emit_return_void();
+        builder.end_function();
+    }
+    
+    fn generate_statement_ir(self, mut builder: IRBuilder, stmt: Stmt) {
+        use super::ast::{Stmt, StmtKind};
+        
+        if stmt.kind == StmtKind::let_stmt() {
+            // Allocate local
+            let idx = builder.get_current_function().add_local(stmt.var_name);
+            
+            // Generate initializer if present
+            if stmt.initializer.is_some() {
+                self.generate_expr_ir(builder, stmt.initializer.unwrap());
+                builder.emit_store_local(idx);
+            }
+        } else {
+            if stmt.kind == StmtKind::return_stmt() {
+                if stmt.return_value.is_some() {
+                    self.generate_expr_ir(builder, stmt.return_value.unwrap());
+                    builder.emit_return();
+                } else {
+                    builder.emit_return_void();
+                }
+            } else {
+                if stmt.kind == StmtKind::expr_stmt() {
+                    if stmt.expr.is_some() {
+                        self.generate_expr_ir(builder, stmt.expr.unwrap());
+                    }
+                } else {
+                    if stmt.kind == StmtKind::if_stmt() {
+                        self.generate_if_ir(builder, stmt);
+                    } else {
+                        if stmt.kind == StmtKind::while_stmt() {
+                            self.generate_while_ir(builder, stmt);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    fn generate_if_ir(self, mut builder: IRBuilder, stmt: Stmt) {
+        use super::ast::Stmt;
+        
+        let else_label = builder.new_label();
+        let end_label = builder.new_label();
+        
+        // Condition
+        if stmt.condition.is_some() {
+            self.generate_expr_ir(builder, stmt.condition.unwrap());
+        }
+        builder.emit_jump_if_not(else_label);
+        
+        // Then block
+        let num_then = stmt.then_block.len();
+        let mut i = 0;
+        while i < num_then {
+            self.generate_statement_ir(builder, stmt.then_block.get(i).unwrap());
+            i = i + 1;
+        }
+        builder.emit_jump(end_label);
+        
+        // Else block
+        let num_else = stmt.else_block.len();
+        i = 0;
+        while i < num_else {
+            self.generate_statement_ir(builder, stmt.else_block.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        // End label is implicitly the next instruction
+    }
+    
+    fn generate_while_ir(self, mut builder: IRBuilder, stmt: Stmt) {
+        use super::ast::Stmt;
+        
+        let loop_label = builder.new_label();
+        let end_label = builder.new_label();
+        
+        // Loop header
+        if stmt.condition.is_some() {
+            self.generate_expr_ir(builder, stmt.condition.unwrap());
+        }
+        builder.emit_jump_if_not(end_label);
+        
+        // Body
+        let num_body = stmt.body.len();
+        let mut i = 0;
+        while i < num_body {
+            self.generate_statement_ir(builder, stmt.body.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        builder.emit_jump(loop_label);
+    }
+    
+    fn generate_expr_ir(self, mut builder: IRBuilder, expr: Expr) {
+        use super::ast::{Expr, ExprKind};
+        
+        if expr.kind == ExprKind::int_literal() {
+            builder.emit_load_int(expr.int_value);
+        } else {
+            if expr.kind == ExprKind::string_literal() {
+                builder.emit_load_string(expr.string_value);
+            } else {
+                if expr.kind == ExprKind::variable() {
+                    let idx = builder.get_current_function().get_local_index(expr.name);
+                    if idx >= 0 {
+                        builder.emit_load_local(idx);
+                    }
+                } else {
+                    if expr.kind == ExprKind::binary() {
+                        // Left operand
+                        if expr.left.is_some() {
+                            self.generate_expr_ir(builder, *expr.left.unwrap());
+                        }
+                        // Right operand
+                        if expr.right.is_some() {
+                            self.generate_expr_ir(builder, *expr.right.unwrap());
+                        }
+                        // Operator
+                        let op = expr.binary_op;
+                        if op.op_id == 0 { builder.emit_add(); }
+                        else { if op.op_id == 1 { builder.emit_sub(); }
+                        else { if op.op_id == 2 { builder.emit_mul(); }
+                        else { if op.op_id == 3 { builder.emit_div(); }
+                        }}}
+                    } else {
+                        if expr.kind == ExprKind::call() {
+                            // Generate arguments
+                            let num_args = expr.arguments.len();
+                            let mut i = 0;
+                            while i < num_args {
+                                self.generate_expr_ir(builder, expr.arguments.get(i).unwrap());
+                                i = i + 1;
+                            }
+                            
+                            // Call function
+                            if expr.callee.is_some() {
+                                let callee = *expr.callee.unwrap();
+                                builder.emit_call(callee.name, num_args);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Main compilation entry point
+fn compile(source: string, input_path: string) -> CompileResult {
+    let options = CompileOptions::default_options(input_path);
+    let mut compiler = Compiler::new(options);
+    return compiler.compile(source);
+}
+
+fn compile_to_asm(source: string, input_path: string, target: Target) -> string {
+    let mut options = CompileOptions::default_options(input_path);
+    options.emit_asm = true;
+    options.target = target;
+    
+    let mut compiler = Compiler::new(options);
+    let result = compiler.compile(source);
+    
+    if result.assembly.is_some() {
+        return result.assembly.unwrap();
+    }
+    return "";
+}

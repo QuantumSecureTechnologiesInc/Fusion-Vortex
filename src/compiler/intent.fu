@@ -1,0 +1,397 @@
+// src/compiler/intent.fu
+// Intent System for the Fusion Compiler
+// Enables intent-driven compilation and task scheduling
+
+// Intent categories for task execution
+// The Intent tells the Cortex what the user values most for this task
+enum Intent {
+    // HFT: Minimal Jitter - Always runs on CPU, <10μs latency
+    Critical = 0,
+    // AI: Maximum FLOPS - Prefers GPU for throughput
+    HighThroughput = 1,
+    // Science: Accuracy over speed - Extended precision
+    Precision = 2,
+    // Logging/Cleanup: Low priority background tasks
+    Background = 3,
+}
+
+impl Intent {
+    fn from_string(s: string) -> Intent {
+        if s == "critical" || s == "hft" {
+            return Intent::Critical;
+        }
+        if s == "high_throughput" || s == "ai" || s == "ml" {
+            return Intent::HighThroughput;
+        }
+        if s == "precision" || s == "science" {
+            return Intent::Precision;
+        }
+        return Intent::Background;
+    }
+    
+    fn priority(self) -> int {
+        if self == Intent::Critical { return 3; }
+        if self == Intent::HighThroughput { return 2; }
+        if self == Intent::Precision { return 2; }
+        return 0;
+    }
+    
+    fn requires_cpu(self) -> bool {
+        return self == Intent::Critical;
+    }
+    
+    fn prefers_gpu(self) -> bool {
+        return self == Intent::HighThroughput;
+    }
+    
+    fn to_string(self) -> string {
+        if self == Intent::Critical { return "Critical (HFT)"; }
+        if self == Intent::HighThroughput { return "HighThroughput (AI)"; }
+        if self == Intent::Precision { return "Precision (Science)"; }
+        return "Background";
+    }
+}
+
+// Task profile for scheduler decisions
+class TaskProfile {
+    estimated_ops: int;
+    memory_footprint: int;
+    intent: Intent;
+    dependencies: int;
+}
+
+impl TaskProfile {
+    fn new(intent: Intent) -> TaskProfile {
+        return TaskProfile {
+            estimated_ops: 0,
+            memory_footprint: 0,
+            intent: intent,
+            dependencies: 0
+        };
+    }
+    
+    fn with_details(ops: int, memory: int, intent: Intent, deps: int) -> TaskProfile {
+        return TaskProfile {
+            estimated_ops: ops,
+            memory_footprint: memory,
+            intent: intent,
+            dependencies: deps
+        };
+    }
+    
+    fn with_ops(mut self, ops: int) -> TaskProfile {
+        self.estimated_ops = ops;
+        return self;
+    }
+    
+    fn with_memory(mut self, bytes: int) -> TaskProfile {
+        self.memory_footprint = bytes;
+        return self;
+    }
+    
+    fn complexity_score(self) -> float {
+        let ops_component = log10(self.estimated_ops as float);
+        let mem_component = log10(self.memory_footprint as float / 1024.0);
+        let dep_component = sqrt(self.dependencies as float);
+        return ops_component * 0.5 + mem_component * 0.3 + dep_component * 0.2;
+    }
+}
+
+// Hardware device targets
+enum Device {
+    Cpu,
+    Gpu(int),
+    Qpu(int),
+}
+
+impl Device {
+    fn is_cpu(self) -> bool {
+        return self == Device::Cpu;
+    }
+    
+    fn is_gpu(self) -> bool {
+        if let Device::Gpu(_) = self {
+            return true;
+        }
+        return false;
+    }
+    
+    fn is_qpu(self) -> bool {
+        if let Device::Qpu(_) = self {
+            return true;
+        }
+        return false;
+    }
+    
+    fn to_string(self) -> string {
+        if self == Device::Cpu { return "CPU"; }
+        if let Device::Gpu(idx) = self {
+            return "GPU:" + idx.to_string();
+        }
+        if let Device::Qpu(idx) = self {
+            return "QPU:" + idx.to_string();
+        }
+        return "Unknown";
+    }
+}
+
+// Intent categories for code generation
+enum IntentCategory {
+    MachineLearning,
+    WebService,
+    CLI,
+    Library,
+    Quantum,
+    Finance,
+    General,
+}
+
+impl IntentCategory {
+    fn from_keywords(text: string) -> IntentCategory {
+        let lower = text.to_lowercase();
+        
+        if lower.contains("machine learning") || lower.contains("ml") || 
+           lower.contains("neural") || lower.contains("ai") {
+            return IntentCategory::MachineLearning;
+        }
+        
+        if lower.contains("web") || lower.contains("api") || 
+           lower.contains("server") || lower.contains("http") {
+            return IntentCategory::WebService;
+        }
+        
+        if lower.contains("cli") || lower.contains("command") || 
+           lower.contains("terminal") {
+            return IntentCategory::CLI;
+        }
+        
+        if lower.contains("quantum") || lower.contains("qubit") ||
+           lower.contains("circuit") {
+            return IntentCategory::Quantum;
+        }
+        
+        if lower.contains("finance") || lower.contains("trading") ||
+           lower.contains("hft") || lower.contains("order") {
+            return IntentCategory::Finance;
+        }
+        
+        if lower.contains("library") || lower.contains("crate") ||
+           lower.contains("module") {
+            return IntentCategory::Library;
+        }
+        
+        return IntentCategory::General;
+    }
+    
+    fn to_string(self) -> string {
+        if self == IntentCategory::MachineLearning { return "MachineLearning"; }
+        if self == IntentCategory::WebService { return "WebService"; }
+        if self == IntentCategory::CLI { return "CLI"; }
+        if self == IntentCategory::Library { return "Library"; }
+        if self == IntentCategory::Quantum { return "Quantum"; }
+        if self == IntentCategory::Finance { return "Finance"; }
+        return "General";
+    }
+    
+    fn default_intent(self) -> Intent {
+        if self == IntentCategory::MachineLearning {
+            return Intent::HighThroughput;
+        }
+        if self == IntentCategory::Quantum {
+            return Intent::Precision;
+        }
+        if self == IntentCategory::Finance {
+            return Intent::Critical;
+        }
+        return Intent::Background;
+    }
+}
+
+// Parsed intent from natural language or annotations
+class ParsedIntent {
+    category: IntentCategory;
+    execution_intent: Intent;
+    language: string;
+    features: Vector<string>;
+    target_device: Device;
+}
+
+impl ParsedIntent {
+    fn new(category: IntentCategory) -> ParsedIntent {
+        return ParsedIntent {
+            category: category,
+            execution_intent: category.default_intent(),
+            language: "fusion",
+            features: Vector::<string>::new(),
+            target_device: Device::Cpu
+        };
+    }
+}
+
+// Intent Engine - parses intent annotations and natural language descriptions
+class IntentEngine {
+    // No state needed - stateless parser
+}
+
+impl IntentEngine {
+    fn new() -> IntentEngine {
+        return IntentEngine {};
+    }
+    
+    fn parse(self, intent_text: string) -> ParsedIntent {
+        let lower = intent_text.to_lowercase();
+        let category = IntentCategory::from_keywords(intent_text);
+        
+        let mut parsed = ParsedIntent::new(category);
+        
+        // Extract features from text
+        if lower.contains("gpu") || lower.contains("cuda") {
+            parsed.features.push("gpu");
+            parsed.target_device = Device::Gpu(0);
+        }
+        
+        if lower.contains("async") || lower.contains("concurrent") {
+            parsed.features.push("async");
+        }
+        
+        if lower.contains("distributed") || lower.contains("cluster") {
+            parsed.features.push("distributed");
+        }
+        
+        if lower.contains("quantum") || lower.contains("qpu") {
+            parsed.features.push("quantum");
+            parsed.target_device = Device::Qpu(0);
+        }
+        
+        if lower.contains("realtime") || lower.contains("low_latency") {
+            parsed.features.push("realtime");
+            parsed.execution_intent = Intent::Critical;
+        }
+        
+        if lower.contains("precision") || lower.contains("accurate") {
+            parsed.features.push("precision");
+            parsed.execution_intent = Intent::Precision;
+        }
+        
+        return parsed;
+    }
+    
+    fn parse_annotation(self, annotation: string) -> Intent {
+        // Parse #[intent(Critical)] style annotations
+        let lower = annotation.to_lowercase();
+        
+        if lower.contains("critical") {
+            return Intent::Critical;
+        }
+        if lower.contains("high_throughput") || lower.contains("highthroughput") {
+            return Intent::HighThroughput;
+        }
+        if lower.contains("precision") {
+            return Intent::Precision;
+        }
+        if lower.contains("background") {
+            return Intent::Background;
+        }
+        
+        return Intent::Background;
+    }
+}
+
+// Intent-aware function metadata
+class IntentMetadata {
+    intent: Intent;
+    target_device: Device;
+    estimated_ops: int;
+    memory_hint: int;
+}
+
+impl IntentMetadata {
+    fn default() -> IntentMetadata {
+        return IntentMetadata {
+            intent: Intent::Background,
+            target_device: Device::Cpu,
+            estimated_ops: 0,
+            memory_hint: 0
+        };
+    }
+    
+    fn from_annotation(annotation: string) -> IntentMetadata {
+        let engine = IntentEngine::new();
+        let intent = engine.parse_annotation(annotation);
+        
+        return IntentMetadata {
+            intent: intent,
+            target_device: if intent.requires_cpu() { Device::Cpu } else { Device::Gpu(0) },
+            estimated_ops: 0,
+            memory_hint: 0
+        };
+    }
+}
+
+// Cortex scheduler for intent-based execution
+class Cortex {
+    gpu_threshold: float;
+}
+
+impl Cortex {
+    fn new() -> Cortex {
+        return Cortex {
+            gpu_threshold: 0.6
+        };
+    }
+    
+    fn schedule(self, profile: TaskProfile) -> Device {
+        // Critical intent always runs on CPU for minimum jitter
+        if profile.intent.requires_cpu() {
+            return Device::Cpu;
+        }
+        
+        // Calculate GPU score based on complexity
+        let gpu_score = profile.complexity_score() / 10.0;
+        
+        if gpu_score > self.gpu_threshold {
+            return Device::Gpu(0);
+        }
+        
+        return Device::Cpu;
+    }
+    
+    fn schedule_with_metadata(self, metadata: IntentMetadata) -> Device {
+        let profile = TaskProfile::with_details(
+            metadata.estimated_ops,
+            metadata.memory_hint,
+            metadata.intent,
+            0
+        );
+        return self.schedule(profile);
+    }
+}
+
+// Helper math functions
+fn log10(x: float) -> float {
+    if x <= 0.0 {
+        return 0.0;
+    }
+    // Approximate log10
+    let mut result: float = 0.0;
+    let mut val = x;
+    while val >= 10.0 {
+        val = val / 10.0;
+        result = result + 1.0;
+    }
+    return result;
+}
+
+fn sqrt(x: float) -> float {
+    if x <= 0.0 {
+        return 0.0;
+    }
+    // Newton-Raphson approximation
+    let mut guess = x / 2.0;
+    let mut i = 0;
+    while i < 10 {
+        guess = (guess + x / guess) / 2.0;
+        i = i + 1;
+    }
+    return guess;
+}

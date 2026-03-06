@@ -1,0 +1,410 @@
+// src/compiler/ast.fu
+// Abstract Syntax Tree Definitions for the Fusion Language
+
+use super::token::Span;
+
+// Type representation
+class Type {
+    kind: int;  // 0=primitive, 1=named, 2=generic, 3=array, 4=pointer, 5=function
+    name: string;
+    generics: Vector<Type>;
+    inner: Option<Box<Type>>;  // For arrays, pointers
+    array_size: int;           // For fixed-size arrays
+}
+
+impl Type {
+    fn primitive(name: string) -> Type {
+        return Type {
+            kind: 0,
+            name: name,
+            generics: Vector::<Type>::new(),
+            inner: Option::None,
+            array_size: 0
+        };
+    }
+    
+    fn named(name: string) -> Type {
+        return Type {
+            kind: 1,
+            name: name,
+            generics: Vector::<Type>::new(),
+            inner: Option::None,
+            array_size: 0
+        };
+    }
+    
+    fn generic(name: string, params: Vector<Type>) -> Type {
+        return Type {
+            kind: 2,
+            name: name,
+            generics: params,
+            inner: Option::None,
+            array_size: 0
+        };
+    }
+    
+    fn array(elem_type: Type, size: int) -> Type {
+        return Type {
+            kind: 3,
+            name: "array",
+            generics: Vector::<Type>::new(),
+            inner: Option::Some(Box::new(elem_type)),
+            array_size: size
+        };
+    }
+    
+    fn pointer(inner_type: Type) -> Type {
+        return Type {
+            kind: 4,
+            name: "pointer",
+            generics: Vector::<Type>::new(),
+            inner: Option::Some(Box::new(inner_type)),
+            array_size: 0
+        };
+    }
+    
+    fn int_type() -> Type { return Type::primitive("int"); }
+    fn float_type() -> Type { return Type::primitive("float"); }
+    fn bool_type() -> Type { return Type::primitive("bool"); }
+    fn string_type() -> Type { return Type::primitive("string"); }
+    fn void_type() -> Type { return Type::primitive("void"); }
+}
+
+// Binary operators
+class BinaryOp {
+    op_id: int;
+}
+
+impl BinaryOp {
+    fn add() -> BinaryOp { return BinaryOp { op_id: 0 }; }
+    fn sub() -> BinaryOp { return BinaryOp { op_id: 1 }; }
+    fn mul() -> BinaryOp { return BinaryOp { op_id: 2 }; }
+    fn div() -> BinaryOp { return BinaryOp { op_id: 3 }; }
+    fn mod() -> BinaryOp { return BinaryOp { op_id: 4 }; }
+    fn eq() -> BinaryOp { return BinaryOp { op_id: 5 }; }
+    fn neq() -> BinaryOp { return BinaryOp { op_id: 6 }; }
+    fn lt() -> BinaryOp { return BinaryOp { op_id: 7 }; }
+    fn gt() -> BinaryOp { return BinaryOp { op_id: 8 }; }
+    fn le() -> BinaryOp { return BinaryOp { op_id: 9 }; }
+    fn ge() -> BinaryOp { return BinaryOp { op_id: 10 }; }
+    fn and() -> BinaryOp { return BinaryOp { op_id: 11 }; }
+    fn or() -> BinaryOp { return BinaryOp { op_id: 12 }; }
+}
+
+// Unary operators
+class UnaryOp {
+    op_id: int;
+}
+
+impl UnaryOp {
+    fn neg() -> UnaryOp { return UnaryOp { op_id: 0 }; }
+    fn not() -> UnaryOp { return UnaryOp { op_id: 1 }; }
+    fn deref() -> UnaryOp { return UnaryOp { op_id: 2 }; }
+    fn addr_of() -> UnaryOp { return UnaryOp { op_id: 3 }; }
+}
+
+// Expression node
+class Expr {
+    kind: int;
+    span: Span;
+    
+    // Literal values
+    int_value: int;
+    float_value: float;
+    string_value: string;
+    bool_value: bool;
+    
+    // Variable/field name
+    name: string;
+    
+    // Binary/unary expressions
+    binary_op: BinaryOp;
+    unary_op: UnaryOp;
+    left: Option<Box<Expr>>;
+    right: Option<Box<Expr>>;
+    operand: Option<Box<Expr>>;
+    
+    // Call expressions
+    callee: Option<Box<Expr>>;
+    arguments: Vector<Expr>;
+    
+    // Member access
+    object: Option<Box<Expr>>;
+    member: string;
+    
+    // Index access
+    index: Option<Box<Expr>>;
+    
+    // Struct literal
+    struct_name: string;
+    fields: Vector<FieldInit>;
+    
+    // Array literal
+    elements: Vector<Expr>;
+    
+    // If expression
+    condition: Option<Box<Expr>>;
+    then_branch: Option<Box<Expr>>;
+    else_branch: Option<Box<Expr>>;
+}
+
+// Expression kind constants
+class ExprKind {
+    fn int_literal() -> int { return 0; }
+    fn float_literal() -> int { return 1; }
+    fn string_literal() -> int { return 2; }
+    fn bool_literal() -> int { return 3; }
+    fn variable() -> int { return 4; }
+    fn binary() -> int { return 5; }
+    fn unary() -> int { return 6; }
+    fn call() -> int { return 7; }
+    fn method_call() -> int { return 8; }
+    fn member_access() -> int { return 9; }
+    fn index() -> int { return 10; }
+    fn struct_literal() -> int { return 11; }
+    fn array_literal() -> int { return 12; }
+    fn if_expr() -> int { return 13; }
+    fn block() -> int { return 14; }
+}
+
+impl Expr {
+    fn int_lit(value: int, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::int_literal();
+        e.int_value = value;
+        return e;
+    }
+    
+    fn string_lit(value: string, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::string_literal();
+        e.string_value = value;
+        return e;
+    }
+    
+    fn bool_lit(value: bool, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::bool_literal();
+        e.bool_value = value;
+        return e;
+    }
+    
+    fn variable(name: string, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::variable();
+        e.name = name;
+        return e;
+    }
+    
+    fn binary(op: BinaryOp, left: Expr, right: Expr, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::binary();
+        e.binary_op = op;
+        e.left = Option::Some(Box::new(left));
+        e.right = Option::Some(Box::new(right));
+        return e;
+    }
+    
+    fn call(callee: Expr, args: Vector<Expr>, span: Span) -> Expr {
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::call();
+        e.callee = Option::Some(Box::new(callee));
+        e.arguments = args;
+        return e;
+    }
+    
+    fn empty(span: Span) -> Expr {
+        return Expr {
+            kind: 0,
+            span: span,
+            int_value: 0,
+            float_value: 0.0,
+            string_value: "",
+            bool_value: false,
+            name: "",
+            binary_op: BinaryOp::add(),
+            unary_op: UnaryOp::neg(),
+            left: Option::None,
+            right: Option::None,
+            operand: Option::None,
+            callee: Option::None,
+            arguments: Vector::<Expr>::new(),
+            object: Option::None,
+            member: "",
+            index: Option::None,
+            struct_name: "",
+            fields: Vector::<FieldInit>::new(),
+            elements: Vector::<Expr>::new(),
+            condition: Option::None,
+            then_branch: Option::None,
+            else_branch: Option::None
+        };
+    }
+}
+
+// Field initializer for struct literals
+class FieldInit {
+    name: string;
+    value: Expr;
+}
+
+// Statement node
+class Stmt {
+    kind: int;
+    span: Span;
+    
+    // Let statement
+    var_name: string;
+    var_type: Option<Type>;
+    is_mutable: bool;
+    initializer: Option<Expr>;
+    
+    // Expression statement
+    expr: Option<Expr>;
+    
+    // Return statement
+    return_value: Option<Expr>;
+    
+    // If statement
+    condition: Option<Expr>;
+    then_block: Vector<Stmt>;
+    else_block: Vector<Stmt>;
+    
+    // While statement
+    body: Vector<Stmt>;
+    
+    // For statement
+    loop_var: string;
+    iterable: Option<Expr>;
+    
+    // Assignment
+    target: Option<Expr>;
+    value: Option<Expr>;
+}
+
+class StmtKind {
+    fn let_stmt() -> int { return 0; }
+    fn expr_stmt() -> int { return 1; }
+    fn return_stmt() -> int { return 2; }
+    fn if_stmt() -> int { return 3; }
+    fn while_stmt() -> int { return 4; }
+    fn for_stmt() -> int { return 5; }
+    fn assignment() -> int { return 6; }
+    fn block() -> int { return 7; }
+    fn break_stmt() -> int { return 8; }
+    fn continue_stmt() -> int { return 9; }
+}
+
+// Function parameter
+class Param {
+    name: string;
+    param_type: Type;
+    is_mutable: bool;
+}
+
+// Function definition
+class Function {
+    name: string;
+    params: Vector<Param>;
+    return_type: Option<Type>;
+    body: Vector<Stmt>;
+    is_pub: bool;
+    is_async: bool;
+    span: Span;
+}
+
+// Field in class/struct
+class Field {
+    name: string;
+    field_type: Type;
+    is_pub: bool;
+}
+
+// Class/Struct definition
+class ClassDef {
+    name: string;
+    fields: Vector<Field>;
+    is_pub: bool;
+    span: Span;
+}
+
+// Impl block
+class ImplBlock {
+    target_type: string;
+    trait_name: Option<string>;
+    methods: Vector<Function>;
+    span: Span;
+}
+
+// Trait definition
+class TraitDef {
+    name: string;
+    methods: Vector<Function>;
+    is_pub: bool;
+    span: Span;
+}
+
+// Enum variant
+class EnumVariant {
+    name: string;
+    fields: Vector<Field>;
+}
+
+// Enum definition
+class EnumDef {
+    name: string;
+    variants: Vector<EnumVariant>;
+    is_pub: bool;
+    span: Span;
+}
+
+// Use statement
+class UseStmt {
+    path: Vector<string>;
+    alias: Option<string>;
+    span: Span;
+}
+
+// Module definition
+class ModDef {
+    name: string;
+    is_pub: bool;
+    span: Span;
+}
+
+// Top-level item
+class Item {
+    kind: int;
+    function: Option<Function>;
+    class_def: Option<ClassDef>;
+    impl_block: Option<ImplBlock>;
+    trait_def: Option<TraitDef>;
+    enum_def: Option<EnumDef>;
+    use_stmt: Option<UseStmt>;
+    mod_def: Option<ModDef>;
+}
+
+class ItemKind {
+    fn function() -> int { return 0; }
+    fn class_def() -> int { return 1; }
+    fn impl_block() -> int { return 2; }
+    fn trait_def() -> int { return 3; }
+    fn enum_def() -> int { return 4; }
+    fn use_stmt() -> int { return 5; }
+    fn mod_def() -> int { return 6; }
+}
+
+// Complete source file
+class SourceFile {
+    path: string;
+    items: Vector<Item>;
+}
+
+impl SourceFile {
+    fn new(path: string) -> SourceFile {
+        return SourceFile {
+            path: path,
+            items: Vector::<Item>::new()
+        };
+    }
+}

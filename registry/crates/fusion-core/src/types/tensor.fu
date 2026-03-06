@@ -1,20 +1,19 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-use std::ops::{Add, Sub, Mul, Div};
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FSize = FSize;
+#[allow(missing_docs, dead_code)]
+type FVec<T> = FVec<T>;
 use crate::FusionError;
 use crate::FusionResult;
 use ndarray::{Array, ArrayD, IxDyn};
 use num_complex::Complex64;
 #[derive(Debug, Clone)]
-pub struct Tensor<T, const RANK: FSize> {
+struct Tensor<T, const RANK: FSize> {
     pub data: ArrayD<T>,
 }
-pub type Matrix<T> = Tensor<T, 2>;
-pub type Vector1D<T> = Tensor<T, 1>;
-pub type Tensor3D<T> = Tensor<T, 3>;
+type Matrix<T> = Tensor<T, 2>;
+type Vector1D<T> = Tensor<T, 1>;
+type Tensor3D<T> = Tensor<T, 3>;
 impl<T, const RANK: FSize> Tensor<T, RANK> {
     pub fn from_array(data: ArrayD<T>) -> Self {
         Self { data }

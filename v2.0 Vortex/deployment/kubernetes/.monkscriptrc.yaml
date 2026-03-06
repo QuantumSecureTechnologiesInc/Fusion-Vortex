@@ -1,0 +1,7 @@
+# Local monkscript analyzer config to ignore rules that conflict
+# with standard kustomize keys in this folder.
+files:
+  - pattern: "kustomization.yaml"
+    rules:
+      naming-convention: off
+      structural: off

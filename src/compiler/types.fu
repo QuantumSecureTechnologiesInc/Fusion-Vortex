@@ -1,0 +1,224 @@
+// src/compiler/types.fu
+// Type System for the Fusion Compiler
+
+use super::ast::Type;
+use stdlib::hashmap::HashMap;
+
+// Type ID for efficient comparison
+class TypeId {
+    id: int;
+}
+
+impl TypeId {
+    fn equals(self, other: TypeId) -> bool {
+        return self.id == other.id;
+    }
+}
+
+// Resolved type information
+class ResolvedType {
+    id: TypeId;
+    name: string;
+    kind: int;  // 0=primitive, 1=struct, 2=enum, 3=trait, 4=function, 5=generic
+    fields: Vector<TypeField>;
+    methods: Vector<TypeMethod>;
+    generics: Vector<ResolvedType>;
+    return_type: Option<Box<ResolvedType>>;
+    param_types: Vector<ResolvedType>;
+}
+
+impl ResolvedType {
+    fn int_type() -> ResolvedType {
+        return ResolvedType {
+            id: TypeId { id: 1 },
+            name: "int",
+            kind: 0,
+            fields: Vector::<TypeField>::new(),
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+    }
+    
+    fn float_type() -> ResolvedType {
+        return ResolvedType {
+            id: TypeId { id: 2 },
+            name: "float",
+            kind: 0,
+            fields: Vector::<TypeField>::new(),
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+    }
+    
+    fn bool_type() -> ResolvedType {
+        return ResolvedType {
+            id: TypeId { id: 3 },
+            name: "bool",
+            kind: 0,
+            fields: Vector::<TypeField>::new(),
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+    }
+    
+    fn string_type() -> ResolvedType {
+        return ResolvedType {
+            id: TypeId { id: 4 },
+            name: "string",
+            kind: 0,
+            fields: Vector::<TypeField>::new(),
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+    }
+    
+    fn void_type() -> ResolvedType {
+        return ResolvedType {
+            id: TypeId { id: 0 },
+            name: "void",
+            kind: 0,
+            fields: Vector::<TypeField>::new(),
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+    }
+    
+    fn is_numeric(self) -> bool {
+        return self.name == "int" || self.name == "float";
+    }
+    
+    fn is_primitive(self) -> bool {
+        return self.kind == 0;
+    }
+    
+    fn equals(self, other: ResolvedType) -> bool {
+        return self.id.equals(other.id);
+    }
+}
+
+class TypeField {
+    name: string;
+    field_type: ResolvedType;
+    is_mutable: bool;
+}
+
+class TypeMethod {
+    name: string;
+    params: Vector<ResolvedType>;
+    return_type: ResolvedType;
+    is_static: bool;
+}
+
+// Type registry for tracking all types
+class TypeRegistry {
+    types: HashMap<string, ResolvedType>;
+    next_id: int;
+}
+
+impl TypeRegistry {
+    fn new() -> TypeRegistry {
+        let mut reg = TypeRegistry {
+            types: HashMap::<string, ResolvedType>::new(),
+            next_id: 100
+        };
+        
+        // Register primitive types
+        reg.types.insert("int", ResolvedType::int_type());
+        reg.types.insert("float", ResolvedType::float_type());
+        reg.types.insert("bool", ResolvedType::bool_type());
+        reg.types.insert("string", ResolvedType::string_type());
+        reg.types.insert("void", ResolvedType::void_type());
+        
+        return reg;
+    }
+    
+    fn lookup(self, name: string) -> Option<ResolvedType> {
+        return self.types.get(name);
+    }
+    
+    fn register_struct(mut self, name: string, fields: Vector<TypeField>) -> ResolvedType {
+        let type_id = TypeId { id: self.next_id };
+        self.next_id = self.next_id + 1;
+        
+        let resolved = ResolvedType {
+            id: type_id,
+            name: name,
+            kind: 1,
+            fields: fields,
+            methods: Vector::<TypeMethod>::new(),
+            generics: Vector::<ResolvedType>::new(),
+            return_type: Option::None,
+            param_types: Vector::<ResolvedType>::new()
+        };
+        
+        self.types.insert(name, resolved);
+        return resolved;
+    }
+    
+    fn add_method(mut self, type_name: string, method: TypeMethod) {
+        let type_opt = self.types.get(type_name);
+        if type_opt.is_some() {
+            let mut t = type_opt.unwrap();
+            t.methods.push(method);
+            self.types.insert(type_name, t);
+        }
+    }
+}
+
+// Type inference context
+class TypeContext {
+    registry: TypeRegistry;
+    variables: HashMap<string, ResolvedType>;
+    current_function_return: Option<ResolvedType>;
+}
+
+impl TypeContext {
+    fn new() -> TypeContext {
+        return TypeContext {
+            registry: TypeRegistry::new(),
+            variables: HashMap::<string, ResolvedType>::new(),
+            current_function_return: Option::None
+        };
+    }
+    
+    fn enter_scope(mut self) -> TypeContext {
+        // Create child context with same registry but fresh variables
+        let mut child = TypeContext {
+            registry: self.registry,
+            variables: HashMap::<string, ResolvedType>::new(),
+            current_function_return: self.current_function_return
+        };
+        
+        // Copy parent variables
+        // In real implementation, use proper scope chain
+        return child;
+    }
+    
+    fn define_variable(mut self, name: string, var_type: ResolvedType) {
+        self.variables.insert(name, var_type);
+    }
+    
+    fn lookup_variable(self, name: string) -> Option<ResolvedType> {
+        return self.variables.get(name);
+    }
+    
+    fn resolve_ast_type(self, ast_type: Type) -> ResolvedType {
+        let type_opt = self.registry.lookup(ast_type.name);
+        if type_opt.is_some() {
+            return type_opt.unwrap();
+        }
+        
+        // Unknown type - return void as placeholder
+        return ResolvedType::void_type();
+    }
+}

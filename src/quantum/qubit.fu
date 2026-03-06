@@ -1,0 +1,80 @@
+// src/quantum/qubit.fu
+// Quantum Qubit Primitive
+
+// Represents the state of a single Qubit
+class QubitState {
+    // 0: Zero (|0⟩)
+    // 1: One (|1⟩)
+    // 2: Superposition
+    state_id: int;
+}
+
+impl QubitState {
+    fn zero() -> QubitState {
+        return QubitState { state_id: 0 };
+    }
+    
+    fn one() -> QubitState {
+        return QubitState { state_id: 1 };
+    }
+    
+    fn superposition() -> QubitState {
+        return QubitState { state_id: 2 };
+    }
+}
+
+class Qubit {
+    id: int;
+    state: QubitState;
+}
+
+impl Qubit {
+    fn new(id: int) -> Qubit {
+        return Qubit {
+            id: id,
+            state: QubitState::zero()
+        };
+    }
+
+    fn hadamard(mut self) {
+        // H-gate puts qubit in superposition
+        self.state = QubitState::superposition();
+    }
+
+    fn pauli_x(mut self) {
+        // X-gate flips 0->1, 1->0
+        if self.state.state_id == 0 {
+            self.state = QubitState::one();
+        } else {
+            if self.state.state_id == 1 {
+                self.state = QubitState::zero();
+            }
+        }
+        // Superposition remains superposition
+    }
+
+    fn measure(mut self) -> int {
+        // Collapse state with quantum randomness
+        if self.state.state_id == 0 {
+            self.state = QubitState::zero(); // Already collapsed
+            return 0;
+        } else {
+            if self.state.state_id == 1 {
+                self.state = QubitState::one(); // Already collapsed
+                return 1;
+            } else {
+                // Superposition collapses with 50/50 probability
+                // Using qubit ID as seed for deterministic "randomness"
+                let collapsed = (self.id % 2);
+                
+                if collapsed == 0 {
+                    self.state = QubitState::zero();
+                    return 0;
+                } else {
+                    self.state = QubitState::one();
+                    return 1;
+                }
+            }
+        }
+    }
+}

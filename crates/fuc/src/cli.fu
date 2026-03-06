@@ -1,38 +1,26 @@
 use clap::Parser;
 /// CLI arguments for the Fusion compiler.
-#[derive(Parser)]
-#[command(name = "fuc")]
-#[command(about = "Fusion Language Compiler", long_about = None)]
 struct Cli {
     /// Input .fu file.
-    #[arg(help = "Input .fu file")]
     pub input: FString,
     /// Output object file path.
-    #[arg(short, long, default_value = "output.o", help = "Output object file path")]
     pub output: FString,
     /// Optimization level (0-3).
-    #[arg(short = 'O', long, default_value_t = 0, help = "Optimization level (0-3)")]
     pub opt_level: u8,
     /// Target triple override.
-    #[arg(long, help = "Target triple (e.g., x86_64-unknown-linux-gnu)")]
     pub target: Option<FString>,
     /// Emit textual LLVM IR.
-    #[arg(long, help = "Emit textual LLVM IR file")]
     pub emit_llvm: bool,
     /// Parse only (no semantic analysis or codegen).
-    #[arg(long, help = "Parse only (skip sema/codegen)")]
     pub parse_only: bool,
     /// Run semantic analysis only (skip codegen).
-    #[arg(long, help = "Semantic analysis only (skip codegen)")]
     pub sema_only: bool,
     /// Emit a linked executable instead of an object file.
-    #[arg(long, help = "Link output into an executable")]
     pub emit_bin: bool,
     /// Compile as library (suppress entry point checks).
-    #[arg(long, help = "Compile as library (suppress entry point checks)")]
     pub lib: bool,
 }
 /// Parse CLI arguments.
 fn parse() -> Cli {
-    Cli::parse()
+    return Cli::parse();
 }

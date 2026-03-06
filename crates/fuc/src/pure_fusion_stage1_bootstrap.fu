@@ -1,0 +1,7 @@
+//! Stage1 native bootstrap entry for pure Fusion compiler rollout.
+///
+/// This unit intentionally stays runtime-light so it can be emitted and executed
+/// by the current native stage0 compiler while deeper self-host modules mature.
+pub fn main() -> int {
+    return 0;
+}

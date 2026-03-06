@@ -1,0 +1,60 @@
+// src/finance/order.fu
+// Financial Order Primitives
+
+class OrderSide {
+    // 0: Buy
+    // 1: Sell
+    id: int;
+}
+
+impl OrderSide {
+    fn buy() -> OrderSide {
+        return OrderSide { id: 0 };
+    }
+    
+    fn sell() -> OrderSide {
+        return OrderSide { id: 1 };
+    }
+}
+
+class OrderType {
+    // 0: Market
+    // 1: Limit
+    id: int;
+}
+
+impl OrderType {
+    fn market() -> OrderType {
+        return OrderType { id: 0 };
+    }
+    
+    fn limit() -> OrderType {
+        return OrderType { id: 1 };
+    }
+}
+
+class Order {
+    side: OrderSide;
+    price: float; // Using float for initial port
+    quantity: float;
+    order_type: OrderType;
+}
+
+impl Order {
+    fn new(side: OrderSide, price: float, qty: float, type: OrderType) -> Order {
+        return Order {
+            side: side,
+            price: price,
+            quantity: qty,
+            order_type: type
+        };
+    }
+    
+    fn limit_buy(price: float, qty: float) -> Order {
+        return Order::new(OrderSide::buy(), price, qty, OrderType::limit());
+    }
+    
+    fn limit_sell(price: float, qty: float) -> Order {
+        return Order::new(OrderSide::sell(), price, qty, OrderType::limit());
+    }
+}

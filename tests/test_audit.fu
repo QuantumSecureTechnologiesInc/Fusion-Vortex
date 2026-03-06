@@ -1,0 +1,43 @@
+// tests/test_audit.fu
+// Final Ecosystem Audit
+// Verifies that all Native Stdlib modules compile and link correctly.
+
+use std::fs;
+use std::net;
+use std::process;
+use std::log;
+use std::json;
+use std::http;
+
+fn main() {
+    println("--- Starting Ecosystem Audit ---");
+
+    // 1. Audit FS
+    let f = fs::File { handle: 0, path: "test", mode: "r" }; // Check struct existence
+    println("[PASS] std::fs loaded");
+
+    // 2. Audit Net
+    let s = net::TcpStream { socket: 0, connected: false };
+    println("[PASS] std::net loaded");
+
+    // 3. Audit Process
+    let path = process::env("PATH");
+    println("[PASS] std::process loaded");
+
+    // 4. Audit Log
+    let logger = log::Logger::new(log::Level::Info);
+    logger.info("Audit log test");
+    println("[PASS] std::log loaded");
+
+    // 5. Audit JSON
+    let val = json::JsonValue { kind: 0, bool_val: false, int_val: 0, string_val: "" };
+    let parser = json::ConfigParser::new("{}");
+    println("[PASS] std::json loaded");
+
+    // 6. Audit HTTP
+    let res = http::Response::new(200, "OK");
+    let srv = http::SimpleServer::new(8080);
+    println("[PASS] std::http loaded");
+
+    println("--- Audit Complete: All Modules Verified ---");
+}

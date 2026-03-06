@@ -1,6 +1,87 @@
-extern fn printf(fmt: string, val: int) -> int;
 
-fn main() -> int {
-    printf("Fusion repo root placeholder %d\n", 0);
-    return 0;
+use std::env;
+use std::process;
+use fusion_core::compiler;
+
+#[fusion::main]
+fn main() -> i32 {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        print_usage();
+        return 1;
+    }
+
+    let command = &args[1];
+
+    match command.as_str() {
+        "build" => {
+            handle_build(&args[2..])
+        },
+        "run" => {
+            handle_run(&args[2..])
+        },
+        "repl" => {
+            // Future home of ifusion integration
+            println!("Fusion REPL v2.0 (Native)");
+            // TODO: Call verification_repl::run()
+            0
+        },
+        "version" | "--version" => {
+            println!("Fusion v2.0 Vortex (Native Build)");
+            0
+        },
+        _ => {
+            println!("Unknown command: {}", command);
+            print_usage();
+            1
+        }
+    }
+}
+
+fn print_usage() {
+    println!("Fusion v2.0 Vortex Compiler");
+    println!("Usage:");
+    println!("  fusion build [file]    Compile a Fusion source file");
+    println!("  fusion run [file]      Compile and run a Fusion source file");
+    println!("  fusion repl            Start the interactive read-eval-print loop");
+    println!("  fusion version         Show version information");
+}
+
+fn handle_build(args: &[String]) -> i32 {
+    if args.is_empty() {
+        println!("Error: 'build' requires a file path");
+        return 1;
+    }
+    let file_path = &args[0];
+    println!("Compiling {}...", file_path);
+
+    // Call the internal compiler module
+    match compiler::compile_file(file_path) {
+        Ok(_) => {
+            println!("Build successful.");
+            0
+        },
+        Err(e) => {
+            println!("Build failed: {}", e);
+            1
+        }
+    }
+}
+
+fn handle_run(args: &[String]) -> i32 {
+    if args.is_empty() {
+        println!("Error: 'run' requires a file path");
+        return 1;
+    }
+    let file_path = &args[0];
+
+    // collaborative compile + run
+    match compiler::run_file(file_path) {
+        Ok(exit_code) => exit_code,
+        Err(e) => {
+            println!("Execution failed: {}", e);
+            1
+        }
+    }
 }

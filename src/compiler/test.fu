@@ -1,0 +1,448 @@
+// src/compiler/test.fu
+// Unit Tests for the Self-Hosting Fusion Compiler
+
+use super::token::{Token, TokenKind, Span, KeywordTable};
+use super::lexer::{Lexer, lex};
+use super::parser::{Parser, parse};
+use super::ast::{SourceFile, Expr, ExprKind, Stmt, StmtKind};
+use super::types::{TypeContext, ResolvedType, TypeRegistry};
+use super::sema::{SemanticAnalyzer, analyze};
+use super::ir::{IRModule, IRBuilder, Instruction, Opcode};
+use super::codegen::{generate_bytecode, generate_assembly, Target};
+use super::driver::{compile, Compiler, CompileOptions};
+
+// Test results collector
+class TestResults {
+    passed: int;
+    failed: int;
+    failures: Vector<string>;
+}
+
+impl TestResults {
+    fn new() -> TestResults {
+        return TestResults {
+            passed: 0,
+            failed: 0,
+            failures: Vector::<string>::new()
+        };
+    }
+    
+    fn pass(mut self, name: string) {
+        self.passed = self.passed + 1;
+    }
+    
+    fn fail(mut self, name: string, message: string) {
+        self.failed = self.failed + 1;
+        self.failures.push(name + ": " + message);
+    }
+    
+    fn summary(self) -> string {
+        let total = self.passed + self.failed;
+        let mut result = "Tests: " + total.to_string() + " total, ";
+        result = result + self.passed.to_string() + " passed, ";
+        result = result + self.failed.to_string() + " failed\n";
+        
+        if self.failed > 0 {
+            result = result + "\nFailures:\n";
+            let num_failures = self.failures.len();
+            let mut i = 0;
+            while i < num_failures {
+                result = result + "  - " + self.failures.get(i).unwrap() + "\n";
+                i = i + 1;
+            }
+        }
+        
+        return result;
+    }
+}
+
+// Lexer Tests
+fn test_lexer_keywords(mut results: TestResults) {
+    let source = "fn let mut return if else while for class impl";
+    let tokens = lex(source);
+    
+    if tokens.len() >= 10 {
+        let fn_tok = tokens.get(0).unwrap();
+        if fn_tok.kind.kind_id == TokenKind::kw_fn().kind_id {
+            results.pass("lexer_keywords_fn");
+        } else {
+            results.fail("lexer_keywords_fn", "Expected 'fn' keyword");
+        }
+        
+        let let_tok = tokens.get(1).unwrap();
+        if let_tok.kind.kind_id == TokenKind::kw_let().kind_id {
+            results.pass("lexer_keywords_let");
+        } else {
+            results.fail("lexer_keywords_let", "Expected 'let' keyword");
+        }
+    } else {
+        results.fail("lexer_keywords", "Too few tokens");
+    }
+}
+
+fn test_lexer_numbers(mut results: TestResults) {
+    let source = "123 456 789 3.14159";
+    let tokens = lex(source);
+    
+    if tokens.len() >= 4 {
+        let int_tok = tokens.get(0).unwrap();
+        if int_tok.kind.kind_id == TokenKind::int_literal().kind_id && int_tok.int_value == 123 {
+            results.pass("lexer_int_literal");
+        } else {
+            results.fail("lexer_int_literal", "Expected int 123");
+        }
+        
+        let float_tok = tokens.get(3).unwrap();
+        if float_tok.kind.kind_id == TokenKind::float_literal().kind_id {
+            results.pass("lexer_float_literal");
+        } else {
+            results.fail("lexer_float_literal", "Expected float literal");
+        }
+    } else {
+        results.fail("lexer_numbers", "Too few tokens");
+    }
+}
+
+fn test_lexer_strings(mut results: TestResults) {
+    let source = "\"hello world\"";
+    let tokens = lex(source);
+    
+    if tokens.len() >= 1 {
+        let str_tok = tokens.get(0).unwrap();
+        if str_tok.kind.kind_id == TokenKind::string_literal().kind_id {
+            if str_tok.string_value == "hello world" {
+                results.pass("lexer_string_literal");
+            } else {
+                results.fail("lexer_string_literal", "String value mismatch");
+            }
+        } else {
+            results.fail("lexer_string_literal", "Expected string literal");
+        }
+    } else {
+        results.fail("lexer_strings", "No tokens");
+    }
+}
+
+fn test_lexer_operators(mut results: TestResults) {
+    let source = "+ - * / == != < > <= >= && ||";
+    let tokens = lex(source);
+    
+    if tokens.len() >= 12 {
+        if tokens.get(0).unwrap().kind.kind_id == TokenKind::op_plus().kind_id {
+            results.pass("lexer_op_plus");
+        } else {
+            results.fail("lexer_op_plus", "Expected '+'");
+        }
+        
+        if tokens.get(4).unwrap().kind.kind_id == TokenKind::op_eq().kind_id {
+            results.pass("lexer_op_eq");
+        } else {
+            results.fail("lexer_op_eq", "Expected '=='");
+        }
+        
+        if tokens.get(10).unwrap().kind.kind_id == TokenKind::op_and().kind_id {
+            results.pass("lexer_op_and");
+        } else {
+            results.fail("lexer_op_and", "Expected '&&'");
+        }
+    } else {
+        results.fail("lexer_operators", "Too few tokens");
+    }
+}
+
+fn test_lexer_comments(mut results: TestResults) {
+    let source = "fn // this is a comment\nlet";
+    let tokens = lex(source);
+    
+    // Should only get 'fn', 'let', and EOF - comment is skipped
+    if tokens.len() == 3 {
+        results.pass("lexer_line_comment");
+    } else {
+        results.fail("lexer_line_comment", "Expected 3 tokens, comment should be skipped");
+    }
+}
+
+// Parser Tests
+fn test_parser_function(mut results: TestResults) {
+    let source = "fn hello() -> int { return 42; }";
+    let ast = parse(source, "test.fu");
+    
+    if ast.items.len() == 1 {
+        let item = ast.items.get(0).unwrap();
+        if item.function.is_some() {
+            let func = item.function.unwrap();
+            if func.name == "hello" {
+                results.pass("parser_function_name");
+            } else {
+                results.fail("parser_function_name", "Expected function name 'hello'");
+            }
+            
+            if func.return_type.is_some() {
+                results.pass("parser_function_return_type");
+            } else {
+                results.fail("parser_function_return_type", "Expected return type");
+            }
+        } else {
+            results.fail("parser_function", "Expected function item");
+        }
+    } else {
+        results.fail("parser_function", "Expected 1 item");
+    }
+}
+
+fn test_parser_let_statement(mut results: TestResults) {
+    let source = "fn test() { let x: int = 42; }";
+    let ast = parse(source, "test.fu");
+    
+    if ast.items.len() == 1 {
+        let func = ast.items.get(0).unwrap().function.unwrap();
+        if func.body.len() == 1 {
+            let stmt = func.body.get(0).unwrap();
+            if stmt.kind == StmtKind::let_stmt() {
+                if stmt.var_name == "x" {
+                    results.pass("parser_let_statement");
+                } else {
+                    results.fail("parser_let_statement", "Expected variable 'x'");
+                }
+            } else {
+                results.fail("parser_let_statement", "Expected let statement");
+            }
+        } else {
+            results.fail("parser_let_statement", "Expected 1 statement");
+        }
+    } else {
+        results.fail("parser_let_statement", "Expected 1 item");
+    }
+}
+
+fn test_parser_class(mut results: TestResults) {
+    let source = "class Point { x: int; y: int; }";
+    let ast = parse(source, "test.fu");
+    
+    if ast.items.len() == 1 {
+        let item = ast.items.get(0).unwrap();
+        if item.class_def.is_some() {
+            let cls = item.class_def.unwrap();
+            if cls.name == "Point" && cls.fields.len() == 2 {
+                results.pass("parser_class");
+            } else {
+                results.fail("parser_class", "Expected class 'Point' with 2 fields");
+            }
+        } else {
+            results.fail("parser_class", "Expected class definition");
+        }
+    } else {
+        results.fail("parser_class", "Expected 1 item");
+    }
+}
+
+fn test_parser_binary_expression(mut results: TestResults) {
+    let source = "fn test() { let x = 1 + 2 * 3; }";
+    let ast = parse(source, "test.fu");
+    
+    // This tests operator precedence: should be 1 + (2 * 3)
+    if ast.items.len() == 1 {
+        let func = ast.items.get(0).unwrap().function.unwrap();
+        if func.body.len() == 1 {
+            let stmt = func.body.get(0).unwrap();
+            if stmt.initializer.is_some() {
+                let init = stmt.initializer.unwrap();
+                if init.kind == ExprKind::binary() {
+                    results.pass("parser_binary_expression");
+                } else {
+                    results.fail("parser_binary_expression", "Expected binary expression");
+                }
+            } else {
+                results.fail("parser_binary_expression", "Expected initializer");
+            }
+        } else {
+            results.fail("parser_binary_expression", "Expected 1 statement");
+        }
+    } else {
+        results.fail("parser_binary_expression", "Expected 1 item");
+    }
+}
+
+// Type System Tests
+fn test_type_registry(mut results: TestResults) {
+    let registry = TypeRegistry::new();
+    
+    let int_opt = registry.lookup("int");
+    if int_opt.is_some() {
+        let int_type = int_opt.unwrap();
+        if int_type.name == "int" && int_type.is_primitive() {
+            results.pass("type_registry_int");
+        } else {
+            results.fail("type_registry_int", "int type properties incorrect");
+        }
+    } else {
+        results.fail("type_registry_int", "int type not found");
+    }
+    
+    let float_opt = registry.lookup("float");
+    if float_opt.is_some() {
+        results.pass("type_registry_float");
+    } else {
+        results.fail("type_registry_float", "float type not found");
+    }
+}
+
+// IR Tests
+fn test_ir_builder(mut results: TestResults) {
+    let mut builder = IRBuilder::new("test_module");
+    
+    builder.start_function("add");
+    let func = builder.get_current_function();
+    func.add_block("entry");
+    
+    builder.emit_load_int(10);
+    builder.emit_load_int(20);
+    builder.emit_add();
+    builder.emit_return();
+    
+    builder.end_function();
+    
+    let module = builder.finalize();
+    
+    if module.functions.len() == 1 {
+        let func = module.functions.get(0).unwrap();
+        if func.name == "add" {
+            results.pass("ir_builder_function");
+        } else {
+            results.fail("ir_builder_function", "Expected function 'add'");
+        }
+    } else {
+        results.fail("ir_builder", "Expected 1 function");
+    }
+}
+
+// Code Generation Tests
+fn test_codegen_bytecode(mut results: TestResults) {
+    let mut builder = IRBuilder::new("test");
+    builder.start_function("main");
+    builder.get_current_function().add_block("entry");
+    builder.emit_load_int(42);
+    builder.emit_return();
+    builder.end_function();
+    
+    let module = builder.finalize();
+    let bytecode = generate_bytecode(module);
+    
+    if bytecode.instructions.len() > 0 {
+        results.pass("codegen_bytecode");
+    } else {
+        results.fail("codegen_bytecode", "No bytecode generated");
+    }
+}
+
+fn test_codegen_assembly(mut results: TestResults) {
+    let mut builder = IRBuilder::new("test");
+    builder.start_function("main");
+    builder.get_current_function().add_block("entry");
+    builder.emit_load_int(42);
+    builder.emit_return();
+    builder.end_function();
+    
+    let module = builder.finalize();
+    let asm = generate_assembly(module, Target::x86_64());
+    
+    if asm.len() > 0 && asm.contains("main:") {
+        results.pass("codegen_assembly");
+    } else {
+        results.fail("codegen_assembly", "No/invalid assembly generated");
+    }
+}
+
+// End-to-End Compilation Test
+fn test_full_compilation(mut results: TestResults) {
+    let source = "fn main() -> int { let x: int = 42; return x; }";
+    let result = compile(source, "test.fu");
+    
+    if result.success {
+        if result.bytecode.is_some() {
+            let bytecode = result.bytecode.unwrap();
+            if bytecode.instructions.len() > 0 {
+                results.pass("full_compilation");
+            } else {
+                results.fail("full_compilation", "Empty bytecode");
+            }
+        } else {
+            results.fail("full_compilation", "No bytecode output");
+        }
+    } else {
+        results.fail("full_compilation", "Compilation failed");
+    }
+}
+
+fn test_compile_hello_world(mut results: TestResults) {
+    let source = "
+fn main() {
+    let message: string = \"Hello, Fusion!\";
+    print(message);
+}
+";
+    let result = compile(source, "hello.fu");
+    
+    if result.success {
+        results.pass("compile_hello_world");
+    } else {
+        results.fail("compile_hello_world", "Compilation failed");
+    }
+}
+
+fn test_compile_fibonacci(mut results: TestResults) {
+    let source = "
+fn fib(n: int) -> int {
+    if n <= 1 {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+fn main() -> int {
+    return fib(10);
+}
+";
+    let result = compile(source, "fib.fu");
+    
+    if result.success {
+        results.pass("compile_fibonacci");
+    } else {
+        results.fail("compile_fibonacci", "Compilation failed");
+    }
+}
+
+// Main test runner
+pub fn run_all_tests() -> TestResults {
+    let mut results = TestResults::new();
+    
+    // Lexer tests
+    test_lexer_keywords(results);
+    test_lexer_numbers(results);
+    test_lexer_strings(results);
+    test_lexer_operators(results);
+    test_lexer_comments(results);
+    
+    // Parser tests
+    test_parser_function(results);
+    test_parser_let_statement(results);
+    test_parser_class(results);
+    test_parser_binary_expression(results);
+    
+    // Type system tests
+    test_type_registry(results);
+    
+    // IR tests
+    test_ir_builder(results);
+    
+    // Code generation tests
+    test_codegen_bytecode(results);
+    test_codegen_assembly(results);
+    
+    // End-to-end tests
+    test_full_compilation(results);
+    test_compile_hello_world(results);
+    test_compile_fibonacci(results);
+    
+    return results;
+}

@@ -1,0 +1,22 @@
+// stdlib/process.fu
+// Process Management
+
+fn exit(code: int) -> void {
+    // Intrinsic: exit(code: int) -> void
+    __intrinsic_exit(code);
+}
+
+fn env(key: string) -> string {
+    // Intrinsic: getenv(key: string) -> string
+    return getenv(key);
+}
+
+fn args() -> Vector<string> {
+    // Intrinsic: get_args() -> Vector<string>
+    return get_args();
+}
+
+fn sleep(ms: int) {
+    // Intrinsic: sleep_ms(ms: int) -> void
+    sleep_ms(ms);
+}

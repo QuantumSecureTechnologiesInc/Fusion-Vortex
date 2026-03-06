@@ -1,0 +1,109 @@
+// src/net/tcp.fu
+// TCP Networking Primitives
+
+use stdlib::hashmap::HashMap;
+
+class TcpStream {
+    addr: string;
+    send_buffer: Vector<byte>;
+    recv_buffer: Vector<byte>;
+    is_connected: bool;
+}
+
+impl TcpStream {
+    fn connect(addr: string) -> Result<TcpStream, string> {
+        // Validate address format (basic check)
+        if addr.len() == 0 {
+            return Result::Err("Invalid address");
+        }
+        
+        return Result::Ok(TcpStream { 
+            addr: addr,
+            send_buffer: Vector::<byte>::new(),
+            recv_buffer: Vector::<byte>::new(),
+            is_connected: true
+        });
+    }
+
+    fn write(mut self, data: Vector<byte>) -> Result<int, string> {
+        if !self.is_connected {
+            return Result::Err("Connection closed");
+        }
+        
+        // Append data to send buffer
+        let len = data.len();
+        let mut i = 0;
+        while i < len {
+            self.send_buffer.push(data.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        return Result::Ok(len);
+    }
+
+    fn read(mut self, buf_len: int) -> Result<Vector<byte>, string> {
+        if !self.is_connected {
+            return Result::Err("Connection closed");
+        }
+        
+        // Return available data from receive buffer
+        let available = self.recv_buffer.len();
+        let to_read = if available < buf_len { available } else { buf_len };
+        
+        let mut result = Vector::<byte>::new();
+        let mut i = 0;
+        while i < to_read {
+            result.push(self.recv_buffer.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        return Result::Ok(result);
+    }
+    
+    fn close(mut self) {
+        self.is_connected = false;
+        self.send_buffer.clear();
+        self.recv_buffer.clear();
+    }
+}
+
+class TcpListener {
+    addr: string;
+    pending_connections: Vector<string>;
+    is_listening: bool;
+}
+
+impl TcpListener {
+    fn bind(addr: string) -> Result<TcpListener, string> {
+        if addr.len() == 0 {
+            return Result::Err("Invalid bind address");
+        }
+        
+        return Result::Ok(TcpListener { 
+            addr: addr,
+            pending_connections: Vector::<string>::new(),
+            is_listening: true
+        });
+    }
+
+    fn accept(mut self) -> Result<TcpStream, string> {
+        if !self.is_listening {
+            return Result::Err("Listener closed");
+        }
+        
+        // Simulate accepting a connection
+        let peer_addr = "127.0.0.1:50000";
+        
+        return Result::Ok(TcpStream {
+            addr: peer_addr,
+            send_buffer: Vector::<byte>::new(),
+            recv_buffer: Vector::<byte>::new(),
+            is_connected: true
+        });
+    }
+    
+    fn close(mut self) {
+        self.is_listening = false;
+        self.pending_connections.clear();
+    }
+}

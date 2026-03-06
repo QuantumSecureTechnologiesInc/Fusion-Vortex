@@ -1,0 +1,6 @@
+// src/net/mod.fu
+// Fusion Networking Module
+
+pub mod tcp;
+
+pub use tcp::{TcpStream, TcpListener};

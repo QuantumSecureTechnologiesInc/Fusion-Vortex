@@ -1,0 +1,87 @@
+use crate::security::verify_current_context;
+/// Fusion-secured integer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct FInt(FInt);
+impl FInt {
+    pub fn new(val: FInt) -> Self {
+        if !verify_current_context() {
+            panic!("Creation denied: FInt");
+        }
+        Self(val)
+    }
+    pub(crate) fn new_unchecked(val: FInt) -> Self {
+        Self(val)
+    }
+    pub fn val(&self) -> FInt {
+        if !verify_current_context() {
+            panic!("Read denied: FInt");
+        }
+        self.0
+    }
+    pub(crate) fn val_unchecked(&self) -> FInt {
+        self.0
+    }
+    pub fn checked_add(self, other: Self) -> Option<Self> {
+        if !verify_current_context() {
+            panic!("Compute denied: FInt");
+        }
+        self.0.checked_add(other.0).map(Self)
+    }
+}
+/// Fusion-secured 32-bit float.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct F32(f32);
+impl F32 {
+    pub fn new(val: f32) -> Self {
+        if !verify_current_context() {
+            panic!("Creation denied: F32");
+        }
+        Self(val)
+    }
+    pub fn val(&self) -> f32 {
+        if !verify_current_context() {
+            panic!("Read denied: F32");
+        }
+        self.0
+    }
+}
+/// Fusion-secured boolean.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FBool(FBool);
+impl FBool {
+    pub fn new(val: FBool) -> Self {
+        if !verify_current_context() {
+            panic!("Creation denied: FBool");
+        }
+        Self(val)
+    }
+    pub(crate) fn new_unchecked(val: FBool) -> Self {
+        Self(val)
+    }
+    pub fn val(&self) -> FBool {
+        if !verify_current_context() {
+            panic!("Read denied: FBool");
+        }
+        self.0
+    }
+    pub(crate) fn val_unchecked(&self) -> FBool {
+        self.0
+    }
+}
+/// Fusion-secured String.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FString(FString);
+impl FString {
+    pub fn from(s: &str) -> Self {
+        if !verify_current_context() {
+            panic!("Creation denied: FString");
+        }
+        Self(s.to_string())
+    }
+    pub fn as_str(&self) -> &str {
+        if !verify_current_context() {
+            panic!("Read denied: FString");
+        }
+        &self.0
+    }
+}

@@ -1,0 +1,15 @@
+
+// Native implementation of the Fusion Compiler
+// Currently a stub used for bootstrap verification.
+
+pub fn compile_file(path: string) -> Result<i32, string> {
+    println("Native Compiler: Compiling " + path);
+    // TODO: Port lexer/parser/codegen from crates/fusion_core
+    println("Warning: Native backend logic not yet fully ported.");
+    Ok(0)
+}
+
+pub fn run_file(path: string) -> Result<i32, string> {
+    println("Native Compiler: Running " + path);
+    compile_file(path)
+}

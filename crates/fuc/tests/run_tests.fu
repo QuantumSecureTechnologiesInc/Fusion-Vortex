@@ -1,0 +1,183 @@
+//! Native test runner for Fusion compiler verification
+//! Executes strictly without Rust/Cargo dependencies.
+
+use std::fs;
+use std::path::{self, PathBuf};
+use std::process::Command;
+use std::env;
+
+const TEST_DIR: &str = "crates/fuc/tests";
+const FIXTURES_DIR: &str = "crates/fuc/tests/fixtures";
+const BUILD_DIR: &str = "target/tests";
+
+struct TestResult {
+    name: FString,
+    passed: FBool,
+    message: FString,
+    duration_ms: FInt
+}
+
+fn compile_and_run(source_path: &str, output_name: &str) -> TestResult {
+    let start_time = time::now_ms();
+    
+    // 1. Compile the test file strictly using 'fuc'
+    let exe_path = path::join(BUILD_DIR, output_name);
+    let obj_path = format!("{}.o", exe_path);
+    
+    println!("[RUNNER] Compiling {}...", source_path);
+    
+    // Compiler invocation: fuc <src> -o <obj>
+    let compile_status = Command::new("bin/fuc")  // Using the NATIVE binary
+        .arg(source_path)
+        .arg("-o")
+        .arg(&obj_path)
+        .status()
+        .expect("Failed to invoke native compiler 'bin/fuc'");
+
+    if !compile_status.success() {
+        return TestResult {
+            name: source_path.to_string(),
+            passed: false,
+            message: "Compilation failed".to_string(),
+            duration_ms: time::now_ms() - start_time
+        };
+    }
+
+    // 2. Link the object file using system linker (cc)
+    // Linking against native runtime (libfusionrt.a)
+    // No Rust dependencies here.
+    let link_status = Command::new("cc")
+        .arg(&obj_path)
+        .arg("-o")
+        .arg(&exe_path)
+        .arg("-L")
+        .arg("bin")    // Look for libs in bin/
+        .arg("-lfusionrt") // Link native runtime
+        .arg("-no-pie") // Often needed for static linking
+        .status()
+        .expect("Failed to invoke linker 'cc'");
+
+    if !link_status.success() {
+         return TestResult {
+            name: source_path.to_string(),
+            passed: false,
+            message: "Linking failed".to_string(),
+            duration_ms: time::now_ms() - start_time
+        };
+    }
+
+    // 3. Execute the test binary
+    println!("[RUNNER] Executing {}...", exe_path);
+    let run_output = Command::new(&exe_path)
+        .output()
+        .expect("Failed to execute test binary");
+
+    let duration = time::now_ms() - start_time;
+    let passed = run_output.status.success();
+    let message = if passed {
+        "OK".to_string()
+    } else {
+        String::from_utf8_lossy(&run_output.stderr).to_string()
+    };
+    
+    // Check against expected output if .out file exists
+    if passed {
+         let out_path = path::change_extension(source_path, "out");
+         if fs::exists(&out_path) {
+             let expected = fs::read_to_string(&out_path).trim();
+             let actual = String::from_utf8_lossy(&run_output.stdout).trim();
+             if expected != actual {
+                 return TestResult {
+                     name: source_path.to_string(),
+                     passed: false,
+                     message: format!("Output mismatch.\nExpected:\n{}\nActual:\n{}", expected, actual),
+                     duration_ms: duration
+                 };
+             }
+         }
+    }
+
+    TestResult {
+        name: source_path.to_string(),
+        passed,
+        message,
+        duration_ms: duration
+    }
+}
+
+fn main() {
+    println!(">>> Fusion Native Test Runner <<<");
+    println!(">>> Strictly No Rust Dependencies");
+    
+    // Ensure build directory exists
+    if !fs::exists(BUILD_DIR) {
+        fs::create_dir(BUILD_DIR);
+    }
+    
+    let mut total = 0;
+    let mut passed = 0;
+    let mut failed = 0;
+    
+    // 1. Run main test definitions
+    let test_files = [
+        "crates/fuc/tests/test_lexer.fu",
+        "crates/fuc/tests/test_parser.fu",
+        "crates/fuc/tests/test_sema.fu",
+        "crates/fuc/tests/test_ir.fu",
+        "crates/fuc/tests/test_codegen.fu",
+        "crates/fuc/tests/test_runtime.fu"
+    ];
+
+    for test_file in test_files {
+        total += 1;
+        let name = path::basename(test_file);
+        // Remove extension for binary name
+        let output_name = name.replace(".fu", "");
+        
+        let result = compile_and_run(test_file, &output_name);
+        
+        if result.passed {
+            passed += 1;
+            println!("✅ {} [{}ms]", result.name, result.duration_ms);
+        } else {
+            failed += 1;
+            println!("❌ {} [{}ms] - {}", result.name, result.duration_ms, result.message);
+        }
+    }
+    
+    // 2. Run fixtures
+    let fixtures = [
+        "crates/fuc/tests/fixtures/control_flow.fu",
+        "crates/fuc/tests/fixtures/generics.fu",
+        "crates/fuc/tests/fixtures/memory.fu",
+        "crates/fuc/tests/fixtures/closures.fu",
+        "crates/fuc/tests/fixtures/concurrency.fu",
+        "crates/fuc/tests/fixtures/modules.fu"
+    ];
+    
+    for fixture in fixtures {
+         total += 1;
+         let name = path::basename(fixture);
+         let output_name = format!("fixture_{}", name.replace(".fu", ""));
+         
+         let result = compile_and_run(fixture, &output_name);
+         
+         if result.passed {
+            passed += 1;
+            println!("✅ {} [{}ms]", result.name, result.duration_ms);
+        } else {
+            failed += 1;
+            println!("❌ {} [{}ms] - {}", result.name, result.duration_ms, result.message);
+        }
+    }
+
+    println!("--------------------------------------------------");
+    println!("Test Summary:");
+    println!("Total:  {}", total);
+    println!("Passed: {}", passed);
+    println!("Failed: {}", failed);
+    
+    if failed > 0 {
+        std::process::exit(1);
+    }
+}

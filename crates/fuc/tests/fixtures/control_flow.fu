@@ -1,0 +1,79 @@
+//! Test control flow edge cases
+
+fn test_nested_if() {
+    let a = 5;
+    let b = 10;
+    let c = 15;
+    
+    if a < b {
+        if b < c {
+            println!("a < b < c");
+        } else {
+            println!("a < b, b >= c");
+        }
+    } else {
+        if a < c {
+            println!("b <= a < c");
+        } else {
+            println!("b <= a, a >= c");
+        }
+    }
+}
+
+fn test_nested_loops() {
+    let mut result = 0;
+    for i in 0..3 {
+        for j in 0..3 {
+            result = result + i * j;
+        }
+    }
+    println!("Nested loop result: {}", result);
+}
+
+fn test_break_continue() {
+    let mut sum = 0;
+    for i in 0..100 {
+        if i % 2 == 0 {
+            continue;
+        }
+        if i > 10 {
+            break;
+        }
+        sum = sum + i;
+    }
+    println!("Break/continue sum: {}", sum);
+}
+
+fn test_early_return() -> FInt {
+    for i in 0..100 {
+        if i == 42 {
+            return i;
+        }
+    }
+    return -1;
+}
+
+fn test_match_exhaustive(val: FInt) -> FString {
+    match val {
+        0 => "zero",
+        1 => "one",
+        2 => "two",
+        _ => "other"
+    }
+}
+
+fn main() {
+    println!("=== Control Flow Tests ===");
+    test_nested_if();
+    test_nested_loops();
+    test_break_continue();
+    
+    let early = test_early_return();
+    println!("Early return: {}", early);
+    
+    println!("Match 0: {}", test_match_exhaustive(0));
+    println!("Match 1: {}", test_match_exhaustive(1));
+    println!("Match 5: {}", test_match_exhaustive(5));
+    
+    println!("All control flow tests passed!");
+}

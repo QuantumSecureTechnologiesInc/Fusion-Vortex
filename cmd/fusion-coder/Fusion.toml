@@ -46,7 +46,10 @@ fusion-task-groups = { path = "../../crates/fusion-task-groups" }
 fusion-review-policy = { path = "../../crates/fusion-review-policy" }
 fusion-browser-agent = { path = "../../crates/fusion-browser-agent" }
 fusion-settings = { path = "../../crates/fusion-settings" }
+fusion-toolchain = { path = "../../crates/toolchain" }
 fusion_std = "1.0.0"
+colored = "2.0"
+which = "6.0"
 
 [dev-dependencies]
 tempfile = "3.8"

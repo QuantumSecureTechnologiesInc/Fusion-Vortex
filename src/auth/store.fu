@@ -1,0 +1,88 @@
+// src/auth/store.fu
+// Persistence layer for Users and Sessions
+
+use stdlib::hashmap::HashMap;
+use super::domain::{User, Session};
+
+// Interface for User persistence
+trait UserStore {
+    fn create_user(mut self, username: string, hash: string, mfa: Option<string>) -> Result<(), string>;
+    fn get_user(self, username: string) -> Option<User>;
+    fn update_roles(mut self, username: string, roles: Vector<string>);
+}
+
+// Interface for Session persistence
+trait SessionStore {
+    fn create_or_replace(mut self, session: Session);
+    fn get(self, session_id: string) -> Option<Session>;
+    fn revoke(mut self, session_id: string);
+}
+
+// In-Memory implementation for Users
+class InMemoryUserStore {
+    // Note: In real Fusion, we would likely use a shared reference (RefCell/Arc equivalent)
+    // for the map to persist across calls. For this port, we model the structure.
+    users: HashMap<string, User>;
+}
+
+impl InMemoryUserStore {
+    fn new() -> InMemoryUserStore {
+        return InMemoryUserStore {
+            users: HashMap::<string, User>::new()
+        };
+    }
+}
+
+impl UserStore for InMemoryUserStore {
+    fn create_user(mut self, username: string, hash: string, mfa: Option<string>) -> Result<(), string> {
+        if self.users.contains_key(username) {
+            return Result::Err("User already exists");
+        }
+        
+        let mut user = User::new(username, hash);
+        user.mfa_secret = mfa;
+        
+        self.users.insert(username, user);
+        return Result::Ok(());
+    }
+
+    fn get_user(self, username: string) -> Option<User> {
+        // Cloning logic would go here if needed, or returning reference
+        return self.users.get(username);
+    }
+
+    fn update_roles(mut self, username: string, roles: Vector<string>) {
+        if self.users.contains_key(username) {
+             let mut user = self.users.get(username).unwrap();
+             user.roles = roles;
+             self.users.insert(username, user);
+        }
+    }
+}
+
+// In-Memory implementation for Sessions
+class InMemorySessionStore {
+    sessions: HashMap<string, Session>;
+}
+
+impl InMemorySessionStore {
+    fn new() -> InMemorySessionStore {
+        return InMemorySessionStore {
+            sessions: HashMap::<string, Session>::new()
+        };
+    }
+}
+
+impl SessionStore for InMemorySessionStore {
+    fn create_or_replace(mut self, session: Session) {
+        self.sessions.insert(session.session_id, session);
+    }
+
+    fn get(self, session_id: string) -> Option<Session> {
+        return self.sessions.get(session_id);
+    }
+
+    fn revoke(mut self, session_id: string) {
+        self.sessions.remove(session_id);
+    }
+}

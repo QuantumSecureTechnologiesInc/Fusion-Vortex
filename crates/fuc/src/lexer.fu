@@ -1,123 +1,71 @@
 //! Lexer for the Fusion compiler.
-#![allow(missing_docs)]
-use logos::{Logos, Span};
+use std::ops::Range;
 /// Token definitions for the language.
-#[derive(Logos, Clone, Debug, PartialEq, Hash, Eq)]
-#[logos(skip r"[ \t\n\f]+")]
-#[logos(skip r"//[^\n]*")]
 enum Token {
-    #[token("fn")]
     KwFn,
-    #[token("let")]
     KwLet,
-    #[token("return")]
     KwReturn,
-    #[token("if")]
     KwIf,
-    #[token("else")]
     KwElse,
-    #[token("while")]
     KwWhile,
-    #[token("impl")]
+    KwFor,
+    KwIn,
+    KwMatch,
     KwImpl,
-    #[token("trait")]
     KwTrait,
-    #[token("where")]
     KwWhere,
-    #[token("const")]
     KwConst,
-    #[token("use")]
+    KwStatic,
     KwUse,
-    #[token("mod")]
     KwMod,
-    #[token("pub")]
     KwPub,
-    #[token("async")]
     KwAsync,
-    #[token("await")]
     KwAwait,
-    #[token("struct")]
     KwStruct,
-    #[token("extern")]
+    KwEnum,
+    KwType,
     KwExtern,
-    #[regex("[a-zA-Z_][a-zA-Z0-9_]*", |lex|lex.slice().to_string())]
     Identifier(FString),
-    #[regex("[0-9]+", |lex|lex.slice().parse::<i64>().unwrap())]
     IntLiteral(FI64),
-    #[regex("r#\"[^\"]*\"#", |lex|unescape_string(&lex.slice()[3..lex.slice().len()-2]))]
-    #[regex(r#""[^"]*""#, |lex|unescape_string(&lex.slice()[1..lex.slice().len()-1]))]
     StringLiteral(FString),
-    #[token(":")]
     Colon,
-    #[token("::")]
     ColonColon,
-    #[token(";")]
     Semicolon,
-    #[token("=")]
     Assign,
-    #[token("==")]
     Equals,
-    #[token("!=")]
     NotEquals,
-    #[token("!")]
     Bang,
-    #[token("||")]
     Or,
-    #[token("&&")]
     And,
-    #[token("->")]
     Arrow,
-    #[token("<")]
     Less,
-    #[token(">")]
     Greater,
-    #[token("+")]
     Plus,
-    #[token("-")]
     Minus,
-    #[token("*")]
     Star,
-    #[token("/")]
     Slash,
-    #[token("&")]
     Ampersand,
-    #[token("(")]
     LParen,
-    #[token(")")]
     RParen,
-    #[token("{")]
     LBrace,
-    #[token("}")]
     RBrace,
-    #[token("[")]
     LBracket,
-    #[token("]")]
     RBracket,
-    #[token(",")]
     Comma,
-    #[token("...")]
     Ellipsis,
-    #[token(".")]
     Dot,
-    #[token("#")]
     Hash,
-    #[token("int")]
     TypeInt,
-    #[token("bool")]
     TypeBool,
-    #[token("string")]
     TypeString,
-    #[token("void")]
     TypeVoid,
-    #[token("true")]
     True,
-    #[token("false")]
     False,
     Error,
 }
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        return write!(f, "{:?}", self);
     }
 }
 fn unescape_string(input: &str) -> FString {
@@ -141,37 +89,342 @@ fn unescape_string(input: &str) -> FString {
             out.push(ch);
         }
     }
-    out
+    return out;
 }
 /// Token paired with a span.
+type Span = Range<FSize>;
 type SpannedToken = (Token, Span);
-fn strip_block_comments(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    let mut chars = input.chars().peekable();
-    while let Some(ch) = chars.next() {
-        if ch == '/' {
-            if let Some('*') = chars.peek() {
-                chars.next();
-                while let Some(c) = chars.next() {
-                    if c == '*' {
-                        if let Some('/') = chars.peek() {
-                            chars.next();
-                            break;
-                        }
-                    }
-                }
-                continue;
-            }
-        }
-        out.push(ch);
+fn is_ident_start(ch: u8) -> FBool {
+    return (ch >= b'a' && ch <= b'z') || (ch >= b'A' && ch <= b'Z') || ch == b'_';
+}
+fn is_ident_continue(ch: u8) -> FBool {
+    return is_ident_start(ch) || (ch >= b'0' && ch <= b'9');
+}
+fn keyword_or_ident(text: &str) -> Token {
+    if text == "fn" {
+        return Token::KwFn;
     }
-    out
+    if text == "let" {
+        return Token::KwLet;
+    }
+    if text == "return" {
+        return Token::KwReturn;
+    }
+    if text == "if" {
+        return Token::KwIf;
+    }
+    if text == "else" {
+        return Token::KwElse;
+    }
+    if text == "while" {
+        return Token::KwWhile;
+    }
+    if text == "for" {
+        return Token::KwFor;
+    }
+    if text == "in" {
+        return Token::KwIn;
+    }
+    if text == "match" {
+        return Token::KwMatch;
+    }
+    if text == "impl" {
+        return Token::KwImpl;
+    }
+    if text == "trait" {
+        return Token::KwTrait;
+    }
+    if text == "where" {
+        return Token::KwWhere;
+    }
+    if text == "const" {
+        return Token::KwConst;
+    }
+    if text == "static" {
+        return Token::KwStatic;
+    }
+    if text == "use" {
+        return Token::KwUse;
+    }
+    if text == "mod" {
+        return Token::KwMod;
+    }
+    if text == "pub" {
+        return Token::KwPub;
+    }
+    if text == "async" {
+        return Token::KwAsync;
+    }
+    if text == "await" {
+        return Token::KwAwait;
+    }
+    if text == "struct" {
+        return Token::KwStruct;
+    }
+    if text == "enum" {
+        return Token::KwEnum;
+    }
+    if text == "type" {
+        return Token::KwType;
+    }
+    if text == "extern" {
+        return Token::KwExtern;
+    }
+    if text == "int" {
+        return Token::TypeInt;
+    }
+    if text == "bool" {
+        return Token::TypeBool;
+    }
+    if text == "string" {
+        return Token::TypeString;
+    }
+    if text == "void" {
+        return Token::TypeVoid;
+    }
+    if text == "true" {
+        return Token::True;
+    }
+    if text == "false" {
+        return Token::False;
+    }
+    return Token::Identifier(text.to_string());
 }
 /// Lexes the given input into tokens with spans.
 fn lex(input: &str) -> FVec<SpannedToken> {
-    let cleaned = strip_block_comments(input);
-    Token::lexer(&cleaned)
-        .spanned()
-        .map(|(token, span)| (token.unwrap_or(Token::Error), span))
-        .collect()
+    let bytes = input.as_bytes();
+    let mut tokens: FVec<SpannedToken> = Vec::new();
+    let mut i = 0usize;
+    let len = bytes.len();
+    if len >= 2 && bytes[0] == b'#' && bytes[1] == b'!' {
+        while i < len && bytes[i] != b'\n' {
+            i = i + 1;
+        }
+    }
+    while i < len {
+        let ch = bytes[i];
+        if ch == b' ' || ch == b'\t' || ch == b'\r' || ch == b'\n' || ch == 0x0c {
+            i = i + 1;
+            continue;
+        }
+        if ch == b'/' && i + 1 < len && bytes[i + 1] == b'/' {
+            i = i + 2;
+            while i < len && bytes[i] != b'\n' {
+                i = i + 1;
+            }
+            continue;
+        }
+        if ch == b'/' && i + 1 < len && bytes[i + 1] == b'*' {
+            i = i + 2;
+            while i + 1 < len {
+                if bytes[i] == b'*' && bytes[i + 1] == b'/' {
+                    i = i + 2;
+                    break;
+                }
+                i = i + 1;
+            }
+            continue;
+        }
+        let start = i;
+        if is_ident_start(ch) {
+            i = i + 1;
+            while i < len && is_ident_continue(bytes[i]) {
+                i = i + 1;
+            }
+            let text = &input[start..i];
+            tokens.push((keyword_or_ident(text), start..i));
+            continue;
+        }
+        if ch >= b'0' && ch <= b'9' {
+            i = i + 1;
+            while i < len && bytes[i] >= b'0' && bytes[i] <= b'9' {
+                i = i + 1;
+            }
+            let text = &input[start..i];
+            let parsed = text.parse::<i64>();
+            if parsed.is_ok() {
+                tokens.push((Token::IntLiteral(parsed.unwrap()), start..i));
+            } else {
+                tokens.push((Token::Error, start..i));
+            }
+            continue;
+        }
+        if ch == b'"' {
+            i = i + 1;
+            while i < len {
+                if bytes[i] == b'\\' {
+                    if i + 1 < len {
+                        i = i + 2;
+                    } else {
+                        i = i + 1;
+                    }
+                    continue;
+                }
+                if bytes[i] == b'"' {
+                    i = i + 1;
+                    break;
+                }
+                i = i + 1;
+            }
+            if i >= start + 2 {
+                let literal = &input[start + 1..i - 1];
+                tokens.push((Token::StringLiteral(unescape_string(literal)), start..i));
+            } else {
+                tokens.push((Token::Error, start..i));
+            }
+            continue;
+        }
+        if ch == b'r' && i + 2 < len && bytes[i + 1] == b'#' && bytes[i + 2] == b'"' {
+            i = i + 3;
+            while i + 1 < len {
+                if bytes[i] == b'"' && bytes[i + 1] == b'#' {
+                    let end = i + 2;
+                    let literal = &input[start + 3..i];
+                    tokens.push((Token::StringLiteral(unescape_string(literal)), start..end));
+                    i = end;
+                    break;
+                }
+                i = i + 1;
+            }
+            continue;
+        }
+        if i + 2 < len && bytes[i] == b'.' && bytes[i + 1] == b'.' && bytes[i + 2] == b'.' {
+            tokens.push((Token::Ellipsis, i..i + 3));
+            i = i + 3;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b':' && bytes[i + 1] == b':' {
+            tokens.push((Token::ColonColon, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'-' && bytes[i + 1] == b'>' {
+            tokens.push((Token::Arrow, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'=' && bytes[i + 1] == b'=' {
+            tokens.push((Token::Equals, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'!' && bytes[i + 1] == b'=' {
+            tokens.push((Token::NotEquals, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'|' && bytes[i + 1] == b'|' {
+            tokens.push((Token::Or, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'&' && bytes[i + 1] == b'&' {
+            tokens.push((Token::And, i..i + 2));
+            i = i + 2;
+            continue;
+        }
+        if ch == b':' {
+            tokens.push((Token::Colon, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b';' {
+            tokens.push((Token::Semicolon, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'=' {
+            tokens.push((Token::Assign, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'!' {
+            tokens.push((Token::Bang, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'<' {
+            tokens.push((Token::Less, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'>' {
+            tokens.push((Token::Greater, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'+' {
+            tokens.push((Token::Plus, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'-' {
+            tokens.push((Token::Minus, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'*' {
+            tokens.push((Token::Star, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'/' {
+            tokens.push((Token::Slash, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'&' {
+            tokens.push((Token::Ampersand, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'(' {
+            tokens.push((Token::LParen, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b')' {
+            tokens.push((Token::RParen, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'{' {
+            tokens.push((Token::LBrace, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'}' {
+            tokens.push((Token::RBrace, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'[' {
+            tokens.push((Token::LBracket, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b']' {
+            tokens.push((Token::RBracket, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b',' {
+            tokens.push((Token::Comma, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'.' {
+            tokens.push((Token::Dot, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'#' {
+            tokens.push((Token::Hash, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        tokens.push((Token::Error, i..i + 1));
+        i = i + 1;
+    }
+    return tokens;
 }

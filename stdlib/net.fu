@@ -1,0 +1,48 @@
+// stdlib/net.fu
+// Network Interface
+
+class TcpStream {
+    socket: int;
+    connected: bool;
+
+    fn connect(addr: string) -> TcpStream {
+        // Intrinsic: socket_connect(addr: string) -> int
+        let s = socket_connect(addr);
+        return TcpStream { socket: s, connected: s > 0 };
+    }
+
+    fn write(mut self, data: string) -> int {
+        if (!self.connected) { return 0; }
+        // Intrinsic: socket_send(socket: int, data: string) -> int
+        return socket_send(self.socket, data);
+    }
+
+    fn read(mut self, size: int) -> string {
+        if (!self.connected) { return ""; }
+        // Intrinsic: socket_recv(socket: int, size: int) -> string
+        return socket_recv(self.socket, size);
+    }
+
+    fn close(mut self) {
+        if (self.connected) {
+            // Intrinsic: socket_close(socket: int) -> void
+            socket_close(self.socket);
+            self.connected = false;
+        }
+    }
+}
+
+class UdpSocket {
+    socket: int;
+
+    fn bind(addr: string) -> UdpSocket {
+        // Intrinsic: socket_bind_udp(addr: string) -> int
+        let s = socket_bind_udp(addr);
+        return UdpSocket { socket: s };
+    }
+
+    fn send_to(mut self, data: string, addr: string) -> int {
+        // Intrinsic: socket_sendto(socket: int, data: string, addr: string) -> int
+        return socket_sendto(self.socket, data, addr);
+    }
+}

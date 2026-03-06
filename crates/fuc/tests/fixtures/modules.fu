@@ -1,0 +1,62 @@
+//! Test module system and visibility
+
+mod inner {
+    pub const PUBLIC_CONST: FInt = 42;
+    const PRIVATE_CONST: FInt = 10;
+    
+    pub fn public_fn() -> FInt {
+        PRIVATE_CONST  // Can access private items in same module
+    }
+    
+    fn private_fn() -> FInt {
+        PUBLIC_CONST
+    }
+    
+    pub struct PublicStruct {
+        pub public_field: FInt,
+        private_field: FInt
+    }
+    
+    impl PublicStruct {
+        pub fn new(val: FInt) -> Self {
+            PublicStruct {
+                public_field: val,
+                private_field: val * 2
+            }
+        }
+        
+        pub fn get_private(&self) -> FInt {
+            self.private_field
+        }
+    }
+}
+
+pub mod nested {
+    pub mod deep {
+        pub fn deep_fn() -> FString {
+            "deep".to_string()
+        }
+    }
+}
+
+use inner::{PublicStruct, public_fn};
+
+fn main() {
+    println!("=== Module Tests ===");
+    
+    // Test public constant
+    println!("inner::PUBLIC_CONST = {}", inner::PUBLIC_CONST);
+    
+    // Test public function
+    println!("public_fn() = {}", public_fn());
+    
+    // Test public struct
+    let s = PublicStruct::new(10);
+    println!("s.public_field = {}", s.public_field);
+    println!("s.get_private() = {}", s.get_private());
+    
+    // Test nested modules
+    println!("nested::deep::deep_fn() = {}", nested::deep::deep_fn());
+    
+    println!("All module tests passed!");
+}

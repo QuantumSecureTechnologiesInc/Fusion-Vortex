@@ -1,0 +1,6 @@
+// src/runtime/mod.fu
+// Fusion Core Runtime Interfaces
+
+pub mod hal;
+
+pub use hal::HardwareInterface;

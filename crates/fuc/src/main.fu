@@ -4,68 +4,96 @@ use fuc::{cli, codegen, ir, optimizer, parser, sema};
 use fuc::codegen::Backend;
 use fuc::codegen::llvm::CodegenConfig;
 use inkwell::context::Context;
+
 fn print_status(verb: &str, details: &str) {
     println!("{:>12} {}", verb.green().bold(), details);
 }
+
 fn main() {
     let args = cli::parse();
     let src_path_str = args.input.clone();
     let overall_start = std::time::Instant::now();
+
     if args.parse_only && args.sema_only {
-        eprintln!("{}: {}", "error".red().bold(), "Cannot use --parse-only and --sema-only together.");
+        eprintln!(
+            "{}: {}",
+            "error".red().bold(),
+            "Cannot use --parse-only and --sema-only together."
+        );
         std::process::exit(1);
     }
-    let src = match fs::read_to_string(&src_path_str) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("{}: Error reading file '{}': {}", "error".red().bold(), src_path_str, e);
-            std::process::exit(1);
-        }
-    };
+
+    let read_result = fs::read_to_string(&src_path_str);
+    if read_result.is_err() {
+        eprintln!(
+            "{}: Error reading file '{}': {}",
+            "error".red().bold(),
+            src_path_str,
+            read_result.err().unwrap()
+        );
+        std::process::exit(1);
+    }
+    let src = read_result.unwrap();
+
     print_status("Parsing", &src_path_str);
-    let (ast_opt, parse_errs) = parser::parse(&src);
-    for err in parse_errs {
+    let parse_result = parser::parse_output(&src);
+
+    let parse_error_count = parse_result.errors.len();
+    let mut parse_idx = 0;
+    while parse_idx < parse_error_count {
+        let err = &parse_result.errors[parse_idx];
         Report::build(ariadne::ReportKind::Error, (), err.span().start)
             .with_message(err.to_string())
             .with_label(ariadne::Label::new(err.span()).with_message(err.to_string()))
             .finish()
             .print(Source::from(&src))
             .unwrap();
+        parse_idx = parse_idx + 1;
     }
-    let ast = match ast_opt {
-        Some(ast) => ast,
-        None => {
-            eprintln!("{}: Parsing failed due to errors.", "error".red().bold());
-            std::process::exit(1);
-        }
-    };
+
+    if parse_result.program.is_none() {
+        eprintln!("{}: Parsing failed due to errors.", "error".red().bold());
+        std::process::exit(1);
+    }
+    let ast = parse_result.program.unwrap();
+
     if args.parse_only {
-        print_status("Finished", &format!("parse [ok] in {:.2?}", overall_start.elapsed()));
+        print_status("Finished", "parse [ok]");
         return;
     }
+
     print_status("Analyzing", &src_path_str);
     let analyzer = sema::Analyzer::new();
-    let (tast_opt, sema_errs) = analyzer.analyze(ast);
-    for err in sema_errs {
-        err.print(Source::from(&src)).unwrap();
+    let sema_result = analyzer.analyze_output(ast);
+
+    let sema_error_count = sema_result.errors.len();
+    let mut sema_idx = 0;
+    while sema_idx < sema_error_count {
+        sema_result.errors[sema_idx].print(Source::from(&src)).unwrap();
+        sema_idx = sema_idx + 1;
     }
-    let tast = match tast_opt {
-        Some(tast) => tast,
-        None => {
-            eprintln!("{}: Semantic analysis failed due to errors.", "error".red().bold());
-            std::process::exit(1);
-        }
-    };
+
+    if sema_result.program.is_none() {
+        eprintln!(
+            "{}: Semantic analysis failed due to errors.",
+            "error".red().bold()
+        );
+        std::process::exit(1);
+    }
+    let tast = sema_result.program.unwrap();
+
     if args.sema_only {
-        print_status("Finished", &format!("sema [ok] in {:.2?}", overall_start.elapsed()));
+        print_status("Finished", "sema [ok]");
         return;
     }
+
     let lowerer = ir::Lowerer::new();
     let mut ir_module = lowerer.lower_program(tast);
     if args.opt_level > 0 {
-        print_status("Optimizing", &format!("IR (level {})", args.opt_level));
+        print_status("Optimizing", "IR");
         ir_module = optimizer::optimize(ir_module);
     }
+
     let context = Context::create();
     let config = CodegenConfig {
         opt_level: args.opt_level,
@@ -74,124 +102,224 @@ fn main() {
         source_file_path: &src_path_str,
         is_lib: args.lib,
     };
+
     let mut backend = codegen::llvm::LlvmBackend::new(&context, config);
     let output_path = PathBuf::from(&args.output);
-    let output_ext = output_path.extension().and_then(|s| s.to_str()).unwrap_or("");
-    let emit_bin = args.emit_bin || (output_ext != "o" && output_ext != "obj");
+    let mut emit_bin = args.emit_bin;
+    if !args.lib {
+        emit_bin = true;
+    }
+
     print_status("Compiling", &src_path_str);
     if emit_bin {
-        let obj_path = output_path.with_extension("o");
-        if let Err(e) = backend.generate(&ir_module, obj_path.to_str().unwrap()) {
-            eprintln!("{}: Code generation failed: {}", "error".red().bold(), e);
+        let obj_path = output_path.with_extension("stage.o");
+
+        let codegen_result = backend.generate(&ir_module, obj_path.to_str().unwrap());
+        if codegen_result.is_err() {
+            eprintln!(
+                "{}: Code generation failed: {}",
+                "error".red().bold(),
+                codegen_result.err().unwrap()
+            );
             std::process::exit(1);
         }
-        if let Err(e) = build_and_link_stdlib(&output_path, &obj_path) {
-            eprintln!("{}: Link failed: {}", "error".red().bold(), e);
+
+        let link_result = build_and_link_stdlib(&output_path, &obj_path);
+        if link_result.is_err() {
+            eprintln!(
+                "{}: Link failed: {}",
+                "error".red().bold(),
+                link_result.err().unwrap()
+            );
             std::process::exit(1);
         }
-        print_status("Finished", &format!("dev [unoptimized + debuginfo] target(s) in {:.2?}", overall_start.elapsed()));
+
+        print_status("Finished", "build");
         println!("     Output {}", output_path.display());
     } else {
-        if let Err(e) = backend.generate(&ir_module, &args.output) {
-            eprintln!("{}: Code generation failed: {}", "error".red().bold(), e);
+        let codegen_result = backend.generate(&ir_module, &args.output);
+        if codegen_result.is_err() {
+            eprintln!(
+                "{}: Code generation failed: {}",
+                "error".red().bold(),
+                codegen_result.err().unwrap()
+            );
             std::process::exit(1);
-        } else {
-            print_status("Finished", &format!("dev [unoptimized + debuginfo] target(s) in {:.2?}", overall_start.elapsed()));
-            println!("     Output {}", args.output);
         }
+
+        print_status("Finished", "build");
+        println!("     Output {}", args.output);
     }
 }
+
 fn build_and_link_stdlib(output_bin: &Path, obj_path: &Path) -> Result<(), FString> {
-    let workspace_root = find_workspace_root()
-        .ok_or_else(|| "Could not locate workspace root".to_string())?;
-    let target_dir = workspace_root.join("target");
-    let stdlib_src = resolve_stdlib_source(&workspace_root)?;
-    let stdlib_obj = target_dir.join("std.o");
-    if !stdlib_obj.exists() {
-        let fuc_path = std::env::current_exe()
-            .map_err(|e| format!("Failed to locate fuc binary: {}", e))?;
-        let status = Command::new(fuc_path)
-            .arg(&stdlib_src)
-            .arg("--lib")
-            .arg("-o")
-            .arg(&stdlib_obj)
-            .status()
-            .map_err(|e| format!("Failed to compile stdlib: {}", e))?;
-        if !status.success() {
-            return Err("Failed to compile stdlib".to_string());
-        }
+    let workspace_root_opt = find_workspace_root();
+    if workspace_root_opt.is_none() {
+        return Err("Could not locate workspace root".to_string());
     }
+    let workspace_root = workspace_root_opt.unwrap();
+
+    let target_dir = workspace_root.join("target");
+    let stdlib_obj = target_dir.join("std.o");
+
+    let stdlib_source_result = resolve_stdlib_source(&workspace_root);
+    let mut stdlib_obj_path: Option<PathBuf> = None;
+    if stdlib_source_result.is_ok() {
+        let stdlib_src = stdlib_source_result.unwrap();
+        if !stdlib_obj.exists() {
+            let fuc_path_result = std::env::current_exe();
+            if fuc_path_result.is_err() {
+                return Err(format!(
+                    "Failed to locate fuc binary: {}",
+                    fuc_path_result.err().unwrap()
+                ));
+            }
+            let fuc_path = fuc_path_result.unwrap();
+
+            let status_result = Command::new(fuc_path)
+                .arg(&stdlib_src)
+                .arg("--lib")
+                .arg("-o")
+                .arg(&stdlib_obj)
+                .status();
+            if status_result.is_err() {
+                return Err(format!(
+                    "Failed to compile stdlib: {}",
+                    status_result.err().unwrap()
+                ));
+            }
+
+            let status = status_result.unwrap();
+            if !status.success() {
+                return Err("Failed to compile stdlib".to_string());
+            }
+        }
+
+        stdlib_obj_path = Some(stdlib_obj.clone());
+    }
+
     let tmp_dir = std::env::temp_dir().join("fusion_runtime");
-    let _ = fs::create_dir_all(&tmp_dir);
-    let panic_src = tmp_dir.join("panic.c");
-    let panic_obj = tmp_dir.join("panic.o");
-    fs::write(
+    let _mk_dir = fs::create_dir_all(&tmp_dir);
+
+    let mut panic_obj_path: Option<PathBuf> = None;
+    if stdlib_obj_path.is_none() {
+        let panic_src = tmp_dir.join("panic.c");
+        let panic_obj = tmp_dir.join("panic.o");
+
+        let write_result = fs::write(
             &panic_src,
             "#include <stdio.h>\nvoid panic(const char* msg){(void)msg; fflush(NULL); __builtin_trap();}\n",
-        )
-        .map_err(|e| format!("Failed to write panic runtime: {}", e))?;
-    let status = Command::new("cc")
-        .arg("-c")
-        .arg(&panic_src)
-        .arg("-o")
-        .arg(&panic_obj)
-        .status()
-        .map_err(|e| format!("Failed to compile panic runtime: {}", e))?;
-    if !status.success() {
-        return Err("Failed to compile panic runtime".to_string());
+        );
+        if write_result.is_err() {
+            return Err(format!(
+                "Failed to write panic runtime: {}",
+                write_result.err().unwrap()
+            ));
+        }
+
+        let status_result = Command::new("cc")
+            .arg("-c")
+            .arg(&panic_src)
+            .arg("-o")
+            .arg(&panic_obj)
+            .status();
+        if status_result.is_err() {
+            return Err(format!(
+                "Failed to compile panic runtime: {}",
+                status_result.err().unwrap()
+            ));
+        }
+
+        let status = status_result.unwrap();
+        if !status.success() {
+            return Err("Failed to compile panic runtime".to_string());
+        }
+
+        panic_obj_path = Some(panic_obj);
     }
+
     let arc_obj = tmp_dir.join("arc_runtime.o");
     let mut arc_obj_path: Option<PathBuf> = None;
     let mut arc_candidates: Vec<PathBuf> = Vec::new();
-    if let Ok(sysroot) = std::env::var("FUSION_SYSROOT") {
-        arc_candidates.push(PathBuf::from(sysroot).join("lib").join("fusion").join("arc_runtime.c"));
+
+    let sysroot_result = std::env::var("FUSION_SYSROOT");
+    if sysroot_result.is_ok() {
+        let sysroot = sysroot_result.unwrap();
+        arc_candidates.push(
+            PathBuf::from(sysroot)
+                .join("lib")
+                .join("fusion")
+                .join("arc_runtime.c")
+        );
     }
+
     arc_candidates.push(workspace_root.join("src").join("stdlib").join("arc_runtime.c"));
     arc_candidates.push(
         workspace_root
             .join("Source Files")
             .join("Automatic Reference Counting (ARC)")
-            .join("runtime.c"),
+            .join("runtime.c")
     );
-    for candidate in arc_candidates {
+
+    let mut arc_idx = 0;
+    while arc_idx < arc_candidates.len() {
+        let candidate = &arc_candidates[arc_idx];
         if candidate.exists() {
-            let status = Command::new("cc")
+            let status_result = Command::new("cc")
                 .arg("-c")
-                .arg(&candidate)
+                .arg(candidate)
                 .arg("-o")
                 .arg(&arc_obj)
-                .status()
-                .map_err(|e| format!("Failed to compile ARC runtime: {}", e))?;
+                .status();
+            if status_result.is_err() {
+                return Err(format!(
+                    "Failed to compile ARC runtime: {}",
+                    status_result.err().unwrap()
+                ));
+            }
+
+            let status = status_result.unwrap();
             if !status.success() {
                 return Err("Failed to compile ARC runtime".to_string());
             }
+
             arc_obj_path = Some(arc_obj.clone());
             break;
         }
+
+        arc_idx = arc_idx + 1;
     }
-    let status = Command::new("cc")
-        .arg(obj_path)
-        .arg(&panic_obj)
-        .args(
-            arc_obj_path
-                .as_ref()
-                .map(|p| vec![p])
-                .unwrap_or_else(|| Vec::new()),
-        )
-        .arg(&stdlib_obj)
-        .arg("-o")
-        .arg(output_bin)
-        .arg("-no-pie")
-        .arg("-lc")
-        .status()
-        .map_err(|e| format!("Failed to link: {}", e))?;
-    if !status.success() {
+
+    let mut cmd = Command::new("cc");
+    cmd.arg(obj_path);
+
+    if panic_obj_path.is_some() {
+        cmd.arg(panic_obj_path.as_ref().unwrap());
+    }
+    if arc_obj_path.is_some() {
+        cmd.arg(arc_obj_path.as_ref().unwrap());
+    }
+    if stdlib_obj_path.is_some() {
+        cmd.arg(stdlib_obj_path.as_ref().unwrap());
+    }
+
+    let link_status_result = cmd.arg("-o").arg(output_bin).status();
+    if link_status_result.is_err() {
+        return Err(format!("Failed to link: {}", link_status_result.err().unwrap()));
+    }
+
+    let link_status = link_status_result.unwrap();
+    if !link_status.success() {
         return Err("Linker failed".to_string());
     }
-    Ok(())
+
+    return Ok(Default::default());
 }
+
 fn resolve_stdlib_source(workspace_root: &Path) -> Result<PathBuf, FString> {
-    if let Ok(std_path) = std::env::var("FUSION_STD_PATH") {
+    let std_path_result = std::env::var("FUSION_STD_PATH");
+    if std_path_result.is_ok() {
+        let std_path = std_path_result.unwrap();
         let candidate = PathBuf::from(std_path);
         if candidate.is_file() {
             return Ok(candidate);
@@ -207,33 +335,62 @@ fn resolve_stdlib_source(workspace_root: &Path) -> Result<PathBuf, FString> {
             }
         }
     }
+
     let candidates = [
-        workspace_root.join("registry").join("crates").join("std").join("src").join("main.fu"),
-        workspace_root.join("registry").join("crates").join("std").join("src").join("lib.fu"),
+        workspace_root
+            .join("registry")
+            .join("crates")
+            .join("std")
+            .join("src")
+            .join("main.fu"),
+        workspace_root
+            .join("registry")
+            .join("crates")
+            .join("std")
+            .join("src")
+            .join("lib.fu"),
         workspace_root.join("stdlib").join("src").join("main.fu"),
         workspace_root.join("stdlib").join("src").join("lib.fu"),
+        workspace_root.join("stdlib").join("main.fu"),
+        workspace_root.join("stdlib").join("lib.fu"),
+        workspace_root.join("stdlib").join("runtime.fu"),
     ];
-    for candidate in candidates {
+
+    let mut candidate_idx = 0;
+    while candidate_idx < candidates.len() {
+        let candidate = &candidates[candidate_idx];
         if candidate.exists() {
-            return Ok(candidate);
+            return Ok(candidate.clone());
         }
+        candidate_idx = candidate_idx + 1;
     }
-    Err("Stdlib source not found (set FUSION_STD_PATH)".to_string())
+
+    return Err("Stdlib source not found (set FUSION_STD_PATH)".to_string());
 }
+
 fn find_workspace_root() -> Option<PathBuf> {
-    let mut dir = std::env::current_dir().ok()?;
-    loop {
+    let current_dir_result = std::env::current_dir();
+    if current_dir_result.is_err() {
+        return None;
+    }
+
+    let mut dir = current_dir_result.unwrap();
+    while true {
         let candidate = dir.join("Fusion.toml");
         if candidate.exists() {
-            if let Ok(contents) = fs::read_to_string(&candidate) {
+            let read_result = fs::read_to_string(&candidate);
+            if read_result.is_ok() {
+                let contents = read_result.unwrap();
                 if contents.contains("[workspace]") || contents.contains("[package]") {
                     return Some(dir);
                 }
             }
         }
+
         if !dir.pop() {
             break;
         }
     }
-    None
+
+    return None;
 }

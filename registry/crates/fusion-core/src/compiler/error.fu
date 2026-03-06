@@ -1,10 +1,9 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FString = String;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FString = FString;
 use thiserror::Error;
 #[derive(Error, Debug)]
-pub enum CompilerError {
+enum CompilerError {
     #[error("Lexer error: {0}")]
     LexerError(FString),
     #[error("Parser error: {0}")]

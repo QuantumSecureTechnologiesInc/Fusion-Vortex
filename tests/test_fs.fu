@@ -1,0 +1,21 @@
+// tests/test_fs.fu
+use std::fs;
+
+fn main() {
+    let path = "test_file.txt";
+    let content = "Hello, Native FS!";
+
+    // Write
+    let mut f = fs::File::create(path);
+    f.write(content);
+    f.close();
+
+    // Read back
+    let read_content = fs::read_to_string(path);
+    if read_content != content {
+        panic("Content mismatch!");
+    }
+
+    // Cleanup
+    fs::remove_file(path);
+}

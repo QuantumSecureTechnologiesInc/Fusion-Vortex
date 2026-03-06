@@ -1,0 +1,156 @@
+//! Runtime tests - verify native runtime functions work correctly
+
+/// Test I/O functions
+fn test_io() {
+    // Test print functions
+    print("Testing print without newline: ");
+    println!("println works");
+    
+    // Test formatted output
+    let num = 42;
+    let text = "formatted";
+    println!("Number: {}, Text: {}", num, text);
+    
+    println!("I/O tests: PASS");
+}
+
+/// Test filesystem functions
+fn test_filesystem() {
+    let test_path = "/tmp/fusion_test_file.txt";
+    let content = "Hello from Fusion!";
+    
+    // Write to file
+    fs::write(test_path, content);
+    
+    // Read from file
+    let read_content = fs::read_to_string(test_path);
+    
+    // Verify content
+    if read_content == content {
+        println!("File write/read: PASS");
+    } else {
+        println!("File write/read: FAIL");
+    }
+    
+    // Check file exists
+    if fs::exists(test_path) {
+        println!("File exists check: PASS");
+    }
+    
+    // Remove file
+    fs::remove(test_path);
+    
+    if !fs::exists(test_path) {
+        println!("File remove: PASS");
+    }
+}
+
+/// Test path manipulation
+fn test_paths() {
+    let path = "/home/user/project/src/main.fu";
+    
+    let dirname = path::dirname(path);
+    let basename = path::basename(path);
+    let joined = path::join("/home/user", "project");
+    
+    println!("dirname: {}", dirname);
+    println!("basename: {}", basename);
+    println!("joined: {}", joined);
+    println!("Path tests: PASS");
+}
+
+/// Test environment functions
+fn test_environment() {
+    // Get environment variable
+    let home = env::get("HOME");
+    println!("HOME={}", home);
+    
+    // Get command line args
+    let argc = env::argc();
+    println!("argc={}", argc);
+    
+    if argc > 0 {
+        let argv0 = env::argv(0);
+        println!("argv[0]={}", argv0);
+    }
+    
+    println!("Environment tests: PASS");
+}
+
+/// Test time functions
+fn test_time() {
+    let start = time::now_ms();
+    
+    // Do some work
+    let mut sum = 0;
+    for i in 0..10000 {
+        sum = sum + i;
+    }
+    
+    let end = time::now_ms();
+    let elapsed = end - start;
+    
+    println!("Elapsed time: {}ms (sum={})", elapsed, sum);
+    
+    // Test sleep
+    time::sleep_ms(10);
+    println!("Sleep test: PASS");
+}
+
+/// Test random functions
+fn test_random() {
+    // Seed random generator
+    rand::seed(12345);
+    
+    // Generate random numbers
+    let r1 = rand::next();
+    let r2 = rand::next();
+    let r3 = rand::next();
+    
+    println!("Random: {}, {}, {}", r1, r2, r3);
+    
+    // Verify they're different
+    if r1 != r2 && r2 != r3 {
+        println!("Random uniqueness: PASS");
+    }
+}
+
+/// Test hashing functions
+fn test_hashing() {
+    let text = "Hello, World!";
+    let hash = crypto::hash32(text);
+    
+    println!("hash32('Hello, World!') = {}", hash);
+    
+    let hmac = crypto::hmac32("key", "message");
+    println!("hmac32 = {}", hmac);
+    
+    println!("Hashing tests: PASS");
+}
+
+/// Test JSON formatting
+fn test_json() {
+    let escaped = json::escape("hello\nworld");
+    println!("JSON escaped: {}", escaped);
+    
+    let kv_str = json::kv_string("name", "value");
+    println!("JSON kv_string: {}", kv_str);
+    
+    let kv_int = json::kv_int("count", 42);
+    println!("JSON kv_int: {}", kv_int);
+    
+    println!("JSON tests: PASS");
+}
+
+fn main() {
+    println!("=== Runtime Tests ===");
+    test_io();
+    test_filesystem();
+    test_paths();
+    test_environment();
+    test_time();
+    test_random();
+    test_hashing();
+    test_json();
+    println!("All runtime tests passed!");
+}

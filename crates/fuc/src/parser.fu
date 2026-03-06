@@ -12,8 +12,7 @@ fn type_parser() -> impl Parser<Token, ast::Type, Error = ParserError> + Clone {
         let path = ident
             .clone()
             .then(
-                just(Token::Colon)
-                    .then(just(Token::Colon))
+                just(Token::ColonColon)
                     .ignore_then(ident.clone())
                     .repeated(),
             )
@@ -71,7 +70,6 @@ enum PostfixOp {
     Member(FString),
     MethodCall { method: FString, args: FVec<Spanned<ast::Expression>> },
 }
-#[derive(Clone, Copy)]
 enum UnaryOp {
     Deref,
     AddrOf,
@@ -103,6 +101,10 @@ fn expr_parser() -> impl Parser<
             ast::Expression::BoolLiteral(false), Token::StringLiteral(s) =>
             ast::Expression::StringLiteral(s),
         }
+            .map_with_span(|node, span| Spanned { node, span });
+        let unit = just(Token::LParen)
+            .ignore_then(just(Token::RParen))
+            .map(|_| ast::Expression::IntLiteral(0))
             .map_with_span(|node, span| Spanned { node, span });
         let array_list = expr
             .clone()
@@ -161,6 +163,17 @@ fn expr_parser() -> impl Parser<
         let parenthesized = expr
             .clone()
             .delimited_by(just(Token::LParen), just(Token::RParen));
+        let match_expr = just(Token::KwMatch)
+            .ignore_then(expr.clone())
+            .then_ignore(
+                any()
+                    .repeated()
+                    .delimited_by(just(Token::LBrace), just(Token::RBrace)),
+            )
+            .map_with_span(|scrutinee, span| Spanned {
+                node: scrutinee.node,
+                span,
+            });
         let call = path
             .then(just(Token::Bang).or_not())
             .then(
@@ -175,10 +188,12 @@ fn expr_parser() -> impl Parser<
                 args,
             });
         let primary = atom
+            .or(unit)
             .or(struct_literal)
             .or(array_literal)
             .or(call.map_with_span(|node, span| Spanned { node, span }))
             .or(variable)
+            .or(match_expr)
             .or(parenthesized);
         let postfix = primary
             .clone()
@@ -359,8 +374,32 @@ fn stmt_parser() -> impl Parser<
             .clone()
             .repeated()
             .delimited_by(just(Token::LBrace), just(Token::RBrace));
+        let fallback_condition = any()
+            .try_map(|t, span| {
+                if t == Token::LBrace {
+                    Err(Simple::custom(span, "start of condition block"))
+                } else {
+                    Ok(t)
+                }
+            })
+            .repeated()
+            .map_with_span(|_, span| Spanned {
+                node: ast::Expression::BoolLiteral(true),
+                span,
+            });
+        let condition = expr
+            .clone()
+            .delimited_by(just(Token::LParen), just(Token::RParen))
+            .or(expr.clone())
+            .or(fallback_condition);
         let let_decl = just(Token::KwLet)
-            .ignore_then(ident.clone())
+            .ignore_then(
+                select! {
+                    Token::Identifier(name) if name == "mut" => ()
+                }
+                .or_not()
+                .ignore_then(ident.clone()),
+            )
             .then(
                 just(Token::Colon)
                     .ignore_then(type_parser())
@@ -388,12 +427,7 @@ fn stmt_parser() -> impl Parser<
             .then_ignore(just(Token::Semicolon))
             .map(ast::Statement::Return);
         let if_stmt = just(Token::KwIf)
-            .ignore_then(
-                expr
-                    .clone()
-                    .delimited_by(just(Token::LParen), just(Token::RParen))
-                    .or(expr.clone()),
-            )
+            .ignore_then(condition.clone())
             .then(block.clone())
             .then(just(Token::KwElse).ignore_then(block.clone()).or_not())
             .map(|((cond, then_block), else_block)| ast::Statement::If {
@@ -402,16 +436,49 @@ fn stmt_parser() -> impl Parser<
                 else_block,
             });
         let while_stmt = just(Token::KwWhile)
-            .ignore_then(
-                expr
-                    .clone()
-                    .delimited_by(just(Token::LParen), just(Token::RParen))
-                    .or(expr.clone()),
-            )
+            .ignore_then(condition)
             .then(block)
             .map(|(cond, body)| ast::Statement::While {
                 cond,
                 body,
+            });
+        let for_stmt = just(Token::KwFor)
+            .ignore_then(
+                any()
+                    .try_map(|t, span| {
+                        if t == Token::KwIn {
+                            Err(Simple::custom(span, "end of for pattern"))
+                        } else {
+                            Ok(t)
+                        }
+                    })
+                    .repeated()
+                    .then_ignore(just(Token::KwIn)),
+            )
+            .ignore_then(expr.clone())
+            .then(
+                stmt.clone()
+                    .repeated()
+                    .delimited_by(just(Token::LBrace), just(Token::RBrace)),
+            )
+            .map(|(iter_expr, for_body)| {
+                let cond_span = iter_expr.span.clone();
+                let setup_stmt = Spanned {
+                    node: ast::Statement::Expression(iter_expr),
+                    span: cond_span.clone(),
+                };
+                let mut desugared_body: FVec<Spanned<ast::Statement>> = Vec::new();
+                desugared_body.push(setup_stmt);
+                for stmt in for_body {
+                    desugared_body.push(stmt);
+                }
+                ast::Statement::While {
+                    cond: Spanned {
+                        node: ast::Expression::BoolLiteral(true),
+                        span: cond_span,
+                    },
+                    body: desugared_body,
+                }
             });
         let expr_stmt = expr
             .clone()
@@ -422,6 +489,7 @@ fn stmt_parser() -> impl Parser<
             .or(ret)
             .or(if_stmt)
             .or(while_stmt)
+            .or(for_stmt)
             .or(expr_stmt)
             .map_with_span(|node, span| Spanned { node, span })
     })
@@ -430,13 +498,29 @@ enum TopLevel {
     Function(ast::Function),
     Extern(ast::ExternFunction),
     Struct(ast::StructDefinition),
-    Use,
-    Mod,
+    Enum(ast::EnumDefinition),
+    TypeAlias(ast::TypeAliasDefinition),
+    Const(ast::ConstDefinition),
+    Static(ast::StaticDefinition),
+    Use(ast::UseDefinition),
+    Mod(ast::ModDefinition),
+    Trait(ast::TraitDefinition),
+    Impl(ast::ImplDefinition),
 }
 fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let ident = select! {
         Token::Identifier(id) => id
     };
+    let path = ident
+        .clone()
+        .then(just(Token::ColonColon).ignore_then(ident.clone()).repeated())
+        .map(|(head, tail)| {
+            let mut name = head;
+            for seg in tail {
+                name = format!("{}::{}", name, seg);
+            }
+            name
+        });
     let brace_block = recursive(|block| {
         let non_brace = any().try_map(|t, span| {
             if t == Token::LBrace || t == Token::RBrace {
@@ -459,8 +543,24 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .or_not(),
         )
         .or_not();
+    let generic_header = just(Token::Less)
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::Greater {
+                        Err(Simple::custom(span, "end of generic header"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated(),
+        )
+        .then_ignore(just(Token::Greater));
     let stmt = stmt_parser();
     let block = stmt.repeated().delimited_by(just(Token::LBrace), just(Token::RBrace));
+    let function_block = block
+        .clone()
+        .or(brace_block.clone().map(|_| Vec::new()));
     let field_or_param = visibility
         .clone()
         .ignore_then(ident.clone())
@@ -474,15 +574,51 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let struct_def = visibility.clone()
         .ignore_then(just(Token::KwStruct))
         .ignore_then(ident.clone())
+        .then(generic_header.clone().or_not())
         .then(
             fields_or_params_list
                 .clone()
                 .delimited_by(just(Token::LBrace), just(Token::RBrace)),
         )
-        .map(|(name, fields)| ast::StructDefinition { name, fields });
-    let return_type = just(Token::Colon)
+        .map(|((name, _), fields)| ast::StructDefinition { name, fields });
+    let struct_def_opaque = visibility.clone()
+        .ignore_then(just(Token::KwStruct))
+        .ignore_then(ident.clone())
+        .then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "start of struct body"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(brace_block.clone()),
+        )
+        .map(|(name, _)| ast::StructDefinition {
+            name,
+            fields: Vec::new(),
+        });
+    let return_type_strict = just(Token::Colon)
         .or(just(Token::Arrow))
-        .ignore_then(type_parser())
+        .ignore_then(type_parser());
+    let return_type_fallback = just(Token::Colon)
+        .or(just(Token::Arrow))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace || t == Token::KwWhere {
+                        Err(Simple::custom(span, "start of function body"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated(),
+        )
+        .to(ast::Type::Unknown);
+    let return_type = return_type_strict
+        .or(return_type_fallback)
         .or_not()
         .map(|t| t.unwrap_or(ast::Type::Void));
     let params_list = field_or_param
@@ -523,6 +659,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .ignore_then(just(Token::KwAsync).or_not())
         .ignore_then(just(Token::KwFn))
         .ignore_then(ident.clone())
+        .then(generic_header.clone().or_not())
         .then(
             fields_or_params_list.delimited_by(just(Token::LParen), just(Token::RParen)),
         )
@@ -542,20 +679,113 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 )
                 .or_not(),
         )
-        .then(block)
-        .map(|((((name, params), return_type), _), body)| ast::Function {
+        .then(function_block.clone())
+        .map(|(((((name, _), params), return_type), _), body)| ast::Function {
             name,
             params,
             return_type,
             body,
         });
-    let use_decl = visibility.clone()
-        .ignore_then(just(Token::KwUse))
-        .ignore_then(
+    let function_opaque = visibility.clone()
+        .ignore_then(just(Token::KwAsync).or_not())
+        .ignore_then(just(Token::KwFn))
+        .ignore_then(ident.clone())
+        .then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "start of function body"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(brace_block.clone()),
+        )
+        .map(|(name, _)| ast::Function {
+            name,
+            params: Vec::new(),
+            return_type: ast::Type::Unknown,
+            body: Vec::new(),
+        });
+    let enum_tuple_payload = type_parser()
+        .separated_by(just(Token::Comma))
+        .allow_trailing()
+        .delimited_by(just(Token::LParen), just(Token::RParen))
+        .or_not()
+        .map(|opt| opt.unwrap_or_else(|| Vec::new()));
+    let enum_named_field = ident
+        .clone()
+        .then_ignore(just(Token::Colon))
+        .then(type_parser());
+    let enum_named_payload = enum_named_field
+        .separated_by(just(Token::Comma))
+        .allow_trailing()
+        .delimited_by(just(Token::LBrace), just(Token::RBrace))
+        .or_not()
+        .map(|opt| opt.unwrap_or_else(|| Vec::new()));
+    let enum_variant = ident
+        .clone()
+        .then(enum_tuple_payload)
+        .then(enum_named_payload)
+        .map(|((name, tuple_fields), named_fields)| ast::EnumVariant {
+            name,
+            tuple_fields,
+            named_fields,
+        });
+    let enum_decl = visibility.clone()
+        .ignore_then(just(Token::KwEnum))
+        .ignore_then(ident.clone())
+        .then(generic_header.clone().or_not())
+        .then(
+            enum_variant
+                .separated_by(just(Token::Comma))
+                .allow_trailing()
+                .delimited_by(just(Token::LBrace), just(Token::RBrace)),
+        )
+        .map(|((name, _), variants)| TopLevel::Enum(ast::EnumDefinition { name, variants }));
+    let enum_decl_opaque = visibility.clone()
+        .ignore_then(just(Token::KwEnum))
+        .ignore_then(ident.clone())
+        .then_ignore(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "start of enum body"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(brace_block.clone()),
+        )
+        .map(|name| {
+            TopLevel::Enum(ast::EnumDefinition {
+                name,
+                variants: Vec::new(),
+            })
+        });
+    let type_decl = visibility.clone()
+        .ignore_then(just(Token::KwType))
+        .ignore_then(ident.clone())
+        .then(generic_header.clone().or_not())
+        .then_ignore(just(Token::Assign))
+        .then(type_parser())
+        .then_ignore(just(Token::Semicolon))
+        .map(|((name, _), target)| {
+            TopLevel::TypeAlias(ast::TypeAliasDefinition {
+                name,
+                target,
+            })
+        });
+    let type_decl_opaque = visibility.clone()
+        .ignore_then(just(Token::KwType))
+        .ignore_then(ident.clone())
+        .then_ignore(
             any()
                 .try_map(|t, span| {
                     if t == Token::Semicolon {
-                        Err(Simple::custom(span, "end of use"))
+                        Err(Simple::custom(span, "end of type alias"))
                     } else {
                         Ok(t)
                     }
@@ -563,17 +793,174 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .repeated()
                 .then_ignore(just(Token::Semicolon)),
         )
-        .map(|_| TopLevel::Use);
+        .map(|name| {
+            TopLevel::TypeAlias(ast::TypeAliasDefinition {
+                name,
+                target: ast::Type::Unknown,
+            })
+        });
+    let const_decl = visibility.clone()
+        .ignore_then(just(Token::KwConst))
+        .ignore_then(ident.clone())
+        .then(just(Token::Colon).ignore_then(type_parser()).or_not())
+        .then(just(Token::Assign).ignore_then(expr_parser()).or_not())
+        .then_ignore(just(Token::Semicolon))
+        .map(|((name, ty), value)| {
+            TopLevel::Const(ast::ConstDefinition {
+                name,
+                ty: ty.unwrap_or(ast::Type::Unknown),
+                value,
+            })
+        });
+    let const_decl_opaque = visibility.clone()
+        .ignore_then(just(Token::KwConst))
+        .ignore_then(ident.clone())
+        .then(just(Token::Colon).ignore_then(type_parser()).or_not())
+        .then_ignore(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::Semicolon {
+                        Err(Simple::custom(span, "end of const"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(just(Token::Semicolon)),
+        )
+        .map(|(name, ty)| {
+            TopLevel::Const(ast::ConstDefinition {
+                name,
+                ty: ty.unwrap_or(ast::Type::Unknown),
+                value: None,
+            })
+        });
+    let static_decl = visibility.clone()
+        .ignore_then(just(Token::KwStatic))
+        .ignore_then(ident.clone())
+        .then(just(Token::Colon).ignore_then(type_parser()).or_not())
+        .then(just(Token::Assign).ignore_then(expr_parser()).or_not())
+        .then_ignore(just(Token::Semicolon))
+        .map(|((name, ty), value)| {
+            TopLevel::Static(ast::StaticDefinition {
+                name,
+                ty: ty.unwrap_or(ast::Type::Unknown),
+                value,
+            })
+        });
+    let static_decl_opaque = visibility.clone()
+        .ignore_then(just(Token::KwStatic))
+        .ignore_then(ident.clone())
+        .then(just(Token::Colon).ignore_then(type_parser()).or_not())
+        .then_ignore(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::Semicolon {
+                        Err(Simple::custom(span, "end of static"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated()
+                .then_ignore(just(Token::Semicolon)),
+        )
+        .map(|(name, ty)| {
+            TopLevel::Static(ast::StaticDefinition {
+                name,
+                ty: ty.unwrap_or(ast::Type::Unknown),
+                value: None,
+            })
+        });
+    let use_decl = visibility.clone()
+        .ignore_then(just(Token::KwUse))
+        .ignore_then(
+            path
+                .clone()
+                .then(
+                    just(Token::ColonColon)
+                        .ignore_then(just(Token::Star))
+                        .or_not(),
+                )
+                .then(
+                    select! {
+                        Token::Identifier(name) if name == "as" => ()
+                    }
+                    .ignore_then(ident.clone())
+                    .or_not(),
+                )
+                .map(|((base, star), alias)| {
+                    let mut out = base;
+                    if star.is_some() {
+                        out = format!("{}::*", out);
+                    }
+                    if let Some(alias) = alias {
+                        out = format!("{} as {}", out, alias);
+                    }
+                    out
+                })
+                .or(
+                    any()
+                        .try_map(|t, span| {
+                            if t == Token::Semicolon {
+                                Err(Simple::custom(span, "end of use"))
+                            } else {
+                                Ok(t)
+                            }
+                        })
+                        .repeated()
+                        .map(|tokens| {
+                            let mut out = String::new();
+                            for token in tokens {
+                                let part = match token {
+                                    Token::Identifier(name) => name,
+                                    Token::ColonColon => "::".to_string(),
+                                    Token::Star => "*".to_string(),
+                                    Token::Comma => ",".to_string(),
+                                    Token::LBrace => "{".to_string(),
+                                    Token::RBrace => "}".to_string(),
+                                    _ => "".to_string(),
+                                };
+                                if part.is_empty() {
+                                    continue;
+                                }
+                                if !out.is_empty()
+                                    && part != "::"
+                                    && part != ","
+                                    && part != "}"
+                                    && !out.ends_with("::")
+                                    && !out.ends_with("{")
+                                    && !out.ends_with(",")
+                                {
+                                    out.push(' ');
+                                }
+                                out.push_str(&part);
+                            }
+                            out
+                        }),
+                )
+                .then_ignore(just(Token::Semicolon)),
+        )
+        .map(|path| TopLevel::Use(ast::UseDefinition { path }));
     let mod_decl = visibility.clone()
         .ignore_then(just(Token::KwMod))
         .ignore_then(ident.clone())
         .then_ignore(just(Token::Semicolon))
-        .map(|_| TopLevel::Mod);
+        .map(|name| {
+            TopLevel::Mod(ast::ModDefinition {
+                name,
+                has_body: false,
+            })
+        });
     let mod_block = visibility.clone()
         .ignore_then(just(Token::KwMod))
         .ignore_then(ident.clone())
         .then_ignore(brace_block.clone())
-        .map(|_| TopLevel::Mod);
+        .map(|name| {
+            TopLevel::Mod(ast::ModDefinition {
+                name,
+                has_body: true,
+            })
+        });
     let impl_decl = visibility
         .clone()
         .ignore_then(just(Token::KwImpl))
@@ -589,23 +976,35 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .repeated()
                 .then_ignore(brace_block.clone()),
         )
-        .map(|_| TopLevel::Mod);
+        .map(|header_tokens| {
+            let mut target = "impl".to_string();
+            for token in header_tokens {
+                if let Token::Identifier(name) = token {
+                    target = name;
+                }
+            }
+            TopLevel::Impl(ast::ImplDefinition { target })
+        });
     let trait_decl = visibility
         .clone()
         .ignore_then(just(Token::KwTrait))
         .ignore_then(
-            any()
-                .try_map(|t, span| {
-                    if t == Token::LBrace {
-                        Err(Simple::custom(span, "end of trait header"))
-                    } else {
-                        Ok(t)
-                    }
-                })
-                .repeated()
-                .then_ignore(brace_block.clone()),
+            ident
+                .clone()
+                .then(
+                    any()
+                        .try_map(|t, span| {
+                            if t == Token::LBrace {
+                                Err(Simple::custom(span, "end of trait header"))
+                            } else {
+                                Ok(t)
+                            }
+                        })
+                        .repeated()
+                        .then_ignore(brace_block.clone()),
+                ),
         )
-        .map(|_| TopLevel::Mod);
+        .map(|(name, _)| TopLevel::Trait(ast::TraitDefinition { name }));
     let attributes = just(Token::Hash)
         .ignore_then(just(Token::LBracket))
         .ignore_then(
@@ -624,7 +1023,17 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let top_level_item = extern_func
         .map(TopLevel::Extern)
         .or(function.map(TopLevel::Function))
+        .or(function_opaque.map(TopLevel::Function))
         .or(struct_def.map(TopLevel::Struct))
+        .or(struct_def_opaque.map(TopLevel::Struct))
+        .or(enum_decl)
+        .or(enum_decl_opaque)
+        .or(type_decl)
+        .or(type_decl_opaque)
+        .or(const_decl)
+        .or(const_decl_opaque)
+        .or(static_decl)
+        .or(static_decl_opaque)
         .or(use_decl)
         .or(mod_decl)
         .or(mod_block)
@@ -637,19 +1046,41 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
             let mut functions = Vec::new();
             let mut externs = Vec::new();
             let mut structs = Vec::new();
+            let mut enums = Vec::new();
+            let mut type_aliases = Vec::new();
+            let mut consts = Vec::new();
+            let mut statics = Vec::new();
+            let mut uses = Vec::new();
+            let mut mods = Vec::new();
+            let mut traits = Vec::new();
+            let mut impls = Vec::new();
             for item in items {
                 match item {
                     TopLevel::Function(f) => functions.push(f),
                     TopLevel::Extern(e) => externs.push(e),
                     TopLevel::Struct(s) => structs.push(s),
-                    TopLevel::Use => {}
-                    TopLevel::Mod => {}
+                    TopLevel::Enum(e) => enums.push(e),
+                    TopLevel::TypeAlias(a) => type_aliases.push(a),
+                    TopLevel::Const(c) => consts.push(c),
+                    TopLevel::Static(s) => statics.push(s),
+                    TopLevel::Use(u) => uses.push(u),
+                    TopLevel::Mod(m) => mods.push(m),
+                    TopLevel::Trait(t) => traits.push(t),
+                    TopLevel::Impl(i) => impls.push(i),
                 }
             }
             ast::Program {
                 functions,
                 externs,
                 structs,
+                enums,
+                type_aliases,
+                consts,
+                statics,
+                uses,
+                mods,
+                traits,
+                impls,
             }
         })
         .then_ignore(end())
@@ -662,4 +1093,16 @@ fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
         tokens.into_iter(),
     );
     program_parser().parse_recovery(token_stream)
+}
+/// Parse output container for native-friendly field access.
+struct ParseOutput {
+    /// Parsed program, if successful.
+    pub program: Option<ast::Program>,
+    /// Parser diagnostics.
+    pub errors: FVec<ParserError>,
+}
+/// Parses source text and returns a field-addressable result.
+fn parse_output(input: &str) -> ParseOutput {
+    let (program, errors) = parse(input);
+    ParseOutput { program, errors }
 }

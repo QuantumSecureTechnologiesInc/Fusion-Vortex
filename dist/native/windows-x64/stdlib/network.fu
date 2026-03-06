@@ -1,0 +1,23 @@
+// stdlib/network.fu – Thin wrappers for Fusion network RPC
+
+/// Sends a structured RPC `Message` over a `SecureChannel`.
+/// Returns a `NetResult<()>` indicating success or I/O error.
+pub fn send_message(channel: &mut SecureChannel, msg: &Message) -> NetResult<()> {
+    // The underlying Rust implementation provides `SecureChannel::send` which
+    // expects a byte slice. We serialize the `Message` using bincode (the same
+    // format used by the Rust side) and forward the bytes.
+    let bytes = bincode::serialize(msg).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    channel.send(&bytes)
+}
+
+/// Receives a structured RPC `Message` from a `SecureChannel`.
+/// Returns a `NetResult<Message>`; malformed data results in an error.
+pub fn recv_message(channel: &mut SecureChannel) -> NetResult<Message> {
+    let data = channel.recv()?;
+    let msg: Message = bincode::deserialize(&data).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    Ok(msg)
+}
+
+// Note: `SecureChannel`, `Message`, and `NetResult` are re‑exported from the
+// Rust `network` crate (see src/network/mod.rs). The Fusion standard library
+// can import them via `use network::*;`.

@@ -1,0 +1,13 @@
+// tests/test_process.fu
+use std::process;
+
+fn main() {
+    // Verify PATH exists (almost always true on Windows/Linux)
+    let path_val = process::env("PATH");
+    if path_val.len() == 0 {
+        panic("PATH environment variable is empty!");
+    }
+    
+    // Testing exit code requires external validation (the runner checks this).
+    process::exit(0);
+}

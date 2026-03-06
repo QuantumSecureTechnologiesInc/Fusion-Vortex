@@ -4,40 +4,41 @@
 
 ```bash
 cd "C:\Projects\Fusion - Programming Language"
-cargo build -p haft_fusion
-```text
+fuc build -p haft_fusion
+```
 
 ## CLI Usage
 
 ```bash
-
 # Basic
-
 haft-fusion --shape 100,100,100
 
 # With options
-
 haft-fusion -s 256,256,64 -l 1000000 -t 1.5
-```text
+```
 
 ## API Quick Start
 
-```rust
-use haft_fusion::*;
-use std::sync::Arc;
+```fusion
+import haft_fusion::*;
+import std::sync::shared;
 
-// Create tensor
-let tensor = Arc::new(FluxTensor::new(vec![1024, 768]));
+async fn main() -> int {
+    // Create tensor
+    let tensor = shared::new(FluxTensor::new(vec![1024, 768]));
 
-// Set values
-tensor.set(vec![10, 20], 3.14);
+    // Set values
+    tensor.set(vec![10, 20], 3.14);
 
-// Get values
-let val = tensor.get(&[10, 20]); // Some(3.14)
+    // Get values
+    let val = tensor.get(&[10, 20]); // Some(3.14)
 
-// Spawn agents
-spawn_agents(tensor.clone()).await;
-```text
+    // Spawn agents
+    spawn_agents(tensor.clone()).await;
+
+    return 0;
+}
+```
 
 ## Key Metrics
 
@@ -53,25 +54,25 @@ spawn_agents(tensor.clone()).await;
 | ---------- | -------- | ------------------------------- |
 | Researcher | 5s       | Statistics & anomaly detection  |
 | Builder    | 10s      | Memory management & compression |
-| Optimizer  | 15s      | Access pattern optimization     |
+| Optimizer  | 15s      | Access pattern optimisation     |
 
 ## Common Patterns
 
 ### ML Training
 
-```rust
-let weights = Arc::new(FluxTensor::new(vec![10000, 5000]));
+```fusion
+let weights = shared::new(FluxTensor::new(vec![10000, 5000]));
 // 10% hot storage for active layers
 spawn_agents(weights).await;
-```text
+```
 
 ### Analytics
 
-```rust
-let events = Arc::new(FluxTensor::new(vec![1000000]));
+```fusion
+let events = shared::new(FluxTensor::new(vec![1000000]));
 // Recent events hot, historical cold
 spawn_agents(events).await;
-```text
+```
 
 ## Configuration Tips
 

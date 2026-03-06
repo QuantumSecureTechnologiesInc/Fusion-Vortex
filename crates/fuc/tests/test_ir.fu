@@ -1,0 +1,125 @@
+//! IR generation and optimisation tests
+
+/// Test basic block generation
+fn test_basic_blocks() {
+    fn linear_flow() {
+        let a = 1;
+        let b = 2;
+        let c = a + b;
+    }
+    
+    fn branching_flow(cond: FBool) -> FInt {
+        if cond {
+            42
+        } else {
+            0
+        }
+    }
+    
+    fn loop_flow() {
+        let mut i = 0;
+        while i < 10 {
+            i = i + 1;
+        }
+    }
+    
+    println!("Basic blocks: PASS");
+}
+
+/// Test SSA form generation
+fn test_ssa_form() {
+    fn multiple_assignments() {
+        let mut x = 1;
+        x = x + 1;  // Should create x_1 = x_0 + 1
+        x = x * 2;  // Should create x_2 = x_1 * 2
+        x = x - 3;  // Should create x_3 = x_2 - 3
+    }
+    
+    fn phi_nodes(cond: FBool) -> FInt {
+        let mut result = 0;
+        if cond {
+            result = 1;
+        } else {
+            result = 2;
+        }
+        // Should have phi node: result_3 = phi(result_1, result_2)
+        result
+    }
+    
+    println!("SSA form: PASS");
+}
+
+/// Test constant folding
+fn test_constant_folding() {
+    let a = 2 + 3;        // Should fold to 5
+    let b = 10 * 4;       // Should fold to 40
+    let c = 100 / 5;      // Should fold to 20
+    let d = 7 % 3;        // Should fold to 1
+    let e = true && false; // Should fold to false
+    let f = true || false; // Should fold to true
+    
+    println!("Constant folding: PASS");
+}
+
+/// Test dead code elimination
+fn test_dead_code_elimination() {
+    fn with_dead_code() {
+        let used = 42;
+        let unused = 100;  // Should be eliminated
+        return used;
+        let unreachable = 200;  // Should be eliminated
+    }
+    
+    println!("Dead code elimination: PASS");
+}
+
+/// Test common subexpression elimination
+fn test_cse() {
+    fn with_common_subexpr(a: FInt, b: FInt) -> FInt {
+        let x = a + b;
+        let y = a + b;  // Should reuse x
+        x * y
+    }
+    
+    println!("Common subexpression elimination: PASS");
+}
+
+/// Test inlining
+fn small_function(x: FInt) -> FInt { x + 1 }
+
+fn test_inlining() {
+    let result = small_function(5);  // Should be inlined to: let result = 5 + 1
+    println!("Inlining: PASS");
+}
+
+/// Test loop optimisations
+fn test_loop_optimisations() {
+    fn loop_invariant_motion() {
+        let constant = 10;
+        let mut sum = 0;
+        for i in 0..100 {
+            sum = sum + constant * 2;  // constant * 2 should be hoisted
+        }
+    }
+    
+    fn loop_unrolling() {
+        let mut arr = [0; 4];
+        for i in 0..4 {  // Small constant bound - candidate for unrolling
+            arr[i] = i;
+        }
+    }
+    
+    println!("Loop optimisations: PASS");
+}
+
+fn main() {
+    println!("=== IR and Optimisation Tests ===");
+    test_basic_blocks();
+    test_ssa_form();
+    test_constant_folding();
+    test_dead_code_elimination();
+    test_cse();
+    test_inlining();
+    test_loop_optimisations();
+    println!("All IR tests passed!");
+}

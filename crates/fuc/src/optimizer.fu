@@ -3,7 +3,8 @@ use crate::ast;
 use crate::ir::{Address, BasicBlock, Function, Instruction, Module, TypedValue, Value};
 use generational_arena::Index;
 /// Applies optimization passes to the module.
-fn optimize(mut module: Module) -> Module {
+fn optimize(module: Module) -> Module {
+    let mut module = module;
     for func in &mut module.functions {
         optimize_function(func);
     }
@@ -72,25 +73,25 @@ fn constant_fold_block(block: &mut BasicBlock) -> FBool {
                 let folded = match (val1.val.clone(), val2.val.clone()) {
                     (Value::IntConst(i1), Value::IntConst(i2)) => {
                         match op {
-                            ast::BinaryOp::Add => Some(Value::IntConst(i1 + i2)),
-                            ast::BinaryOp::Sub => Some(Value::IntConst(i1 - i2)),
-                            ast::BinaryOp::Mul => Some(Value::IntConst(i1 * i2)),
-                            ast::BinaryOp::Div => {
+                            BinaryOp::Add => Some(Value::IntConst(i1 + i2)),
+                            BinaryOp::Sub => Some(Value::IntConst(i1 - i2)),
+                            BinaryOp::Mul => Some(Value::IntConst(i1 * i2)),
+                            BinaryOp::Div => {
                                 if i2 != 0 { Some(Value::IntConst(i1 / i2)) } else { None }
                             }
-                            ast::BinaryOp::Eq => Some(Value::BoolConst(i1 == i2)),
-                            ast::BinaryOp::Neq => Some(Value::BoolConst(i1 != i2)),
-                            ast::BinaryOp::Lt => Some(Value::BoolConst(i1 < i2)),
-                            ast::BinaryOp::Gt => Some(Value::BoolConst(i1 > i2)),
+                            BinaryOp::Eq => Some(Value::BoolConst(i1 == i2)),
+                            BinaryOp::Neq => Some(Value::BoolConst(i1 != i2)),
+                            BinaryOp::Lt => Some(Value::BoolConst(i1 < i2)),
+                            BinaryOp::Gt => Some(Value::BoolConst(i1 > i2)),
                             _ => None,
                         }
                     }
                     (Value::BoolConst(b1), Value::BoolConst(b2)) => {
                         match op {
-                            ast::BinaryOp::Or => Some(Value::BoolConst(b1 || b2)),
-                            ast::BinaryOp::And => Some(Value::BoolConst(b1 && b2)),
-                            ast::BinaryOp::Eq => Some(Value::BoolConst(b1 == b2)),
-                            ast::BinaryOp::Neq => Some(Value::BoolConst(b1 != b2)),
+                            BinaryOp::Or => Some(Value::BoolConst(b1 || b2)),
+                            BinaryOp::And => Some(Value::BoolConst(b1 && b2)),
+                            BinaryOp::Eq => Some(Value::BoolConst(b1 == b2)),
+                            BinaryOp::Neq => Some(Value::BoolConst(b1 != b2)),
                             _ => None,
                         }
                     }
@@ -186,3 +187,4 @@ fn constant_fold_block(block: &mut BasicBlock) -> FBool {
     }
     changed
 }
+

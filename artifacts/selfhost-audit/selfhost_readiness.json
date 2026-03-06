@@ -1,0 +1,90 @@
+﻿{
+    "summary":  {
+                    "timestamp":  "2026-03-05T09:19:50.5741960+00:00",
+                    "compiler":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\target\\release\\fuc.exe",
+                    "total_files":  11,
+                    "parse_pass":  null,
+                    "sema_pass":  null,
+                    "parse_fail":  10,
+                    "sema_fail":  10
+                },
+    "files":  [
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\ast.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\cli.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\codegen\\llvm.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\codegen\\mod.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\ir.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\lexer.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\lib.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\main.fu",
+                      "parse_exit":  0,
+                      "sema_exit":  0,
+                      "parse_pass":  true,
+                      "sema_pass":  true
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\optimizer.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\parser.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  },
+                  {
+                      "file":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\crates\\fuc\\src\\sema.fu",
+                      "parse_exit":  1,
+                      "sema_exit":  1,
+                      "parse_pass":  false,
+                      "sema_pass":  false
+                  }
+              ]
+}

@@ -1,0 +1,74 @@
+// src/auth/service.fu
+// Main Authentication Service Layer
+
+use super::domain::{User, Session, Roles};
+use super::crypto::{ChaosCryptoProvider, ChaosLibrary};
+use super::store::{UserStore, SessionStore};
+
+class AuthService {
+    user_store: UserStore;
+    session_store: SessionStore;
+    crypto: ChaosCryptoProvider;
+}
+
+impl AuthService {
+    fn new(u_store: UserStore, s_store: SessionStore, crypto: ChaosCryptoProvider) -> AuthService {
+        return AuthService {
+            user_store: u_store,
+            session_store: s_store,
+            crypto: crypto
+        };
+    }
+
+    // Register a new user
+    fn register(mut self, username: string, password: string, officer_id: string) -> Result<string, string> {
+        // In real implementation:
+        // 1. Hash password (using hashing module, distinct from encryption)
+        // 2. Generate initial key checks
+        
+        // Simulating password hash for now
+        let pw_hash = "hashed-" + password; 
+        
+        let result = self.user_store.create_user(username, pw_hash, Option::None);
+        
+        if result.is_err() {
+            return Result::Err("Registration failed: User exists");
+        }
+        
+        return Result::Ok("User registered successfully");
+    }
+
+    // Login logic
+    fn login(mut self, username: string, password: string) -> Result<Session, string> {
+        let user_opt = self.user_store.get_user(username);
+        
+        if user_opt.is_none() {
+            return Result::Err("Invalid credentials");
+        }
+        
+        let user = user_opt.unwrap();
+        
+        // Verify password (simplified for port)
+        let input_hash = "hashed-" + password;
+        if user.password_hash != input_hash {
+            return Result::Err("Invalid credentials");
+        }
+        
+        // Create session
+        let session_id = self.crypto.generate_key("system").key_reference; // Using key-gen for random ID
+        let refresh_token = "refresh-" + session_id;
+        let csrf_token = "csrf-" + session_id;
+        
+        let session = Session::new(
+            session_id, 
+            username, 
+            refresh_token, 
+            csrf_token,
+            3600 // 1 hour expiry
+        );
+        
+        self.session_store.create_or_replace(session);
+        
+        return Result::Ok(session);
+    }
+}

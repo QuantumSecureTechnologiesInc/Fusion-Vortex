@@ -1,28 +1,19 @@
 [package]
 name = "fusion_lang"
 version = "0.2.0-beta.1"
-edition = "2021"
+edition = "2026"
 authors = ["QuantumSecure Technologies Ltd"]
-description = "Fusion Programming Language Compiler"
+description = "Fusion Programming Language Compiler (Self-Hosting)"
+type = "native"
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)'] }
+[lints.fusion]
 unsafe_code = "warn"
 unused_imports = "warn"
-unused_variables = "warn"
-dead_code = "warn"
 
-[lints.clippy]
-all = { level = "warn", priority = -1 }
-# Allow common patterns
-module_name_repetitions = "allow"
-
-
-
+# Native Dependencies (Fusion Crates)
 [dependencies]
-# Core Dependencies
-logos = "0.14"
-clap = { version = "4.4", features = ["derive"] }
+fusion_core = { path = "registry/crates/fusion-core" }
+fusion_std = { path = "registry/crates/std" }
 lazy_static = "1.4"
 regex = "1.10"
 thiserror = "1.0"

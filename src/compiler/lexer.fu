@@ -1,0 +1,358 @@
+// src/compiler/lexer.fu
+// Pure Fusion Lexer for the Fusion Language
+
+use super::token::{Token, TokenKind, Span, KeywordTable};
+
+class Lexer {
+    source: string;
+    pos: int;
+    line: int;
+    column: int;
+    keywords: KeywordTable;
+}
+
+impl Lexer {
+    fn new(source: string) -> Lexer {
+        return Lexer {
+            source: source,
+            pos: 0,
+            line: 1,
+            column: 1,
+            keywords: KeywordTable::new()
+        };
+    }
+    
+    fn is_at_end(self) -> bool {
+        return self.pos >= self.source.len();
+    }
+    
+    fn peek(self) -> string {
+        if self.is_at_end() {
+            return "";
+        }
+        return self.source.char_at(self.pos);
+    }
+    
+    fn peek_next(self) -> string {
+        if self.pos + 1 >= self.source.len() {
+            return "";
+        }
+        return self.source.char_at(self.pos + 1);
+    }
+    
+    fn advance(mut self) -> string {
+        let ch = self.peek();
+        self.pos = self.pos + 1;
+        
+        if ch == "\n" {
+            self.line = self.line + 1;
+            self.column = 1;
+        } else {
+            self.column = self.column + 1;
+        }
+        
+        return ch;
+    }
+    
+    fn skip_whitespace(mut self) {
+        while !self.is_at_end() {
+            let ch = self.peek();
+            if ch == " " || ch == "\t" || ch == "\r" || ch == "\n" {
+                self.advance();
+            } else {
+                if ch == "/" && self.peek_next() == "/" {
+                    // Line comment
+                    while !self.is_at_end() && self.peek() != "\n" {
+                        self.advance();
+                    }
+                } else {
+                    if ch == "/" && self.peek_next() == "*" {
+                        // Block comment
+                        self.advance(); // /
+                        self.advance(); // *
+                        while !self.is_at_end() {
+                            if self.peek() == "*" && self.peek_next() == "/" {
+                                self.advance(); // *
+                                self.advance(); // /
+                                break;
+                            }
+                            self.advance();
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    fn is_digit(self, ch: string) -> bool {
+        return ch == "0" || ch == "1" || ch == "2" || ch == "3" || ch == "4" ||
+               ch == "5" || ch == "6" || ch == "7" || ch == "8" || ch == "9";
+    }
+    
+    fn is_alpha(self, ch: string) -> bool {
+        // Check if character is a letter or underscore
+        let code = ch.char_code_at(0);
+        return (code >= 65 && code <= 90) ||   // A-Z
+               (code >= 97 && code <= 122) ||  // a-z
+               ch == "_";
+    }
+    
+    fn is_alphanumeric(self, ch: string) -> bool {
+        return self.is_alpha(ch) || self.is_digit(ch);
+    }
+    
+    fn make_span(self, start: int, start_line: int, start_col: int) -> Span {
+        return Span::new(start, self.pos, start_line, start_col);
+    }
+    
+    fn scan_identifier(mut self) -> Token {
+        let start = self.pos;
+        let start_line = self.line;
+        let start_col = self.column;
+        
+        let mut text = "";
+        while !self.is_at_end() && self.is_alphanumeric(self.peek()) {
+            text = text + self.advance();
+        }
+        
+        let span = self.make_span(start, start_line, start_col);
+        
+        // Check if it's a keyword
+        let keyword_opt = self.keywords.lookup(text);
+        if keyword_opt.is_some() {
+            return Token::new(keyword_opt.unwrap(), span, text);
+        }
+        
+        // It's an identifier
+        return Token::with_string(TokenKind::identifier(), span, text, text);
+    }
+    
+    fn scan_number(mut self) -> Token {
+        let start = self.pos;
+        let start_line = self.line;
+        let start_col = self.column;
+        
+        let mut text = "";
+        let mut is_float = false;
+        
+        while !self.is_at_end() && self.is_digit(self.peek()) {
+            text = text + self.advance();
+        }
+        
+        // Check for decimal point
+        if self.peek() == "." && self.is_digit(self.peek_next()) {
+            is_float = true;
+            text = text + self.advance(); // .
+            while !self.is_at_end() && self.is_digit(self.peek()) {
+                text = text + self.advance();
+            }
+        }
+        
+        let span = self.make_span(start, start_line, start_col);
+        
+        if is_float {
+            let value = text.parse_float();
+            let mut tok = Token::new(TokenKind::float_literal(), span, text);
+            tok.float_value = value;
+            return tok;
+        } else {
+            let value = text.parse_int();
+            return Token::with_int(TokenKind::int_literal(), span, text, value);
+        }
+    }
+    
+    fn scan_string(mut self) -> Token {
+        let start = self.pos;
+        let start_line = self.line;
+        let start_col = self.column;
+        
+        self.advance(); // Opening "
+        
+        let mut value = "";
+        while !self.is_at_end() && self.peek() != "\"" {
+            let ch = self.advance();
+            if ch == "\\" {
+                // Escape sequence
+                let escaped = self.advance();
+                if escaped == "n" {
+                    value = value + "\n";
+                } else {
+                    if escaped == "t" {
+                        value = value + "\t";
+                    } else {
+                        if escaped == "r" {
+                            value = value + "\r";
+                        } else {
+                            if escaped == "\\" {
+                                value = value + "\\";
+                            } else {
+                                if escaped == "\"" {
+                                    value = value + "\"";
+                                } else {
+                                    value = value + escaped;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                value = value + ch;
+            }
+        }
+        
+        if !self.is_at_end() {
+            self.advance(); // Closing "
+        }
+        
+        let span = self.make_span(start, start_line, start_col);
+        return Token::with_string(TokenKind::string_literal(), span, "\"" + value + "\"", value);
+    }
+    
+    fn scan_operator(mut self) -> Token {
+        let start = self.pos;
+        let start_line = self.line;
+        let start_col = self.column;
+        
+        let ch = self.advance();
+        let next = self.peek();
+        
+        let mut kind = TokenKind::error();
+        let mut text = ch;
+        
+        // Two-character operators
+        if ch == "=" && next == "=" {
+            self.advance();
+            kind = TokenKind::op_eq();
+            text = "==";
+        } else {
+            if ch == "!" && next == "=" {
+                self.advance();
+                kind = TokenKind::op_neq();
+                text = "!=";
+            } else {
+                if ch == "<" && next == "=" {
+                    self.advance();
+                    kind = TokenKind::op_le();
+                    text = "<=";
+                } else {
+                    if ch == ">" && next == "=" {
+                        self.advance();
+                        kind = TokenKind::op_ge();
+                        text = ">=";
+                    } else {
+                        if ch == "&" && next == "&" {
+                            self.advance();
+                            kind = TokenKind::op_and();
+                            text = "&&";
+                        } else {
+                            if ch == "|" && next == "|" {
+                                self.advance();
+                                kind = TokenKind::op_or();
+                                text = "||";
+                            } else {
+                                if ch == "-" && next == ">" {
+                                    self.advance();
+                                    kind = TokenKind::op_arrow();
+                                    text = "->";
+                                } else {
+                                    if ch == "=" && next == ">" {
+                                        self.advance();
+                                        kind = TokenKind::op_fat_arrow();
+                                        text = "=>";
+                                    } else {
+                                        if ch == ":" && next == ":" {
+                                            self.advance();
+                                            kind = TokenKind::double_colon();
+                                            text = "::";
+                                        } else {
+                                            // Single-character operators
+                                            if ch == "+" { kind = TokenKind::op_plus(); }
+                                            else { if ch == "-" { kind = TokenKind::op_minus(); }
+                                            else { if ch == "*" { kind = TokenKind::op_star(); }
+                                            else { if ch == "/" { kind = TokenKind::op_slash(); }
+                                            else { if ch == "%" { kind = TokenKind::op_percent(); }
+                                            else { if ch == "<" { kind = TokenKind::op_lt(); }
+                                            else { if ch == ">" { kind = TokenKind::op_gt(); }
+                                            else { if ch == "=" { kind = TokenKind::op_assign(); }
+                                            else { if ch == "!" { kind = TokenKind::op_not(); }
+                                            else { if ch == "&" { kind = TokenKind::op_ampersand(); }
+                                            else { if ch == "|" { kind = TokenKind::op_pipe(); }
+                                            else { if ch == "(" { kind = TokenKind::lparen(); }
+                                            else { if ch == ")" { kind = TokenKind::rparen(); }
+                                            else { if ch == "{" { kind = TokenKind::lbrace(); }
+                                            else { if ch == "}" { kind = TokenKind::rbrace(); }
+                                            else { if ch == "[" { kind = TokenKind::lbracket(); }
+                                            else { if ch == "]" { kind = TokenKind::rbracket(); }
+                                            else { if ch == "," { kind = TokenKind::comma(); }
+                                            else { if ch == ";" { kind = TokenKind::semicolon(); }
+                                            else { if ch == ":" { kind = TokenKind::colon(); }
+                                            else { if ch == "." { kind = TokenKind::dot(); }
+                                            else { if ch == "#" { kind = TokenKind::hash(); }
+                                            else { if ch == "?" { kind = TokenKind::question(); }
+                                            }}}}}}}}}}}}}}}}}}}}}}}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        let span = self.make_span(start, start_line, start_col);
+        return Token::new(kind, span, text);
+    }
+    
+    fn next_token(mut self) -> Token {
+        self.skip_whitespace();
+        
+        if self.is_at_end() {
+            let span = Span::new(self.pos, self.pos, self.line, self.column);
+            return Token::new(TokenKind::eof(), span, "");
+        }
+        
+        let ch = self.peek();
+        
+        // Identifier or keyword
+        if self.is_alpha(ch) {
+            return self.scan_identifier();
+        }
+        
+        // Number
+        if self.is_digit(ch) {
+            return self.scan_number();
+        }
+        
+        // String
+        if ch == "\"" {
+            return self.scan_string();
+        }
+        
+        // Operators and delimiters
+        return self.scan_operator();
+    }
+    
+    fn tokenize(mut self) -> Vector<Token> {
+        let mut tokens = Vector::<Token>::new();
+        
+        while true {
+            let token = self.next_token();
+            tokens.push(token);
+            
+            if token.is_eof() {
+                break;
+            }
+        }
+        
+        return tokens;
+    }
+}
+
+// Convenience function
+fn lex(source: string) -> Vector<Token> {
+    let mut lexer = Lexer::new(source);
+    return lexer.tokenize();
+}

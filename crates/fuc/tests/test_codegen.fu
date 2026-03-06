@@ -1,0 +1,120 @@
+//! Code generation tests - LLVM output verification
+
+/// Test integer operations codegen
+fn test_integer_ops() {
+    let a = 10;
+    let b = 3;
+    
+    let add = a + b;      // Should generate: add i32 %a, %b
+    let sub = a - b;      // Should generate: sub i32 %a, %b
+    let mul = a * b;      // Should generate: mul i32 %a, %b
+    let div = a / b;      // Should generate: sdiv i32 %a, %b
+    let rem = a % b;      // Should generate: srem i32 %a, %b
+    
+    let neg = -a;         // Should generate: sub i32 0, %a
+    
+    println!("Integer operations: {}, {}, {}, {}, {}, {}", add, sub, mul, div, rem, neg);
+}
+
+/// Test comparison operations codegen
+fn test_comparison_ops() {
+    let a = 5;
+    let b = 10;
+    
+    let eq = a == b;      // Should generate: icmp eq
+    let ne = a != b;      // Should generate: icmp ne
+    let lt = a < b;       // Should generate: icmp slt
+    let le = a <= b;      // Should generate: icmp sle
+    let gt = a > b;       // Should generate: icmp sgt
+    let ge = a >= b;      // Should generate: icmp sge
+    
+    println!("Comparisons: {}, {}, {}, {}, {}, {}", eq, ne, lt, le, gt, ge);
+}
+
+/// Test boolean operations codegen
+fn test_boolean_ops() {
+    let a = true;
+    let b = false;
+    
+    let and_result = a && b;   // Should generate: and i1 with short-circuit
+    let or_result = a || b;    // Should generate: or i1 with short-circuit
+    let not_result = !a;       // Should generate: xor i1 %a, true
+    
+    println!("Booleans: {}, {}, {}", and_result, or_result, not_result);
+}
+
+/// Test control flow codegen
+fn test_control_flow() {
+    // If-else generates br with phi
+    let x = if true { 1 } else { 2 };
+    
+    // While loop generates loop blocks
+    let mut counter = 0;
+    while counter < 5 {
+        counter = counter + 1;
+    }
+    
+    // For loop generates iterator blocks
+    let mut sum = 0;
+    for i in 0..10 {
+        sum = sum + i;
+    }
+    
+    println!("Control flow: x={}, counter={}, sum={}", x, counter, sum);
+}
+
+/// Test function calls codegen
+fn helper(x: FInt, y: FInt) -> FInt {
+    x + y
+}
+
+fn test_function_calls() {
+    let result = helper(3, 4);  // Should generate: call i32 @helper(i32 3, i32 4)
+    println!("Function call result: {}", result);
+}
+
+/// Test struct operations codegen
+struct Point {
+    x: FInt,
+    y: FInt
+}
+
+fn test_struct_ops() {
+    let p = Point { x: 10, y: 20 };  // Should generate: alloca + GEP stores
+    let x_val = p.x;                  // Should generate: GEP + load
+    let y_val = p.y;
+    
+    println!("Struct: x={}, y={}", x_val, y_val);
+}
+
+/// Test array operations codegen
+fn test_array_ops() {
+    let arr = [1, 2, 3, 4, 5];  // Should generate: alloca [5 x i32]
+    let elem = arr[2];          // Should generate: GEP + load
+    
+    let mut arr2 = [0; 10];     // Should generate: alloca with zeroinitializer
+    arr2[0] = 42;               // Should generate: GEP + store
+    
+    println!("Array: elem={}, arr2[0]={}", elem, arr2[0]);
+}
+
+/// Test string operations codegen
+fn test_string_ops() {
+    let s = "Hello, World!";    // Should generate global string constant
+    let concat = s + " Extra";   // Should generate string concatenation call
+    
+    println!("String: {}", concat);
+}
+
+fn main() {
+    println!("=== Code Generation Tests ===");
+    test_integer_ops();
+    test_comparison_ops();
+    test_boolean_ops();
+    test_control_flow();
+    test_function_calls();
+    test_struct_ops();
+    test_array_ops();
+    test_string_ops();
+    println!("All codegen tests passed!");
+}

@@ -1,4 +1,3 @@
-#![deny(missing_docs)]
 //! Fusion compiler library.
 /// AST definitions.
 mod ast;

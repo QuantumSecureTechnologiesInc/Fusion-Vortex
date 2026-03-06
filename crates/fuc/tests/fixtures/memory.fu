@@ -1,0 +1,104 @@
+//! Test memory operations and references
+
+/// Test stack allocation
+fn test_stack() {
+    let a = 1;
+    let b = 2;
+    let c = 3;
+    let sum = a + b + c;
+    println!("Stack sum: {}", sum);
+}
+
+/// Test mutable variables
+fn test_mutation() {
+    let mut x = 0;
+    x = x + 1;
+    x = x + 2;
+    x = x + 3;
+    println!("Mutated x: {}", x);
+}
+
+/// Test references
+fn increment(x: &mut FInt) {
+    *x = *x + 1;
+}
+
+fn read_only(x: &FInt) -> FInt {
+    *x * 2
+}
+
+fn test_references() {
+    let mut val = 10;
+    
+    // Immutable borrow
+    let doubled = read_only(&val);
+    println!("Doubled: {}", doubled);
+    
+    // Mutable borrow
+    increment(&mut val);
+    println!("Incremented: {}", val);
+}
+
+/// Test array memory
+fn test_arrays() {
+    let arr = [1, 2, 3, 4, 5];
+    let mut sum = 0;
+    for i in 0..5 {
+        sum = sum + arr[i];
+    }
+    println!("Array sum: {}", sum);
+    
+    // Mutable array
+    let mut arr2 = [0; 5];
+    for i in 0..5 {
+        arr2[i] = i * i;
+    }
+    println!("arr2[4]: {}", arr2[4]);
+}
+
+/// Test struct memory
+struct LargeStruct {
+    a: FInt,
+    b: FInt,
+    c: FInt,
+    d: FInt,
+    e: FInt
+}
+
+fn test_struct_memory() {
+    let s = LargeStruct {
+        a: 1, b: 2, c: 3, d: 4, e: 5
+    };
+    let sum = s.a + s.b + s.c + s.d + s.e;
+    println!("Struct sum: {}", sum);
+}
+
+/// Test nested structs
+struct Inner {
+    value: FInt
+}
+
+struct Outer {
+    inner: Inner,
+    scale: FInt
+}
+
+fn test_nested() {
+    let o = Outer {
+        inner: Inner { value: 10 },
+        scale: 2
+    };
+    let result = o.inner.value * o.scale;
+    println!("Nested result: {}", result);
+}
+
+fn main() {
+    println!("=== Memory Tests ===");
+    test_stack();
+    test_mutation();
+    test_references();
+    test_arrays();
+    test_struct_memory();
+    test_nested();
+    println!("All memory tests passed!");
+}

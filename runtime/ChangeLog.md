@@ -1,9 +1,88 @@
+<!-- markdownlint-disable MD024 -->
+
 # Fusion Runtime Core - Change Log
 
 All notable changes to the Fusion Programming Language runtime will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.4.0] - 2026-02-06
+
+### Added - Self-Hosting Compiler & IDE Environment
+
+#### Fusion-Coder CLI Completion
+
+- **Commands Module** (`commands.fu`): Full session management and compiler integration
+  - `SessionMetadata`: Persistent session state with JSON serialisation
+  - `handle_resume()`: Session restoration from disk
+  - `handle_compile()`: Direct `fuc` compiler invocation
+  - `handle_build()`: Project build via `fusion-toolchain::builder`
+  - `handle_run()`: Execute compiled binaries
+- **Exec Mode** (`exec_mode.fu`): Non-interactive task execution
+  - Task parser for compile/build/run/check/format/agent commands
+  - JSON output mode for scripting integration
+  - Proper exit codes and error handling
+- **Interactive Mode** (`interactive.fu`): REPL-style interaction
+  - Command loop with `:compile`, `:build`, `:run`, `:check`, `:fmt` commands
+  - Multi-line input support (end with `;;`)
+  - Code snippet compilation and execution
+  - Command history tracking
+- **Dependencies**: Added `fusion-toolchain`, `colored`, `which` to Fusion.toml
+
+#### Self-Hosting Compiler (Pure Fusion)
+
+- **Complete Compiler in Fusion**: All components written in pure `.fu` files
+  - `token.fu`: 28 keywords, 20 operators, all literals
+  - `lexer.fu`: Hand-written tokenizer with escape sequences
+  - `ast.fu`: Full AST node definitions for all language constructs
+  - `parser.fu`: Recursive descent parser with operator precedence
+  - `types.fu`: Type registry, inference, and primitives
+  - `sema.fu`: Two-pass semantic analysis with type checking
+  - `ir.fu`: IR with opcodes, basic blocks, SSA-style
+  - `codegen.fu`: Fusion VM bytecode + x86_64 assembly output
+  - `driver.fu`: Compilation pipeline orchestration
+  - `test.fu`: 17 unit tests for compiler validation
+
+#### Intent System
+
+- **Intent Module** (`intent.fu`): Intent-driven execution scheduling
+  - `Intent` enum: Critical, HighThroughput, Precision, Background
+  - `TaskProfile`: Metadata for scheduler decisions (ops, memory, intent)
+  - `Device`: Target hardware (Cpu, Gpu(n), Qpu(n))
+  - `IntentEngine`: Parses intent annotations and natural language
+  - `Cortex`: AI-driven scheduler for optimal device selection
+
+#### Post-Quantum Cryptography
+
+- **PQC Module** (`pqc.fu`): Quantum-resistant cryptographic primitives
+  - `KyberKeypair` + `KyberKEM`: ML-KEM at 512/768/1024 levels
+  - `DilithiumKeypair` + `DilithiumSign`: ML-DSA at 2/3/5 levels
+  - `HybridKeypair`: Combined Classical (ECDH/ECDSA) + PQC
+  - `hybrid_key_exchange()`: ECDH + Kyber768 KEM
+  - `hybrid_sign()`/`hybrid_verify()`: ECDSA + Dilithium3
+
+#### IDE Environment
+
+- **VS Code Integration**:
+  - `settings.json`: Fusion language configuration
+  - `tasks.json`: Build, Run, Test, Format commands
+  - `launch.json`: Debug configurations
+  - `fusion.tmLanguage.json`: Full syntax highlighting grammar
+- **VS Code Extension**:
+  - `package.json`: Extension manifest
+  - `language-configuration.json`: Bracket matching, auto-close
+  - `snippets/fusion.json`: 18 code snippets
+- **Project Templates**:
+  - `templates/hello_world/`: Quick-start template
+  - `templates/library/`: Reusable library with math/utils
+
+### Changed
+
+- Updated workspace version to 0.4.0
+- Documentation updated with self-hosting compiler references
+- DeveloperGuide.md updated with compiler pipeline details
+- QuickStartGuide.md updated with intent and compiler examples
 
 ## [0.3.0] - 2025-12-11
 

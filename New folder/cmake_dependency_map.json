@@ -1,0 +1,3924 @@
+{
+  ".\\runtime\\native\\CMakeLists.txt": {
+    "targets": [
+      "fusionrt"
+    ],
+    "dependencies": {
+      "fusionrt": [
+        "ws2_32",
+        "pthread"
+      ]
+    }
+  },
+  ".\\v2.0 Vortex\\CMakeLists.txt": {
+    "targets": [
+      "hypercycle_pqc",
+      "vortex_dashboard",
+      "secure_dashboard",
+      "hc_cuda",
+      "hc_rocm",
+      "hypercycle_vortex_objs",
+      "${test_name}"
+    ],
+    "dependencies": {
+      "hypercycle_pqc": [
+        "OpenSSL::Crypto",
+        "dl",
+        "m",
+        "pthread",
+        "winpthread"
+      ],
+      "vortex_dashboard": [
+        "hypercycle_pqc",
+        "OpenSSL::Crypto",
+        "m",
+        "pthread",
+        "winpthread"
+      ],
+      "secure_dashboard": [
+        "hypercycle_pqc",
+        "OpenSSL::Crypto",
+        "m",
+        "pthread",
+        "winpthread"
+      ],
+      "hc_cuda": [
+        "CUDA::cudart"
+      ],
+      "hc_rocm": [
+        "HIP::hip_runtime"
+      ],
+      "hypercycle_vortex_objs": [],
+      "${test_name}": [
+        "hypercycle_pqc"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\7zip\\CMakeLists.txt": {
+    "targets": [
+      "7zip"
+    ],
+    "dependencies": {
+      "7zip": []
+    }
+  },
+  ".\\vcpkg\\ports\\alac\\CMakeLists.txt": {
+    "targets": [
+      "libalac",
+      "alacconvert"
+    ],
+    "dependencies": {
+      "libalac": [],
+      "alacconvert": [
+        "libalac"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\alac-decoder\\CMakeLists.txt": {
+    "targets": [
+      "libalac_decoder",
+      "alac_decoder"
+    ],
+    "dependencies": {
+      "libalac_decoder": [],
+      "alac_decoder": [
+        "libalac_decoder"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\angle\\cmake-buildsystem\\CMakeLists.txt": {
+    "targets": [
+      "ANGLEFramework",
+      "ANGLE",
+      "GLESv2",
+      "GLESv2Framework",
+      "ANGLE::GLES",
+      "EGL",
+      "EGLFramework",
+      "ANGLE::EGL",
+      "ANGLE",
+      "ANGLE::ANGLE"
+    ],
+    "dependencies": {
+      "ANGLEFramework": [
+        "ANGLE"
+      ],
+      "ANGLE": [
+        "ZLIB::ZLIB",
+        "${CMAKE_DL_LIBS}",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "GLESv2": [
+        "${ANGLEGLESv2_LIBRARIES}",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "GLESv2Framework": [
+        "GLESv2"
+      ],
+      "ANGLE::GLES": [],
+      "EGL": [
+        "GLESv2",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "EGLFramework": [
+        "EGL"
+      ],
+      "ANGLE::EGL": [],
+      "ANGLE::ANGLE": []
+    }
+  },
+  ".\\vcpkg\\ports\\argon2\\CMakeLists.txt": {
+    "targets": [
+      "libargon2",
+      "argon2"
+    ],
+    "dependencies": {
+      "libargon2": [
+        "Threads::Threads"
+      ],
+      "argon2": [
+        "libargon2"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\asio\\CMakeLists.txt": {
+    "targets": [
+      "asio"
+    ],
+    "dependencies": {
+      "asio": [
+        "Threads::Threads"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\aubio\\CMakeLists.txt": {
+    "targets": [
+      "aubio",
+      "${EXAMPLE_EXEC}"
+    ],
+    "dependencies": {
+      "aubio": [
+        "SndFile::sndfile",
+        "${FFMPEG_LIBRARIES}",
+        "BZip2::BZip2",
+        "${LIBLZMA_LIBRARIES}",
+        "ws2_32"
+      ],
+      "${EXAMPLE_EXEC}": [
+        "aubio",
+        "ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\autodock-vina\\CMakeLists.txt": {
+    "targets": [
+      "vina",
+      "vina_split"
+    ],
+    "dependencies": {
+      "vina": [
+        "Boost::boost",
+        "Boost::filesystem",
+        "Boost::log",
+        "Boost::program_options",
+        "Boost::random",
+        "Boost::serialization",
+        "Boost::thread",
+        "Boost::timer"
+      ],
+      "vina_split": [
+        "Boost::boost",
+        "Boost::filesystem",
+        "Boost::log",
+        "Boost::program_options",
+        "Boost::random",
+        "Boost::serialization",
+        "Boost::thread",
+        "Boost::timer"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\b64\\CMakeLists.txt": {
+    "targets": [
+      "b64"
+    ],
+    "dependencies": {
+      "b64": []
+    }
+  },
+  ".\\vcpkg\\ports\\berkeleydb\\CMakeLists.txt": {
+    "targets": [
+      "libdb48"
+    ],
+    "dependencies": {
+      "libdb48": [
+        "ws2_32.lib"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\bigint\\CMakeLists.txt": {
+    "targets": [
+      "bigint"
+    ],
+    "dependencies": {
+      "bigint": []
+    }
+  },
+  ".\\vcpkg\\ports\\binn\\CMakeLists.txt": {
+    "targets": [
+      "binn"
+    ],
+    "dependencies": {
+      "binn": []
+    }
+  },
+  ".\\vcpkg\\ports\\boinc\\CMakeLists.txt": {
+    "targets": [
+      "boinc",
+      "boincapi",
+      "boinc_zip"
+    ],
+    "dependencies": {
+      "boinc": [
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto"
+      ],
+      "boincapi": [
+        "boinc"
+      ],
+      "boinc_zip": [
+        "libzip::zip"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\breakpad\\CMakeLists.txt": {
+    "targets": [
+      "libbreakpad",
+      "libbreakpad_client",
+      "microdump_stackwalk",
+      "minidump_dump",
+      "minidump_stackwalk",
+      "core2md",
+      "pid2md",
+      "dump_syms",
+      "minidump-2-core",
+      "minidump_upload",
+      "sym_upload",
+      "core_handler"
+    ],
+    "dependencies": {
+      "libbreakpad": [
+        "${LIBDISASM_LIB}"
+      ],
+      "libbreakpad_client": [
+        "wininet.lib",
+        "${CoreFoundation_FRAMEWORK}",
+        "${PTHREAD_LIBRARIES}",
+        "ZLIB::ZLIB"
+      ],
+      "microdump_stackwalk": [
+        "libbreakpad",
+        "libbreakpad_client"
+      ],
+      "minidump_dump": [
+        "libbreakpad",
+        "libbreakpad_client"
+      ],
+      "minidump_stackwalk": [
+        "libbreakpad",
+        "libbreakpad_client"
+      ],
+      "core2md": [
+        "libbreakpad_client"
+      ],
+      "pid2md": [
+        "libbreakpad_client"
+      ],
+      "dump_syms": [
+        "libbreakpad_client"
+      ],
+      "minidump-2-core": [
+        "libbreakpad_client"
+      ],
+      "minidump_upload": [
+        "libbreakpad_client",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "sym_upload": [
+        "libbreakpad_client",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "core_handler": [
+        "libbreakpad_client"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\butteraugli\\CMakeLists.txt": {
+    "targets": [
+      "butteraugli_lib",
+      "butteraugli"
+    ],
+    "dependencies": {
+      "butteraugli_lib": [],
+      "butteraugli": [
+        "butteraugli_lib",
+        "${JPEG_LIBRARIES}",
+        "${TURBO}",
+        "${PNG_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\bzip2\\CMakeLists.txt": {
+    "targets": [
+      "bz2",
+      "bzip2",
+      "bzip2recover"
+    ],
+    "dependencies": {
+      "bz2": [],
+      "bzip2": [],
+      "bzip2recover": []
+    }
+  },
+  ".\\vcpkg\\ports\\cello\\CMakeLists.txt": {
+    "targets": [
+      "cello"
+    ],
+    "dependencies": {
+      "cello": []
+    }
+  },
+  ".\\vcpkg\\ports\\cgicc\\CMakeLists.txt": {
+    "targets": [
+      "cgicc"
+    ],
+    "dependencies": {
+      "cgicc": []
+    }
+  },
+  ".\\vcpkg\\ports\\chmlib\\CMakeLists.txt": {
+    "targets": [
+      "chm",
+      "enum_chmLib",
+      "enumdir_chmLib",
+      "extract_chmLib"
+    ],
+    "dependencies": {
+      "chm": [],
+      "enum_chmLib": [],
+      "enumdir_chmLib": [],
+      "extract_chmLib": []
+    }
+  },
+  ".\\vcpkg\\ports\\cimg\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\cityhash\\CMakeLists.txt": {
+    "targets": [
+      "cityhash"
+    ],
+    "dependencies": {
+      "cityhash": []
+    }
+  },
+  ".\\vcpkg\\ports\\clue\\CMakeLists.txt": {
+    "targets": [
+      "test_clue"
+    ],
+    "dependencies": {
+      "test_clue": []
+    }
+  },
+  ".\\vcpkg\\ports\\convectionkernels\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\cpp-exiftool\\CMakeLists.txt": {
+    "targets": [
+      "cpp-exiftool"
+    ],
+    "dependencies": {
+      "cpp-exiftool": []
+    }
+  },
+  ".\\vcpkg\\ports\\cpp-redis\\tacopie\\CMakeLists.txt": {
+    "targets": [
+      "tacopie"
+    ],
+    "dependencies": {
+      "tacopie": [
+        "\"${TACOPIE}\""
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\cppcoro\\CMakeLists.txt": {
+    "targets": [
+      "cppcoro",
+      "cppcoro_test"
+    ],
+    "dependencies": {
+      "cppcoro": [
+        "c++",
+        "pthread",
+        "kernel32",
+        "synchronization",
+        "ws2_32",
+        "mswsock",
+        "#",
+        "msvcrt[d]",
+        "msvcprt[d]",
+        "vcruntime",
+        "ucrt",
+        "c++",
+        "#",
+        "stdc++",
+        "#",
+        "expect",
+        "libc++",
+        "instead",
+        "of",
+        "libstdc++"
+      ],
+      "cppcoro_test": [
+        "cppcoro",
+        "Threads::Threads",
+        "doctest::doctest"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\cppunit\\CMakeLists.txt": {
+    "targets": [
+      "cppunit",
+      "cppunit",
+      "DllPlugInTester"
+    ],
+    "dependencies": {
+      "cppunit": [],
+      "DllPlugInTester": [
+        "cppunit"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\crfsuite\\CMakeLists.txt": {
+    "targets": [
+      "cqdb",
+      "crf",
+      "crfsuite",
+      "frontend"
+    ],
+    "dependencies": {
+      "cqdb": [],
+      "crf": [
+        "cqdb",
+        "${LBFGS_LIBRARY}"
+      ],
+      "crfsuite": [
+        "crf"
+      ],
+      "frontend": [
+        "crf"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\cspice\\CMakeLists.txt": {
+    "targets": [
+      "cspice"
+    ],
+    "dependencies": {
+      "cspice": []
+    }
+  },
+  ".\\vcpkg\\ports\\ctemplate\\CMakeLists.txt": {
+    "targets": [
+      "libctemplate"
+    ],
+    "dependencies": {
+      "libctemplate": []
+    }
+  },
+  ".\\vcpkg\\ports\\cunit\\CMakeLists.txt": {
+    "targets": [
+      "cunit"
+    ],
+    "dependencies": {
+      "cunit": []
+    }
+  },
+  ".\\vcpkg\\ports\\darts-clone\\CMakeLists.txt": {
+    "targets": [
+      "darts"
+    ],
+    "dependencies": {
+      "darts": []
+    }
+  },
+  ".\\vcpkg\\ports\\devicenameresolver\\CMakeLists.txt": {
+    "targets": [
+      "DeviceNameResolver"
+    ],
+    "dependencies": {
+      "DeviceNameResolver": []
+    }
+  },
+  ".\\vcpkg\\ports\\discord-game-sdk\\CMakeLists.txt": {
+    "targets": [
+      "discord_game_sdk_cpp"
+    ],
+    "dependencies": {
+      "discord_game_sdk_cpp": [
+        "${SDK_LIB}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\distorm\\CMakeLists.txt": {
+    "targets": [
+      "distorm"
+    ],
+    "dependencies": {
+      "distorm": []
+    }
+  },
+  ".\\vcpkg\\ports\\duktape\\CMakeLists.txt": {
+    "targets": [
+      "duktape"
+    ],
+    "dependencies": {
+      "duktape": []
+    }
+  },
+  ".\\vcpkg\\ports\\easyexif\\CMakeLists.txt": {
+    "targets": [
+      "easyexif"
+    ],
+    "dependencies": {
+      "easyexif": []
+    }
+  },
+  ".\\vcpkg\\ports\\ecos\\CMakeLists.txt": {
+    "targets": [
+      "ecos-suitesparse",
+      "ecos-amd",
+      "ecos-ldl",
+      "ecos"
+    ],
+    "dependencies": {
+      "ecos-suitesparse": [],
+      "ecos-amd": [
+        "ecos-suitesparse"
+      ],
+      "ecos-ldl": [
+        "ecos-suitesparse"
+      ],
+      "ecos": [
+        "ecos-amd",
+        "ecos-ldl"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\ed25519\\CMakeLists.txt": {
+    "targets": [
+      "\"${PROJECT_NAME}\""
+    ],
+    "dependencies": {
+      "\"${PROJECT_NAME}\"": []
+    }
+  },
+  ".\\vcpkg\\ports\\edflib\\CMakeLists.txt": {
+    "targets": [
+      "EDFlib",
+      "sine_generator",
+      "sweep_generator"
+    ],
+    "dependencies": {
+      "EDFlib": [],
+      "sine_generator": [
+        "EDFlib",
+        "m"
+      ],
+      "sweep_generator": [
+        "EDFlib",
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\fastfeat\\CMakeLists.txt": {
+    "targets": [
+      "fastfeat"
+    ],
+    "dependencies": {
+      "fastfeat": []
+    }
+  },
+  ".\\vcpkg\\ports\\fastlz\\CMakeLists.txt": {
+    "targets": [
+      "fastlz"
+    ],
+    "dependencies": {
+      "fastlz": []
+    }
+  },
+  ".\\vcpkg\\ports\\fdlibm\\CMakeLists.txt": {
+    "targets": [
+      "fdlibm"
+    ],
+    "dependencies": {
+      "fdlibm": []
+    }
+  },
+  ".\\vcpkg\\ports\\ffmpeg-bin2c\\CMakeLists.txt": {
+    "targets": [
+      "bin2c"
+    ],
+    "dependencies": {
+      "bin2c": []
+    }
+  },
+  ".\\vcpkg\\ports\\freeimage\\CMakeLists.txt": {
+    "targets": [
+      "FreeImage",
+      "FreeImagePlus"
+    ],
+    "dependencies": {
+      "FreeImage": [
+        "${ZLIB_LIBRARIES}",
+        "${JPEG_LIBRARIES}",
+        "${TIFF_LIBRARIES}",
+        "${PNG_LIBRARIES}",
+        "${OPENJPEG_LIBRARIES}",
+        "WebP::webp",
+        "WebP::webpdemux",
+        "WebP::libwebpmux",
+        "WebP::webpdecoder",
+        "${JXR_LIBRARIES}",
+        "${LibRaw_LIBRARIES}",
+        "OpenEXR::OpenEXR",
+        "Imath::Imath"
+      ],
+      "FreeImagePlus": [
+        "FreeImage"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\gamma\\CMakeLists.txt": {
+    "targets": [
+      "gamma"
+    ],
+    "dependencies": {
+      "gamma": [
+        "SndFile::sndfile",
+        "${PORTAUDIO_LIB}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\genann\\CMakeLists.txt": {
+    "targets": [
+      "genann"
+    ],
+    "dependencies": {
+      "genann": []
+    }
+  },
+  ".\\vcpkg\\ports\\geotrans\\CMakeLists.txt": {
+    "targets": [
+      "MSPdtcc",
+      "MSPCoordinateConversionService"
+    ],
+    "dependencies": {
+      "MSPdtcc": [
+        "Threads::Threads",
+        "${CMAKE_DL_LIBS}"
+      ],
+      "MSPCoordinateConversionService": []
+    }
+  },
+  ".\\vcpkg\\ports\\gettimeofday\\CMakeLists.txt": {
+    "targets": [
+      "gettimeofday"
+    ],
+    "dependencies": {
+      "gettimeofday": []
+    }
+  },
+  ".\\vcpkg\\ports\\giflib\\CMakeLists.txt": {
+    "targets": [
+      "gif"
+    ],
+    "dependencies": {
+      "gif": []
+    }
+  },
+  ".\\vcpkg\\ports\\gl3w\\CMakeLists.txt": {
+    "targets": [
+      "gl3w"
+    ],
+    "dependencies": {
+      "gl3w": [
+        "${OPENGL_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\gppanel\\CMakeLists.txt": {
+    "targets": [
+      "gpPanel"
+    ],
+    "dependencies": {
+      "gpPanel": [
+        "${wxWidgets_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\gsl\\CMakeLists.txt": {
+    "targets": [
+      "gslcblas",
+      "gsl"
+    ],
+    "dependencies": {
+      "gslcblas": [],
+      "gsl": [
+        "gslcblas"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\gts\\CMakeLists.txt": {
+    "targets": [
+      "gts"
+    ],
+    "dependencies": {
+      "gts": [
+        "PkgConfig::GLIB2"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\guetzli\\CMakeLists.txt": {
+    "targets": [
+      "guetzli_lib",
+      "guetzli"
+    ],
+    "dependencies": {
+      "guetzli_lib": [
+        "${butteraugli_library}",
+        "${PNG_LIBRARIES}"
+      ],
+      "guetzli": [
+        "guetzli_lib",
+        "${butteraugli_library}",
+        "${PNG_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\gumbo\\CMakeLists.txt": {
+    "targets": [
+      "gumbo"
+    ],
+    "dependencies": {
+      "gumbo": []
+    }
+  },
+  ".\\vcpkg\\ports\\h5py-lzf\\CMakeLists.txt": {
+    "targets": [
+      "h5py-lzf"
+    ],
+    "dependencies": {
+      "h5py-lzf": [
+        "unofficial::liblzf::liblzf",
+        "$<IF:$<TARGET_EXISTS:hdf5::hdf5-shared>,hdf5::hdf5-shared,hdf5::hdf5-static>"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\hash-library\\CMakeLists.txt": {
+    "targets": [
+      "hash-library"
+    ],
+    "dependencies": {
+      "hash-library": []
+    }
+  },
+  ".\\vcpkg\\ports\\hffix\\CMakeLists.txt": {
+    "targets": [
+      "hffix"
+    ],
+    "dependencies": {
+      "hffix": []
+    }
+  },
+  ".\\vcpkg\\ports\\http-parser\\CMakeLists.txt": {
+    "targets": [
+      "http_parser"
+    ],
+    "dependencies": {
+      "http_parser": []
+    }
+  },
+  ".\\vcpkg\\ports\\hungarian\\CMakeLists.txt": {
+    "targets": [
+      "hungarian"
+    ],
+    "dependencies": {
+      "hungarian": []
+    }
+  },
+  ".\\vcpkg\\ports\\iausofa\\CMakeLists.txt": {
+    "targets": [
+      "iausofa"
+    ],
+    "dependencies": {
+      "iausofa": [
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\ideviceinstaller\\CMakeLists.txt": {
+    "targets": [
+      "ideviceinstaller"
+    ],
+    "dependencies": {
+      "ideviceinstaller": [
+        "unofficial::libimobiledevice::libimobiledevice",
+        "libzip::zip",
+        "unofficial::getopt-win32::getopt"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\idevicerestore\\CMakeLists.txt": {
+    "targets": [
+      "idevicerestore"
+    ],
+    "dependencies": {
+      "idevicerestore": [
+        "CURL::libcurl",
+        "unofficial::libimobiledevice::libimobiledevice",
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "unofficial::libirecovery::libirecovery",
+        "libzip::zip",
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto",
+        "ZLIB::ZLIB",
+        "unofficial::getopt-win32::getopt"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\im3d\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\imgui\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}",
+      "${PROJECT_NAME}::${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "Allegro::allegro",
+        "Allegro::allegro_ttf",
+        "Allegro::allegro_font",
+        "Allegro::allegro_main",
+        "glfw",
+        "GLUT::GLUT",
+        "SDL3::SDL3",
+        "SDL3::SDL3",
+        "SDL3::SDL3",
+        "Vulkan::Vulkan",
+        "freetype",
+        "plutosvg::plutosvg"
+      ],
+      "${PROJECT_NAME}::${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\imgui-node-editor\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\imguizmo\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\implot\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}",
+      "${PROJECT_NAME}::${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [],
+      "${PROJECT_NAME}::${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\implot3d\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}",
+      "${PROJECT_NAME}::${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "imgui::imgui"
+      ],
+      "${PROJECT_NAME}::${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\intelrdfpmathlib\\CMakeLists.txt": {
+    "targets": [
+      "intel_decimal128"
+    ],
+    "dependencies": {
+      "intel_decimal128": []
+    }
+  },
+  ".\\vcpkg\\ports\\irrlicht\\CMakeLists.txt": {
+    "targets": [
+      "Irrlicht",
+      "Irrlicht",
+      "FileToHeader",
+      "GUIEditor",
+      "FontTool",
+      "MeshConverter"
+    ],
+    "dependencies": {
+      "Irrlicht": [
+        "${OSX_LIBRARIES}",
+        "${PNG_LIBRARY}",
+        "${JPEG_LIBRARY}",
+        "${ZLIB_LIBRARY}",
+        "${BZIP2_LIBRARY}",
+        "${ADDITIONAL_LIRARIES}",
+        "${DX_LIBS}/d3dx9.lib",
+        "${DX_LIBS}/dinput8.lib",
+        "${DX_LIBS}/dxguid.lib",
+        "X11",
+        "GL",
+        "Xxf86vm"
+      ],
+      "FileToHeader": [],
+      "GUIEditor": [
+        "Irrlicht"
+      ],
+      "FontTool": [
+        "Irrlicht"
+      ],
+      "MeshConverter": [
+        "Irrlicht"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\jack2\\CMakeLists.txt": {
+    "targets": [
+      "jack"
+    ],
+    "dependencies": {
+      "jack": [
+        "${CMAKE_DL_LIBS}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\jbig2dec\\CMakeLists.txt": {
+    "targets": [
+      "jbig2dec"
+    ],
+    "dependencies": {
+      "jbig2dec": []
+    }
+  },
+  ".\\vcpkg\\ports\\jbigkit\\CMakeLists.txt": {
+    "targets": [
+      "libjbig"
+    ],
+    "dependencies": {
+      "libjbig": []
+    }
+  },
+  ".\\vcpkg\\ports\\jxrlib\\CMakeLists.txt": {
+    "targets": [
+      "jpegxr",
+      "jxrglue"
+    ],
+    "dependencies": {
+      "jpegxr": [],
+      "jxrglue": [
+        "jpegxr"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\keccak-tiny\\CMakeLists.txt": {
+    "targets": [
+      "\"${PROJECT_NAME}\""
+    ],
+    "dependencies": {
+      "\"${PROJECT_NAME}\"": []
+    }
+  },
+  ".\\vcpkg\\ports\\lemon-parser-generator\\CMakeLists.txt": {
+    "targets": [
+      "lemon"
+    ],
+    "dependencies": {
+      "lemon": []
+    }
+  },
+  ".\\vcpkg\\ports\\libaes-siv\\CMakeLists.txt": {
+    "targets": [
+      "\"${PROJECT_NAME}\""
+    ],
+    "dependencies": {
+      "\"${PROJECT_NAME}\"": [
+        "OpenSSL::Crypto"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libaiff\\CMakeLists.txt": {
+    "targets": [
+      "libaiff"
+    ],
+    "dependencies": {
+      "libaiff": []
+    }
+  },
+  ".\\vcpkg\\ports\\libaio\\CMakeLists.txt": {
+    "targets": [
+      "aio"
+    ],
+    "dependencies": {
+      "aio": []
+    }
+  },
+  ".\\vcpkg\\ports\\libass\\CMakeLists.txt": {
+    "targets": [
+      "ass"
+    ],
+    "dependencies": {
+      "ass": [
+        "Freetype::Freetype",
+        "PkgConfig::FRIBIDI",
+        "PkgConfig::HARFBUZZ",
+        "${FONT_LIBRARY}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libdatrie\\CMakeLists.txt": {
+    "targets": [
+      "libdatrie",
+      "trietool"
+    ],
+    "dependencies": {
+      "libdatrie": [],
+      "trietool": [
+        "libdatrie",
+        "Iconv::Iconv"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libdisasm\\CMakeLists.txt": {
+    "targets": [
+      "libdisasm"
+    ],
+    "dependencies": {
+      "libdisasm": []
+    }
+  },
+  ".\\vcpkg\\ports\\libideviceactivation\\CMakeLists.txt": {
+    "targets": [
+      "libideviceactivation",
+      "ideviceactivation"
+    ],
+    "dependencies": {
+      "libideviceactivation": [
+        "CURL::libcurl",
+        "LibXml2::LibXml2",
+        "unofficial::libplist::libplist",
+        "unofficial::libimobiledevice::libimobiledevice"
+      ],
+      "ideviceactivation": [
+        "libideviceactivation"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libimobiledevice\\CMakeLists.txt": {
+    "targets": [
+      "libimobiledevice",
+      "\"${name}\""
+    ],
+    "dependencies": {
+      "libimobiledevice": [
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "unofficial::libusbmuxd::libusbmuxd",
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto",
+        "unofficial::libplist::libplist",
+        "Ws2_32"
+      ],
+      "\"${name}\"": [
+        "libimobiledevice",
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "unofficial::libusbmuxd::libusbmuxd",
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto",
+        "unofficial::getopt-win32::getopt",
+        "Ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libimobiledevice-glue\\CMakeLists.txt": {
+    "targets": [
+      "libimobiledevice-glue"
+    ],
+    "dependencies": {
+      "libimobiledevice-glue": [
+        "unofficial::libplist::libplist",
+        "Ws2_32",
+        "Iphlpapi"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libirecovery\\CMakeLists.txt": {
+    "targets": [
+      "libirecovery",
+      "irecovery"
+    ],
+    "dependencies": {
+      "libirecovery": [
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "PkgConfig::libusb",
+        "Setupapi",
+        "\"-framework",
+        "IOKit\"",
+        "\"-framework",
+        "CoreFoundation\""
+      ],
+      "irecovery": [
+        "unofficial::getopt-win32::getopt",
+        "Ws2_32",
+        "\"-framework",
+        "IOKit\"",
+        "\"-framework",
+        "CoreFoundation\"",
+        "PkgConfig::libusb",
+        "libirecovery",
+        "PkgConfig::readline"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\liblbfgs\\CMakeLists.txt": {
+    "targets": [
+      "lbfgs"
+    ],
+    "dependencies": {
+      "lbfgs": []
+    }
+  },
+  ".\\vcpkg\\ports\\liblinear\\CMakeLists.txt": {
+    "targets": [
+      "blas",
+      "liblinear",
+      "train",
+      "predict"
+    ],
+    "dependencies": {
+      "blas": [],
+      "liblinear": [
+        "\"-DEF:${CMAKE_CURRENT_SOURCE_DIR}/linear.def\""
+      ],
+      "train": [
+        "liblinear"
+      ],
+      "predict": [
+        "liblinear"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\liblzf\\CMakeLists.txt": {
+    "targets": [
+      "liblzf"
+    ],
+    "dependencies": {
+      "liblzf": []
+    }
+  },
+  ".\\vcpkg\\ports\\libmpeg2\\CMakeLists.txt": {
+    "targets": [
+      "mpeg2",
+      "mpeg2convert",
+      "getopt",
+      "vo",
+      "mpeg2dec",
+      "extract_mpeg2",
+      "corrupt_mpeg2"
+    ],
+    "dependencies": {
+      "mpeg2": [],
+      "mpeg2convert": [],
+      "getopt": [],
+      "vo": [
+        "mpeg2convert"
+      ],
+      "mpeg2dec": [
+        "getopt",
+        "vo",
+        "mpeg2convert",
+        "mpeg2",
+        "gdi32"
+      ],
+      "extract_mpeg2": [
+        "getopt"
+      ],
+      "corrupt_mpeg2": [
+        "getopt"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libmspack\\CMakeLists.txt": {
+    "targets": [
+      "libmspack"
+    ],
+    "dependencies": {
+      "libmspack": []
+    }
+  },
+  ".\\vcpkg\\ports\\libmupdf\\CMakeLists.txt": {
+    "targets": [
+      "bin2coff",
+      "libmupdf"
+    ],
+    "dependencies": {
+      "bin2coff": [],
+      "libmupdf": [
+        "freetype",
+        "harfbuzz::harfbuzz",
+        "${JBIG2DEC_LIBRARY}",
+        "JPEG::JPEG",
+        "openjp2",
+        "unofficial::gumbo::gumbo",
+        "ZLIB::ZLIB",
+        "$<$<BOOL:${ENABLE_OCR}>:leptonica>",
+        "$<$<BOOL:${ENABLE_OCR}>:Tesseract::libtesseract>",
+        "$<$<BOOL:${ANDROID}>:log>"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libodb\\CMakeLists.txt": {
+    "targets": [
+      "libodb"
+    ],
+    "dependencies": {
+      "libodb": []
+    }
+  },
+  ".\\vcpkg\\ports\\libodb-boost\\CMakeLists.txt": {
+    "targets": [
+      "libodb-boost"
+    ],
+    "dependencies": {
+      "libodb-boost": [
+        "odb::libodb"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libodb-mysql\\CMakeLists.txt": {
+    "targets": [
+      "libodb-mysql"
+    ],
+    "dependencies": {
+      "libodb-mysql": [
+        "odb::libodb",
+        "${MYSQL_LIB}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libodb-pgsql\\CMakeLists.txt": {
+    "targets": [
+      "libodb-pgsql"
+    ],
+    "dependencies": {
+      "libodb-pgsql": [
+        "odb::libodb",
+        "${PostgreSQL_LIBRARY}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libodb-sqlite\\CMakeLists.txt": {
+    "targets": [
+      "libodb-sqlite"
+    ],
+    "dependencies": {
+      "libodb-sqlite": [
+        "odb::libodb",
+        "unofficial::sqlite3::sqlite3"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libopenmpt\\CMakeLists.txt": {
+    "targets": [
+      "libopenmpt"
+    ],
+    "dependencies": {
+      "libopenmpt": [
+        "MPG123::libmpg123",
+        "Vorbis::vorbisfile",
+        "Vorbis::vorbis",
+        "ZLIB::ZLIB"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libopusenc\\CMakeLists.txt": {
+    "targets": [
+      "opusenc"
+    ],
+    "dependencies": {
+      "opusenc": [
+        "${OPUS_LIBRARY}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libp7client\\CMakeLists.txt": {
+    "targets": [
+      "P7"
+    ],
+    "dependencies": {
+      "P7": [
+        "\"ws2_32\""
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libpff\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "ZLIB::ZLIB"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libplist\\CMakeLists.txt": {
+    "targets": [
+      "libplist",
+      "libplist++",
+      "plistutil"
+    ],
+    "dependencies": {
+      "libplist": [
+        "m"
+      ],
+      "libplist++": [
+        "libplist"
+      ],
+      "plistutil": [
+        "libplist"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libpopt\\CMakeLists.txt": {
+    "targets": [
+      "popt"
+    ],
+    "dependencies": {
+      "popt": []
+    }
+  },
+  ".\\vcpkg\\ports\\libqcow\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "ZLIB::ZLIB",
+        "OpenSSL::Crypto"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\librtmp\\CMakeLists.txt": {
+    "targets": [
+      "rtmp"
+    ],
+    "dependencies": {
+      "rtmp": [
+        "${ZLIB_LIBRARIES}",
+        "${OPENSSL_LIBRARIES}",
+        "Ws2_32.lib",
+        "Winmm.lib"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libsmacker\\CMakeLists.txt": {
+    "targets": [
+      "libsmacker",
+      "driver",
+      "smk2avi"
+    ],
+    "dependencies": {
+      "libsmacker": [],
+      "driver": [
+        "libsmacker"
+      ],
+      "smk2avi": [
+        "libsmacker"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libsonic\\CMakeLists.txt": {
+    "targets": [
+      "libsonic",
+      "sonic"
+    ],
+    "dependencies": {
+      "libsonic": [],
+      "sonic": [
+        "libsonic"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libstemmer\\CMakeLists.txt": {
+    "targets": [
+      "stemmer"
+    ],
+    "dependencies": {
+      "stemmer": []
+    }
+  },
+  ".\\vcpkg\\ports\\libstk\\CMakeLists.txt": {
+    "targets": [
+      "libstk"
+    ],
+    "dependencies": {
+      "libstk": []
+    }
+  },
+  ".\\vcpkg\\ports\\libsvm\\CMakeLists.txt": {
+    "targets": [
+      "libsvm",
+      "svm-predict",
+      "svm-scale",
+      "svm-train",
+      "svm-toy"
+    ],
+    "dependencies": {
+      "libsvm": [],
+      "svm-predict": [
+        "libsvm"
+      ],
+      "svm-scale": [
+        "libsvm"
+      ],
+      "svm-train": [
+        "libsvm"
+      ],
+      "svm-toy": [
+        "libsvm"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libtess2\\CMakeLists.txt": {
+    "targets": [
+      "libtess2"
+    ],
+    "dependencies": {
+      "libtess2": []
+    }
+  },
+  ".\\vcpkg\\ports\\libtheora\\CMakeLists.txt": {
+    "targets": [
+      "theora-common",
+      "theora-enc",
+      "theora-dec",
+      "theora",
+      "theoraenc",
+      "theoradec"
+    ],
+    "dependencies": {
+      "theora-common": [
+        "Ogg::ogg"
+      ],
+      "theora-enc": [
+        "Ogg::ogg"
+      ],
+      "theora-dec": [
+        "Ogg::ogg"
+      ],
+      "theora": [
+        "Ogg::ogg"
+      ],
+      "theoraenc": [
+        "Ogg::ogg"
+      ],
+      "theoradec": [
+        "Ogg::ogg"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libu2f-server\\CMakeLists.txt": {
+    "targets": [
+      "libu2f-server"
+    ],
+    "dependencies": {
+      "libu2f-server": [
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto",
+        "json-c::json-c"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libudis86\\CMakeLists.txt": {
+    "targets": [
+      "libudis86",
+      "udcli"
+    ],
+    "dependencies": {
+      "libudis86": [],
+      "udcli": [
+        "libudis86"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libunibreak\\CMakeLists.txt": {
+    "targets": [
+      "unibreak"
+    ],
+    "dependencies": {
+      "unibreak": []
+    }
+  },
+  ".\\vcpkg\\ports\\libusb-win32\\CMakeLists.txt": {
+    "targets": [
+      "libusb0"
+    ],
+    "dependencies": {
+      "libusb0": [
+        "setupapi"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libusbmuxd\\CMakeLists.txt": {
+    "targets": [
+      "libusbmuxd",
+      "\"${name}\""
+    ],
+    "dependencies": {
+      "libusbmuxd": [
+        "unofficial::libplist::libplist",
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "Ws2_32"
+      ],
+      "\"${name}\"": [
+        "libusbmuxd",
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "unofficial::getopt-win32::getopt",
+        "Ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libuuid\\CMakeLists.txt": {
+    "targets": [
+      "uuid",
+      "test_uuid"
+    ],
+    "dependencies": {
+      "uuid": [],
+      "test_uuid": [
+        "uuid"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libvhdi\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "ZLIB::ZLIB"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\libxmlmm\\CMakeLists.txt": {
+    "targets": [
+      "libxmlmm"
+    ],
+    "dependencies": {
+      "libxmlmm": [
+        "LibXml2::LibXml2"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\live555\\CMakeLists.txt": {
+    "targets": [
+      "BasicUsageEnvironment",
+      "groupsock",
+      "liveMedia",
+      "UsageEnvironment"
+    ],
+    "dependencies": {
+      "BasicUsageEnvironment": [],
+      "groupsock": [],
+      "liveMedia": [],
+      "UsageEnvironment": []
+    }
+  },
+  ".\\vcpkg\\ports\\lmdb\\cmake\\CMakeLists.txt": {
+    "targets": [
+      "lmdb",
+      "${tool}",
+      "${test}"
+    ],
+    "dependencies": {
+      "lmdb": [
+        "Threads::Threads"
+      ],
+      "${tool}": [
+        "lmdb",
+        "${getopt_libs}"
+      ],
+      "${test}": [
+        "lmdb"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\lodepng\\CMakeLists.txt": {
+    "targets": [
+      "lodepng",
+      "lodepng-c"
+    ],
+    "dependencies": {
+      "lodepng": [],
+      "lodepng-c": []
+    }
+  },
+  ".\\vcpkg\\ports\\lpeg\\CMakeLists.txt": {
+    "targets": [
+      "lpeg"
+    ],
+    "dependencies": {
+      "lpeg": [
+        "${LPEG_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\lua\\CMakeLists.txt": {
+    "targets": [
+      "lua",
+      "lua-cpp",
+      "luac",
+      "luai"
+    ],
+    "dependencies": {
+      "lua": [
+        "${CMAKE_DL_LIBS}",
+        "m"
+      ],
+      "lua-cpp": [
+        "${CMAKE_DL_LIBS}",
+        "m"
+      ],
+      "luac": [
+        "m"
+      ],
+      "luai": [
+        "lua",
+        "${PC_READLINE_LINK_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\luafilesystem\\CMakeLists.txt": {
+    "targets": [
+      "lfs"
+    ],
+    "dependencies": {
+      "lfs": [
+        "${LFS_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\luasec\\CMakeLists.txt": {
+    "targets": [
+      "lua-ssl"
+    ],
+    "dependencies": {
+      "lua-ssl": [
+        "${LUASEC_LIBRARIES}",
+        "${PLATFORM_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\luasocket\\CMakeLists.txt": {
+    "targets": [
+      "socket.core",
+      "mime.core",
+      "socket.unix",
+      "socket.serial"
+    ],
+    "dependencies": {
+      "socket.core": [
+        "${LUASOCKET_LIBRARIES}"
+      ],
+      "mime.core": [
+        "${LUASOCKET_LIBRARIES}"
+      ],
+      "socket.unix": [
+        "${LUASOCKET_LIBRARIES}"
+      ],
+      "socket.serial": [
+        "${LUASOCKET_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\mapbox-variant\\CMakeLists.txt": {
+    "targets": [
+      "variant"
+    ],
+    "dependencies": {
+      "variant": [
+        "Threads::Threads"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\mathc\\CMakeLists.txt": {
+    "targets": [
+      "mathc"
+    ],
+    "dependencies": {
+      "mathc": []
+    }
+  },
+  ".\\vcpkg\\ports\\mecab\\CMakeLists.txt": {
+    "targets": [
+      "mecab"
+    ],
+    "dependencies": {
+      "mecab": []
+    }
+  },
+  ".\\vcpkg\\ports\\meschach\\CMakeLists.txt": {
+    "targets": [
+      "meschach"
+    ],
+    "dependencies": {
+      "meschach": []
+    }
+  },
+  ".\\vcpkg\\ports\\metrohash\\CMakeLists.txt": {
+    "targets": [
+      "metrohash"
+    ],
+    "dependencies": {
+      "metrohash": []
+    }
+  },
+  ".\\vcpkg\\ports\\mikktspace\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}",
+      "${PROJECT_NAME}::${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [],
+      "${PROJECT_NAME}::${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\minizip\\CMakeLists.txt": {
+    "targets": [
+      "minizip",
+      "minizip_bin",
+      "miniunz_bin"
+    ],
+    "dependencies": {
+      "minizip": [
+        "ZLIB::ZLIB",
+        "BZip2::BZip2"
+      ],
+      "minizip_bin": [
+        "minizip"
+      ],
+      "miniunz_bin": [
+        "minizip"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\modern-cpp-kafka\\CMakeLists.txt": {
+    "targets": [
+      "modern-cpp-kafka"
+    ],
+    "dependencies": {
+      "modern-cpp-kafka": [
+        "RdKafka::rdkafka",
+        "Boost::boost",
+        "rapidjson"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\modp-base64\\CMakeLists.txt": {
+    "targets": [
+      "libmodpbase64"
+    ],
+    "dependencies": {
+      "libmodpbase64": []
+    }
+  },
+  ".\\vcpkg\\ports\\mongoose\\CMakeLists.txt": {
+    "targets": [
+      "mongoose",
+      "pack"
+    ],
+    "dependencies": {
+      "mongoose": [
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto"
+      ],
+      "pack": []
+    }
+  },
+  ".\\vcpkg\\ports\\msix\\CMakeLists.txt": {
+    "targets": [
+      "xerces-c",
+      "zlib",
+      "zlibstatic"
+    ],
+    "dependencies": {
+      "xerces-c": [
+        "XercesC::XercesC"
+      ],
+      "zlib": [
+        "ZLIB::ZLIB"
+      ],
+      "zlibstatic": [
+        "ZLIB::ZLIB"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\mujs\\CMakeLists.txt": {
+    "targets": [
+      "mujs"
+    ],
+    "dependencies": {
+      "mujs": [
+        "${LINK_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\murmur3\\CMakeLists.txt": {
+    "targets": [
+      "\"${PROJECT_NAME}\""
+    ],
+    "dependencies": {
+      "\"${PROJECT_NAME}\"": []
+    }
+  },
+  ".\\vcpkg\\ports\\murmurhash\\CMakeLists.txt": {
+    "targets": [
+      "murmurhash"
+    ],
+    "dependencies": {
+      "murmurhash": []
+    }
+  },
+  ".\\vcpkg\\ports\\nana\\CMakeLists.txt": {
+    "targets": [
+      "nana"
+    ],
+    "dependencies": {
+      "nana": [
+        "c++experimental",
+        "stdc++fs",
+        "Threads::Threads",
+        "Freetype::Freetype",
+        "${X11_LIBRARIES}",
+        "${X11_Xft_LIB}",
+        "Fontconfig::Fontconfig",
+        "PNG::PNG",
+        "$<BUILD_INTERFACE:${JPEG_LIBRARIES}>"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\nanobench\\CMakeLists.txt": {
+    "targets": [
+      "nanobench",
+      "nanobench::nanobench"
+    ],
+    "dependencies": {
+      "nanobench": [],
+      "nanobench::nanobench": []
+    }
+  },
+  ".\\vcpkg\\ports\\nanovg\\CMakeLists.txt": {
+    "targets": [
+      "nanovg"
+    ],
+    "dependencies": {
+      "nanovg": []
+    }
+  },
+  ".\\vcpkg\\ports\\nayuki-qr-code-generator\\CMakeLists.txt": {
+    "targets": [
+      "nayuki-qr-code-generator"
+    ],
+    "dependencies": {
+      "nayuki-qr-code-generator": []
+    }
+  },
+  ".\\vcpkg\\ports\\nlohmann-fifo-map\\CMakeLists.txt": {
+    "targets": [
+      "${NLOHMANN_FIFO_MAP_TARGET_NAME}",
+      "${PROJECT_NAME}::${NLOHMANN_FIFO_MAP_TARGET_NAME}"
+    ],
+    "dependencies": {
+      "${NLOHMANN_FIFO_MAP_TARGET_NAME}": [],
+      "${PROJECT_NAME}::${NLOHMANN_FIFO_MAP_TARGET_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\nonius\\CMakeLists.txt": {
+    "targets": [
+      "nonius"
+    ],
+    "dependencies": {
+      "nonius": []
+    }
+  },
+  ".\\vcpkg\\ports\\nuklear\\CMakeLists.txt": {
+    "targets": [
+      "nuklear"
+    ],
+    "dependencies": {
+      "nuklear": []
+    }
+  },
+  ".\\vcpkg\\ports\\opencsg\\CMakeLists.txt": {
+    "targets": [
+      "opencsg"
+    ],
+    "dependencies": {
+      "opencsg": [
+        "GLEW::GLEW"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\openctm\\CMakeLists.txt": {
+    "targets": [
+      "openctm"
+    ],
+    "dependencies": {
+      "openctm": [
+        "7zip::7zip"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\openfbx\\CMakeLists.txt": {
+    "targets": [
+      "openfbx"
+    ],
+    "dependencies": {
+      "openfbx": [
+        "$<IF:$<TARGET_EXISTS:libdeflate::libdeflate_shared>,libdeflate::libdeflate_shared,libdeflate::libdeflate_static>"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\openfx\\CMakeLists.txt": {
+    "targets": [
+      "OpenFx",
+      "OfxSupport"
+    ],
+    "dependencies": {
+      "OpenFx": [],
+      "OfxSupport": [
+        "OpenFx"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\perfetto\\CMakeLists.txt": {
+    "targets": [
+      "perfetto"
+    ],
+    "dependencies": {
+      "perfetto": [
+        "Threads::Threads",
+        "log",
+        "ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\pffft\\CMakeLists.txt": {
+    "targets": [
+      "pffft"
+    ],
+    "dependencies": {
+      "pffft": []
+    }
+  },
+  ".\\vcpkg\\ports\\piex\\CMakeLists.txt": {
+    "targets": [
+      "binary_parse",
+      "image_type_recognition",
+      "tiff_directory",
+      "piex"
+    ],
+    "dependencies": {
+      "binary_parse": [],
+      "image_type_recognition": [
+        "binary_parse"
+      ],
+      "tiff_directory": [
+        "binary_parse"
+      ],
+      "piex": [
+        "tiff_directory",
+        "image_type_recognition",
+        "binary_parse"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\plib\\CMakeLists.txt": {
+    "targets": [
+      "plib_fnt",
+      "plib_js",
+      "plib_net",
+      "plib_psl",
+      "plib_puAux",
+      "plib_pui",
+      "plib_pw",
+      "plib_sg",
+      "plib_sl",
+      "plib_ssg",
+      "plib_ssgAux",
+      "plib_ul"
+    ],
+    "dependencies": {
+      "plib_fnt": [],
+      "plib_js": [],
+      "plib_net": [],
+      "plib_psl": [],
+      "plib_puAux": [],
+      "plib_pui": [],
+      "plib_pw": [],
+      "plib_sg": [],
+      "plib_sl": [],
+      "plib_ssg": [],
+      "plib_ssgAux": [],
+      "plib_ul": []
+    }
+  },
+  ".\\vcpkg\\ports\\plustache\\CMakeLists.txt": {
+    "targets": [
+      "plustache"
+    ],
+    "dependencies": {
+      "plustache": [
+        "${Boost_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\poissonrecon\\CMakeLists.txt": {
+    "targets": [
+      "PoissonRecon"
+    ],
+    "dependencies": {
+      "PoissonRecon": [
+        "PNG::PNG",
+        "JPEG::JPEG"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\portable-snippets\\CMakeLists.txt": {
+    "targets": [
+      "${module}",
+      "${module}",
+      "${namespace}::${module}"
+    ],
+    "dependencies": {
+      "${module}": [],
+      "${namespace}::${module}": []
+    }
+  },
+  ".\\vcpkg\\ports\\pqp\\CMakeLists.txt": {
+    "targets": [
+      "pqp"
+    ],
+    "dependencies": {
+      "pqp": []
+    }
+  },
+  ".\\vcpkg\\ports\\presentmon\\CMakeLists.txt": {
+    "targets": [
+      "PresentData",
+      "PresentMon"
+    ],
+    "dependencies": {
+      "PresentData": [],
+      "PresentMon": [
+        "PresentData",
+        "Tdh",
+        "Shlwapi"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\pystring\\CMakeLists.txt": {
+    "targets": [
+      "pystring"
+    ],
+    "dependencies": {
+      "pystring": []
+    }
+  },
+  ".\\vcpkg\\ports\\quirc\\CMakeLists.txt": {
+    "targets": [
+      "quirc"
+    ],
+    "dependencies": {
+      "quirc": []
+    }
+  },
+  ".\\vcpkg\\ports\\ragel\\CMakeLists.txt": {
+    "targets": [
+      "ragel"
+    ],
+    "dependencies": {
+      "ragel": []
+    }
+  },
+  ".\\vcpkg\\ports\\rappture\\CMakeLists.txt": {
+    "targets": [
+      "rappture"
+    ],
+    "dependencies": {
+      "rappture": [
+        "expat::expat",
+        "ZLIB::ZLIB"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\rewolf-wow64ext\\CMakeLists.txt": {
+    "targets": [
+      "wow64ext"
+    ],
+    "dependencies": {
+      "wow64ext": []
+    }
+  },
+  ".\\vcpkg\\ports\\rhash\\CMakeLists.txt": {
+    "targets": [
+      "rhash"
+    ],
+    "dependencies": {
+      "rhash": []
+    }
+  },
+  ".\\vcpkg\\ports\\rply\\CMakeLists.txt": {
+    "targets": [
+      "${target_name}"
+    ],
+    "dependencies": {
+      "${target_name}": []
+    }
+  },
+  ".\\vcpkg\\ports\\ryu\\CMakeLists.txt": {
+    "targets": [
+      "ryu",
+      "ryu_printf"
+    ],
+    "dependencies": {
+      "ryu": [],
+      "ryu_printf": []
+    }
+  },
+  ".\\vcpkg\\ports\\sajson\\CMakeLists.txt": {
+    "targets": [
+      "sajson"
+    ],
+    "dependencies": {
+      "sajson": []
+    }
+  },
+  ".\\vcpkg\\ports\\scylla-wrapper\\CMakeLists.txt": {
+    "targets": [
+      "scylla_wrapper"
+    ],
+    "dependencies": {
+      "scylla_wrapper": [
+        "${DISTORM_LIBRARY}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\sdl1-net\\CMakeLists.txt": {
+    "targets": [
+      "SDL_net"
+    ],
+    "dependencies": {
+      "SDL_net": [
+        "${SDL_LIBRARY}",
+        "ws2_32",
+        "iphlpapi"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\sdl2-gfx\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "SDL2::SDL2"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\sfsexp\\CMakeLists.txt": {
+    "targets": [
+      "sexp"
+    ],
+    "dependencies": {
+      "sexp": []
+    }
+  },
+  ".\\vcpkg\\ports\\skia\\example\\CMakeLists.txt": {
+    "targets": [
+      "legacy",
+      "main",
+      "skcms",
+      "skpathediting"
+    ],
+    "dependencies": {
+      "legacy": [
+        "skia"
+      ],
+      "main": [
+        "unofficial::skia::skia",
+        "unofficial::skia::modules::skshaper"
+      ],
+      "skcms": [
+        "unofficial::skia::skia"
+      ],
+      "skpathediting": [
+        "unofficial::skia::skia"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\smpeg2\\CMakeLists.txt": {
+    "targets": [
+      "smpeg2"
+    ],
+    "dependencies": {
+      "smpeg2": [
+        "SDL2::SDL2",
+        "SDL2::SDL2-static"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\snap7\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}",
+      "${PROJECT_NAME}::${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "wsock32",
+        "ws2_32",
+        "winmm.lib"
+      ],
+      "${PROJECT_NAME}::${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\soil2\\CMakeLists.txt": {
+    "targets": [
+      "soil2"
+    ],
+    "dependencies": {
+      "soil2": [
+        "${OPENGL_gl_LIBRARY}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\speexdsp\\CMakeLists.txt": {
+    "targets": [
+      "speexdsp"
+    ],
+    "dependencies": {
+      "speexdsp": []
+    }
+  },
+  ".\\vcpkg\\ports\\sproto\\CMakeLists.txt": {
+    "targets": [
+      "sproto"
+    ],
+    "dependencies": {
+      "sproto": [
+        "${LUA_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\sqlcipher\\CMakeLists.txt": {
+    "targets": [
+      "sqlcipher",
+      "sqlcipher-bin"
+    ],
+    "dependencies": {
+      "sqlcipher": [
+        "Threads::Threads",
+        "${CMAKE_DL_LIBS}",
+        "m",
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto"
+      ],
+      "sqlcipher-bin": [
+        "sqlcipher"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\sqlite3\\CMakeLists.txt": {
+    "targets": [
+      "sqlite3",
+      "sqlite3-bin"
+    ],
+    "dependencies": {
+      "sqlite3": [
+        "Threads::Threads",
+        "${CMAKE_DL_LIBS}",
+        "m",
+        "ICU::uc",
+        "ICU::i18n"
+      ],
+      "sqlite3-bin": [
+        "sqlite3",
+        "ZLIB::ZLIB",
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\tgc\\CMakeLists.txt": {
+    "targets": [
+      "tgc"
+    ],
+    "dependencies": {
+      "tgc": []
+    }
+  },
+  ".\\vcpkg\\ports\\tinkerforge\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": [
+        "Threads::Threads",
+        "Ws2_32",
+        "advapi32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\tiny-aes-c\\CMakeLists.txt": {
+    "targets": [
+      "tiny-aes-c"
+    ],
+    "dependencies": {
+      "tiny-aes-c": []
+    }
+  },
+  ".\\vcpkg\\ports\\tiny-bignum-c\\CMakeLists.txt": {
+    "targets": [
+      "tiny-bignum-c"
+    ],
+    "dependencies": {
+      "tiny-bignum-c": []
+    }
+  },
+  ".\\vcpkg\\ports\\tiny-regex-c\\CMakeLists.txt": {
+    "targets": [
+      "tiny-regex-c"
+    ],
+    "dependencies": {
+      "tiny-regex-c": []
+    }
+  },
+  ".\\vcpkg\\ports\\tinycbor\\CMakeLists.txt": {
+    "targets": [
+      "tinycbor"
+    ],
+    "dependencies": {
+      "tinycbor": []
+    }
+  },
+  ".\\vcpkg\\ports\\tinyexpr\\CMakeLists.txt": {
+    "targets": [
+      "tinyexpr",
+      "tinyexpr"
+    ],
+    "dependencies": {
+      "tinyexpr": [
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\tinyfiledialogs\\CMakeLists.txt": {
+    "targets": [
+      "tinyfiledialogs"
+    ],
+    "dependencies": {
+      "tinyfiledialogs": []
+    }
+  },
+  ".\\vcpkg\\ports\\tinythread\\CMakeLists.txt": {
+    "targets": [
+      "tinythread"
+    ],
+    "dependencies": {
+      "tinythread": []
+    }
+  },
+  ".\\vcpkg\\ports\\tinyxml\\CMakeLists.txt": {
+    "targets": [
+      "unofficial-tinyxml"
+    ],
+    "dependencies": {
+      "unofficial-tinyxml": []
+    }
+  },
+  ".\\vcpkg\\ports\\tre\\CMakeLists.txt": {
+    "targets": [
+      "tre"
+    ],
+    "dependencies": {
+      "tre": []
+    }
+  },
+  ".\\vcpkg\\ports\\triangle\\CMakeLists.txt": {
+    "targets": [
+      "triangle",
+      "triangle_exe"
+    ],
+    "dependencies": {
+      "triangle": [],
+      "triangle_exe": [],
+      "${target}": [
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\udt\\CMakeLists.txt": {
+    "targets": [
+      "udt"
+    ],
+    "dependencies": {
+      "udt": [
+        "ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\unicorn-lib\\CMakeLists.txt": {
+    "targets": [
+      "unicorn-lib"
+    ],
+    "dependencies": {
+      "unicorn-lib": [
+        "PkgConfig::PCRE2",
+        "ZLIB::ZLIB",
+        "Iconv::Iconv"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\usbmuxd\\CMakeLists.txt": {
+    "targets": [
+      "usbmuxd"
+    ],
+    "dependencies": {
+      "usbmuxd": [
+        "unofficial::libimobiledevice::libimobiledevice",
+        "unofficial::libimobiledevice-glue::libimobiledevice-glue",
+        "PkgConfig::libusb",
+        "PThreads4W::PThreads4W",
+        "unofficial::getopt-win32::getopt"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\usockets\\CMakeLists.txt": {
+    "targets": [
+      "uSockets"
+    ],
+    "dependencies": {
+      "uSockets": [
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto",
+        "$<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>",
+        "ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\vamp-sdk\\CMakeLists.txt": {
+    "targets": [
+      "vamp-sdk",
+      "vamp-hostsdk"
+    ],
+    "dependencies": {
+      "vamp-sdk": [
+        "SndFile::sndfile"
+      ],
+      "vamp-hostsdk": [
+        "SndFile::sndfile"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\vectorclass\\CMakeLists.txt": {
+    "targets": [
+      "${PROJECT_NAME}"
+    ],
+    "dependencies": {
+      "${PROJECT_NAME}": []
+    }
+  },
+  ".\\vcpkg\\ports\\visit-struct\\CMakeLists.txt": {
+    "targets": [
+      "visit_struct"
+    ],
+    "dependencies": {
+      "visit_struct": []
+    }
+  },
+  ".\\vcpkg\\ports\\vlfeat\\CMakeLists.txt": {
+    "targets": [
+      "vl"
+    ],
+    "dependencies": {
+      "vl": [
+        "OpenMP::OpenMP_C"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\webui\\CMakeLists.txt": {
+    "targets": [
+      "webui"
+    ],
+    "dependencies": {
+      "webui": [
+        "OpenSSL::SSL",
+        "OpenSSL::Crypto"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\wepoll\\CMakeLists.txt": {
+    "targets": [
+      "wepoll"
+    ],
+    "dependencies": {
+      "wepoll": [
+        "ws2_32"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\whereami\\CMakeLists.txt": {
+    "targets": [
+      "whereami",
+      "whereami::whereami"
+    ],
+    "dependencies": {
+      "whereami": [],
+      "whereami::whereami": []
+    }
+  },
+  ".\\vcpkg\\ports\\winpty\\CMakeLists.txt": {
+    "targets": [
+      "winpty",
+      "winpty-agent",
+      "winpty-debugserver"
+    ],
+    "dependencies": {
+      "winpty": [],
+      "winpty-agent": [],
+      "winpty-debugserver": []
+    }
+  },
+  ".\\vcpkg\\ports\\wordnet\\CMakeLists.txt": {
+    "targets": [
+      "${target_name}"
+    ],
+    "dependencies": {
+      "${target_name}": []
+    }
+  },
+  ".\\vcpkg\\ports\\wren\\CMakeLists.txt": {
+    "targets": [
+      "wren"
+    ],
+    "dependencies": {
+      "wren": [
+        "m"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\wxchartdir\\CMakeLists.txt": {
+    "targets": [
+      "wxchartdir"
+    ],
+    "dependencies": {
+      "wxchartdir": [
+        "${wxWidgets_LIBRARIES}",
+        "chartdir"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\wxwidgets\\example\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main2"
+    ],
+    "dependencies": {
+      "main": [
+        "${wxWidgets_LIBRARIES}"
+      ],
+      "main2": [
+        "wx::core",
+        "wx::base"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\x-plane\\CMakeLists.txt": {
+    "targets": [
+      "unofficial::x-plane::xplm",
+      "unofficial::x-plane::xplm",
+      "unofficial::x-plane::xpwidgets",
+      "unofficial::x-plane::xpwidgets",
+      "xplm_cpp"
+    ],
+    "dependencies": {
+      "unofficial::x-plane::xplm": [],
+      "unofficial::x-plane::xpwidgets": [],
+      "xplm_cpp": [
+        "unofficial::x-plane::xplm",
+        "unofficial::x-plane::xpwidgets"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\xmlsec\\CMakeLists.txt": {
+    "targets": [
+      "xmlsec1",
+      "xmlsec1-openssl",
+      "xmlsec"
+    ],
+    "dependencies": {
+      "xmlsec1": [
+        "LibXml2::LibXml2",
+        "${LTDL_LIBRARY}"
+      ],
+      "xmlsec1-openssl": [
+        "xmlsec1",
+        "OpenSSL::Crypto"
+      ],
+      "xmlsec": [
+        "crypt32.lib",
+        "xmlsec1-openssl",
+        "Threads::Threads"
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\xqilla\\CMakeLists.txt": {
+    "targets": [
+      "xqilla"
+    ],
+    "dependencies": {
+      "xqilla": [
+        "debug",
+        "\"${XercesC_LIBRARY_DEBUG}\"",
+        "optimized",
+        "\"${XercesC_LIBRARY_RELEASE}\""
+      ]
+    }
+  },
+  ".\\vcpkg\\ports\\yara\\CMakeLists.txt": {
+    "targets": [
+      "libyara",
+      "yara",
+      "yarac"
+    ],
+    "dependencies": {
+      "libyara": [
+        "${libyara_dependencies}"
+      ],
+      "yara": [
+        "libyara",
+        "${libyara_dependencies}"
+      ],
+      "yarac": [
+        "libyara",
+        "${libyara_dependencies}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\cmake-user\\project\\CMakeLists.txt": {
+    "targets": [
+      "lib",
+      "exe"
+    ],
+    "dependencies": {
+      "lib": [],
+      "exe": [
+        "${libraries}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\rpath-macho-test-binaries\\project\\CMakeLists.txt": {
+    "targets": [
+      "rpath-macho-backend-lib++",
+      "rpath-macho-test-lib",
+      "rpath-macho-test-tool"
+    ],
+    "dependencies": {
+      "rpath-macho-backend-lib++": [],
+      "rpath-macho-test-lib": [
+        "rpath-macho-backend-lib++"
+      ],
+      "rpath-macho-test-tool": [
+        "rpath-macho-test-lib"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\rpath-test-binaries\\project\\CMakeLists.txt": {
+    "targets": [
+      "rpath-backend-lib",
+      "rpath-test-lib",
+      "rpath-test-tool"
+    ],
+    "dependencies": {
+      "rpath-backend-lib": [],
+      "rpath-test-lib": [
+        "rpath-backend-lib"
+      ],
+      "rpath-test-tool": [
+        "rpath-test-lib"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\try-compile\\try\\CMakeLists.txt": {
+    "targets": [
+      "result"
+    ],
+    "dependencies": {
+      "result": []
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-angelscript\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "Angelscript::angelscript"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-ankurvdev-embedresource\\project\\CMakeLists.txt": {
+    "targets": [
+      "sample_test_exe",
+      "sample_test_shlib",
+      "sample_test_lib"
+    ],
+    "dependencies": {
+      "sample_test_exe": [],
+      "sample_test_shlib": [],
+      "sample_test_lib": [],
+      "${target}": [
+        "$<BUILD_INTERFACE:sample_test_resources>",
+        "$<BUILD_INTERFACE:testdata3>",
+        "sample_test_resources",
+        "testdata3"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-asmjit\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "asmjit::asmjit"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-aurora-au\\project\\CMakeLists.txt": {
+    "targets": [
+      "test_au_client"
+    ],
+    "dependencies": {
+      "test_au_client": [
+        "Au::au"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-bgfx\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "bgfx::bgfx",
+        "#",
+        "auxiliary",
+        "targets",
+        "bgfx::bx",
+        "bgfx::bimg",
+        "bgfx::bimg_decode",
+        "bgfx::bimg_encode",
+        "nativewindow",
+        "OpenGL::EGL",
+        "OpenGL::GLES2"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-blas\\project\\CMakeLists.txt": {
+    "targets": [
+      "fortran-interface",
+      "fortran-interface-pc"
+    ],
+    "dependencies": {
+      "fortran-interface": [
+        "BLAS::BLAS"
+      ],
+      "fortran-interface-pc": [
+        "PkgConfig::BLAS_PC"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-box2d\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "box2d::box2d"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-bullet3\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "${BULLET_LIBRARIES}"
+      ],
+      "main-pkgconfig": [
+        "PkgConfig::bullet"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-capstone\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "capstone::capstone"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-crashpad\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "crashpad::crashpad"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-curl\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-targets",
+      "main-variables",
+      "main-pkgconfig",
+      "main-curl-config"
+    ],
+    "dependencies": {
+      "main-targets": [
+        "CURL::libcurl"
+      ],
+      "main-variables": [
+        "${CURL_LIBRARIES}"
+      ],
+      "main-pkgconfig": [
+        "PkgConfig::libcurl_pc"
+      ],
+      "main-curl-config": [
+        "${curl-config-libs}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-dartsim\\project\\CMakeLists.txt": {
+    "targets": [
+      "target::dart",
+      "main-dart",
+      "main-all",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "target::dart": [],
+      "main-dart": [
+        "target::dart"
+      ],
+      "main-all": [
+        "${DART_LIBRARIES}"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::dartsim_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-dawn\\project\\CMakeLists.txt": {
+    "targets": [
+      "vcpkg_ci_dawn",
+      "vcpkg_ci_dawn_pc"
+    ],
+    "dependencies": {
+      "vcpkg_ci_dawn": [
+        "glfw",
+        "dawn::webgpu_dawn"
+      ],
+      "vcpkg_ci_dawn_pc": [
+        "glfw",
+        "PkgConfig::webgpu_dawn"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-dbus-cxx\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "dbus-cxx::dbus-cxx"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-dcmtk\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "DCMTK::DCMTK"
+      ],
+      "main-pkgconfig": [
+        "PkgConfig::DCMTK"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-duckdb\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "imported::duckdb",
+      "imported::duckdb"
+    ],
+    "dependencies": {
+      "main": [
+        "imported::duckdb"
+      ],
+      "imported::duckdb": []
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-exiv2\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "Exiv2::exiv2lib"
+      ],
+      "main-pkgconfig": [
+        "PkgConfig::exiv2"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-ffmpeg\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "shared",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "${FFMPEG_LIBRARIES}"
+      ],
+      "shared": [
+        "${FFMPEG_LIBRARIES}"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::ffmpeg_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-fluidsynth\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "FluidSynth::libfluidsynth"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::fluidsynth_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-gmime\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "PkgConfig::gmime"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-gobject-introspection\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main-pkgconfig": [
+        "PkgConfig::gobject-introspection_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-graphicsmagick\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-pkgconfig",
+      "main-gm-config"
+    ],
+    "dependencies": {
+      "main-pkgconfig": [
+        "PkgConfig::graphicsmagick_pc"
+      ],
+      "main-gm-config": [
+        "${gm-config-libs}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-graphviz\\project\\CMakeLists.txt": {
+    "targets": [
+      "simple-cmake",
+      "simple-pkgconfig",
+      "check-${id}"
+    ],
+    "dependencies": {
+      "simple-cmake": [
+        "graphviz::gvc",
+        "graphviz::cgraph"
+      ],
+      "simple-pkgconfig": [
+        "PkgConfig::PC_LIBGVC"
+      ],
+      "check-${id}": [
+        "${target}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-gz-common\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "gz-common6::gz-common6-av"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::gz-common_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-hello-imgui\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "hello-imgui::hello_imgui"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-icu\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "ICU::i18n"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::icu_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-itk\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "$<TARGET_NAME:ITKFFT>"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-kubernetes\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "kubernetes::kubernetes"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libaec\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "libaec::aec"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libavif\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "$<TARGET_NAME:avif>"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::libavif_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libe57\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "${E57RefImpl_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libftdi1\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "PkgConfig::libftdipp1"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libftdi1\\project\\cmake-usage\\CMakeLists.txt": {
+    "targets": [
+      "cmake-usage"
+    ],
+    "dependencies": {
+      "cmake-usage": [
+        "${LIBFTDIPP_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libgwenhywfar\\project\\CMakeLists.txt": {
+    "targets": [
+      "libgwenhywfar_pkgconfig"
+    ],
+    "dependencies": {
+      "libgwenhywfar_pkgconfig": [
+        "PkgConfig::gwenhywfar"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libharu\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::libharu::hpdf"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libhat\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "libhat::libhat"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libheif\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "imported::heif",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "imported::heif"
+      ],
+      "imported::heif": [],
+      "main-pkconfig": [
+        "PkgConfig::libheif_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libigl\\project\\CMakeLists.txt": {
+    "targets": [
+      "101_FileIO",
+      "609_Boolean",
+      "706_FacetOrientation",
+      "102_DrawMesh",
+      "111_MatCap",
+      "109_ImGuizmo",
+      "113_Shadows",
+      "601_Serialization"
+    ],
+    "dependencies": {
+      "101_FileIO": [
+        "igl::igl_core"
+      ],
+      "609_Boolean": [
+        "igl::igl_glfw",
+        "igl_copyleft::igl_copyleft_cgal"
+      ],
+      "706_FacetOrientation": [
+        "igl::igl_glfw",
+        "igl::igl_embree"
+      ],
+      "102_DrawMesh": [
+        "igl::igl_glfw"
+      ],
+      "111_MatCap": [
+        "igl::igl_glfw",
+        "igl::igl_stb"
+      ],
+      "109_ImGuizmo": [
+        "igl::igl_imgui"
+      ],
+      "113_Shadows": [
+        "igl::igl_imgui",
+        "igl::igl_stb"
+      ],
+      "601_Serialization": [
+        "igl::igl_xml"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libmem\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "libmem::libmem"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libmodbus\\project\\CMakeLists.txt": {
+    "targets": [
+      "imported::modbus",
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "imported::modbus": [],
+      "main": [
+        "imported::modbus"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::libmodbus_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libmupdf\\project\\CMakeLists.txt": {
+    "targets": [
+      "example"
+    ],
+    "dependencies": {
+      "example": [
+        "unofficial::libmupdf::libmupdf"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libpqxx\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "libpqxx::pqxx"
+      ],
+      "main-pkgconfig": [
+        "PkgConfig::libpqxx"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libremidi\\project\\CMakeLists.txt": {
+    "targets": [
+      "imported::libremidi",
+      "main"
+    ],
+    "dependencies": {
+      "imported::libremidi": [],
+      "main": [
+        "imported::libremidi"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libressl\\project\\CMakeLists.txt": {
+    "targets": [
+      "openssl_cmake",
+      "openssl_pkgconfig",
+      "libressl_cmake",
+      "libressl_pkgconfig"
+    ],
+    "dependencies": {
+      "openssl_cmake": [
+        "OpenSSL::SSL"
+      ],
+      "openssl_pkgconfig": [
+        "PkgConfig::openssl"
+      ],
+      "libressl_cmake": [
+        "LibreSSL::TLS"
+      ],
+      "libressl_pkgconfig": [
+        "PkgConfig::libtls"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-libsrtp\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "libSRTP::srtp2"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::libsrtp_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-lief\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "LIEF::LIEF"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-llama-cpp\\project\\CMakeLists.txt": {
+    "targets": [
+      "test-cmake",
+      "imported::llama",
+      "test-pkconfig"
+    ],
+    "dependencies": {
+      "test-cmake": [
+        "imported::llama",
+        "Vulkan::Vulkan"
+      ],
+      "imported::llama": [],
+      "test-pkconfig": [
+        "PkgConfig::llama-cpp",
+        "Vulkan::Vulkan"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-lua\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-cpp"
+    ],
+    "dependencies": {
+      "main": [
+        "${LUA_LIBRARIES}"
+      ],
+      "main-cpp": [
+        "unofficial::lua::lua-cpp"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-luajit\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "PkgConfig::LUAJIT"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-mapbox-variant\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::mapbox-variant::variant"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-minc\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "${LIBMINC_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-mpg123\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pc"
+    ],
+    "dependencies": {
+      "main": [
+        "MPG123::libmpg123"
+      ],
+      "main-pc": [
+        "PkgConfig::MPG123_PC"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-msh3\\project\\CMakeLists.txt": {
+    "targets": [
+      "msh3_cmake",
+      "msh3_pkgconfig"
+    ],
+    "dependencies": {
+      "msh3_cmake": [
+        "msh3"
+      ],
+      "msh3_pkgconfig": [
+        "PkgConfig::libmsh3"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-mysql-connector-cpp\\project\\CMakeLists.txt": {
+    "targets": [
+      "unofficial-mysql-connector-cpp",
+      "mysql-concpp-xdevapi",
+      "unofficial-mysql-connector-cpp-jdbc",
+      "mysql-concpp-jdbc"
+    ],
+    "dependencies": {
+      "unofficial-mysql-connector-cpp": [
+        "unofficial::mysql-connector-cpp::connector"
+      ],
+      "mysql-concpp-xdevapi": [
+        "$<IF:$<TARGET_EXISTS:mysql::concpp-xdevapi>,mysql::concpp-xdevapi,mysql::concpp-xdevapi-static>"
+      ],
+      "unofficial-mysql-connector-cpp-jdbc": [
+        "unofficial::mysql-connector-cpp::connector-jdbc"
+      ],
+      "mysql-concpp-jdbc": [
+        "$<IF:$<TARGET_EXISTS:mysql::concpp-jdbc>,mysql::concpp-jdbc,mysql::concpp-jdbc-static>"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-mzying2001-sw\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "sw::sw"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-nss\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main-pkconfig": [
+        "PkgConfig::nss_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-openblas\\project\\CMakeLists.txt": {
+    "targets": [
+      "fortran-interface"
+    ],
+    "dependencies": {
+      "fortran-interface": [
+        "OpenBLAS::OpenBLAS"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-openimageio\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "OpenImageIO::OpenImageIO"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-openvpn3\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::openvpn3::ovpncli"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-orange-math\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "omath::omath"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-plplot\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "PLPLOT::plplot"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::plplot_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-podofo\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "podofo::podofo"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::podofo_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-pybind11\\project\\CMakeLists.txt": {
+    "targets": [
+      "test-python"
+    ],
+    "dependencies": {
+      "test-python": [
+        "pybind11::headers"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-python3\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-python-target",
+      "main-python3-libraries"
+    ],
+    "dependencies": {
+      "main-python-target": [
+        "Python_MEOW::Python",
+        "Python::Python"
+      ],
+      "main-python3-libraries": [
+        "${Python3_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-qtwebengine\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "Qt6::Pdf",
+        "Qt6::WebEngineCore"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-rest-rpc\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::rest-rpc::rest-rpc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-rewolf-wow64ext\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::wow64ext::wow64ext"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-rtlsdr\\project\\CMakeLists.txt": {
+    "targets": [
+      "rtlsdr_cmake",
+      "rtlsdr_pkgconfig"
+    ],
+    "dependencies": {
+      "rtlsdr_cmake": [
+        "$<IF:$<TARGET_EXISTS:rtlsdr::rtlsdr>,rtlsdr::rtlsdr,rtlsdr::rtlsdr_static>"
+      ],
+      "rtlsdr_pkgconfig": [
+        "PkgConfig::librtlsdr"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-ryu\\CMakeLists.txt": {
+    "targets": [
+      "test"
+    ],
+    "dependencies": {
+      "test": [
+        "RYU::ryu",
+        "RYU::ryu_printf"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-sdl3-image\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "$<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::PC_SDL3_IMAGE",
+        "${PC_SDL3_IMAGE_LDFLAGS}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-sdl3-ttf\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "SDL3_ttf::SDL3_ttf"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::PC_SDL3_TTF"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-soci\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "$<IF:$<TARGET_EXISTS:SOCI::soci_mysql>,SOCI::soci_mysql,SOCI::soci_mysql_static>",
+        "$<IF:$<TARGET_EXISTS:SOCI::soci_postgresql>,SOCI::soci_postgresql,SOCI::soci_postgresql_static>",
+        "$<IF:$<TARGET_EXISTS:SOCI::soci_sqlite3>,SOCI::soci_sqlite3,SOCI::soci_sqlite3_static>"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-sol2\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-cmake",
+      "main-pkgconfig"
+    ],
+    "dependencies": {
+      "main-cmake": [
+        "sol2::sol2"
+      ],
+      "main-pkgconfig": [
+        "${PC_SOL2_LUA_LIBRARIES}",
+        "${LUA_LIBRARIES}"
+      ],
+      "sol2::sol2": [
+        "${LUA_LIBRARIES}"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-subversion\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "unofficial::subversion::svn_client",
+        "unofficial::subversion::svn_delta",
+        "unofficial::subversion::svn_diff",
+        "unofficial::subversion::svn_fs",
+        "unofficial::subversion::svn_fs_fs",
+        "unofficial::subversion::svn_fs_util",
+        "unofficial::subversion::svn_fs_x",
+        "unofficial::subversion::svn_ra",
+        "unofficial::subversion::svn_ra_local",
+        "unofficial::subversion::svn_ra_serf",
+        "unofficial::subversion::svn_ra_svn",
+        "unofficial::subversion::svn_repos",
+        "unofficial::subversion::svn_subr",
+        "unofficial::subversion::svn_wc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-tdlib\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main2"
+    ],
+    "dependencies": {
+      "main": [
+        "Td::TdStatic"
+      ],
+      "main2": [
+        "PkgConfig::tdclient"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-tgbot-cpp\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "TgBot::TgBot"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-tomlplusplus\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "tomlplusplus::tomlplusplus"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::tomlplusplus_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-tree-sitter\\project\\CMakeLists.txt": {
+    "targets": [
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main-pkconfig": [
+        "PkgConfig::tree-sitter_pc",
+        "PkgConfig::tree-sitter-c_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-unarr\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main2"
+    ],
+    "dependencies": {
+      "main": [
+        "unarr::unarr"
+      ],
+      "main2": [
+        "PkgConfig::libunarr"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-unicorn\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "PkgConfig::unicorn"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-unixodbc\\project\\CMakeLists.txt": {
+    "targets": [
+      "main",
+      "main-pkconfig"
+    ],
+    "dependencies": {
+      "main": [
+        "UNIX::odbc"
+      ],
+      "main-pkconfig": [
+        "PkgConfig::unixodbc_pc"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-uwebsockets\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "$<TARGET_NAME:unofficial::uwebsockets::uwebsockets>"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-vsgqt\\project\\CMakeLists.txt": {
+    "targets": [
+      "vsgqtviewer"
+    ],
+    "dependencies": {
+      "vsgqtviewer": [
+        "vsgQt::vsgQt",
+        "vsgXchange::vsgXchange"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-vxl\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "$<TARGET_NAME:vil>",
+        "#",
+        "required.",
+        "Needs",
+        "image",
+        "format",
+        "deps",
+        "$<TARGET_NAME:vnl_algo>",
+        "#",
+        "test",
+        "only:",
+        "wants",
+        "netlib",
+        "$<TARGET_NAME:vgl>",
+        "#",
+        "test",
+        "only:",
+        "wants",
+        "polyclipping",
+        "$<TARGET_NAME:vgl_algo>",
+        "#",
+        "test",
+        "only:",
+        "wants",
+        "image",
+        "formats"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-whisper-cpp\\project\\CMakeLists.txt": {
+    "targets": [
+      "test-cmake",
+      "imported::whisper",
+      "test-pkconfig"
+    ],
+    "dependencies": {
+      "test-cmake": [
+        "imported::whisper"
+      ],
+      "imported::whisper": [],
+      "test-pkconfig": [
+        "PkgConfig::whisper-cpp"
+      ]
+    }
+  },
+  ".\\vcpkg\\scripts\\test_ports\\vcpkg-ci-yandex-disk-cpp-client\\project\\CMakeLists.txt": {
+    "targets": [
+      "main"
+    ],
+    "dependencies": {
+      "main": [
+        "yandex-disk-cpp-client::yandex-disk-cpp-client"
+      ]
+    }
+  }
+}

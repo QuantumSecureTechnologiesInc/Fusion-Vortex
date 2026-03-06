@@ -1,29 +1,31 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FI64 = i64;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FBool = FBool;
+#[allow(missing_docs, dead_code)]
+type FI64 = FI64;
+#[allow(missing_docs, dead_code)]
+type FString = FString;
+#[allow(missing_docs, dead_code)]
+type FSize = FSize;
+#[allow(missing_docs, dead_code)]
+type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)]
+type FMap<K, V> = FMap<K, V>;
 use crate::compiler::chunk::OpCode;
 use crate::compiler::function::Function;
 use crate::compiler::value::Value;
-pub enum InterpretResult {
+enum InterpretResult {
     Ok,
     CompileError,
     RuntimeError(FString),
 }
 #[derive(Clone)]
-pub struct CallFrame {
+struct CallFrame {
     function: Function,
     ip: FSize,
     base_pointer: FSize,
 }
-pub struct VM {
+struct VM {
     frames: FVec<CallFrame>,
     stack: FVec<Value>,
     pub globals: FMap<FString, Value>,
@@ -50,7 +52,6 @@ impl VM {
                 Value::Native(crate::compiler::value::NativeFunction {
                     name: "clock".to_string(),
                     func: |_| {
-
                         let start = SystemTime::now();
                         let since_the_epoch = start
                             .duration_since(UNIX_EPOCH)
@@ -109,8 +110,8 @@ impl VM {
                         (Value::Int(v1), Value::Int(v2)) => {
                             self.push(Value::Int(v1 + v2))
                         }
-                        (Value::String(s1), Value::String(s2)) => {
-                            self.push(Value::String(s1 + &s2))
+                        (Value::FString(s1), Value::FString(s2)) => {
+                            self.push(Value::FString(s1 + &s2))
                         }
                         _ => {
                             return InterpretResult::RuntimeError(
@@ -235,7 +236,7 @@ impl VM {
                         .constants[name_idx as FSize]
                         .clone();
                     let name = match name_val {
-                        Value::String(s) => s,
+                        Value::FString(s) => s,
                         _ => {
                             return InterpretResult::RuntimeError(
                                 "Global name must be string".into(),
@@ -257,7 +258,7 @@ impl VM {
                         .constants[name_idx as FSize]
                         .clone();
                     let name = match name_val {
-                        Value::String(s) => s,
+                        Value::FString(s) => s,
                         _ => {
                             return InterpretResult::RuntimeError(
                                 "Global name must be string".into(),
@@ -274,7 +275,7 @@ impl VM {
                         .constants[name_idx as FSize]
                         .clone();
                     let name = match name_val {
-                        Value::String(s) => s,
+                        Value::FString(s) => s,
                         _ => {
                             return InterpretResult::RuntimeError(
                                 "Global name must be string".into(),
@@ -317,7 +318,7 @@ impl VM {
                         let val = self.pop();
                         let key = self.pop();
                         match key {
-                            Value::String(k) => {
+                            Value::FString(k) => {
                                 fields.insert(k, val);
                             }
                             _ => {
@@ -333,7 +334,7 @@ impl VM {
                 OpCode::GetProp(idx) => {
                     let name_val = frame.function.chunk.constants[idx as FSize].clone();
                     let name = match name_val {
-                        Value::String(s) => s,
+                        Value::FString(s) => s,
                         _ => {
                             return InterpretResult::RuntimeError(
                                 "Property name must be string".to_string(),
@@ -362,7 +363,7 @@ impl VM {
                 OpCode::SetProp(idx) => {
                     let name_val = frame.function.chunk.constants[idx as FSize].clone();
                     let name = match name_val {
-                        Value::String(s) => s,
+                        Value::FString(s) => s,
                         _ => {
                             return InterpretResult::RuntimeError(
                                 "Property name must be string".to_string(),

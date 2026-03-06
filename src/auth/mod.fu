@@ -1,0 +1,11 @@
+// src/auth/mod.fu
+// Authentication Module Exports
+
+pub mod domain;
+pub mod crypto;
+pub mod store;
+pub mod service;
+
+// Re-export common types for easier access
+pub use domain::{User, Session};
+pub use service::AuthService;

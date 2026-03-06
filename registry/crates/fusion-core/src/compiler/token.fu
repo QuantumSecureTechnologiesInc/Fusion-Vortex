@@ -1,11 +1,12 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FI64 = i64;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FI64 = FI64;
+#[allow(missing_docs, dead_code)]
+type FString = FString;
+#[allow(missing_docs, dead_code)]
+type FSize = FSize;
 #[derive(Debug, PartialEq, Clone)]
-pub enum Token {
+enum Token {
     Fn,
     Let,
     If,
@@ -41,12 +42,12 @@ pub enum Token {
     Illegal(char),
 }
 #[derive(Debug, PartialEq, Clone)]
-pub struct Span {
+struct Span {
     pub line: FSize,
     pub column: FSize,
 }
 #[derive(Debug, PartialEq, Clone)]
-pub struct SpannedToken {
+struct SpannedToken {
     pub token: Token,
     pub span: Span,
 }

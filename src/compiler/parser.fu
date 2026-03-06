@@ -1,0 +1,914 @@
+// src/compiler/parser.fu
+// Recursive Descent Parser for the Fusion Language
+
+use super::token::{Token, TokenKind, Span};
+use super::lexer::Lexer;
+use super::ast::{
+    Type, Expr, ExprKind, BinaryOp, UnaryOp, Stmt, StmtKind,
+    Function, Param, ClassDef, Field, ImplBlock, TraitDef,
+    EnumDef, EnumVariant, UseStmt, ModDef, Item, ItemKind, SourceFile, FieldInit
+};
+
+class ParseError {
+    message: string;
+    span: Span;
+}
+
+impl ParseError {
+    fn new(msg: string, span: Span) -> ParseError {
+        return ParseError { message: msg, span: span };
+    }
+}
+
+class Parser {
+    tokens: Vector<Token>;
+    pos: int;
+    errors: Vector<ParseError>;
+}
+
+impl Parser {
+    fn new(tokens: Vector<Token>) -> Parser {
+        return Parser {
+            tokens: tokens,
+            pos: 0,
+            errors: Vector::<ParseError>::new()
+        };
+    }
+    
+    fn current(self) -> Token {
+        if self.pos >= self.tokens.len() {
+            return self.tokens.get(self.tokens.len() - 1).unwrap();
+        }
+        return self.tokens.get(self.pos).unwrap();
+    }
+    
+    fn peek(self) -> Token {
+        return self.current();
+    }
+    
+    fn peek_kind(self) -> int {
+        return self.current().kind.kind_id;
+    }
+    
+    fn is_at_end(self) -> bool {
+        return self.current().is_eof();
+    }
+    
+    fn advance(mut self) -> Token {
+        let tok = self.current();
+        if !self.is_at_end() {
+            self.pos = self.pos + 1;
+        }
+        return tok;
+    }
+    
+    fn check_kind(self, kind_id: int) -> bool {
+        return self.peek_kind() == kind_id;
+    }
+    
+    fn match_kind(mut self, kind_id: int) -> bool {
+        if self.check_kind(kind_id) {
+            self.advance();
+            return true;
+        }
+        return false;
+    }
+    
+    fn expect(mut self, kind_id: int, msg: string) -> Token {
+        if self.check_kind(kind_id) {
+            return self.advance();
+        }
+        self.error(msg);
+        return self.current();
+    }
+    
+    fn error(mut self, msg: string) {
+        let err = ParseError::new(msg, self.current().span);
+        self.errors.push(err);
+    }
+    
+    // Parse type annotation
+    fn parse_type(mut self) -> Type {
+        let tok = self.advance();
+        let base_name = tok.text;
+        
+        // Check for generic parameters
+        if self.check_kind(TokenKind::op_lt().kind_id) {
+            self.advance(); // <
+            let mut params = Vector::<Type>::new();
+            
+            params.push(self.parse_type());
+            while self.match_kind(TokenKind::comma().kind_id) {
+                params.push(self.parse_type());
+            }
+            
+            self.expect(TokenKind::op_gt().kind_id, "Expected '>' after generic params");
+            return Type::generic(base_name, params);
+        }
+        
+        // Check for primitive types
+        if base_name == "int" { return Type::int_type(); }
+        if base_name == "float" { return Type::float_type(); }
+        if base_name == "bool" { return Type::bool_type(); }
+        if base_name == "string" { return Type::string_type(); }
+        if base_name == "void" { return Type::void_type(); }
+        
+        return Type::named(base_name);
+    }
+    
+    // Parse primary expression
+    fn parse_primary(mut self) -> Expr {
+        let tok = self.current();
+        let span = tok.span;
+        
+        // Integer literal
+        if self.check_kind(TokenKind::int_literal().kind_id) {
+            self.advance();
+            return Expr::int_lit(tok.int_value, span);
+        }
+        
+        // String literal
+        if self.check_kind(TokenKind::string_literal().kind_id) {
+            self.advance();
+            return Expr::string_lit(tok.string_value, span);
+        }
+        
+        // Boolean literals
+        if self.check_kind(TokenKind::kw_true().kind_id) {
+            self.advance();
+            return Expr::bool_lit(true, span);
+        }
+        if self.check_kind(TokenKind::kw_false().kind_id) {
+            self.advance();
+            return Expr::bool_lit(false, span);
+        }
+        
+        // Identifier (variable or path)
+        if self.check_kind(TokenKind::identifier().kind_id) {
+            self.advance();
+            let mut name = tok.string_value;
+            
+            // Handle path (a::b::c)
+            while self.match_kind(TokenKind::double_colon().kind_id) {
+                let next = self.expect(TokenKind::identifier().kind_id, "Expected identifier after '::'");
+                name = name + "::" + next.string_value;
+            }
+            
+            // Check for function call
+            if self.check_kind(TokenKind::lparen().kind_id) {
+                self.advance(); // (
+                let mut args = Vector::<Expr>::new();
+                
+                if !self.check_kind(TokenKind::rparen().kind_id) {
+                    args.push(self.parse_expression());
+                    while self.match_kind(TokenKind::comma().kind_id) {
+                        args.push(self.parse_expression());
+                    }
+                }
+                
+                self.expect(TokenKind::rparen().kind_id, "Expected ')' after arguments");
+                
+                let var_expr = Expr::variable(name, span);
+                return Expr::call(var_expr, args, span);
+            }
+            
+            // Check for struct literal
+            if self.check_kind(TokenKind::lbrace().kind_id) {
+                return self.parse_struct_literal(name, span);
+            }
+            
+            return Expr::variable(name, span);
+        }
+        
+        // Parenthesized expression
+        if self.match_kind(TokenKind::lparen().kind_id) {
+            let expr = self.parse_expression();
+            self.expect(TokenKind::rparen().kind_id, "Expected ')' after expression");
+            return expr;
+        }
+        
+        self.error("Expected expression");
+        return Expr::empty(span);
+    }
+    
+    fn parse_struct_literal(mut self, name: string, span: Span) -> Expr {
+        self.advance(); // {
+        let mut fields = Vector::<FieldInit>::new();
+        
+        if !self.check_kind(TokenKind::rbrace().kind_id) {
+            fields.push(self.parse_field_init());
+            while self.match_kind(TokenKind::comma().kind_id) {
+                if self.check_kind(TokenKind::rbrace().kind_id) {
+                    break;
+                }
+                fields.push(self.parse_field_init());
+            }
+        }
+        
+        self.expect(TokenKind::rbrace().kind_id, "Expected '}' after struct fields");
+        
+        let mut e = Expr::empty(span);
+        e.kind = ExprKind::struct_literal();
+        e.struct_name = name;
+        e.fields = fields;
+        return e;
+    }
+    
+    fn parse_field_init(mut self) -> FieldInit {
+        let name_tok = self.expect(TokenKind::identifier().kind_id, "Expected field name");
+        self.expect(TokenKind::colon().kind_id, "Expected ':' after field name");
+        let value = self.parse_expression();
+        
+        return FieldInit { name: name_tok.string_value, value: value };
+    }
+    
+    // Parse postfix expressions (calls, member access, indexing)
+    fn parse_postfix(mut self) -> Expr {
+        let mut expr = self.parse_primary();
+        
+        while true {
+            if self.match_kind(TokenKind::dot().kind_id) {
+                // Member access or method call
+                let member_tok = self.expect(TokenKind::identifier().kind_id, "Expected member name");
+                
+                if self.check_kind(TokenKind::lparen().kind_id) {
+                    // Method call
+                    self.advance(); // (
+                    let mut args = Vector::<Expr>::new();
+                    
+                    if !self.check_kind(TokenKind::rparen().kind_id) {
+                        args.push(self.parse_expression());
+                        while self.match_kind(TokenKind::comma().kind_id) {
+                            args.push(self.parse_expression());
+                        }
+                    }
+                    
+                    self.expect(TokenKind::rparen().kind_id, "Expected ')' after arguments");
+                    
+                    let mut e = Expr::empty(expr.span);
+                    e.kind = ExprKind::method_call();
+                    e.object = Option::Some(Box::new(expr));
+                    e.member = member_tok.string_value;
+                    e.arguments = args;
+                    expr = e;
+                } else {
+                    // Field access
+                    let mut e = Expr::empty(expr.span);
+                    e.kind = ExprKind::member_access();
+                    e.object = Option::Some(Box::new(expr));
+                    e.member = member_tok.string_value;
+                    expr = e;
+                }
+            } else {
+                if self.match_kind(TokenKind::lbracket().kind_id) {
+                    // Index access
+                    let idx = self.parse_expression();
+                    self.expect(TokenKind::rbracket().kind_id, "Expected ']' after index");
+                    
+                    let mut e = Expr::empty(expr.span);
+                    e.kind = ExprKind::index();
+                    e.object = Option::Some(Box::new(expr));
+                    e.index = Option::Some(Box::new(idx));
+                    expr = e;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        return expr;
+    }
+    
+    // Parse unary expressions
+    fn parse_unary(mut self) -> Expr {
+        if self.match_kind(TokenKind::op_minus().kind_id) {
+            let operand = self.parse_unary();
+            let mut e = Expr::empty(operand.span);
+            e.kind = ExprKind::unary();
+            e.unary_op = UnaryOp::neg();
+            e.operand = Option::Some(Box::new(operand));
+            return e;
+        }
+        
+        if self.match_kind(TokenKind::op_not().kind_id) {
+            let operand = self.parse_unary();
+            let mut e = Expr::empty(operand.span);
+            e.kind = ExprKind::unary();
+            e.unary_op = UnaryOp::not();
+            e.operand = Option::Some(Box::new(operand));
+            return e;
+        }
+        
+        if self.match_kind(TokenKind::op_star().kind_id) {
+            let operand = self.parse_unary();
+            let mut e = Expr::empty(operand.span);
+            e.kind = ExprKind::unary();
+            e.unary_op = UnaryOp::deref();
+            e.operand = Option::Some(Box::new(operand));
+            return e;
+        }
+        
+        if self.match_kind(TokenKind::op_ampersand().kind_id) {
+            let operand = self.parse_unary();
+            let mut e = Expr::empty(operand.span);
+            e.kind = ExprKind::unary();
+            e.unary_op = UnaryOp::addr_of();
+            e.operand = Option::Some(Box::new(operand));
+            return e;
+        }
+        
+        return self.parse_postfix();
+    }
+    
+    // Parse multiplicative expressions
+    fn parse_multiplicative(mut self) -> Expr {
+        let mut left = self.parse_unary();
+        
+        while true {
+            let span = left.span;
+            if self.match_kind(TokenKind::op_star().kind_id) {
+                let right = self.parse_unary();
+                left = Expr::binary(BinaryOp::mul(), left, right, span);
+            } else {
+                if self.match_kind(TokenKind::op_slash().kind_id) {
+                    let right = self.parse_unary();
+                    left = Expr::binary(BinaryOp::div(), left, right, span);
+                } else {
+                    if self.match_kind(TokenKind::op_percent().kind_id) {
+                        let right = self.parse_unary();
+                        left = Expr::binary(BinaryOp::mod(), left, right, span);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return left;
+    }
+    
+    // Parse additive expressions
+    fn parse_additive(mut self) -> Expr {
+        let mut left = self.parse_multiplicative();
+        
+        while true {
+            let span = left.span;
+            if self.match_kind(TokenKind::op_plus().kind_id) {
+                let right = self.parse_multiplicative();
+                left = Expr::binary(BinaryOp::add(), left, right, span);
+            } else {
+                if self.match_kind(TokenKind::op_minus().kind_id) {
+                    let right = self.parse_multiplicative();
+                    left = Expr::binary(BinaryOp::sub(), left, right, span);
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        return left;
+    }
+    
+    // Parse comparison expressions
+    fn parse_comparison(mut self) -> Expr {
+        let mut left = self.parse_additive();
+        
+        while true {
+            let span = left.span;
+            if self.match_kind(TokenKind::op_eq().kind_id) {
+                let right = self.parse_additive();
+                left = Expr::binary(BinaryOp::eq(), left, right, span);
+            } else {
+                if self.match_kind(TokenKind::op_neq().kind_id) {
+                    let right = self.parse_additive();
+                    left = Expr::binary(BinaryOp::neq(), left, right, span);
+                } else {
+                    if self.match_kind(TokenKind::op_lt().kind_id) {
+                        let right = self.parse_additive();
+                        left = Expr::binary(BinaryOp::lt(), left, right, span);
+                    } else {
+                        if self.match_kind(TokenKind::op_gt().kind_id) {
+                            let right = self.parse_additive();
+                            left = Expr::binary(BinaryOp::gt(), left, right, span);
+                        } else {
+                            if self.match_kind(TokenKind::op_le().kind_id) {
+                                let right = self.parse_additive();
+                                left = Expr::binary(BinaryOp::le(), left, right, span);
+                            } else {
+                                if self.match_kind(TokenKind::op_ge().kind_id) {
+                                    let right = self.parse_additive();
+                                    left = Expr::binary(BinaryOp::ge(), left, right, span);
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return left;
+    }
+    
+    // Parse logical AND
+    fn parse_and(mut self) -> Expr {
+        let mut left = self.parse_comparison();
+        
+        while self.match_kind(TokenKind::op_and().kind_id) {
+            let span = left.span;
+            let right = self.parse_comparison();
+            left = Expr::binary(BinaryOp::and(), left, right, span);
+        }
+        
+        return left;
+    }
+    
+    // Parse logical OR
+    fn parse_or(mut self) -> Expr {
+        let mut left = self.parse_and();
+        
+        while self.match_kind(TokenKind::op_or().kind_id) {
+            let span = left.span;
+            let right = self.parse_and();
+            left = Expr::binary(BinaryOp::or(), left, right, span);
+        }
+        
+        return left;
+    }
+    
+    // Top-level expression parser
+    fn parse_expression(mut self) -> Expr {
+        return self.parse_or();
+    }
+    
+    // Parse let statement
+    fn parse_let(mut self) -> Stmt {
+        let start_span = self.current().span;
+        self.advance(); // let
+        
+        let is_mutable = self.match_kind(TokenKind::kw_mut().kind_id);
+        
+        let name_tok = self.expect(TokenKind::identifier().kind_id, "Expected variable name");
+        
+        let mut var_type = Option::<Type>::None;
+        if self.match_kind(TokenKind::colon().kind_id) {
+            var_type = Option::Some(self.parse_type());
+        }
+        
+        let mut initializer = Option::<Expr>::None;
+        if self.match_kind(TokenKind::op_assign().kind_id) {
+            initializer = Option::Some(self.parse_expression());
+        }
+        
+        self.expect(TokenKind::semicolon().kind_id, "Expected ';' after let statement");
+        
+        let mut stmt = Stmt {
+            kind: StmtKind::let_stmt(),
+            span: start_span,
+            var_name: name_tok.string_value,
+            var_type: var_type,
+            is_mutable: is_mutable,
+            initializer: initializer,
+            expr: Option::None,
+            return_value: Option::None,
+            condition: Option::None,
+            then_block: Vector::<Stmt>::new(),
+            else_block: Vector::<Stmt>::new(),
+            body: Vector::<Stmt>::new(),
+            loop_var: "",
+            iterable: Option::None,
+            target: Option::None,
+            value: Option::None
+        };
+        
+        return stmt;
+    }
+    
+    // Parse return statement
+    fn parse_return(mut self) -> Stmt {
+        let span = self.current().span;
+        self.advance(); // return
+        
+        let mut value = Option::<Expr>::None;
+        if !self.check_kind(TokenKind::semicolon().kind_id) {
+            value = Option::Some(self.parse_expression());
+        }
+        
+        self.expect(TokenKind::semicolon().kind_id, "Expected ';' after return");
+        
+        let mut stmt = Stmt {
+            kind: StmtKind::return_stmt(),
+            span: span,
+            var_name: "",
+            var_type: Option::None,
+            is_mutable: false,
+            initializer: Option::None,
+            expr: Option::None,
+            return_value: value,
+            condition: Option::None,
+            then_block: Vector::<Stmt>::new(),
+            else_block: Vector::<Stmt>::new(),
+            body: Vector::<Stmt>::new(),
+            loop_var: "",
+            iterable: Option::None,
+            target: Option::None,
+            value: Option::None
+        };
+        
+        return stmt;
+    }
+    
+    // Parse if statement
+    fn parse_if(mut self) -> Stmt {
+        let span = self.current().span;
+        self.advance(); // if
+        
+        let condition = self.parse_expression();
+        
+        self.expect(TokenKind::lbrace().kind_id, "Expected '{' after if condition");
+        let then_block = self.parse_block();
+        
+        let mut else_block = Vector::<Stmt>::new();
+        if self.match_kind(TokenKind::kw_else().kind_id) {
+            if self.check_kind(TokenKind::kw_if().kind_id) {
+                else_block.push(self.parse_if());
+            } else {
+                self.expect(TokenKind::lbrace().kind_id, "Expected '{' after else");
+                else_block = self.parse_block();
+            }
+        }
+        
+        let mut stmt = Stmt {
+            kind: StmtKind::if_stmt(),
+            span: span,
+            var_name: "",
+            var_type: Option::None,
+            is_mutable: false,
+            initializer: Option::None,
+            expr: Option::None,
+            return_value: Option::None,
+            condition: Option::Some(condition),
+            then_block: then_block,
+            else_block: else_block,
+            body: Vector::<Stmt>::new(),
+            loop_var: "",
+            iterable: Option::None,
+            target: Option::None,
+            value: Option::None
+        };
+        
+        return stmt;
+    }
+    
+    // Parse while statement
+    fn parse_while(mut self) -> Stmt {
+        let span = self.current().span;
+        self.advance(); // while
+        
+        let condition = self.parse_expression();
+        
+        self.expect(TokenKind::lbrace().kind_id, "Expected '{' after while condition");
+        let body = self.parse_block();
+        
+        let mut stmt = Stmt {
+            kind: StmtKind::while_stmt(),
+            span: span,
+            var_name: "",
+            var_type: Option::None,
+            is_mutable: false,
+            initializer: Option::None,
+            expr: Option::None,
+            return_value: Option::None,
+            condition: Option::Some(condition),
+            then_block: Vector::<Stmt>::new(),
+            else_block: Vector::<Stmt>::new(),
+            body: body,
+            loop_var: "",
+            iterable: Option::None,
+            target: Option::None,
+            value: Option::None
+        };
+        
+        return stmt;
+    }
+    
+    // Parse block of statements
+    fn parse_block(mut self) -> Vector<Stmt> {
+        let mut stmts = Vector::<Stmt>::new();
+        
+        while !self.check_kind(TokenKind::rbrace().kind_id) && !self.is_at_end() {
+            stmts.push(self.parse_statement());
+        }
+        
+        self.expect(TokenKind::rbrace().kind_id, "Expected '}' to close block");
+        return stmts;
+    }
+    
+    // Parse any statement
+    fn parse_statement(mut self) -> Stmt {
+        if self.check_kind(TokenKind::kw_let().kind_id) {
+            return self.parse_let();
+        }
+        if self.check_kind(TokenKind::kw_return().kind_id) {
+            return self.parse_return();
+        }
+        if self.check_kind(TokenKind::kw_if().kind_id) {
+            return self.parse_if();
+        }
+        if self.check_kind(TokenKind::kw_while().kind_id) {
+            return self.parse_while();
+        }
+        
+        // Expression statement or assignment
+        let expr = self.parse_expression();
+        let span = expr.span;
+        
+        if self.match_kind(TokenKind::op_assign().kind_id) {
+            // Assignment
+            let value = self.parse_expression();
+            self.expect(TokenKind::semicolon().kind_id, "Expected ';' after assignment");
+            
+            let mut stmt = Stmt {
+                kind: StmtKind::assignment(),
+                span: span,
+                var_name: "",
+                var_type: Option::None,
+                is_mutable: false,
+                initializer: Option::None,
+                expr: Option::None,
+                return_value: Option::None,
+                condition: Option::None,
+                then_block: Vector::<Stmt>::new(),
+                else_block: Vector::<Stmt>::new(),
+                body: Vector::<Stmt>::new(),
+                loop_var: "",
+                iterable: Option::None,
+                target: Option::Some(expr),
+                value: Option::Some(value)
+            };
+            return stmt;
+        }
+        
+        self.expect(TokenKind::semicolon().kind_id, "Expected ';' after expression");
+        
+        let mut stmt = Stmt {
+            kind: StmtKind::expr_stmt(),
+            span: span,
+            var_name: "",
+            var_type: Option::None,
+            is_mutable: false,
+            initializer: Option::None,
+            expr: Option::Some(expr),
+            return_value: Option::None,
+            condition: Option::None,
+            then_block: Vector::<Stmt>::new(),
+            else_block: Vector::<Stmt>::new(),
+            body: Vector::<Stmt>::new(),
+            loop_var: "",
+            iterable: Option::None,
+            target: Option::None,
+            value: Option::None
+        };
+        return stmt;
+    }
+    
+    // Parse function parameter
+    fn parse_param(mut self) -> Param {
+        let is_mutable = self.match_kind(TokenKind::kw_mut().kind_id);
+        
+        // Handle 'self' parameter
+        if self.check_kind(TokenKind::kw_self().kind_id) {
+            self.advance();
+            return Param {
+                name: "self",
+                param_type: Type::named("Self"),
+                is_mutable: is_mutable
+            };
+        }
+        
+        let name_tok = self.expect(TokenKind::identifier().kind_id, "Expected parameter name");
+        self.expect(TokenKind::colon().kind_id, "Expected ':' after parameter name");
+        let param_type = self.parse_type();
+        
+        return Param {
+            name: name_tok.string_value,
+            param_type: param_type,
+            is_mutable: is_mutable
+        };
+    }
+    
+    // Parse function definition
+    fn parse_function(mut self, is_pub: bool) -> Function {
+        let span = self.current().span;
+        self.advance(); // fn
+        
+        let name_tok = self.expect(TokenKind::identifier().kind_id, "Expected function name");
+        
+        self.expect(TokenKind::lparen().kind_id, "Expected '(' after function name");
+        
+        let mut params = Vector::<Param>::new();
+        if !self.check_kind(TokenKind::rparen().kind_id) {
+            params.push(self.parse_param());
+            while self.match_kind(TokenKind::comma().kind_id) {
+                params.push(self.parse_param());
+            }
+        }
+        
+        self.expect(TokenKind::rparen().kind_id, "Expected ')' after parameters");
+        
+        let mut return_type = Option::<Type>::None;
+        if self.match_kind(TokenKind::op_arrow().kind_id) {
+            return_type = Option::Some(self.parse_type());
+        }
+        
+        self.expect(TokenKind::lbrace().kind_id, "Expected '{' to start function body");
+        let body = self.parse_block();
+        
+        return Function {
+            name: name_tok.string_value,
+            params: params,
+            return_type: return_type,
+            body: body,
+            is_pub: is_pub,
+            is_async: false,
+            span: span
+        };
+    }
+    
+    // Parse class definition
+    fn parse_class(mut self, is_pub: bool) -> ClassDef {
+        let span = self.current().span;
+        self.advance(); // class
+        
+        let name_tok = self.expect(TokenKind::identifier().kind_id, "Expected class name");
+        
+        self.expect(TokenKind::lbrace().kind_id, "Expected '{' after class name");
+        
+        let mut fields = Vector::<Field>::new();
+        while !self.check_kind(TokenKind::rbrace().kind_id) && !self.is_at_end() {
+            let field_name = self.expect(TokenKind::identifier().kind_id, "Expected field name");
+            self.expect(TokenKind::colon().kind_id, "Expected ':' after field name");
+            let field_type = self.parse_type();
+            self.expect(TokenKind::semicolon().kind_id, "Expected ';' after field");
+            
+            fields.push(Field {
+                name: field_name.string_value,
+                field_type: field_type,
+                is_pub: false
+            });
+        }
+        
+        self.expect(TokenKind::rbrace().kind_id, "Expected '}' to close class");
+        
+        return ClassDef {
+            name: name_tok.string_value,
+            fields: fields,
+            is_pub: is_pub,
+            span: span
+        };
+    }
+    
+    // Parse impl block
+    fn parse_impl(mut self) -> ImplBlock {
+        let span = self.current().span;
+        self.advance(); // impl
+        
+        let type_name = self.expect(TokenKind::identifier().kind_id, "Expected type name");
+        
+        // Check for trait impl (impl Trait for Type)
+        let mut trait_name = Option::<string>::None;
+        if self.match_kind(TokenKind::kw_for().kind_id) {
+            trait_name = Option::Some(type_name.string_value);
+            // The next identifier is the actual type
+            let actual_type = self.expect(TokenKind::identifier().kind_id, "Expected type name");
+        }
+        
+        self.expect(TokenKind::lbrace().kind_id, "Expected '{' after impl");
+        
+        let mut methods = Vector::<Function>::new();
+        while !self.check_kind(TokenKind::rbrace().kind_id) && !self.is_at_end() {
+            methods.push(self.parse_function(false));
+        }
+        
+        self.expect(TokenKind::rbrace().kind_id, "Expected '}' to close impl");
+        
+        return ImplBlock {
+            target_type: type_name.string_value,
+            trait_name: trait_name,
+            methods: methods,
+            span: span
+        };
+    }
+    
+    // Parse use statement
+    fn parse_use(mut self) -> UseStmt {
+        let span = self.current().span;
+        self.advance(); // use
+        
+        let mut path = Vector::<string>::new();
+        let first = self.expect(TokenKind::identifier().kind_id, "Expected module path");
+        path.push(first.string_value);
+        
+        while self.match_kind(TokenKind::double_colon().kind_id) {
+            let seg = self.expect(TokenKind::identifier().kind_id, "Expected path segment");
+            path.push(seg.string_value);
+        }
+        
+        self.expect(TokenKind::semicolon().kind_id, "Expected ';' after use");
+        
+        return UseStmt {
+            path: path,
+            alias: Option::None,
+            span: span
+        };
+    }
+    
+    // Parse top-level item
+    fn parse_item(mut self) -> Option<Item> {
+        let is_pub = self.match_kind(TokenKind::kw_pub().kind_id);
+        
+        if self.check_kind(TokenKind::kw_fn().kind_id) {
+            let func = self.parse_function(is_pub);
+            return Option::Some(Item {
+                kind: ItemKind::function(),
+                function: Option::Some(func),
+                class_def: Option::None,
+                impl_block: Option::None,
+                trait_def: Option::None,
+                enum_def: Option::None,
+                use_stmt: Option::None,
+                mod_def: Option::None
+            });
+        }
+        
+        if self.check_kind(TokenKind::kw_class().kind_id) {
+            let cls = self.parse_class(is_pub);
+            return Option::Some(Item {
+                kind: ItemKind::class_def(),
+                function: Option::None,
+                class_def: Option::Some(cls),
+                impl_block: Option::None,
+                trait_def: Option::None,
+                enum_def: Option::None,
+                use_stmt: Option::None,
+                mod_def: Option::None
+            });
+        }
+        
+        if self.check_kind(TokenKind::kw_impl().kind_id) {
+            let impl_b = self.parse_impl();
+            return Option::Some(Item {
+                kind: ItemKind::impl_block(),
+                function: Option::None,
+                class_def: Option::None,
+                impl_block: Option::Some(impl_b),
+                trait_def: Option::None,
+                enum_def: Option::None,
+                use_stmt: Option::None,
+                mod_def: Option::None
+            });
+        }
+        
+        if self.check_kind(TokenKind::kw_use().kind_id) {
+            let use_s = self.parse_use();
+            return Option::Some(Item {
+                kind: ItemKind::use_stmt(),
+                function: Option::None,
+                class_def: Option::None,
+                impl_block: Option::None,
+                trait_def: Option::None,
+                enum_def: Option::None,
+                use_stmt: Option::Some(use_s),
+                mod_def: Option::None
+            });
+        }
+        
+        return Option::None;
+    }
+    
+    // Parse entire source file
+    fn parse_file(mut self, path: string) -> SourceFile {
+        let mut file = SourceFile::new(path);
+        
+        while !self.is_at_end() {
+            let item_opt = self.parse_item();
+            if item_opt.is_some() {
+                file.items.push(item_opt.unwrap());
+            } else {
+                // Skip unknown token
+                self.error("Unexpected token");
+                self.advance();
+            }
+        }
+        
+        return file;
+    }
+}
+
+// Convenience function
+fn parse(source: string, path: string) -> SourceFile {
+    let tokens = super::lexer::lex(source);
+    let mut parser = Parser::new(tokens);
+    return parser.parse_file(path);
+}

@@ -1,0 +1,75 @@
+// src/auth/domain.fu
+// Core domain types for the Secure Authentication module
+
+// Role constants - using int for simpler handling until enum support is fully verified
+// 0: User, 1: System Admin, 2: Security Officer
+class Roles {
+    // Constants not fully supported in pure class-level yet, using helper
+}
+
+// Represents a User in the system
+class User {
+    username: string;
+    password_hash: string;
+    roles: Vector<string>; // Storing roles as strings for flexibility
+    mfa_secret: Option<string>;
+    created_at: int; // Timestamp
+}
+
+impl User {
+    fn new(username: string, hash: string) -> User {
+        return User {
+            username: username,
+            password_hash: hash,
+            roles: Vector::<string>::new(),
+            mfa_secret: Option::None,
+            created_at: 0 // Placeholder for time()
+        };
+    }
+
+    fn add_role(mut self, role: string) {
+        self.roles.push(role);
+    }
+
+    fn has_role(self, role: string) -> bool {
+        let len = self.roles.len();
+        let mut i = 0;
+        let mut found = false;
+        
+        while i < len {
+            if self.roles.get(i).unwrap() == role {
+                found = true;
+                i = len; // break
+            }
+            i = i + 1;
+        }
+        return found;
+    }
+}
+
+// Represents an active user session
+class Session {
+    session_id: string;
+    username: string;
+    refresh_token: string;
+    csrf_token: string;
+    issued_at: int;
+    expires_at: int;
+}
+
+impl Session {
+    fn new(sid: string, username: string, refresh: string, csrf: string, expiry: int) -> Session {
+        return Session {
+            session_id: sid,
+            username: username,
+            refresh_token: refresh,
+            csrf_token: csrf,
+            issued_at: 0, // Placeholder
+            expires_at: expiry
+        };
+    }
+    
+    fn is_expired(self, current_time: int) -> bool {
+        return current_time > self.expires_at;
+    }
+}

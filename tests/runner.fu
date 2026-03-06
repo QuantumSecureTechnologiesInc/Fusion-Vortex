@@ -1,0 +1,54 @@
+// tests/runner.fu
+// Native Test Runner
+// Scans for test files, compiles, and executes them.
+
+use std::fs;
+use std::process;
+use std::io;
+
+fn main() {
+    let test_dir = "tests";
+    let entries = fs::read_dir(test_dir);
+    
+    let mut passed = 0;
+    let mut failed = 0;
+
+    for entry in entries {
+        if entry.name.ends_with(".fu") && entry.name != "runner.fu" {
+            print("Running test: " + entry.name + "... ");
+            
+            // Step 1: Compile the test file
+            let out_exe = "temp_test.exe";
+            let compile_cmd = "fuc " + test_dir + "/" + entry.name + " -o " + out_exe;
+            let result = process::exec(compile_cmd);
+            
+            if result.exit_code != 0 {
+                println("COMPILE FAILED");
+                failed += 1;
+                continue;
+            }
+
+            // Step 2: Run the compiled executable
+            let run_result = process::exec("./" + out_exe);
+            
+            if run_result.exit_code == 0 {
+                println("PASSED");
+                passed += 1;
+            } else {
+                println("FAILED (Exit Code: " + run_result.exit_code.to_string() + ")");
+                failed += 1;
+            }
+            
+            // Cleanup
+            fs::remove_file(out_exe);
+        }
+    }
+
+    println("\nTest Summary:");
+    println("Passed: " + passed.to_string());
+    println("Failed: " + failed.to_string());
+    
+    if failed > 0 {
+        process::exit(1);
+    }
+}

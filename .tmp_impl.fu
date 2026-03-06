@@ -1,0 +1,6 @@
+struct Packet { topic: string, payload: string }
+impl Packet {
+    fn new(topic: string, payload: string) -> Packet {
+        return Packet { topic: topic, payload: payload };
+    }
+}

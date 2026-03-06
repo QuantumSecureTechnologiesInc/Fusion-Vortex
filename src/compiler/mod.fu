@@ -1,0 +1,28 @@
+// src/compiler/mod.fu
+// Fusion Self-Hosting Compiler Module
+
+pub mod token;
+pub mod lexer;
+pub mod ast;
+pub mod parser;
+pub mod types;
+pub mod sema;
+pub mod ir;
+pub mod codegen;
+pub mod driver;
+pub mod intent;
+pub mod pqc;
+pub mod test;
+
+// Re-export main compiler entry points
+pub use lexer::lex;
+pub use parser::parse;
+pub use sema::analyze;
+pub use codegen::{generate_bytecode, generate_assembly, Target};
+pub use driver::{compile, compile_to_asm, Compiler, CompileOptions, CompileResult};
+pub use intent::{Intent, IntentEngine, TaskProfile, Device, Cortex};
+pub use pqc::{KyberKeypair, KyberKEM, DilithiumKeypair, DilithiumSign, HybridKeypair};
+pub use test::run_all_tests;
+
+
+

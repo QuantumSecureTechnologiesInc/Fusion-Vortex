@@ -1,0 +1,531 @@
+CMake File,Target,Dependencies
+.\runtime\native\CMakeLists.txt,fusionrt,"ws2_32, pthread"
+.\v2.0 Vortex\CMakeLists.txt,hypercycle_pqc,"OpenSSL::Crypto, dl, m, pthread, winpthread"
+.\v2.0 Vortex\CMakeLists.txt,vortex_dashboard,"hypercycle_pqc, OpenSSL::Crypto, m, pthread, winpthread"
+.\v2.0 Vortex\CMakeLists.txt,secure_dashboard,"hypercycle_pqc, OpenSSL::Crypto, m, pthread, winpthread"
+.\v2.0 Vortex\CMakeLists.txt,hc_cuda,CUDA::cudart
+.\v2.0 Vortex\CMakeLists.txt,hc_rocm,HIP::hip_runtime
+.\v2.0 Vortex\CMakeLists.txt,hypercycle_vortex_objs,
+.\v2.0 Vortex\CMakeLists.txt,${test_name},hypercycle_pqc
+.\vcpkg\ports\7zip\CMakeLists.txt,7zip,
+.\vcpkg\ports\alac\CMakeLists.txt,libalac,
+.\vcpkg\ports\alac\CMakeLists.txt,alacconvert,libalac
+.\vcpkg\ports\alac-decoder\CMakeLists.txt,libalac_decoder,
+.\vcpkg\ports\alac-decoder\CMakeLists.txt,alac_decoder,libalac_decoder
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLEFramework,ANGLE
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLE,"ZLIB::ZLIB, ${CMAKE_DL_LIBS}, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,GLESv2,"${ANGLEGLESv2_LIBRARIES}, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,GLESv2Framework,GLESv2
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLE::GLES,
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,EGL,"GLESv2, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,EGLFramework,EGL
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLE::EGL,
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLE,"ZLIB::ZLIB, ${CMAKE_DL_LIBS}, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\angle\cmake-buildsystem\CMakeLists.txt,ANGLE::ANGLE,
+.\vcpkg\ports\argon2\CMakeLists.txt,libargon2,Threads::Threads
+.\vcpkg\ports\argon2\CMakeLists.txt,argon2,libargon2
+.\vcpkg\ports\asio\CMakeLists.txt,asio,Threads::Threads
+.\vcpkg\ports\aubio\CMakeLists.txt,aubio,"SndFile::sndfile, ${FFMPEG_LIBRARIES}, BZip2::BZip2, ${LIBLZMA_LIBRARIES}, ws2_32"
+.\vcpkg\ports\aubio\CMakeLists.txt,${EXAMPLE_EXEC},"aubio, ws2_32"
+.\vcpkg\ports\autodock-vina\CMakeLists.txt,vina,"Boost::boost, Boost::filesystem, Boost::log, Boost::program_options, Boost::random, Boost::serialization, Boost::thread, Boost::timer"
+.\vcpkg\ports\autodock-vina\CMakeLists.txt,vina_split,"Boost::boost, Boost::filesystem, Boost::log, Boost::program_options, Boost::random, Boost::serialization, Boost::thread, Boost::timer"
+.\vcpkg\ports\b64\CMakeLists.txt,b64,
+.\vcpkg\ports\berkeleydb\CMakeLists.txt,libdb48,ws2_32.lib
+.\vcpkg\ports\bigint\CMakeLists.txt,bigint,
+.\vcpkg\ports\binn\CMakeLists.txt,binn,
+.\vcpkg\ports\boinc\CMakeLists.txt,boinc,"OpenSSL::SSL, OpenSSL::Crypto"
+.\vcpkg\ports\boinc\CMakeLists.txt,boincapi,boinc
+.\vcpkg\ports\boinc\CMakeLists.txt,boinc_zip,libzip::zip
+.\vcpkg\ports\breakpad\CMakeLists.txt,libbreakpad,${LIBDISASM_LIB}
+.\vcpkg\ports\breakpad\CMakeLists.txt,libbreakpad_client,"wininet.lib, ${CoreFoundation_FRAMEWORK}, ${PTHREAD_LIBRARIES}, ZLIB::ZLIB"
+.\vcpkg\ports\breakpad\CMakeLists.txt,microdump_stackwalk,"libbreakpad, libbreakpad_client"
+.\vcpkg\ports\breakpad\CMakeLists.txt,minidump_dump,"libbreakpad, libbreakpad_client"
+.\vcpkg\ports\breakpad\CMakeLists.txt,minidump_stackwalk,"libbreakpad, libbreakpad_client"
+.\vcpkg\ports\breakpad\CMakeLists.txt,core2md,libbreakpad_client
+.\vcpkg\ports\breakpad\CMakeLists.txt,pid2md,libbreakpad_client
+.\vcpkg\ports\breakpad\CMakeLists.txt,dump_syms,libbreakpad_client
+.\vcpkg\ports\breakpad\CMakeLists.txt,minidump-2-core,libbreakpad_client
+.\vcpkg\ports\breakpad\CMakeLists.txt,minidump_upload,"libbreakpad_client, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\breakpad\CMakeLists.txt,sym_upload,"libbreakpad_client, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\breakpad\CMakeLists.txt,core_handler,libbreakpad_client
+.\vcpkg\ports\butteraugli\CMakeLists.txt,butteraugli_lib,
+.\vcpkg\ports\butteraugli\CMakeLists.txt,butteraugli,"butteraugli_lib, ${JPEG_LIBRARIES}, ${TURBO}, ${PNG_LIBRARIES}"
+.\vcpkg\ports\bzip2\CMakeLists.txt,bz2,
+.\vcpkg\ports\bzip2\CMakeLists.txt,bzip2,
+.\vcpkg\ports\bzip2\CMakeLists.txt,bzip2recover,
+.\vcpkg\ports\cello\CMakeLists.txt,cello,
+.\vcpkg\ports\cgicc\CMakeLists.txt,cgicc,
+.\vcpkg\ports\chmlib\CMakeLists.txt,chm,
+.\vcpkg\ports\chmlib\CMakeLists.txt,enum_chmLib,
+.\vcpkg\ports\chmlib\CMakeLists.txt,enumdir_chmLib,
+.\vcpkg\ports\chmlib\CMakeLists.txt,extract_chmLib,
+.\vcpkg\ports\cimg\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\cityhash\CMakeLists.txt,cityhash,
+.\vcpkg\ports\clue\CMakeLists.txt,test_clue,
+.\vcpkg\ports\convectionkernels\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\cpp-exiftool\CMakeLists.txt,cpp-exiftool,
+.\vcpkg\ports\cpp-redis\tacopie\CMakeLists.txt,tacopie,"""${TACOPIE}"""
+.\vcpkg\ports\cppcoro\CMakeLists.txt,cppcoro,"c++, pthread, kernel32, synchronization, ws2_32, mswsock, #, msvcrt[d], msvcprt[d], vcruntime, ucrt, c++, #, stdc++, #, expect, libc++, instead, of, libstdc++"
+.\vcpkg\ports\cppcoro\CMakeLists.txt,cppcoro_test,"cppcoro, Threads::Threads, doctest::doctest"
+.\vcpkg\ports\cppunit\CMakeLists.txt,cppunit,
+.\vcpkg\ports\cppunit\CMakeLists.txt,cppunit,
+.\vcpkg\ports\cppunit\CMakeLists.txt,DllPlugInTester,cppunit
+.\vcpkg\ports\crfsuite\CMakeLists.txt,cqdb,
+.\vcpkg\ports\crfsuite\CMakeLists.txt,crf,"cqdb, ${LBFGS_LIBRARY}"
+.\vcpkg\ports\crfsuite\CMakeLists.txt,crfsuite,crf
+.\vcpkg\ports\crfsuite\CMakeLists.txt,frontend,crf
+.\vcpkg\ports\cspice\CMakeLists.txt,cspice,
+.\vcpkg\ports\ctemplate\CMakeLists.txt,libctemplate,
+.\vcpkg\ports\cunit\CMakeLists.txt,cunit,
+.\vcpkg\ports\darts-clone\CMakeLists.txt,darts,
+.\vcpkg\ports\devicenameresolver\CMakeLists.txt,DeviceNameResolver,
+.\vcpkg\ports\discord-game-sdk\CMakeLists.txt,discord_game_sdk_cpp,${SDK_LIB}
+.\vcpkg\ports\distorm\CMakeLists.txt,distorm,
+.\vcpkg\ports\duktape\CMakeLists.txt,duktape,
+.\vcpkg\ports\easyexif\CMakeLists.txt,easyexif,
+.\vcpkg\ports\ecos\CMakeLists.txt,ecos-suitesparse,
+.\vcpkg\ports\ecos\CMakeLists.txt,ecos-amd,ecos-suitesparse
+.\vcpkg\ports\ecos\CMakeLists.txt,ecos-ldl,ecos-suitesparse
+.\vcpkg\ports\ecos\CMakeLists.txt,ecos,"ecos-amd, ecos-ldl"
+.\vcpkg\ports\ed25519\CMakeLists.txt,"""${PROJECT_NAME}""",
+.\vcpkg\ports\edflib\CMakeLists.txt,EDFlib,
+.\vcpkg\ports\edflib\CMakeLists.txt,sine_generator,"EDFlib, m"
+.\vcpkg\ports\edflib\CMakeLists.txt,sweep_generator,"EDFlib, m"
+.\vcpkg\ports\fastfeat\CMakeLists.txt,fastfeat,
+.\vcpkg\ports\fastlz\CMakeLists.txt,fastlz,
+.\vcpkg\ports\fdlibm\CMakeLists.txt,fdlibm,
+.\vcpkg\ports\ffmpeg-bin2c\CMakeLists.txt,bin2c,
+.\vcpkg\ports\freeimage\CMakeLists.txt,FreeImage,"${ZLIB_LIBRARIES}, ${JPEG_LIBRARIES}, ${TIFF_LIBRARIES}, ${PNG_LIBRARIES}, ${OPENJPEG_LIBRARIES}, WebP::webp, WebP::webpdemux, WebP::libwebpmux, WebP::webpdecoder, ${JXR_LIBRARIES}, ${LibRaw_LIBRARIES}, OpenEXR::OpenEXR, Imath::Imath"
+.\vcpkg\ports\freeimage\CMakeLists.txt,FreeImagePlus,FreeImage
+.\vcpkg\ports\gamma\CMakeLists.txt,gamma,"SndFile::sndfile, ${PORTAUDIO_LIB}"
+.\vcpkg\ports\genann\CMakeLists.txt,genann,
+.\vcpkg\ports\geotrans\CMakeLists.txt,MSPdtcc,"Threads::Threads, ${CMAKE_DL_LIBS}"
+.\vcpkg\ports\geotrans\CMakeLists.txt,MSPCoordinateConversionService,
+.\vcpkg\ports\gettimeofday\CMakeLists.txt,gettimeofday,
+.\vcpkg\ports\giflib\CMakeLists.txt,gif,
+.\vcpkg\ports\gl3w\CMakeLists.txt,gl3w,${OPENGL_LIBRARIES}
+.\vcpkg\ports\gppanel\CMakeLists.txt,gpPanel,${wxWidgets_LIBRARIES}
+.\vcpkg\ports\gsl\CMakeLists.txt,gslcblas,
+.\vcpkg\ports\gsl\CMakeLists.txt,gsl,gslcblas
+.\vcpkg\ports\gts\CMakeLists.txt,gts,PkgConfig::GLIB2
+.\vcpkg\ports\guetzli\CMakeLists.txt,guetzli_lib,"${butteraugli_library}, ${PNG_LIBRARIES}"
+.\vcpkg\ports\guetzli\CMakeLists.txt,guetzli,"guetzli_lib, ${butteraugli_library}, ${PNG_LIBRARIES}"
+.\vcpkg\ports\gumbo\CMakeLists.txt,gumbo,
+.\vcpkg\ports\h5py-lzf\CMakeLists.txt,h5py-lzf,"unofficial::liblzf::liblzf, $<IF:$<TARGET_EXISTS:hdf5::hdf5-shared>,hdf5::hdf5-shared,hdf5::hdf5-static>"
+.\vcpkg\ports\hash-library\CMakeLists.txt,hash-library,
+.\vcpkg\ports\hffix\CMakeLists.txt,hffix,
+.\vcpkg\ports\http-parser\CMakeLists.txt,http_parser,
+.\vcpkg\ports\hungarian\CMakeLists.txt,hungarian,
+.\vcpkg\ports\iausofa\CMakeLists.txt,iausofa,m
+.\vcpkg\ports\ideviceinstaller\CMakeLists.txt,ideviceinstaller,"unofficial::libimobiledevice::libimobiledevice, libzip::zip, unofficial::getopt-win32::getopt"
+.\vcpkg\ports\idevicerestore\CMakeLists.txt,idevicerestore,"CURL::libcurl, unofficial::libimobiledevice::libimobiledevice, unofficial::libimobiledevice-glue::libimobiledevice-glue, unofficial::libirecovery::libirecovery, libzip::zip, OpenSSL::SSL, OpenSSL::Crypto, ZLIB::ZLIB, unofficial::getopt-win32::getopt"
+.\vcpkg\ports\im3d\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\imgui\CMakeLists.txt,${PROJECT_NAME},"Allegro::allegro, Allegro::allegro_ttf, Allegro::allegro_font, Allegro::allegro_main, glfw, GLUT::GLUT, SDL3::SDL3, SDL3::SDL3, SDL3::SDL3, Vulkan::Vulkan, freetype, plutosvg::plutosvg"
+.\vcpkg\ports\imgui\CMakeLists.txt,${PROJECT_NAME}::${PROJECT_NAME},
+.\vcpkg\ports\imgui-node-editor\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\imguizmo\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\implot\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\implot\CMakeLists.txt,${PROJECT_NAME}::${PROJECT_NAME},
+.\vcpkg\ports\implot3d\CMakeLists.txt,${PROJECT_NAME},imgui::imgui
+.\vcpkg\ports\implot3d\CMakeLists.txt,${PROJECT_NAME}::${PROJECT_NAME},
+.\vcpkg\ports\intelrdfpmathlib\CMakeLists.txt,intel_decimal128,
+.\vcpkg\ports\irrlicht\CMakeLists.txt,Irrlicht,"${OSX_LIBRARIES}, ${PNG_LIBRARY}, ${JPEG_LIBRARY}, ${ZLIB_LIBRARY}, ${BZIP2_LIBRARY}, ${ADDITIONAL_LIRARIES}, ${DX_LIBS}/d3dx9.lib, ${DX_LIBS}/dinput8.lib, ${DX_LIBS}/dxguid.lib, X11, GL, Xxf86vm"
+.\vcpkg\ports\irrlicht\CMakeLists.txt,Irrlicht,"${OSX_LIBRARIES}, ${PNG_LIBRARY}, ${JPEG_LIBRARY}, ${ZLIB_LIBRARY}, ${BZIP2_LIBRARY}, ${ADDITIONAL_LIRARIES}, ${DX_LIBS}/d3dx9.lib, ${DX_LIBS}/dinput8.lib, ${DX_LIBS}/dxguid.lib, X11, GL, Xxf86vm"
+.\vcpkg\ports\irrlicht\CMakeLists.txt,FileToHeader,
+.\vcpkg\ports\irrlicht\CMakeLists.txt,GUIEditor,Irrlicht
+.\vcpkg\ports\irrlicht\CMakeLists.txt,FontTool,Irrlicht
+.\vcpkg\ports\irrlicht\CMakeLists.txt,MeshConverter,Irrlicht
+.\vcpkg\ports\jack2\CMakeLists.txt,jack,${CMAKE_DL_LIBS}
+.\vcpkg\ports\jbig2dec\CMakeLists.txt,jbig2dec,
+.\vcpkg\ports\jbigkit\CMakeLists.txt,libjbig,
+.\vcpkg\ports\jxrlib\CMakeLists.txt,jpegxr,
+.\vcpkg\ports\jxrlib\CMakeLists.txt,jxrglue,jpegxr
+.\vcpkg\ports\keccak-tiny\CMakeLists.txt,"""${PROJECT_NAME}""",
+.\vcpkg\ports\lemon-parser-generator\CMakeLists.txt,lemon,
+.\vcpkg\ports\libaes-siv\CMakeLists.txt,"""${PROJECT_NAME}""",OpenSSL::Crypto
+.\vcpkg\ports\libaiff\CMakeLists.txt,libaiff,
+.\vcpkg\ports\libaio\CMakeLists.txt,aio,
+.\vcpkg\ports\libass\CMakeLists.txt,ass,"Freetype::Freetype, PkgConfig::FRIBIDI, PkgConfig::HARFBUZZ, ${FONT_LIBRARY}"
+.\vcpkg\ports\libdatrie\CMakeLists.txt,libdatrie,
+.\vcpkg\ports\libdatrie\CMakeLists.txt,trietool,"libdatrie, Iconv::Iconv"
+.\vcpkg\ports\libdisasm\CMakeLists.txt,libdisasm,
+.\vcpkg\ports\libideviceactivation\CMakeLists.txt,libideviceactivation,"CURL::libcurl, LibXml2::LibXml2, unofficial::libplist::libplist, unofficial::libimobiledevice::libimobiledevice"
+.\vcpkg\ports\libideviceactivation\CMakeLists.txt,ideviceactivation,libideviceactivation
+.\vcpkg\ports\libimobiledevice\CMakeLists.txt,libimobiledevice,"unofficial::libimobiledevice-glue::libimobiledevice-glue, unofficial::libusbmuxd::libusbmuxd, OpenSSL::SSL, OpenSSL::Crypto, unofficial::libplist::libplist, Ws2_32"
+.\vcpkg\ports\libimobiledevice\CMakeLists.txt,"""${name}""","libimobiledevice, unofficial::libimobiledevice-glue::libimobiledevice-glue, unofficial::libusbmuxd::libusbmuxd, OpenSSL::SSL, OpenSSL::Crypto, unofficial::getopt-win32::getopt, Ws2_32"
+.\vcpkg\ports\libimobiledevice-glue\CMakeLists.txt,libimobiledevice-glue,"unofficial::libplist::libplist, Ws2_32, Iphlpapi"
+.\vcpkg\ports\libirecovery\CMakeLists.txt,libirecovery,"unofficial::libimobiledevice-glue::libimobiledevice-glue, PkgConfig::libusb, Setupapi, ""-framework, IOKit"", ""-framework, CoreFoundation"""
+.\vcpkg\ports\libirecovery\CMakeLists.txt,irecovery,"unofficial::getopt-win32::getopt, Ws2_32, ""-framework, IOKit"", ""-framework, CoreFoundation"", PkgConfig::libusb, libirecovery, PkgConfig::readline"
+.\vcpkg\ports\liblbfgs\CMakeLists.txt,lbfgs,
+.\vcpkg\ports\liblinear\CMakeLists.txt,blas,
+.\vcpkg\ports\liblinear\CMakeLists.txt,liblinear,"""-DEF:${CMAKE_CURRENT_SOURCE_DIR}/linear.def"""
+.\vcpkg\ports\liblinear\CMakeLists.txt,train,liblinear
+.\vcpkg\ports\liblinear\CMakeLists.txt,predict,liblinear
+.\vcpkg\ports\liblzf\CMakeLists.txt,liblzf,
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,mpeg2,
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,mpeg2convert,
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,getopt,
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,vo,mpeg2convert
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,mpeg2dec,"getopt, vo, mpeg2convert, mpeg2, gdi32"
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,extract_mpeg2,getopt
+.\vcpkg\ports\libmpeg2\CMakeLists.txt,corrupt_mpeg2,getopt
+.\vcpkg\ports\libmspack\CMakeLists.txt,libmspack,
+.\vcpkg\ports\libmupdf\CMakeLists.txt,bin2coff,
+.\vcpkg\ports\libmupdf\CMakeLists.txt,libmupdf,"freetype, harfbuzz::harfbuzz, ${JBIG2DEC_LIBRARY}, JPEG::JPEG, openjp2, unofficial::gumbo::gumbo, ZLIB::ZLIB, $<$<BOOL:${ENABLE_OCR}>:leptonica>, $<$<BOOL:${ENABLE_OCR}>:Tesseract::libtesseract>, $<$<BOOL:${ANDROID}>:log>"
+.\vcpkg\ports\libodb\CMakeLists.txt,libodb,
+.\vcpkg\ports\libodb-boost\CMakeLists.txt,libodb-boost,odb::libodb
+.\vcpkg\ports\libodb-mysql\CMakeLists.txt,libodb-mysql,"odb::libodb, ${MYSQL_LIB}"
+.\vcpkg\ports\libodb-pgsql\CMakeLists.txt,libodb-pgsql,"odb::libodb, ${PostgreSQL_LIBRARY}"
+.\vcpkg\ports\libodb-sqlite\CMakeLists.txt,libodb-sqlite,"odb::libodb, unofficial::sqlite3::sqlite3"
+.\vcpkg\ports\libopenmpt\CMakeLists.txt,libopenmpt,"MPG123::libmpg123, Vorbis::vorbisfile, Vorbis::vorbis, ZLIB::ZLIB"
+.\vcpkg\ports\libopusenc\CMakeLists.txt,opusenc,${OPUS_LIBRARY}
+.\vcpkg\ports\libp7client\CMakeLists.txt,P7,"""ws2_32"""
+.\vcpkg\ports\libpff\CMakeLists.txt,${PROJECT_NAME},ZLIB::ZLIB
+.\vcpkg\ports\libplist\CMakeLists.txt,libplist,m
+.\vcpkg\ports\libplist\CMakeLists.txt,libplist++,libplist
+.\vcpkg\ports\libplist\CMakeLists.txt,plistutil,libplist
+.\vcpkg\ports\libpopt\CMakeLists.txt,popt,
+.\vcpkg\ports\libqcow\CMakeLists.txt,${PROJECT_NAME},"ZLIB::ZLIB, OpenSSL::Crypto"
+.\vcpkg\ports\librtmp\CMakeLists.txt,rtmp,"${ZLIB_LIBRARIES}, ${OPENSSL_LIBRARIES}, Ws2_32.lib, Winmm.lib"
+.\vcpkg\ports\libsmacker\CMakeLists.txt,libsmacker,
+.\vcpkg\ports\libsmacker\CMakeLists.txt,driver,libsmacker
+.\vcpkg\ports\libsmacker\CMakeLists.txt,smk2avi,libsmacker
+.\vcpkg\ports\libsonic\CMakeLists.txt,libsonic,
+.\vcpkg\ports\libsonic\CMakeLists.txt,sonic,libsonic
+.\vcpkg\ports\libstemmer\CMakeLists.txt,stemmer,
+.\vcpkg\ports\libstk\CMakeLists.txt,libstk,
+.\vcpkg\ports\libsvm\CMakeLists.txt,libsvm,
+.\vcpkg\ports\libsvm\CMakeLists.txt,svm-predict,libsvm
+.\vcpkg\ports\libsvm\CMakeLists.txt,svm-scale,libsvm
+.\vcpkg\ports\libsvm\CMakeLists.txt,svm-train,libsvm
+.\vcpkg\ports\libsvm\CMakeLists.txt,svm-toy,libsvm
+.\vcpkg\ports\libtess2\CMakeLists.txt,libtess2,
+.\vcpkg\ports\libtheora\CMakeLists.txt,theora-common,Ogg::ogg
+.\vcpkg\ports\libtheora\CMakeLists.txt,theora-enc,Ogg::ogg
+.\vcpkg\ports\libtheora\CMakeLists.txt,theora-dec,Ogg::ogg
+.\vcpkg\ports\libtheora\CMakeLists.txt,theora,Ogg::ogg
+.\vcpkg\ports\libtheora\CMakeLists.txt,theoraenc,Ogg::ogg
+.\vcpkg\ports\libtheora\CMakeLists.txt,theoradec,Ogg::ogg
+.\vcpkg\ports\libu2f-server\CMakeLists.txt,libu2f-server,"OpenSSL::SSL, OpenSSL::Crypto, json-c::json-c"
+.\vcpkg\ports\libudis86\CMakeLists.txt,libudis86,
+.\vcpkg\ports\libudis86\CMakeLists.txt,udcli,libudis86
+.\vcpkg\ports\libunibreak\CMakeLists.txt,unibreak,
+.\vcpkg\ports\libusb-win32\CMakeLists.txt,libusb0,setupapi
+.\vcpkg\ports\libusbmuxd\CMakeLists.txt,libusbmuxd,"unofficial::libplist::libplist, unofficial::libimobiledevice-glue::libimobiledevice-glue, Ws2_32"
+.\vcpkg\ports\libusbmuxd\CMakeLists.txt,"""${name}""","libusbmuxd, unofficial::libimobiledevice-glue::libimobiledevice-glue, unofficial::getopt-win32::getopt, Ws2_32"
+.\vcpkg\ports\libuuid\CMakeLists.txt,uuid,
+.\vcpkg\ports\libuuid\CMakeLists.txt,test_uuid,uuid
+.\vcpkg\ports\libvhdi\CMakeLists.txt,${PROJECT_NAME},ZLIB::ZLIB
+.\vcpkg\ports\libxmlmm\CMakeLists.txt,libxmlmm,LibXml2::LibXml2
+.\vcpkg\ports\live555\CMakeLists.txt,BasicUsageEnvironment,
+.\vcpkg\ports\live555\CMakeLists.txt,groupsock,
+.\vcpkg\ports\live555\CMakeLists.txt,liveMedia,
+.\vcpkg\ports\live555\CMakeLists.txt,UsageEnvironment,
+.\vcpkg\ports\lmdb\cmake\CMakeLists.txt,lmdb,Threads::Threads
+.\vcpkg\ports\lmdb\cmake\CMakeLists.txt,${tool},"lmdb, ${getopt_libs}"
+.\vcpkg\ports\lmdb\cmake\CMakeLists.txt,${test},lmdb
+.\vcpkg\ports\lodepng\CMakeLists.txt,lodepng,
+.\vcpkg\ports\lodepng\CMakeLists.txt,lodepng-c,
+.\vcpkg\ports\lpeg\CMakeLists.txt,lpeg,${LPEG_LIBRARIES}
+.\vcpkg\ports\lua\CMakeLists.txt,lua,"${CMAKE_DL_LIBS}, m"
+.\vcpkg\ports\lua\CMakeLists.txt,lua-cpp,"${CMAKE_DL_LIBS}, m"
+.\vcpkg\ports\lua\CMakeLists.txt,luac,m
+.\vcpkg\ports\lua\CMakeLists.txt,luai,"lua, ${PC_READLINE_LINK_LIBRARIES}"
+.\vcpkg\ports\luafilesystem\CMakeLists.txt,lfs,${LFS_LIBRARIES}
+.\vcpkg\ports\luasec\CMakeLists.txt,lua-ssl,"${LUASEC_LIBRARIES}, ${PLATFORM_LIBRARIES}"
+.\vcpkg\ports\luasocket\CMakeLists.txt,socket.core,${LUASOCKET_LIBRARIES}
+.\vcpkg\ports\luasocket\CMakeLists.txt,mime.core,${LUASOCKET_LIBRARIES}
+.\vcpkg\ports\luasocket\CMakeLists.txt,socket.unix,${LUASOCKET_LIBRARIES}
+.\vcpkg\ports\luasocket\CMakeLists.txt,socket.serial,${LUASOCKET_LIBRARIES}
+.\vcpkg\ports\mapbox-variant\CMakeLists.txt,variant,Threads::Threads
+.\vcpkg\ports\mathc\CMakeLists.txt,mathc,
+.\vcpkg\ports\mecab\CMakeLists.txt,mecab,
+.\vcpkg\ports\meschach\CMakeLists.txt,meschach,
+.\vcpkg\ports\metrohash\CMakeLists.txt,metrohash,
+.\vcpkg\ports\mikktspace\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\mikktspace\CMakeLists.txt,${PROJECT_NAME}::${PROJECT_NAME},
+.\vcpkg\ports\minizip\CMakeLists.txt,minizip,"ZLIB::ZLIB, BZip2::BZip2"
+.\vcpkg\ports\minizip\CMakeLists.txt,minizip_bin,minizip
+.\vcpkg\ports\minizip\CMakeLists.txt,miniunz_bin,minizip
+.\vcpkg\ports\modern-cpp-kafka\CMakeLists.txt,modern-cpp-kafka,"RdKafka::rdkafka, Boost::boost, rapidjson"
+.\vcpkg\ports\modp-base64\CMakeLists.txt,libmodpbase64,
+.\vcpkg\ports\mongoose\CMakeLists.txt,mongoose,"OpenSSL::SSL, OpenSSL::Crypto"
+.\vcpkg\ports\mongoose\CMakeLists.txt,pack,
+.\vcpkg\ports\msix\CMakeLists.txt,xerces-c,XercesC::XercesC
+.\vcpkg\ports\msix\CMakeLists.txt,zlib,ZLIB::ZLIB
+.\vcpkg\ports\msix\CMakeLists.txt,zlibstatic,ZLIB::ZLIB
+.\vcpkg\ports\mujs\CMakeLists.txt,mujs,${LINK_LIBRARIES}
+.\vcpkg\ports\murmur3\CMakeLists.txt,"""${PROJECT_NAME}""",
+.\vcpkg\ports\murmurhash\CMakeLists.txt,murmurhash,
+.\vcpkg\ports\nana\CMakeLists.txt,nana,"c++experimental, stdc++fs, Threads::Threads, Freetype::Freetype, ${X11_LIBRARIES}, ${X11_Xft_LIB}, Fontconfig::Fontconfig, PNG::PNG, $<BUILD_INTERFACE:${JPEG_LIBRARIES}>"
+.\vcpkg\ports\nanobench\CMakeLists.txt,nanobench,
+.\vcpkg\ports\nanobench\CMakeLists.txt,nanobench::nanobench,
+.\vcpkg\ports\nanovg\CMakeLists.txt,nanovg,
+.\vcpkg\ports\nayuki-qr-code-generator\CMakeLists.txt,nayuki-qr-code-generator,
+.\vcpkg\ports\nlohmann-fifo-map\CMakeLists.txt,${NLOHMANN_FIFO_MAP_TARGET_NAME},
+.\vcpkg\ports\nlohmann-fifo-map\CMakeLists.txt,${PROJECT_NAME}::${NLOHMANN_FIFO_MAP_TARGET_NAME},
+.\vcpkg\ports\nonius\CMakeLists.txt,nonius,
+.\vcpkg\ports\nuklear\CMakeLists.txt,nuklear,
+.\vcpkg\ports\opencsg\CMakeLists.txt,opencsg,GLEW::GLEW
+.\vcpkg\ports\openctm\CMakeLists.txt,openctm,7zip::7zip
+.\vcpkg\ports\openfbx\CMakeLists.txt,openfbx,"$<IF:$<TARGET_EXISTS:libdeflate::libdeflate_shared>,libdeflate::libdeflate_shared,libdeflate::libdeflate_static>"
+.\vcpkg\ports\openfx\CMakeLists.txt,OpenFx,
+.\vcpkg\ports\openfx\CMakeLists.txt,OfxSupport,OpenFx
+.\vcpkg\ports\perfetto\CMakeLists.txt,perfetto,"Threads::Threads, log, ws2_32"
+.\vcpkg\ports\pffft\CMakeLists.txt,pffft,
+.\vcpkg\ports\piex\CMakeLists.txt,binary_parse,
+.\vcpkg\ports\piex\CMakeLists.txt,image_type_recognition,binary_parse
+.\vcpkg\ports\piex\CMakeLists.txt,tiff_directory,binary_parse
+.\vcpkg\ports\piex\CMakeLists.txt,piex,"tiff_directory, image_type_recognition, binary_parse"
+.\vcpkg\ports\plib\CMakeLists.txt,plib_fnt,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_js,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_net,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_psl,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_puAux,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_pui,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_pw,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_sg,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_sl,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_ssg,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_ssgAux,
+.\vcpkg\ports\plib\CMakeLists.txt,plib_ul,
+.\vcpkg\ports\plustache\CMakeLists.txt,plustache,${Boost_LIBRARIES}
+.\vcpkg\ports\poissonrecon\CMakeLists.txt,PoissonRecon,"PNG::PNG, JPEG::JPEG"
+.\vcpkg\ports\portable-snippets\CMakeLists.txt,${module},
+.\vcpkg\ports\portable-snippets\CMakeLists.txt,${module},
+.\vcpkg\ports\portable-snippets\CMakeLists.txt,${namespace}::${module},
+.\vcpkg\ports\pqp\CMakeLists.txt,pqp,
+.\vcpkg\ports\presentmon\CMakeLists.txt,PresentData,
+.\vcpkg\ports\presentmon\CMakeLists.txt,PresentMon,"PresentData, Tdh, Shlwapi"
+.\vcpkg\ports\pystring\CMakeLists.txt,pystring,
+.\vcpkg\ports\quirc\CMakeLists.txt,quirc,
+.\vcpkg\ports\ragel\CMakeLists.txt,ragel,
+.\vcpkg\ports\rappture\CMakeLists.txt,rappture,"expat::expat, ZLIB::ZLIB"
+.\vcpkg\ports\rewolf-wow64ext\CMakeLists.txt,wow64ext,
+.\vcpkg\ports\rhash\CMakeLists.txt,rhash,
+.\vcpkg\ports\rply\CMakeLists.txt,${target_name},
+.\vcpkg\ports\ryu\CMakeLists.txt,ryu,
+.\vcpkg\ports\ryu\CMakeLists.txt,ryu_printf,
+.\vcpkg\ports\sajson\CMakeLists.txt,sajson,
+.\vcpkg\ports\scylla-wrapper\CMakeLists.txt,scylla_wrapper,${DISTORM_LIBRARY}
+.\vcpkg\ports\sdl1-net\CMakeLists.txt,SDL_net,"${SDL_LIBRARY}, ws2_32, iphlpapi"
+.\vcpkg\ports\sdl2-gfx\CMakeLists.txt,${PROJECT_NAME},SDL2::SDL2
+.\vcpkg\ports\sfsexp\CMakeLists.txt,sexp,
+.\vcpkg\ports\skia\example\CMakeLists.txt,legacy,skia
+.\vcpkg\ports\skia\example\CMakeLists.txt,main,"unofficial::skia::skia, unofficial::skia::modules::skshaper"
+.\vcpkg\ports\skia\example\CMakeLists.txt,skcms,unofficial::skia::skia
+.\vcpkg\ports\skia\example\CMakeLists.txt,skpathediting,unofficial::skia::skia
+.\vcpkg\ports\smpeg2\CMakeLists.txt,smpeg2,"SDL2::SDL2, SDL2::SDL2-static"
+.\vcpkg\ports\snap7\CMakeLists.txt,${PROJECT_NAME},"wsock32, ws2_32, winmm.lib"
+.\vcpkg\ports\snap7\CMakeLists.txt,${PROJECT_NAME}::${PROJECT_NAME},
+.\vcpkg\ports\soil2\CMakeLists.txt,soil2,${OPENGL_gl_LIBRARY}
+.\vcpkg\ports\speexdsp\CMakeLists.txt,speexdsp,
+.\vcpkg\ports\sproto\CMakeLists.txt,sproto,${LUA_LIBRARIES}
+.\vcpkg\ports\sqlcipher\CMakeLists.txt,sqlcipher,"Threads::Threads, ${CMAKE_DL_LIBS}, m, OpenSSL::SSL, OpenSSL::Crypto"
+.\vcpkg\ports\sqlcipher\CMakeLists.txt,sqlcipher-bin,sqlcipher
+.\vcpkg\ports\sqlite3\CMakeLists.txt,sqlite3,"Threads::Threads, ${CMAKE_DL_LIBS}, m, ICU::uc, ICU::i18n"
+.\vcpkg\ports\sqlite3\CMakeLists.txt,sqlite3-bin,"sqlite3, ZLIB::ZLIB, m"
+.\vcpkg\ports\tgc\CMakeLists.txt,tgc,
+.\vcpkg\ports\tinkerforge\CMakeLists.txt,${PROJECT_NAME},"Threads::Threads, Ws2_32, advapi32"
+.\vcpkg\ports\tiny-aes-c\CMakeLists.txt,tiny-aes-c,
+.\vcpkg\ports\tiny-bignum-c\CMakeLists.txt,tiny-bignum-c,
+.\vcpkg\ports\tiny-regex-c\CMakeLists.txt,tiny-regex-c,
+.\vcpkg\ports\tinycbor\CMakeLists.txt,tinycbor,
+.\vcpkg\ports\tinyexpr\CMakeLists.txt,tinyexpr,m
+.\vcpkg\ports\tinyexpr\CMakeLists.txt,tinyexpr,m
+.\vcpkg\ports\tinyfiledialogs\CMakeLists.txt,tinyfiledialogs,
+.\vcpkg\ports\tinythread\CMakeLists.txt,tinythread,
+.\vcpkg\ports\tinyxml\CMakeLists.txt,unofficial-tinyxml,
+.\vcpkg\ports\tre\CMakeLists.txt,tre,
+.\vcpkg\ports\triangle\CMakeLists.txt,triangle,
+.\vcpkg\ports\triangle\CMakeLists.txt,triangle_exe,
+.\vcpkg\ports\udt\CMakeLists.txt,udt,ws2_32
+.\vcpkg\ports\unicorn-lib\CMakeLists.txt,unicorn-lib,"PkgConfig::PCRE2, ZLIB::ZLIB, Iconv::Iconv"
+.\vcpkg\ports\usbmuxd\CMakeLists.txt,usbmuxd,"unofficial::libimobiledevice::libimobiledevice, unofficial::libimobiledevice-glue::libimobiledevice-glue, PkgConfig::libusb, PThreads4W::PThreads4W, unofficial::getopt-win32::getopt"
+.\vcpkg\ports\usockets\CMakeLists.txt,uSockets,"OpenSSL::SSL, OpenSSL::Crypto, $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>, ws2_32"
+.\vcpkg\ports\vamp-sdk\CMakeLists.txt,vamp-sdk,SndFile::sndfile
+.\vcpkg\ports\vamp-sdk\CMakeLists.txt,vamp-hostsdk,SndFile::sndfile
+.\vcpkg\ports\vectorclass\CMakeLists.txt,${PROJECT_NAME},
+.\vcpkg\ports\visit-struct\CMakeLists.txt,visit_struct,
+.\vcpkg\ports\vlfeat\CMakeLists.txt,vl,OpenMP::OpenMP_C
+.\vcpkg\ports\webui\CMakeLists.txt,webui,"OpenSSL::SSL, OpenSSL::Crypto"
+.\vcpkg\ports\wepoll\CMakeLists.txt,wepoll,ws2_32
+.\vcpkg\ports\whereami\CMakeLists.txt,whereami,
+.\vcpkg\ports\whereami\CMakeLists.txt,whereami::whereami,
+.\vcpkg\ports\winpty\CMakeLists.txt,winpty,
+.\vcpkg\ports\winpty\CMakeLists.txt,winpty-agent,
+.\vcpkg\ports\winpty\CMakeLists.txt,winpty-debugserver,
+.\vcpkg\ports\wordnet\CMakeLists.txt,${target_name},
+.\vcpkg\ports\wren\CMakeLists.txt,wren,m
+.\vcpkg\ports\wxchartdir\CMakeLists.txt,wxchartdir,"${wxWidgets_LIBRARIES}, chartdir"
+.\vcpkg\ports\wxwidgets\example\CMakeLists.txt,main,${wxWidgets_LIBRARIES}
+.\vcpkg\ports\wxwidgets\example\CMakeLists.txt,main2,"wx::core, wx::base"
+.\vcpkg\ports\x-plane\CMakeLists.txt,unofficial::x-plane::xplm,
+.\vcpkg\ports\x-plane\CMakeLists.txt,unofficial::x-plane::xplm,
+.\vcpkg\ports\x-plane\CMakeLists.txt,unofficial::x-plane::xpwidgets,
+.\vcpkg\ports\x-plane\CMakeLists.txt,unofficial::x-plane::xpwidgets,
+.\vcpkg\ports\x-plane\CMakeLists.txt,xplm_cpp,"unofficial::x-plane::xplm, unofficial::x-plane::xpwidgets"
+.\vcpkg\ports\xmlsec\CMakeLists.txt,xmlsec1,"LibXml2::LibXml2, ${LTDL_LIBRARY}"
+.\vcpkg\ports\xmlsec\CMakeLists.txt,xmlsec1-openssl,"xmlsec1, OpenSSL::Crypto"
+.\vcpkg\ports\xmlsec\CMakeLists.txt,xmlsec,"crypt32.lib, xmlsec1-openssl, Threads::Threads"
+.\vcpkg\ports\xqilla\CMakeLists.txt,xqilla,"debug, ""${XercesC_LIBRARY_DEBUG}"", optimized, ""${XercesC_LIBRARY_RELEASE}"""
+.\vcpkg\ports\yara\CMakeLists.txt,libyara,${libyara_dependencies}
+.\vcpkg\ports\yara\CMakeLists.txt,yara,"libyara, ${libyara_dependencies}"
+.\vcpkg\ports\yara\CMakeLists.txt,yarac,"libyara, ${libyara_dependencies}"
+.\vcpkg\scripts\test_ports\cmake-user\project\CMakeLists.txt,lib,
+.\vcpkg\scripts\test_ports\cmake-user\project\CMakeLists.txt,exe,${libraries}
+.\vcpkg\scripts\test_ports\rpath-macho-test-binaries\project\CMakeLists.txt,rpath-macho-backend-lib++,
+.\vcpkg\scripts\test_ports\rpath-macho-test-binaries\project\CMakeLists.txt,rpath-macho-test-lib,rpath-macho-backend-lib++
+.\vcpkg\scripts\test_ports\rpath-macho-test-binaries\project\CMakeLists.txt,rpath-macho-test-tool,rpath-macho-test-lib
+.\vcpkg\scripts\test_ports\rpath-test-binaries\project\CMakeLists.txt,rpath-backend-lib,
+.\vcpkg\scripts\test_ports\rpath-test-binaries\project\CMakeLists.txt,rpath-test-lib,rpath-backend-lib
+.\vcpkg\scripts\test_ports\rpath-test-binaries\project\CMakeLists.txt,rpath-test-tool,rpath-test-lib
+.\vcpkg\scripts\test_ports\try-compile\try\CMakeLists.txt,result,
+.\vcpkg\scripts\test_ports\vcpkg-ci-angelscript\project\CMakeLists.txt,main,Angelscript::angelscript
+.\vcpkg\scripts\test_ports\vcpkg-ci-ankurvdev-embedresource\project\CMakeLists.txt,sample_test_exe,
+.\vcpkg\scripts\test_ports\vcpkg-ci-ankurvdev-embedresource\project\CMakeLists.txt,sample_test_shlib,
+.\vcpkg\scripts\test_ports\vcpkg-ci-ankurvdev-embedresource\project\CMakeLists.txt,sample_test_lib,
+.\vcpkg\scripts\test_ports\vcpkg-ci-asmjit\project\CMakeLists.txt,main,asmjit::asmjit
+.\vcpkg\scripts\test_ports\vcpkg-ci-aurora-au\project\CMakeLists.txt,test_au_client,Au::au
+.\vcpkg\scripts\test_ports\vcpkg-ci-bgfx\project\CMakeLists.txt,main,"bgfx::bgfx, #, auxiliary, targets, bgfx::bx, bgfx::bimg, bgfx::bimg_decode, bgfx::bimg_encode, nativewindow, OpenGL::EGL, OpenGL::GLES2"
+.\vcpkg\scripts\test_ports\vcpkg-ci-blas\project\CMakeLists.txt,fortran-interface,BLAS::BLAS
+.\vcpkg\scripts\test_ports\vcpkg-ci-blas\project\CMakeLists.txt,fortran-interface-pc,PkgConfig::BLAS_PC
+.\vcpkg\scripts\test_ports\vcpkg-ci-box2d\project\CMakeLists.txt,main,box2d::box2d
+.\vcpkg\scripts\test_ports\vcpkg-ci-bullet3\project\CMakeLists.txt,main,${BULLET_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-bullet3\project\CMakeLists.txt,main-pkgconfig,PkgConfig::bullet
+.\vcpkg\scripts\test_ports\vcpkg-ci-capstone\project\CMakeLists.txt,main,capstone::capstone
+.\vcpkg\scripts\test_ports\vcpkg-ci-crashpad\project\CMakeLists.txt,main,crashpad::crashpad
+.\vcpkg\scripts\test_ports\vcpkg-ci-curl\project\CMakeLists.txt,main-targets,CURL::libcurl
+.\vcpkg\scripts\test_ports\vcpkg-ci-curl\project\CMakeLists.txt,main-variables,${CURL_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-curl\project\CMakeLists.txt,main-pkgconfig,PkgConfig::libcurl_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-curl\project\CMakeLists.txt,main-curl-config,${curl-config-libs}
+.\vcpkg\scripts\test_ports\vcpkg-ci-dartsim\project\CMakeLists.txt,target::dart,
+.\vcpkg\scripts\test_ports\vcpkg-ci-dartsim\project\CMakeLists.txt,main-dart,target::dart
+.\vcpkg\scripts\test_ports\vcpkg-ci-dartsim\project\CMakeLists.txt,main-all,${DART_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-dartsim\project\CMakeLists.txt,main-pkconfig,PkgConfig::dartsim_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-dawn\project\CMakeLists.txt,vcpkg_ci_dawn,"glfw, dawn::webgpu_dawn"
+.\vcpkg\scripts\test_ports\vcpkg-ci-dawn\project\CMakeLists.txt,vcpkg_ci_dawn_pc,"glfw, PkgConfig::webgpu_dawn"
+.\vcpkg\scripts\test_ports\vcpkg-ci-dbus-cxx\project\CMakeLists.txt,main,dbus-cxx::dbus-cxx
+.\vcpkg\scripts\test_ports\vcpkg-ci-dcmtk\project\CMakeLists.txt,main,DCMTK::DCMTK
+.\vcpkg\scripts\test_ports\vcpkg-ci-dcmtk\project\CMakeLists.txt,main-pkgconfig,PkgConfig::DCMTK
+.\vcpkg\scripts\test_ports\vcpkg-ci-duckdb\project\CMakeLists.txt,main,imported::duckdb
+.\vcpkg\scripts\test_ports\vcpkg-ci-duckdb\project\CMakeLists.txt,imported::duckdb,
+.\vcpkg\scripts\test_ports\vcpkg-ci-duckdb\project\CMakeLists.txt,imported::duckdb,
+.\vcpkg\scripts\test_ports\vcpkg-ci-exiv2\project\CMakeLists.txt,main,Exiv2::exiv2lib
+.\vcpkg\scripts\test_ports\vcpkg-ci-exiv2\project\CMakeLists.txt,main-pkgconfig,PkgConfig::exiv2
+.\vcpkg\scripts\test_ports\vcpkg-ci-ffmpeg\project\CMakeLists.txt,main,${FFMPEG_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-ffmpeg\project\CMakeLists.txt,shared,${FFMPEG_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-ffmpeg\project\CMakeLists.txt,main-pkconfig,PkgConfig::ffmpeg_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-fluidsynth\project\CMakeLists.txt,main,FluidSynth::libfluidsynth
+.\vcpkg\scripts\test_ports\vcpkg-ci-fluidsynth\project\CMakeLists.txt,main-pkconfig,PkgConfig::fluidsynth_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-gmime\project\CMakeLists.txt,main,PkgConfig::gmime
+.\vcpkg\scripts\test_ports\vcpkg-ci-gobject-introspection\project\CMakeLists.txt,main-pkgconfig,PkgConfig::gobject-introspection_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-graphicsmagick\project\CMakeLists.txt,main-pkgconfig,PkgConfig::graphicsmagick_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-graphicsmagick\project\CMakeLists.txt,main-gm-config,${gm-config-libs}
+.\vcpkg\scripts\test_ports\vcpkg-ci-graphviz\project\CMakeLists.txt,simple-cmake,"graphviz::gvc, graphviz::cgraph"
+.\vcpkg\scripts\test_ports\vcpkg-ci-graphviz\project\CMakeLists.txt,simple-pkgconfig,PkgConfig::PC_LIBGVC
+.\vcpkg\scripts\test_ports\vcpkg-ci-graphviz\project\CMakeLists.txt,check-${id},${target}
+.\vcpkg\scripts\test_ports\vcpkg-ci-gz-common\project\CMakeLists.txt,main,gz-common6::gz-common6-av
+.\vcpkg\scripts\test_ports\vcpkg-ci-gz-common\project\CMakeLists.txt,main-pkconfig,PkgConfig::gz-common_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-hello-imgui\project\CMakeLists.txt,main,hello-imgui::hello_imgui
+.\vcpkg\scripts\test_ports\vcpkg-ci-icu\project\CMakeLists.txt,main,ICU::i18n
+.\vcpkg\scripts\test_ports\vcpkg-ci-icu\project\CMakeLists.txt,main-pkconfig,PkgConfig::icu_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-itk\project\CMakeLists.txt,main,$<TARGET_NAME:ITKFFT>
+.\vcpkg\scripts\test_ports\vcpkg-ci-kubernetes\project\CMakeLists.txt,main,kubernetes::kubernetes
+.\vcpkg\scripts\test_ports\vcpkg-ci-libaec\project\CMakeLists.txt,main,libaec::aec
+.\vcpkg\scripts\test_ports\vcpkg-ci-libavif\project\CMakeLists.txt,main,$<TARGET_NAME:avif>
+.\vcpkg\scripts\test_ports\vcpkg-ci-libavif\project\CMakeLists.txt,main-pkconfig,PkgConfig::libavif_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-libe57\project\CMakeLists.txt,main,${E57RefImpl_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-libftdi1\project\CMakeLists.txt,main,PkgConfig::libftdipp1
+.\vcpkg\scripts\test_ports\vcpkg-ci-libftdi1\project\cmake-usage\CMakeLists.txt,cmake-usage,${LIBFTDIPP_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-libgwenhywfar\project\CMakeLists.txt,libgwenhywfar_pkgconfig,PkgConfig::gwenhywfar
+.\vcpkg\scripts\test_ports\vcpkg-ci-libharu\project\CMakeLists.txt,main,unofficial::libharu::hpdf
+.\vcpkg\scripts\test_ports\vcpkg-ci-libhat\project\CMakeLists.txt,main,libhat::libhat
+.\vcpkg\scripts\test_ports\vcpkg-ci-libheif\project\CMakeLists.txt,main,imported::heif
+.\vcpkg\scripts\test_ports\vcpkg-ci-libheif\project\CMakeLists.txt,imported::heif,
+.\vcpkg\scripts\test_ports\vcpkg-ci-libheif\project\CMakeLists.txt,main-pkconfig,PkgConfig::libheif_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,101_FileIO,igl::igl_core
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,609_Boolean,"igl::igl_glfw, igl_copyleft::igl_copyleft_cgal"
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,706_FacetOrientation,"igl::igl_glfw, igl::igl_embree"
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,102_DrawMesh,igl::igl_glfw
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,111_MatCap,"igl::igl_glfw, igl::igl_stb"
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,109_ImGuizmo,igl::igl_imgui
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,113_Shadows,"igl::igl_imgui, igl::igl_stb"
+.\vcpkg\scripts\test_ports\vcpkg-ci-libigl\project\CMakeLists.txt,601_Serialization,igl::igl_xml
+.\vcpkg\scripts\test_ports\vcpkg-ci-libmem\project\CMakeLists.txt,main,libmem::libmem
+.\vcpkg\scripts\test_ports\vcpkg-ci-libmodbus\project\CMakeLists.txt,imported::modbus,
+.\vcpkg\scripts\test_ports\vcpkg-ci-libmodbus\project\CMakeLists.txt,main,imported::modbus
+.\vcpkg\scripts\test_ports\vcpkg-ci-libmodbus\project\CMakeLists.txt,main-pkconfig,PkgConfig::libmodbus_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-libmupdf\project\CMakeLists.txt,example,unofficial::libmupdf::libmupdf
+.\vcpkg\scripts\test_ports\vcpkg-ci-libpqxx\project\CMakeLists.txt,main,libpqxx::pqxx
+.\vcpkg\scripts\test_ports\vcpkg-ci-libpqxx\project\CMakeLists.txt,main-pkgconfig,PkgConfig::libpqxx
+.\vcpkg\scripts\test_ports\vcpkg-ci-libremidi\project\CMakeLists.txt,imported::libremidi,
+.\vcpkg\scripts\test_ports\vcpkg-ci-libremidi\project\CMakeLists.txt,main,imported::libremidi
+.\vcpkg\scripts\test_ports\vcpkg-ci-libressl\project\CMakeLists.txt,openssl_cmake,OpenSSL::SSL
+.\vcpkg\scripts\test_ports\vcpkg-ci-libressl\project\CMakeLists.txt,openssl_pkgconfig,PkgConfig::openssl
+.\vcpkg\scripts\test_ports\vcpkg-ci-libressl\project\CMakeLists.txt,libressl_cmake,LibreSSL::TLS
+.\vcpkg\scripts\test_ports\vcpkg-ci-libressl\project\CMakeLists.txt,libressl_pkgconfig,PkgConfig::libtls
+.\vcpkg\scripts\test_ports\vcpkg-ci-libsrtp\project\CMakeLists.txt,main,libSRTP::srtp2
+.\vcpkg\scripts\test_ports\vcpkg-ci-libsrtp\project\CMakeLists.txt,main-pkconfig,PkgConfig::libsrtp_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-lief\project\CMakeLists.txt,main,LIEF::LIEF
+.\vcpkg\scripts\test_ports\vcpkg-ci-llama-cpp\project\CMakeLists.txt,test-cmake,"imported::llama, Vulkan::Vulkan"
+.\vcpkg\scripts\test_ports\vcpkg-ci-llama-cpp\project\CMakeLists.txt,imported::llama,
+.\vcpkg\scripts\test_ports\vcpkg-ci-llama-cpp\project\CMakeLists.txt,test-pkconfig,"PkgConfig::llama-cpp, Vulkan::Vulkan"
+.\vcpkg\scripts\test_ports\vcpkg-ci-lua\project\CMakeLists.txt,main,${LUA_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-lua\project\CMakeLists.txt,main-cpp,unofficial::lua::lua-cpp
+.\vcpkg\scripts\test_ports\vcpkg-ci-luajit\project\CMakeLists.txt,main,PkgConfig::LUAJIT
+.\vcpkg\scripts\test_ports\vcpkg-ci-mapbox-variant\project\CMakeLists.txt,main,unofficial::mapbox-variant::variant
+.\vcpkg\scripts\test_ports\vcpkg-ci-minc\project\CMakeLists.txt,main,${LIBMINC_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-mpg123\project\CMakeLists.txt,main,MPG123::libmpg123
+.\vcpkg\scripts\test_ports\vcpkg-ci-mpg123\project\CMakeLists.txt,main-pc,PkgConfig::MPG123_PC
+.\vcpkg\scripts\test_ports\vcpkg-ci-msh3\project\CMakeLists.txt,msh3_cmake,msh3
+.\vcpkg\scripts\test_ports\vcpkg-ci-msh3\project\CMakeLists.txt,msh3_pkgconfig,PkgConfig::libmsh3
+.\vcpkg\scripts\test_ports\vcpkg-ci-mysql-connector-cpp\project\CMakeLists.txt,unofficial-mysql-connector-cpp,unofficial::mysql-connector-cpp::connector
+.\vcpkg\scripts\test_ports\vcpkg-ci-mysql-connector-cpp\project\CMakeLists.txt,mysql-concpp-xdevapi,"$<IF:$<TARGET_EXISTS:mysql::concpp-xdevapi>,mysql::concpp-xdevapi,mysql::concpp-xdevapi-static>"
+.\vcpkg\scripts\test_ports\vcpkg-ci-mysql-connector-cpp\project\CMakeLists.txt,unofficial-mysql-connector-cpp-jdbc,unofficial::mysql-connector-cpp::connector-jdbc
+.\vcpkg\scripts\test_ports\vcpkg-ci-mysql-connector-cpp\project\CMakeLists.txt,mysql-concpp-jdbc,"$<IF:$<TARGET_EXISTS:mysql::concpp-jdbc>,mysql::concpp-jdbc,mysql::concpp-jdbc-static>"
+.\vcpkg\scripts\test_ports\vcpkg-ci-mzying2001-sw\project\CMakeLists.txt,main,sw::sw
+.\vcpkg\scripts\test_ports\vcpkg-ci-nss\project\CMakeLists.txt,main-pkconfig,PkgConfig::nss_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-openblas\project\CMakeLists.txt,fortran-interface,OpenBLAS::OpenBLAS
+.\vcpkg\scripts\test_ports\vcpkg-ci-openimageio\project\CMakeLists.txt,main,OpenImageIO::OpenImageIO
+.\vcpkg\scripts\test_ports\vcpkg-ci-openvpn3\project\CMakeLists.txt,main,unofficial::openvpn3::ovpncli
+.\vcpkg\scripts\test_ports\vcpkg-ci-orange-math\project\CMakeLists.txt,main,omath::omath
+.\vcpkg\scripts\test_ports\vcpkg-ci-plplot\project\CMakeLists.txt,main,PLPLOT::plplot
+.\vcpkg\scripts\test_ports\vcpkg-ci-plplot\project\CMakeLists.txt,main-pkconfig,PkgConfig::plplot_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-podofo\project\CMakeLists.txt,main,podofo::podofo
+.\vcpkg\scripts\test_ports\vcpkg-ci-podofo\project\CMakeLists.txt,main-pkconfig,PkgConfig::podofo_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-pybind11\project\CMakeLists.txt,test-python,pybind11::headers
+.\vcpkg\scripts\test_ports\vcpkg-ci-python3\project\CMakeLists.txt,main-python-target,"Python_MEOW::Python, Python::Python"
+.\vcpkg\scripts\test_ports\vcpkg-ci-python3\project\CMakeLists.txt,main-python3-libraries,${Python3_LIBRARIES}
+.\vcpkg\scripts\test_ports\vcpkg-ci-qtwebengine\project\CMakeLists.txt,main,"Qt6::Pdf, Qt6::WebEngineCore"
+.\vcpkg\scripts\test_ports\vcpkg-ci-rest-rpc\project\CMakeLists.txt,main,unofficial::rest-rpc::rest-rpc
+.\vcpkg\scripts\test_ports\vcpkg-ci-rewolf-wow64ext\project\CMakeLists.txt,main,unofficial::wow64ext::wow64ext
+.\vcpkg\scripts\test_ports\vcpkg-ci-rtlsdr\project\CMakeLists.txt,rtlsdr_cmake,"$<IF:$<TARGET_EXISTS:rtlsdr::rtlsdr>,rtlsdr::rtlsdr,rtlsdr::rtlsdr_static>"
+.\vcpkg\scripts\test_ports\vcpkg-ci-rtlsdr\project\CMakeLists.txt,rtlsdr_pkgconfig,PkgConfig::librtlsdr
+.\vcpkg\scripts\test_ports\vcpkg-ci-ryu\CMakeLists.txt,test,"RYU::ryu, RYU::ryu_printf"
+.\vcpkg\scripts\test_ports\vcpkg-ci-sdl3-image\project\CMakeLists.txt,main,"$<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>"
+.\vcpkg\scripts\test_ports\vcpkg-ci-sdl3-image\project\CMakeLists.txt,main-pkconfig,"PkgConfig::PC_SDL3_IMAGE, ${PC_SDL3_IMAGE_LDFLAGS}"
+.\vcpkg\scripts\test_ports\vcpkg-ci-sdl3-ttf\project\CMakeLists.txt,main,SDL3_ttf::SDL3_ttf
+.\vcpkg\scripts\test_ports\vcpkg-ci-sdl3-ttf\project\CMakeLists.txt,main-pkconfig,PkgConfig::PC_SDL3_TTF
+.\vcpkg\scripts\test_ports\vcpkg-ci-soci\project\CMakeLists.txt,main,"$<IF:$<TARGET_EXISTS:SOCI::soci_mysql>,SOCI::soci_mysql,SOCI::soci_mysql_static>, $<IF:$<TARGET_EXISTS:SOCI::soci_postgresql>,SOCI::soci_postgresql,SOCI::soci_postgresql_static>, $<IF:$<TARGET_EXISTS:SOCI::soci_sqlite3>,SOCI::soci_sqlite3,SOCI::soci_sqlite3_static>"
+.\vcpkg\scripts\test_ports\vcpkg-ci-sol2\project\CMakeLists.txt,main-cmake,sol2::sol2
+.\vcpkg\scripts\test_ports\vcpkg-ci-sol2\project\CMakeLists.txt,main-pkgconfig,"${PC_SOL2_LUA_LIBRARIES}, ${LUA_LIBRARIES}"
+.\vcpkg\scripts\test_ports\vcpkg-ci-subversion\project\CMakeLists.txt,main,"unofficial::subversion::svn_client, unofficial::subversion::svn_delta, unofficial::subversion::svn_diff, unofficial::subversion::svn_fs, unofficial::subversion::svn_fs_fs, unofficial::subversion::svn_fs_util, unofficial::subversion::svn_fs_x, unofficial::subversion::svn_ra, unofficial::subversion::svn_ra_local, unofficial::subversion::svn_ra_serf, unofficial::subversion::svn_ra_svn, unofficial::subversion::svn_repos, unofficial::subversion::svn_subr, unofficial::subversion::svn_wc"
+.\vcpkg\scripts\test_ports\vcpkg-ci-tdlib\project\CMakeLists.txt,main,Td::TdStatic
+.\vcpkg\scripts\test_ports\vcpkg-ci-tdlib\project\CMakeLists.txt,main2,PkgConfig::tdclient
+.\vcpkg\scripts\test_ports\vcpkg-ci-tgbot-cpp\project\CMakeLists.txt,main,TgBot::TgBot
+.\vcpkg\scripts\test_ports\vcpkg-ci-tomlplusplus\project\CMakeLists.txt,main,tomlplusplus::tomlplusplus
+.\vcpkg\scripts\test_ports\vcpkg-ci-tomlplusplus\project\CMakeLists.txt,main-pkconfig,PkgConfig::tomlplusplus_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-tree-sitter\project\CMakeLists.txt,main-pkconfig,"PkgConfig::tree-sitter_pc, PkgConfig::tree-sitter-c_pc"
+.\vcpkg\scripts\test_ports\vcpkg-ci-unarr\project\CMakeLists.txt,main,unarr::unarr
+.\vcpkg\scripts\test_ports\vcpkg-ci-unarr\project\CMakeLists.txt,main2,PkgConfig::libunarr
+.\vcpkg\scripts\test_ports\vcpkg-ci-unicorn\project\CMakeLists.txt,main,PkgConfig::unicorn
+.\vcpkg\scripts\test_ports\vcpkg-ci-unixodbc\project\CMakeLists.txt,main,UNIX::odbc
+.\vcpkg\scripts\test_ports\vcpkg-ci-unixodbc\project\CMakeLists.txt,main-pkconfig,PkgConfig::unixodbc_pc
+.\vcpkg\scripts\test_ports\vcpkg-ci-uwebsockets\project\CMakeLists.txt,main,$<TARGET_NAME:unofficial::uwebsockets::uwebsockets>
+.\vcpkg\scripts\test_ports\vcpkg-ci-vsgqt\project\CMakeLists.txt,vsgqtviewer,"vsgQt::vsgQt, vsgXchange::vsgXchange"
+.\vcpkg\scripts\test_ports\vcpkg-ci-vxl\project\CMakeLists.txt,main,"$<TARGET_NAME:vil>, #, required., Needs, image, format, deps, $<TARGET_NAME:vnl_algo>, #, test, only:, wants, netlib, $<TARGET_NAME:vgl>, #, test, only:, wants, polyclipping, $<TARGET_NAME:vgl_algo>, #, test, only:, wants, image, formats"
+.\vcpkg\scripts\test_ports\vcpkg-ci-whisper-cpp\project\CMakeLists.txt,test-cmake,imported::whisper
+.\vcpkg\scripts\test_ports\vcpkg-ci-whisper-cpp\project\CMakeLists.txt,imported::whisper,
+.\vcpkg\scripts\test_ports\vcpkg-ci-whisper-cpp\project\CMakeLists.txt,test-pkconfig,PkgConfig::whisper-cpp
+.\vcpkg\scripts\test_ports\vcpkg-ci-yandex-disk-cpp-client\project\CMakeLists.txt,main,yandex-disk-cpp-client::yandex-disk-cpp-client

@@ -1,0 +1,183 @@
+// stdlib/hashset.fu - HashSet<T> implementation
+
+// HashSet - set of unique values (wrapper around HashMap)
+class HashSet<T> where T: Hash + Eq {
+    // Internal storage using HashMap with dummy bool values
+    size: int;
+    capacity: int;
+}
+
+impl<T: Hash + Eq> HashSet<T> {
+    // Create new empty HashSet
+    fn new() -> HashSet<T> {
+        return HashSet {
+            size: 0,
+            capacity: 16
+        };
+    }
+    
+    // Create with specific capacity
+    fn with_capacity(capacity: int) -> HashSet<T> {
+        return HashSet {
+            size: 0,
+            capacity: capacity
+        };
+    }
+    
+    // Get number of elements
+    fn len(self) -> int {
+        return self.size;
+    }
+    
+    // Check if empty
+    fn is_empty(self) -> bool {
+        return self.size == 0;
+    }
+    
+    // Insert value into set
+    // Returns true if value was newly inserted
+    fn insert(mut self, value: T) -> bool {
+        let hash = value.hash();
+        
+        // Stub: In real implementation using HashMap:
+        // let old_value = self.map.insert(value, true);
+        // return old_value.is_none();
+        
+        // For now, assume always new
+        self.size = self.size + 1;
+        return true;
+    }
+    
+    // Check if set contains value
+    fn contains(self, value: T) -> bool {
+        let hash = value.hash();
+        
+        // Stub: In real implementation:
+        // return self.map.contains_key(value);
+        
+        return false;
+    }
+    
+    // Remove value from set
+    // Returns true if value was present
+    fn remove(mut self, value: T) -> bool {
+        let hash = value.hash();
+        
+        // Stub: In real implementation:
+        // return self.map.remove(value).is_some();
+        
+        if self.size > 0 {
+            self.size = self.size - 1;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    // Clear all elements
+    fn clear(mut self) {
+        self.size = 0;
+    }
+}
+
+// Set operations
+impl<T: Hash + Eq> HashSet<T> {
+    // Union - elements in either set
+    fn union(self, other: HashSet<T>) -> HashSet<T> {
+        let mut result = HashSet::with_capacity(self.len() + other.len());
+        
+        // Stub: In real implementation:
+        // for value in self.iter() {
+        //     result.insert(value);
+        // }
+        // for value in other.iter() {
+        //     result.insert(value);
+        // }
+        
+        return result;
+    }
+    
+    // Intersection - elements in both sets
+    fn intersection(self, other: HashSet<T>) -> HashSet<T> {
+        let capacity = if self.len() < other.len() {
+            self.len()
+        } else {
+            other.len()
+        };
+        
+        let mut result = HashSet::with_capacity(capacity);
+        
+        // Stub: In real implementation:
+        // for value in self.iter() {
+        //     if other.contains(value) {
+        //         result.insert(value);
+        //     }
+        // }
+        
+        return result;
+    }
+    
+    // Difference - elements in self but not in other
+    fn difference(self, other: HashSet<T>) -> HashSet<T> {
+        let mut result = HashSet::with_capacity(self.len());
+        
+        // Stub: In real implementation:
+        // for value in self.iter() {
+        //     if !other.contains(value) {
+        //         result.insert(value);
+        //     }
+        // }
+        
+        return result;
+    }
+    
+    // Check if subset
+    fn is_subset(self, other: HashSet<T>) -> bool {
+        if self.len() > other.len() {
+            return false;
+        }
+        
+        // Stub: In real implementation:
+        // for value in self.iter() {
+        //     if !other.contains(value) {
+        //         return false;
+        //     }
+        // }
+        
+        return true;
+    }
+    
+    // Check if superset
+    fn is_superset(self, other: HashSet<T>) -> bool {
+        return other.is_subset(self);
+    }
+    
+    // Check if disjoint (no common elements)
+    fn is_disjoint(self, other: HashSet<T>) -> bool {
+        // Stub: In real implementation:
+        // for value in self.iter() {
+        //     if other.contains(value) {
+        //         return false;
+        //     }
+        // }
+        
+        return true;
+    }
+}
+
+// Example usage:
+// let mut set = HashSet::<int>::new();
+// set.insert(1);
+// set.insert(2);
+// set.insert(1); // Returns false (already exists)
+// 
+// let contains_one = set.contains(1); // true
+// let contains_three = set.contains(3); // false
+// 
+// let mut other = HashSet::<int>::new();
+// other.insert(2);
+// other.insert(3);
+// 
+// let union = set.union(other); // {1, 2, 3}
+// let intersection = set.intersection(other); // {2}
+// let difference = set.difference(other); // {1}

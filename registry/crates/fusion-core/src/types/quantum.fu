@@ -1,23 +1,24 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FString = FString;
+#[allow(missing_docs, dead_code)]
+type FSize = FSize;
+#[allow(missing_docs, dead_code)]
+type FVec<T> = FVec<T>;
 use crate::types::tensor::Matrix;
 use num_complex::Complex64;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Qubit {
+struct Qubit {
     pub id: FSize,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum QuantumState {
+enum QuantumState {
     Simulated(FVec<Complex64>),
     Real(FVec<u8>),
 }
 #[derive(Clone, Debug)]
-pub struct QuantumGate {
+struct QuantumGate {
     pub name: FString,
     pub matrix: Matrix<Complex64>,
 }
@@ -48,7 +49,7 @@ impl QuantumGate {
         Self::new("CNOT", matrix)
     }
 }
-pub struct QuantumCircuit {
+struct QuantumCircuit {
     pub num_qubits: FSize,
     pub operations: FVec<(QuantumGate, FVec<FSize>)>,
 }

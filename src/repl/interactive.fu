@@ -1,0 +1,44 @@
+// Fusion Native REPL Module
+// Adapted from reactor-cli for direct integration
+
+use std::io::{self, Write};
+use fusion_core::compiler;
+
+pub fn run() -> i32 {
+    println!("Fusion v2.0 Vortex Interactive Shell");
+    println!("Type 'exit' or 'quit' to leave.");
+    
+    let stdin = io::stdin();
+    let mut stdout = io::stdout();
+    let mut input_buffer = String::new();
+
+    loop {
+        print!(">> ");
+        stdout.flush().unwrap();
+        
+        input_buffer.clear();
+        match stdin.read_line(&mut input_buffer) {
+            Ok(0) => break, // EOF
+            Ok(_) => {
+                let input = input_buffer.trim();
+                if input == "exit" || input == "quit" {
+                    break;
+                }
+                if input.is_empty() {
+                    continue;
+                }
+                
+                // JIT Compile and Execute line
+                match compiler::eval_statement(input) {
+                    Ok(result) => println!("=> {}", result),
+                    Err(e) => println!("Error: {}", e),
+                }
+            }
+            Err(e) => {
+                println!("Error reading input: {}", e);
+                break;
+            }
+        }
+    }
+    0
+}

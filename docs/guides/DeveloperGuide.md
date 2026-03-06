@@ -5,6 +5,7 @@
 Welcome to the Fusion v2.0 Vortex Programming Language development guide. This document provides comprehensive information for contributors and developers working on the Fusion project.
 
 **Prerequisites:**
+
 - Fusion toolchain (use `./install.sh` to provision `dist/`)
 - Python 3.10+ (optional, for interop and tooling)
 - CUDA Toolkit 12.0+ (optional, for GPU acceleration)
@@ -29,6 +30,7 @@ Fusion adopts a **Unified Monolith** architecture, consolidating compiler, runti
 - **Policy Engine**: Security policy enforcement at runtime
 
 **Key Components:**
+
 - `fusion_runtime_core`: Core async primitives and executor
 - `fusion_runtime_scheduler`: Task scheduling with work-stealing
 - `fusion_runtime_mem_mgr`: Memory allocation and lifetime management
@@ -51,7 +53,7 @@ Fusion adopts a **Unified Monolith** architecture, consolidating compiler, runti
 
 ## Project Organization
 
-```text
+````text
 fusion/
 ├── cmd/                    # Application entry points
 │   ├── fusion/            # Main CLI (`fusion build`, `fusion run`)
@@ -243,43 +245,97 @@ Every crate in `registry/crates/` must have:
 
 ## Core Components Deep Dive
 
+### Self-Hosting Compiler (Pure Fusion)
+
+Fusion v2.0 Vortex features a **self-hosting compiler** written entirely in Fusion (`.fu` files). Located in `src/compiler/`:
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Token | `token.fu` | 28 keywords, 20 operators, all literals |
+| Lexer | `lexer.fu` | Hand-written tokenizer with escape sequences |
+| AST | `ast.fu` | All expression, statement, and item nodes |
+| Parser | `parser.fu` | Recursive descent with operator precedence |
+| Types | `types.fu` | Type registry, inference, and primitives |
+| Sema | `sema.fu` | Type checking, variable resolution |
+| IR | `ir.fu` | Opcodes, basic blocks, SSA-style |
+| Codegen | `codegen.fu` | Fusion VM bytecode + x86_64 assembly |
+| Intent | `intent.fu` | Intent-driven execution scheduling |
+| PQC | `pqc.fu` | Kyber768 KEM, Dilithium3 signatures |
+| Driver | `driver.fu` | Compilation pipeline orchestration |
+
 ### Compiler Pipeline
 
-1. **Lexer** (`crates/fusion-compiler/src/lexer.rs`):
-   - Tokenizes source code
-   - Handles UTF-8 and special characters
+1. **Lexer** (`src/compiler/lexer.fu`):
+   - Hand-written tokenizer in pure Fusion
+   - Handles whitespace, comments, escape sequences
    - Outputs `Token` stream
 
-2. **Parser** (`crates/fusion-compiler/src/parser.rs`):
+2. **Parser** (`src/compiler/parser.fu`):
    - Recursive descent parser
    - Produces Abstract Syntax Tree (AST)
-   - Error recovery for diagnostics
+   - Full operator precedence handling
 
-3. **Semantic Analysis** (`crates/fusion-compiler/src/semantic.rs`):
+3. **Semantic Analysis** (`src/compiler/sema.fu`):
+   - Two-pass analysis (register types, then analyze)
    - Symbol table construction
-   - Scope resolution
-   - Name binding
+   - Type checking and inference
 
-4. **Type Checker** (`crates/fusion-compiler/src/type_checker.rs`):
+4. **Type System** (`src/compiler/types.fu`):
    - Hindley-Milner type inference
+   - Type registry for primitives and user types
    - Trait resolution
-   - Lifetime checking
 
-5. **IR Generation** (`crates/fusion-compiler/src/ir/`):
+5. **IR Generation** (`src/compiler/ir.fu`):
    - Lowers AST to Fusion IR
-   - SSA form construction
-   - Optimization passes
+   - SSA-form with basic blocks
+   - Opcodes for all operations
 
-6. **Code Generation** (`crates/fusion-compiler/src/codegen/`):
-   - LLVM backend (primary)
-   - WASM backend (experimental)
-   - Native code emission
+6. **Code Generation** (`src/compiler/codegen.fu`):
+   - **Fusion VM**: Bytecode for the Fusion Virtual Machine
+   - **x86_64**: Native assembly output
+   - **WASM**: WebAssembly target (experimental)
+
+### Intent System
+
+The **Intent System** (`src/compiler/intent.fu`) enables intent-driven compilation:
+
+- **Intent Enum**: `Critical`, `HighThroughput`, `Precision`, `Background`
+- **TaskProfile**: Metadata for scheduler decisions (ops, memory, intent)
+- **Device**: Target hardware (Cpu, Gpu, Qpu)
+- **Cortex**: AI-driven scheduler for optimal device selection
+
+```fusion
+// Intent-driven function annotation
+#[intent(Critical)]  // HFT: Minimal jitter, always CPU
+fn process_order(order: Order) -> Result<Trade> { ... }
+
+#[intent(HighThroughput)]  // AI: Maximum FLOPS, prefers GPU
+fn train_model(data: Tensor) -> Model { ... }
+````
+
+### Post-Quantum Cryptography
+
+The **PQC Module** (`src/compiler/pqc.fu`) provides quantum-resistant security:
+
+- **ML-KEM (Kyber)**: Key encapsulation at 512/768/1024 levels
+- **ML-DSA (Dilithium)**: Digital signatures at 2/3/5 levels
+- **Hybrid Crypto**: Combined Classical + PQC operations
+
+```fusion
+use compiler::pqc::{KyberKeypair, DilithiumSign, HybridKeypair};
+
+// Generate hybrid keypair
+let keypair = HybridKeypair::generate();
+
+// Sign with hybrid (ECDSA + Dilithium)
+let signature = hybrid_sign(message, keypair);
+```
 
 ### Runtime System
 
 **Core Loop:**
 
-```rust
+````rust
 // Simplified runtime pseudocode
 loop {
     tasks = scheduler.poll_ready_tasks();
@@ -367,3 +423,4 @@ Reviewers check for:
 ---
 
 **Thank you for contributing to Fusion!** Your work helps build the future of programming.
+````

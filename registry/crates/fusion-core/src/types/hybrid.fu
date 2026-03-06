@@ -1,14 +1,15 @@
-// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+#[allow(missing_docs, dead_code)]
+type FString = FString;
+#[allow(missing_docs, dead_code)]
+type FSize = FSize;
+#[allow(missing_docs, dead_code)]
+type FVec<T> = FVec<T>;
 use super::classical::ClassicalType;
 use super::quantum::Qubit;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TensorType {
+struct TensorType {
     /// Shape of the tensor (e.g., [batch, channels, height, width])
     pub shape: FVec<FSize>,
     /// Data type of tensor elements
@@ -19,7 +20,7 @@ pub struct TensorType {
     pub data_ptr: FSize,
 }
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum TensorDType {
+enum TensorDType {
     F32,
     F64,
     I32,
@@ -28,13 +29,13 @@ pub enum TensorDType {
     U64,
     Bool,
 }
-pub enum FusionType {
+enum FusionType {
     Classical(ClassicalType),
     Tensor(TensorType),
     Quantum(Qubit),
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum HybridValue {
+enum HybridValue {
     Classical(ClassicalType),
     Tensor(TensorType),
     Quantum(Qubit),

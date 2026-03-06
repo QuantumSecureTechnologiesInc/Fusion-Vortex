@@ -1,0 +1,244 @@
+// src/compiler/token.fu
+// Token Definitions for the Fusion Language
+
+use stdlib::hashmap::HashMap;
+
+// Token types for the Fusion language
+class TokenKind {
+    kind_id: int;
+    name: string;
+}
+
+impl TokenKind {
+    // Keywords
+    fn kw_fn() -> TokenKind { return TokenKind { kind_id: 1, name: "fn" }; }
+    fn kw_let() -> TokenKind { return TokenKind { kind_id: 2, name: "let" }; }
+    fn kw_mut() -> TokenKind { return TokenKind { kind_id: 3, name: "mut" }; }
+    fn kw_return() -> TokenKind { return TokenKind { kind_id: 4, name: "return" }; }
+    fn kw_if() -> TokenKind { return TokenKind { kind_id: 5, name: "if" }; }
+    fn kw_else() -> TokenKind { return TokenKind { kind_id: 6, name: "else" }; }
+    fn kw_while() -> TokenKind { return TokenKind { kind_id: 7, name: "while" }; }
+    fn kw_for() -> TokenKind { return TokenKind { kind_id: 8, name: "for" }; }
+    fn kw_in() -> TokenKind { return TokenKind { kind_id: 9, name: "in" }; }
+    fn kw_class() -> TokenKind { return TokenKind { kind_id: 10, name: "class" }; }
+    fn kw_struct() -> TokenKind { return TokenKind { kind_id: 11, name: "struct" }; }
+    fn kw_trait() -> TokenKind { return TokenKind { kind_id: 12, name: "trait" }; }
+    fn kw_impl() -> TokenKind { return TokenKind { kind_id: 13, name: "impl" }; }
+    fn kw_use() -> TokenKind { return TokenKind { kind_id: 14, name: "use" }; }
+    fn kw_mod() -> TokenKind { return TokenKind { kind_id: 15, name: "mod" }; }
+    fn kw_pub() -> TokenKind { return TokenKind { kind_id: 16, name: "pub" }; }
+    fn kw_self() -> TokenKind { return TokenKind { kind_id: 17, name: "self" }; }
+    fn kw_true() -> TokenKind { return TokenKind { kind_id: 18, name: "true" }; }
+    fn kw_false() -> TokenKind { return TokenKind { kind_id: 19, name: "false" }; }
+    fn kw_async() -> TokenKind { return TokenKind { kind_id: 20, name: "async" }; }
+    fn kw_await() -> TokenKind { return TokenKind { kind_id: 21, name: "await" }; }
+    fn kw_const() -> TokenKind { return TokenKind { kind_id: 22, name: "const" }; }
+    fn kw_extern() -> TokenKind { return TokenKind { kind_id: 23, name: "extern" }; }
+    fn kw_where() -> TokenKind { return TokenKind { kind_id: 24, name: "where" }; }
+    fn kw_enum() -> TokenKind { return TokenKind { kind_id: 25, name: "enum" }; }
+    fn kw_match() -> TokenKind { return TokenKind { kind_id: 26, name: "match" }; }
+    fn kw_break() -> TokenKind { return TokenKind { kind_id: 27, name: "break" }; }
+    fn kw_continue() -> TokenKind { return TokenKind { kind_id: 28, name: "continue" }; }
+    
+    // Operators
+    fn op_plus() -> TokenKind { return TokenKind { kind_id: 50, name: "+" }; }
+    fn op_minus() -> TokenKind { return TokenKind { kind_id: 51, name: "-" }; }
+    fn op_star() -> TokenKind { return TokenKind { kind_id: 52, name: "*" }; }
+    fn op_slash() -> TokenKind { return TokenKind { kind_id: 53, name: "/" }; }
+    fn op_percent() -> TokenKind { return TokenKind { kind_id: 54, name: "%" }; }
+    fn op_eq() -> TokenKind { return TokenKind { kind_id: 55, name: "==" }; }
+    fn op_neq() -> TokenKind { return TokenKind { kind_id: 56, name: "!=" }; }
+    fn op_lt() -> TokenKind { return TokenKind { kind_id: 57, name: "<" }; }
+    fn op_gt() -> TokenKind { return TokenKind { kind_id: 58, name: ">" }; }
+    fn op_le() -> TokenKind { return TokenKind { kind_id: 59, name: "<=" }; }
+    fn op_ge() -> TokenKind { return TokenKind { kind_id: 60, name: ">=" }; }
+    fn op_and() -> TokenKind { return TokenKind { kind_id: 61, name: "&&" }; }
+    fn op_or() -> TokenKind { return TokenKind { kind_id: 62, name: "||" }; }
+    fn op_not() -> TokenKind { return TokenKind { kind_id: 63, name: "!" }; }
+    fn op_assign() -> TokenKind { return TokenKind { kind_id: 64, name: "=" }; }
+    fn op_arrow() -> TokenKind { return TokenKind { kind_id: 65, name: "->" }; }
+    fn op_fat_arrow() -> TokenKind { return TokenKind { kind_id: 66, name: "=>" }; }
+    fn op_ampersand() -> TokenKind { return TokenKind { kind_id: 67, name: "&" }; }
+    fn op_pipe() -> TokenKind { return TokenKind { kind_id: 68, name: "|" }; }
+    
+    // Delimiters
+    fn lparen() -> TokenKind { return TokenKind { kind_id: 100, name: "(" }; }
+    fn rparen() -> TokenKind { return TokenKind { kind_id: 101, name: ")" }; }
+    fn lbrace() -> TokenKind { return TokenKind { kind_id: 102, name: "{" }; }
+    fn rbrace() -> TokenKind { return TokenKind { kind_id: 103, name: "}" }; }
+    fn lbracket() -> TokenKind { return TokenKind { kind_id: 104, name: "[" }; }
+    fn rbracket() -> TokenKind { return TokenKind { kind_id: 105, name: "]" }; }
+    fn comma() -> TokenKind { return TokenKind { kind_id: 106, name: "," }; }
+    fn semicolon() -> TokenKind { return TokenKind { kind_id: 107, name: ";" }; }
+    fn colon() -> TokenKind { return TokenKind { kind_id: 108, name: ":" }; }
+    fn double_colon() -> TokenKind { return TokenKind { kind_id: 109, name: "::" }; }
+    fn dot() -> TokenKind { return TokenKind { kind_id: 110, name: "." }; }
+    fn hash() -> TokenKind { return TokenKind { kind_id: 111, name: "#" }; }
+    fn question() -> TokenKind { return TokenKind { kind_id: 112, name: "?" }; }
+    
+    // Literals and identifiers
+    fn identifier() -> TokenKind { return TokenKind { kind_id: 200, name: "identifier" }; }
+    fn int_literal() -> TokenKind { return TokenKind { kind_id: 201, name: "int_literal" }; }
+    fn float_literal() -> TokenKind { return TokenKind { kind_id: 202, name: "float_literal" }; }
+    fn string_literal() -> TokenKind { return TokenKind { kind_id: 203, name: "string_literal" }; }
+    fn char_literal() -> TokenKind { return TokenKind { kind_id: 204, name: "char_literal" }; }
+    
+    // Special
+    fn eof() -> TokenKind { return TokenKind { kind_id: 0, name: "EOF" }; }
+    fn error() -> TokenKind { return TokenKind { kind_id: -1, name: "ERROR" }; }
+    fn newline() -> TokenKind { return TokenKind { kind_id: -2, name: "NEWLINE" }; }
+    
+    // Type keywords  
+    fn ty_int() -> TokenKind { return TokenKind { kind_id: 300, name: "int" }; }
+    fn ty_float() -> TokenKind { return TokenKind { kind_id: 301, name: "float" }; }
+    fn ty_bool() -> TokenKind { return TokenKind { kind_id: 302, name: "bool" }; }
+    fn ty_string() -> TokenKind { return TokenKind { kind_id: 303, name: "string" }; }
+    fn ty_byte() -> TokenKind { return TokenKind { kind_id: 304, name: "byte" }; }
+    fn ty_void() -> TokenKind { return TokenKind { kind_id: 305, name: "void" }; }
+    
+    fn is_keyword(self) -> bool {
+        return self.kind_id >= 1 && self.kind_id <= 30;
+    }
+    
+    fn is_operator(self) -> bool {
+        return self.kind_id >= 50 && self.kind_id <= 70;
+    }
+    
+    fn is_delimiter(self) -> bool {
+        return self.kind_id >= 100 && self.kind_id <= 120;
+    }
+}
+
+// Source location for error reporting
+class Span {
+    start: int;
+    end: int;
+    line: int;
+    column: int;
+}
+
+impl Span {
+    fn new(start: int, end: int, line: int, col: int) -> Span {
+        return Span {
+            start: start,
+            end: end,
+            line: line,
+            column: col
+        };
+    }
+    
+    fn merge(self, other: Span) -> Span {
+        return Span {
+            start: self.start,
+            end: other.end,
+            line: self.line,
+            column: self.column
+        };
+    }
+}
+
+// Token with associated data
+class Token {
+    kind: TokenKind;
+    span: Span;
+    text: string;      // Original text
+    int_value: int;    // For int literals
+    float_value: float; // For float literals
+    string_value: string; // For string literals
+}
+
+impl Token {
+    fn new(kind: TokenKind, span: Span, text: string) -> Token {
+        return Token {
+            kind: kind,
+            span: span,
+            text: text,
+            int_value: 0,
+            float_value: 0.0,
+            string_value: ""
+        };
+    }
+    
+    fn with_int(kind: TokenKind, span: Span, text: string, value: int) -> Token {
+        return Token {
+            kind: kind,
+            span: span,
+            text: text,
+            int_value: value,
+            float_value: 0.0,
+            string_value: ""
+        };
+    }
+    
+    fn with_string(kind: TokenKind, span: Span, text: string, value: string) -> Token {
+        return Token {
+            kind: kind,
+            span: span,
+            text: text,
+            int_value: 0,
+            float_value: 0.0,
+            string_value: value
+        };
+    }
+    
+    fn is_eof(self) -> bool {
+        return self.kind.kind_id == 0;
+    }
+}
+
+// Keyword lookup table
+class KeywordTable {
+    keywords: HashMap<string, TokenKind>;
+}
+
+impl KeywordTable {
+    fn new() -> KeywordTable {
+        let mut table = KeywordTable {
+            keywords: HashMap::<string, TokenKind>::new()
+        };
+        
+        // Register all keywords
+        table.keywords.insert("fn", TokenKind::kw_fn());
+        table.keywords.insert("let", TokenKind::kw_let());
+        table.keywords.insert("mut", TokenKind::kw_mut());
+        table.keywords.insert("return", TokenKind::kw_return());
+        table.keywords.insert("if", TokenKind::kw_if());
+        table.keywords.insert("else", TokenKind::kw_else());
+        table.keywords.insert("while", TokenKind::kw_while());
+        table.keywords.insert("for", TokenKind::kw_for());
+        table.keywords.insert("in", TokenKind::kw_in());
+        table.keywords.insert("class", TokenKind::kw_class());
+        table.keywords.insert("struct", TokenKind::kw_struct());
+        table.keywords.insert("trait", TokenKind::kw_trait());
+        table.keywords.insert("impl", TokenKind::kw_impl());
+        table.keywords.insert("use", TokenKind::kw_use());
+        table.keywords.insert("mod", TokenKind::kw_mod());
+        table.keywords.insert("pub", TokenKind::kw_pub());
+        table.keywords.insert("self", TokenKind::kw_self());
+        table.keywords.insert("true", TokenKind::kw_true());
+        table.keywords.insert("false", TokenKind::kw_false());
+        table.keywords.insert("async", TokenKind::kw_async());
+        table.keywords.insert("await", TokenKind::kw_await());
+        table.keywords.insert("const", TokenKind::kw_const());
+        table.keywords.insert("extern", TokenKind::kw_extern());
+        table.keywords.insert("where", TokenKind::kw_where());
+        table.keywords.insert("enum", TokenKind::kw_enum());
+        table.keywords.insert("match", TokenKind::kw_match());
+        table.keywords.insert("break", TokenKind::kw_break());
+        table.keywords.insert("continue", TokenKind::kw_continue());
+        
+        // Type keywords
+        table.keywords.insert("int", TokenKind::ty_int());
+        table.keywords.insert("float", TokenKind::ty_float());
+        table.keywords.insert("bool", TokenKind::ty_bool());
+        table.keywords.insert("string", TokenKind::ty_string());
+        table.keywords.insert("byte", TokenKind::ty_byte());
+        table.keywords.insert("void", TokenKind::ty_void());
+        
+        return table;
+    }
+    
+    fn lookup(self, name: string) -> Option<TokenKind> {
+        return self.keywords.get(name);
+    }
+}

@@ -1,0 +1,308 @@
+// src/compiler/ir.fu
+// Intermediate Representation for the Fusion Compiler
+
+use super::types::ResolvedType;
+
+// IR instruction opcodes
+class Opcode {
+    fn nop() -> int { return 0; }
+    fn load_const() -> int { return 1; }
+    fn load_local() -> int { return 2; }
+    fn store_local() -> int { return 3; }
+    fn load_global() -> int { return 4; }
+    fn store_global() -> int { return 5; }
+    fn load_field() -> int { return 6; }
+    fn store_field() -> int { return 7; }
+    fn add() -> int { return 10; }
+    fn sub() -> int { return 11; }
+    fn mul() -> int { return 12; }
+    fn div() -> int { return 13; }
+    fn mod_op() -> int { return 14; }
+    fn neg() -> int { return 15; }
+    fn eq() -> int { return 20; }
+    fn neq() -> int { return 21; }
+    fn lt() -> int { return 22; }
+    fn gt() -> int { return 23; }
+    fn le() -> int { return 24; }
+    fn ge() -> int { return 25; }
+    fn and_op() -> int { return 26; }
+    fn or_op() -> int { return 27; }
+    fn not_op() -> int { return 28; }
+    fn jump() -> int { return 30; }
+    fn jump_if() -> int { return 31; }
+    fn jump_if_not() -> int { return 32; }
+    fn call() -> int { return 40; }
+    fn call_method() -> int { return 41; }
+    fn ret() -> int { return 42; }
+    fn ret_void() -> int { return 43; }
+    fn alloc() -> int { return 50; }
+    fn deref() -> int { return 51; }
+    fn addr_of() -> int { return 52; }
+}
+
+// Single IR instruction
+class Instruction {
+    opcode: int;
+    operand_int: int;
+    operand_float: float;
+    operand_string: string;
+    label: string;
+}
+
+impl Instruction {
+    fn new(opcode: int) -> Instruction {
+        return Instruction {
+            opcode: opcode,
+            operand_int: 0,
+            operand_float: 0.0,
+            operand_string: "",
+            label: ""
+        };
+    }
+    
+    fn with_int(opcode: int, value: int) -> Instruction {
+        return Instruction {
+            opcode: opcode,
+            operand_int: value,
+            operand_float: 0.0,
+            operand_string: "",
+            label: ""
+        };
+    }
+    
+    fn with_string(opcode: int, value: string) -> Instruction {
+        return Instruction {
+            opcode: opcode,
+            operand_int: 0,
+            operand_float: 0.0,
+            operand_string: value,
+            label: ""
+        };
+    }
+    
+    fn with_label(opcode: int, label: string) -> Instruction {
+        return Instruction {
+            opcode: opcode,
+            operand_int: 0,
+            operand_float: 0.0,
+            operand_string: "",
+            label: label
+        };
+    }
+}
+
+// Basic block
+class BasicBlock {
+    label: string;
+    instructions: Vector<Instruction>;
+    successors: Vector<string>;
+}
+
+impl BasicBlock {
+    fn new(label: string) -> BasicBlock {
+        return BasicBlock {
+            label: label,
+            instructions: Vector::<Instruction>::new(),
+            successors: Vector::<string>::new()
+        };
+    }
+    
+    fn emit(mut self, instr: Instruction) {
+        self.instructions.push(instr);
+    }
+}
+
+// IR function
+class IRFunction {
+    name: string;
+    params: Vector<string>;
+    locals: Vector<string>;
+    blocks: Vector<BasicBlock>;
+    return_type: ResolvedType;
+}
+
+impl IRFunction {
+    fn new(name: string) -> IRFunction {
+        return IRFunction {
+            name: name,
+            params: Vector::<string>::new(),
+            locals: Vector::<string>::new(),
+            blocks: Vector::<BasicBlock>::new(),
+            return_type: ResolvedType::void_type()
+        };
+    }
+    
+    fn add_block(mut self, label: string) -> int {
+        let block = BasicBlock::new(label);
+        self.blocks.push(block);
+        return self.blocks.len() - 1;
+    }
+    
+    fn add_local(mut self, name: string) -> int {
+        self.locals.push(name);
+        return self.locals.len() - 1;
+    }
+    
+    fn get_local_index(self, name: string) -> int {
+        let len = self.locals.len();
+        let mut i = 0;
+        while i < len {
+            if self.locals.get(i).unwrap() == name {
+                return i;
+            }
+            i = i + 1;
+        }
+        return -1;
+    }
+}
+
+// IR module (compilation unit)
+class IRModule {
+    name: string;
+    functions: Vector<IRFunction>;
+    globals: Vector<string>;
+    string_literals: Vector<string>;
+}
+
+impl IRModule {
+    fn new(name: string) -> IRModule {
+        return IRModule {
+            name: name,
+            functions: Vector::<IRFunction>::new(),
+            globals: Vector::<string>::new(),
+            string_literals: Vector::<string>::new()
+        };
+    }
+    
+    fn add_function(mut self, func: IRFunction) {
+        self.functions.push(func);
+    }
+    
+    fn add_string(mut self, s: string) -> int {
+        self.string_literals.push(s);
+        return self.string_literals.len() - 1;
+    }
+    
+    fn get_function(self, name: string) -> Option<IRFunction> {
+        let len = self.functions.len();
+        let mut i = 0;
+        while i < len {
+            let func = self.functions.get(i).unwrap();
+            if func.name == name {
+                return Option::Some(func);
+            }
+            i = i + 1;
+        }
+        return Option::None;
+    }
+}
+
+// IR builder for generating instructions
+class IRBuilder {
+    module: IRModule;
+    current_function: Option<int>;
+    current_block: int;
+    label_counter: int;
+}
+
+impl IRBuilder {
+    fn new(module_name: string) -> IRBuilder {
+        return IRBuilder {
+            module: IRModule::new(module_name),
+            current_function: Option::None,
+            current_block: 0,
+            label_counter: 0
+        };
+    }
+    
+    fn new_label(mut self) -> string {
+        let label = "L" + self.label_counter.to_string();
+        self.label_counter = self.label_counter + 1;
+        return label;
+    }
+    
+    fn start_function(mut self, name: string) {
+        let func = IRFunction::new(name);
+        self.module.add_function(func);
+        self.current_function = Option::Some(self.module.functions.len() - 1);
+        self.current_block = 0;
+    }
+    
+    fn end_function(mut self) {
+        self.current_function = Option::None;
+    }
+    
+    fn get_current_function(mut self) -> IRFunction {
+        let idx = self.current_function.unwrap();
+        return self.module.functions.get(idx).unwrap();
+    }
+    
+    fn emit(mut self, instr: Instruction) {
+        if self.current_function.is_some() {
+            let func_idx = self.current_function.unwrap();
+            let mut func = self.module.functions.get(func_idx).unwrap();
+            let mut block = func.blocks.get(self.current_block).unwrap();
+            block.emit(instr);
+        }
+    }
+    
+    fn emit_load_int(mut self, value: int) {
+        self.emit(Instruction::with_int(Opcode::load_const(), value));
+    }
+    
+    fn emit_load_string(mut self, value: string) -> int {
+        let idx = self.module.add_string(value);
+        self.emit(Instruction::with_int(Opcode::load_const(), idx));
+        return idx;
+    }
+    
+    fn emit_load_local(mut self, index: int) {
+        self.emit(Instruction::with_int(Opcode::load_local(), index));
+    }
+    
+    fn emit_store_local(mut self, index: int) {
+        self.emit(Instruction::with_int(Opcode::store_local(), index));
+    }
+    
+    fn emit_add(mut self) {
+        self.emit(Instruction::new(Opcode::add()));
+    }
+    
+    fn emit_sub(mut self) {
+        self.emit(Instruction::new(Opcode::sub()));
+    }
+    
+    fn emit_mul(mut self) {
+        self.emit(Instruction::new(Opcode::mul()));
+    }
+    
+    fn emit_div(mut self) {
+        self.emit(Instruction::new(Opcode::div()));
+    }
+    
+    fn emit_call(mut self, func_name: string, arg_count: int) {
+        let mut instr = Instruction::with_string(Opcode::call(), func_name);
+        instr.operand_int = arg_count;
+        self.emit(instr);
+    }
+    
+    fn emit_return(mut self) {
+        self.emit(Instruction::new(Opcode::ret()));
+    }
+    
+    fn emit_return_void(mut self) {
+        self.emit(Instruction::new(Opcode::ret_void()));
+    }
+    
+    fn emit_jump(mut self, label: string) {
+        self.emit(Instruction::with_label(Opcode::jump(), label));
+    }
+    
+    fn emit_jump_if_not(mut self, label: string) {
+        self.emit(Instruction::with_label(Opcode::jump_if_not(), label));
+    }
+    
+    fn finalize(self) -> IRModule {
+        return self.module;
+    }
+}

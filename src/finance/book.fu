@@ -1,0 +1,80 @@
+// src/finance/book.fu
+// Order Book Implementation
+
+use super::order::{Order, OrderSide};
+
+class OrderBook {
+    symbol: string;
+    bids: Vector<Order>;  // Buy orders (highest price first)
+    asks: Vector<Order>;  // Sell orders (lowest price first)
+    next_order_id: int;
+}
+
+impl OrderBook {
+    fn new(symbol: string) -> OrderBook {
+        return OrderBook {
+            symbol: symbol,
+            bids: Vector::<Order>::new(),
+            asks: Vector::<Order>::new(),
+            next_order_id: 1
+        };
+    }
+
+    fn place_order(mut self, order: Order) -> int {
+        let order_id = self.next_order_id;
+        self.next_order_id = self.next_order_id + 1;
+        
+        // Add to appropriate side
+        if order.side.id == 0 {
+            // Buy order
+            self.bids.push(order);
+        } else {
+            // Sell order
+            self.asks.push(order);
+        }
+        
+        return order_id;
+    }
+
+    fn best_bid(self) -> Option<float> {
+        if self.bids.is_empty() {
+            return Option::None;
+        }
+        
+        // Find highest bid price
+        let mut best_price = 0.0;
+        let len = self.bids.len();
+        let mut i = 0;
+        
+        while i < len {
+            let order = self.bids.get(i).unwrap();
+            if order.price > best_price {
+                best_price = order.price;
+            }
+            i = i + 1;
+        }
+        
+        return Option::Some(best_price);
+    }
+    
+    fn best_ask(self) -> Option<float> {
+        if self.asks.is_empty() {
+            return Option::None;
+        }
+        
+        // Find lowest ask price
+        let mut best_price = 999999999.0; // Large initial value
+        let len = self.asks.len();
+        let mut i = 0;
+        
+        while i < len {
+            let order = self.asks.get(i).unwrap();
+            if order.price < best_price {
+                best_price = order.price;
+            }
+            i = i + 1;
+        }
+        
+        return Option::Some(best_price);
+    }
+}

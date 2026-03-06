@@ -1,0 +1,16 @@
+struct IotMessage { device_id: string, topic: string, payload: string, qos: int }
+
+pub fn qos_from_priority(priority: int) -> int {
+    if priority > 7 {
+        return 2;
+    }
+    if priority > 3 {
+        return 1;
+    }
+    return 0;
+}
+
+pub fn default_port_for_tls(use_tls: bool) -> int {
+    if use_tls { return 8883; }
+    return 1883;
+}

@@ -1,0 +1,430 @@
+// src/compiler/sema.fu
+// Semantic Analyzer for the Fusion Compiler
+
+use super::ast::{
+    SourceFile, Item, ItemKind, Function, ClassDef, ImplBlock,
+    Stmt, StmtKind, Expr, ExprKind, Type, BinaryOp
+};
+use super::types::{TypeContext, ResolvedType, TypeRegistry, TypeField, TypeMethod};
+use super::token::Span;
+
+class SemanticError {
+    message: string;
+    span: Span;
+}
+
+impl SemanticError {
+    fn new(msg: string, span: Span) -> SemanticError {
+        return SemanticError { message: msg, span: span };
+    }
+}
+
+class SemanticAnalyzer {
+    context: TypeContext;
+    errors: Vector<SemanticError>;
+}
+
+impl SemanticAnalyzer {
+    fn new() -> SemanticAnalyzer {
+        return SemanticAnalyzer {
+            context: TypeContext::new(),
+            errors: Vector::<SemanticError>::new()
+        };
+    }
+    
+    fn error(mut self, msg: string, span: Span) {
+        self.errors.push(SemanticError::new(msg, span));
+    }
+    
+    fn analyze_file(mut self, file: SourceFile) -> bool {
+        // First pass: register all type declarations
+        let num_items = file.items.len();
+        let mut i = 0;
+        while i < num_items {
+            let item = file.items.get(i).unwrap();
+            self.register_item(item);
+            i = i + 1;
+        }
+        
+        // Second pass: analyze implementations
+        i = 0;
+        while i < num_items {
+            let item = file.items.get(i).unwrap();
+            self.analyze_item(item);
+            i = i + 1;
+        }
+        
+        return self.errors.is_empty();
+    }
+    
+    fn register_item(mut self, item: Item) {
+        if item.kind == ItemKind::class_def() {
+            let cls = item.class_def.unwrap();
+            let mut fields = Vector::<TypeField>::new();
+            
+            let num_fields = cls.fields.len();
+            let mut i = 0;
+            while i < num_fields {
+                let field = cls.fields.get(i).unwrap();
+                let field_type = self.context.resolve_ast_type(field.field_type);
+                fields.push(TypeField {
+                    name: field.name,
+                    field_type: field_type,
+                    is_mutable: false
+                });
+                i = i + 1;
+            }
+            
+            self.context.registry.register_struct(cls.name, fields);
+        }
+    }
+    
+    fn analyze_item(mut self, item: Item) {
+        if item.kind == ItemKind::function() {
+            let func = item.function.unwrap();
+            self.analyze_function(func);
+        } else {
+            if item.kind == ItemKind::impl_block() {
+                let impl_block = item.impl_block.unwrap();
+                self.analyze_impl(impl_block);
+            }
+        }
+    }
+    
+    fn analyze_function(mut self, func: Function) {
+        // Set up return type context
+        if func.return_type.is_some() {
+            let ret_type = self.context.resolve_ast_type(func.return_type.unwrap());
+            self.context.current_function_return = Option::Some(ret_type);
+        } else {
+            self.context.current_function_return = Option::Some(ResolvedType::void_type());
+        }
+        
+        // Register parameters
+        let num_params = func.params.len();
+        let mut i = 0;
+        while i < num_params {
+            let param = func.params.get(i).unwrap();
+            let param_type = self.context.resolve_ast_type(param.param_type);
+            self.context.define_variable(param.name, param_type);
+            i = i + 1;
+        }
+        
+        // Analyze body
+        let num_stmts = func.body.len();
+        i = 0;
+        while i < num_stmts {
+            let stmt = func.body.get(i).unwrap();
+            self.analyze_statement(stmt);
+            i = i + 1;
+        }
+    }
+    
+    fn analyze_impl(mut self, impl_block: ImplBlock) {
+        // Register methods on the type
+        let num_methods = impl_block.methods.len();
+        let mut i = 0;
+        while i < num_methods {
+            let method = impl_block.methods.get(i).unwrap();
+            
+            // Build method signature
+            let mut param_types = Vector::<ResolvedType>::new();
+            let num_params = method.params.len();
+            let mut j = 0;
+            while j < num_params {
+                let param = method.params.get(j).unwrap();
+                param_types.push(self.context.resolve_ast_type(param.param_type));
+                j = j + 1;
+            }
+            
+            let return_type = if method.return_type.is_some() {
+                self.context.resolve_ast_type(method.return_type.unwrap())
+            } else {
+                ResolvedType::void_type()
+            };
+            
+            let type_method = TypeMethod {
+                name: method.name,
+                params: param_types,
+                return_type: return_type,
+                is_static: true  // Simplified
+            };
+            
+            self.context.registry.add_method(impl_block.target_type, type_method);
+            
+            // Analyze method body
+            self.analyze_function(method);
+            i = i + 1;
+        }
+    }
+    
+    fn analyze_statement(mut self, stmt: Stmt) {
+        if stmt.kind == StmtKind::let_stmt() {
+            self.analyze_let(stmt);
+        } else {
+            if stmt.kind == StmtKind::return_stmt() {
+                self.analyze_return(stmt);
+            } else {
+                if stmt.kind == StmtKind::if_stmt() {
+                    self.analyze_if(stmt);
+                } else {
+                    if stmt.kind == StmtKind::while_stmt() {
+                        self.analyze_while(stmt);
+                    } else {
+                        if stmt.kind == StmtKind::expr_stmt() {
+                            if stmt.expr.is_some() {
+                                self.analyze_expr(stmt.expr.unwrap());
+                            }
+                        } else {
+                            if stmt.kind == StmtKind::assignment() {
+                                self.analyze_assignment(stmt);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    fn analyze_let(mut self, stmt: Stmt) {
+        let mut var_type = ResolvedType::void_type();
+        
+        if stmt.var_type.is_some() {
+            var_type = self.context.resolve_ast_type(stmt.var_type.unwrap());
+        }
+        
+        if stmt.initializer.is_some() {
+            let init_type = self.analyze_expr(stmt.initializer.unwrap());
+            
+            if stmt.var_type.is_some() {
+                // Check type compatibility
+                if !var_type.equals(init_type) {
+                    self.error("Type mismatch in variable initialization", stmt.span);
+                }
+            } else {
+                // Infer type from initializer
+                var_type = init_type;
+            }
+        }
+        
+        self.context.define_variable(stmt.var_name, var_type);
+    }
+    
+    fn analyze_return(mut self, stmt: Stmt) {
+        let expected = self.context.current_function_return;
+        
+        if stmt.return_value.is_some() {
+            let actual = self.analyze_expr(stmt.return_value.unwrap());
+            
+            if expected.is_some() {
+                let exp_type = expected.unwrap();
+                if !exp_type.equals(actual) {
+                    self.error("Return type mismatch", stmt.span);
+                }
+            }
+        } else {
+            if expected.is_some() {
+                let exp_type = expected.unwrap();
+                if exp_type.name != "void" {
+                    self.error("Missing return value", stmt.span);
+                }
+            }
+        }
+    }
+    
+    fn analyze_if(mut self, stmt: Stmt) {
+        if stmt.condition.is_some() {
+            let cond_type = self.analyze_expr(stmt.condition.unwrap());
+            if cond_type.name != "bool" {
+                self.error("If condition must be bool", stmt.span);
+            }
+        }
+        
+        let num_then = stmt.then_block.len();
+        let mut i = 0;
+        while i < num_then {
+            self.analyze_statement(stmt.then_block.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        let num_else = stmt.else_block.len();
+        i = 0;
+        while i < num_else {
+            self.analyze_statement(stmt.else_block.get(i).unwrap());
+            i = i + 1;
+        }
+    }
+    
+    fn analyze_while(mut self, stmt: Stmt) {
+        if stmt.condition.is_some() {
+            let cond_type = self.analyze_expr(stmt.condition.unwrap());
+            if cond_type.name != "bool" {
+                self.error("While condition must be bool", stmt.span);
+            }
+        }
+        
+        let num_body = stmt.body.len();
+        let mut i = 0;
+        while i < num_body {
+            self.analyze_statement(stmt.body.get(i).unwrap());
+            i = i + 1;
+        }
+    }
+    
+    fn analyze_assignment(mut self, stmt: Stmt) {
+        if stmt.target.is_some() && stmt.value.is_some() {
+            let target_type = self.analyze_expr(stmt.target.unwrap());
+            let value_type = self.analyze_expr(stmt.value.unwrap());
+            
+            if !target_type.equals(value_type) {
+                self.error("Assignment type mismatch", stmt.span);
+            }
+        }
+    }
+    
+    fn analyze_expr(mut self, expr: Expr) -> ResolvedType {
+        if expr.kind == ExprKind::int_literal() {
+            return ResolvedType::int_type();
+        }
+        
+        if expr.kind == ExprKind::float_literal() {
+            return ResolvedType::float_type();
+        }
+        
+        if expr.kind == ExprKind::string_literal() {
+            return ResolvedType::string_type();
+        }
+        
+        if expr.kind == ExprKind::bool_literal() {
+            return ResolvedType::bool_type();
+        }
+        
+        if expr.kind == ExprKind::variable() {
+            let var_opt = self.context.lookup_variable(expr.name);
+            if var_opt.is_some() {
+                return var_opt.unwrap();
+            }
+            self.error("Undefined variable: " + expr.name, expr.span);
+            return ResolvedType::void_type();
+        }
+        
+        if expr.kind == ExprKind::binary() {
+            return self.analyze_binary(expr);
+        }
+        
+        if expr.kind == ExprKind::call() {
+            return self.analyze_call(expr);
+        }
+        
+        if expr.kind == ExprKind::member_access() {
+            return self.analyze_member_access(expr);
+        }
+        
+        if expr.kind == ExprKind::method_call() {
+            return self.analyze_method_call(expr);
+        }
+        
+        return ResolvedType::void_type();
+    }
+    
+    fn analyze_binary(mut self, expr: Expr) -> ResolvedType {
+        let left_type = self.analyze_expr(*expr.left.unwrap());
+        let right_type = self.analyze_expr(*expr.right.unwrap());
+        
+        let op = expr.binary_op;
+        
+        // Comparison operators return bool
+        if op.op_id >= 5 && op.op_id <= 10 {
+            return ResolvedType::bool_type();
+        }
+        
+        // Logical operators
+        if op.op_id == 11 || op.op_id == 12 {
+            if left_type.name != "bool" || right_type.name != "bool" {
+                self.error("Logical operators require bool operands", expr.span);
+            }
+            return ResolvedType::bool_type();
+        }
+        
+        // Arithmetic operators
+        if !left_type.is_numeric() || !right_type.is_numeric() {
+            self.error("Arithmetic operators require numeric operands", expr.span);
+        }
+        
+        // Return the "wider" type
+        if left_type.name == "float" || right_type.name == "float" {
+            return ResolvedType::float_type();
+        }
+        
+        return ResolvedType::int_type();
+    }
+    
+    fn analyze_call(mut self, expr: Expr) -> ResolvedType {
+        // Analyze arguments
+        let num_args = expr.arguments.len();
+        let mut i = 0;
+        while i < num_args {
+            self.analyze_expr(expr.arguments.get(i).unwrap());
+            i = i + 1;
+        }
+        
+        // Function return type lookup would go here
+        // For now, return void
+        return ResolvedType::void_type();
+    }
+    
+    fn analyze_member_access(mut self, expr: Expr) -> ResolvedType {
+        let object_type = self.analyze_expr(*expr.object.unwrap());
+        
+        // Look up field
+        let num_fields = object_type.fields.len();
+        let mut i = 0;
+        while i < num_fields {
+            let field = object_type.fields.get(i).unwrap();
+            if field.name == expr.member {
+                return field.field_type;
+            }
+            i = i + 1;
+        }
+        
+        self.error("Unknown field: " + expr.member, expr.span);
+        return ResolvedType::void_type();
+    }
+    
+    fn analyze_method_call(mut self, expr: Expr) -> ResolvedType {
+        let object_type = self.analyze_expr(*expr.object.unwrap());
+        
+        // Look up method
+        let num_methods = object_type.methods.len();
+        let mut i = 0;
+        while i < num_methods {
+            let method = object_type.methods.get(i).unwrap();
+            if method.name == expr.member {
+                // Analyze arguments
+                let num_args = expr.arguments.len();
+                let mut j = 0;
+                while j < num_args {
+                    self.analyze_expr(expr.arguments.get(j).unwrap());
+                    j = j + 1;
+                }
+                return method.return_type;
+            }
+            i = i + 1;
+        }
+        
+        self.error("Unknown method: " + expr.member, expr.span);
+        return ResolvedType::void_type();
+    }
+}
+
+// Convenience function
+fn analyze(file: SourceFile) -> Result<(), Vector<SemanticError>> {
+    let mut analyzer = SemanticAnalyzer::new();
+    let success = analyzer.analyze_file(file);
+    
+    if success {
+        return Result::Ok(());
+    } else {
+        return Result::Err(analyzer.errors);
+    }
+}

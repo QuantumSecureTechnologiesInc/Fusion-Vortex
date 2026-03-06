@@ -1,9 +1,7 @@
 //! AST definitions for the Fusion compiler.
-#![allow(missing_docs)]
 /// Byte span for source ranges.
 type Span = Range<FSize>;
 /// AST node with source span.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Spanned<T> {
     /// Node payload.
     pub node: T,
@@ -11,7 +9,6 @@ struct Spanned<T> {
     pub span: Span,
 }
 /// Language types.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum Type {
     /// Signed 32-bit integer.
     Int,
@@ -31,7 +28,6 @@ enum Type {
     Struct(FString),
 }
 /// Top-level program container.
-#[derive(Debug)]
 struct Program {
     /// Defined functions.
     pub functions: FVec<Function>,
@@ -39,17 +35,94 @@ struct Program {
     pub externs: FVec<ExternFunction>,
     /// Struct type definitions.
     pub structs: FVec<StructDefinition>,
+    /// Enum type definitions.
+    pub enums: FVec<EnumDefinition>,
+    /// Type aliases.
+    pub type_aliases: FVec<TypeAliasDefinition>,
+    /// Constant declarations.
+    pub consts: FVec<ConstDefinition>,
+    /// Static declarations.
+    pub statics: FVec<StaticDefinition>,
+    /// Use declarations.
+    pub uses: FVec<UseDefinition>,
+    /// Module declarations.
+    pub mods: FVec<ModDefinition>,
+    /// Trait declarations.
+    pub traits: FVec<TraitDefinition>,
+    /// Impl declarations.
+    pub impls: FVec<ImplDefinition>,
 }
 /// Struct definition.
-#[derive(Debug)]
 struct StructDefinition {
     /// Struct name.
     pub name: FString,
     /// Struct fields with types.
     pub fields: FVec<(FString, Type)>,
 }
+/// Enum variant definition.
+struct EnumVariant {
+    /// Variant name.
+    pub name: FString,
+    /// Tuple-style payload fields.
+    pub tuple_fields: FVec<Type>,
+    /// Struct-style payload fields.
+    pub named_fields: FVec<(FString, Type)>,
+}
+/// Enum definition.
+struct EnumDefinition {
+    /// Enum name.
+    pub name: FString,
+    /// Variants.
+    pub variants: FVec<EnumVariant>,
+}
+/// Type alias definition.
+struct TypeAliasDefinition {
+    /// Alias name.
+    pub name: FString,
+    /// Target type.
+    pub target: Type,
+}
+/// Const definition.
+struct ConstDefinition {
+    /// Const name.
+    pub name: FString,
+    /// Declared type if known.
+    pub ty: Type,
+    /// Initializer expression if present.
+    pub value: Option<Spanned<Expression>>,
+}
+/// Static definition.
+struct StaticDefinition {
+    /// Static name.
+    pub name: FString,
+    /// Declared type if known.
+    pub ty: Type,
+    /// Initializer expression if present.
+    pub value: Option<Spanned<Expression>>,
+}
+/// Use declaration.
+struct UseDefinition {
+    /// Imported path.
+    pub path: FString,
+}
+/// Module declaration.
+struct ModDefinition {
+    /// Module name.
+    pub name: FString,
+    /// Whether this module has an inline body.
+    pub has_body: FBool,
+}
+/// Trait declaration.
+struct TraitDefinition {
+    /// Trait name.
+    pub name: FString,
+}
+/// Impl declaration.
+struct ImplDefinition {
+    /// Implemented target type/trait label.
+    pub target: FString,
+}
 /// Resolved struct definition info for later compiler phases.
-#[derive(Clone, Debug)]
 struct StructInfo {
     /// Map field name to its type and index.
     pub fields: FMap<FString, (Type, FSize)>,
@@ -57,7 +130,6 @@ struct StructInfo {
     pub ordered_fields: FVec<(FString, Type)>,
 }
 /// External function declaration.
-#[derive(Debug)]
 struct ExternFunction {
     /// Function name.
     pub name: FString,
@@ -69,7 +141,6 @@ struct ExternFunction {
     pub is_variadic: FBool,
 }
 /// Function definition.
-#[derive(Debug)]
 struct Function {
     /// Function name.
     pub name: FString,
@@ -83,7 +154,6 @@ struct Function {
 /// Block of statements.
 type Block = FVec<Spanned<Statement>>;
 /// Statements.
-#[derive(Debug)]
 enum Statement {
     /// Let binding.
     Let { name: FString, ty: Type, value: Spanned<Expression> },
@@ -99,7 +169,6 @@ enum Statement {
     Expression(Spanned<Expression>),
 }
 /// Expressions.
-#[derive(Debug)]
 enum Expression {
     /// Integer literal.
     IntLiteral(FI64),
@@ -137,7 +206,6 @@ enum Expression {
     UnaryNot(Box<Spanned<Expression>>),
 }
 /// Binary operators.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum BinaryOp {
     /// Addition.
     Add,

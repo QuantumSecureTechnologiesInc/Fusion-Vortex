@@ -7,11 +7,13 @@ edition = "2021"
 logos = "0.13"
 chumsky = "0.9"
 ariadne = "0.3"
-# Ensure LLVM 15 is installed: e.g., `sudo apt install llvm-15-dev libpolly-15-dev`
-inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "v18-ci", features = ["llvm18-0"] }
-llvm-sys = { version = "180", features = ["prefer-dynamic"] }
+# Ensure LLVM 20 is installed
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = [
+  "llvm20-1",
+] }
+llvm-sys = { version = "201", features = [] }
 thiserror = "1.0"
-generational-arena = "0.2"
+thunderdome = "0.6"
 clap = { version = "4.3", features = ["derive"] }
 anyhow = "1.0"
 fusion_std = "1.0.0"

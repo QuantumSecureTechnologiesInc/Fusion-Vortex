@@ -1,0 +1,22 @@
+// tests/test_net.fu
+use std::net;
+
+fn main() {
+    // Attempt to connect to example.com:80
+    // This integration test assumes internet connectivity.
+    let mut stream = net::TcpStream::connect("93.184.216.34:80");
+    
+    if !stream.connected {
+        // Skip if no network (soft fail for now)
+        return; 
+    }
+
+    stream.write("GET / HTTP/1.1\r\nHost: example.com\r\n\r\n");
+    let response = stream.read(128);
+    
+    if !response.starts_with("HTTP/1.1 200") {
+        panic("Unexpected response!");
+    }
+    
+    stream.close();
+}

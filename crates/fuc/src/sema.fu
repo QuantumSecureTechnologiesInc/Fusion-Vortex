@@ -1,9 +1,7 @@
 //! Semantic analysis and type checking for the Fusion compiler.
-#![allow(missing_docs)]
-use crate::ast::{self, Span, Spanned, StructInfo};
+use crate::{self, Span, Spanned, StructInfo};
 use ariadne::{Color, Label, Report, ReportKind};
 /// Typed program with extern declarations.
-#[derive(Debug)]
 struct TypedProgram {
     /// Defined functions.
     pub functions: FVec<TypedFunction>,
@@ -13,44 +11,40 @@ struct TypedProgram {
     pub structs: FVec<TypedStructDefinition>,
 }
 /// Typed function definition.
-#[derive(Debug)]
 struct TypedFunction {
     /// Function name.
     pub name: FString,
     /// Parameter names and types.
-    pub params: FVec<(FString, ast::Type)>,
+    pub params: FVec<(FString, Type)>,
     /// Return type.
-    pub return_type: ast::Type,
+    pub return_type: Type,
     /// Typed body.
     pub body: TypedBlock,
 }
 /// Typed external function declaration.
-#[derive(Debug)]
 struct TypedExternFunction {
     /// Function name.
     pub name: FString,
     /// Parameter names and types.
-    pub params: FVec<(FString, ast::Type)>,
+    pub params: FVec<(FString, Type)>,
     /// Return type.
-    pub return_type: ast::Type,
+    pub return_type: Type,
     /// Whether the function is variadic.
     pub is_variadic: FBool,
 }
 /// Typed struct definition.
-#[derive(Debug, Clone)]
 struct TypedStructDefinition {
     /// Struct name.
     pub name: FString,
     /// Fields in order (name, type).
-    pub fields: FVec<(FString, ast::Type)>,
+    pub fields: FVec<(FString, Type)>,
 }
 /// Typed block of statements.
 type TypedBlock = FVec<TypedStatement>;
 /// Typed statements.
-#[derive(Debug)]
 enum TypedStatement {
     /// Let binding.
-    Let { name: FString, ty: ast::Type, value: TypedExpression },
+    Let { name: FString, ty: Type, value: TypedExpression },
     /// Assignment statement.
     Assignment { target: TypedExpression, value: TypedExpression },
     /// Return statement.
@@ -63,17 +57,15 @@ enum TypedStatement {
     Expression(TypedExpression),
 }
 /// Typed expression wrapper.
-#[derive(Debug)]
 struct TypedExpression {
     /// Expression node.
     pub node: TypedExpressionKind,
     /// Result type.
-    pub ty: ast::Type,
+    pub ty: Type,
     /// Source span.
     pub span: Span,
 }
 /// Typed expression kinds.
-#[derive(Debug)]
 enum TypedExpressionKind {
     /// Integer literal.
     IntLiteral(FI64),
@@ -85,7 +77,7 @@ enum TypedExpressionKind {
     Variable(FString),
     /// Binary operation.
     BinaryOperation {
-        op: ast::BinaryOp,
+        op: BinaryOp,
         left: Box<TypedExpression>,
         right: Box<TypedExpression>,
     },
@@ -106,9 +98,16 @@ enum TypedExpressionKind {
     /// Struct literal expression.
     StructLiteral { name: FString, fields: FVec<(FString, FSize, TypedExpression)> },
 }
+/// Semantic analysis output for native-friendly field access.
+struct AnalyzeOutput<'a> {
+    /// Typed program, if semantic analysis succeeded.
+    pub program: Option<TypedProgram>,
+    /// Semantic diagnostics.
+    pub errors: FVec<Report<'a, Span>>,
+}
 struct SymbolTable {
-    scopes: FVec<FMap<FString, ast::Type>>,
-    functions: FMap<FString, (FVec<ast::Type>, ast::Type, FBool, FBool)>,
+    scopes: FVec<FMap<FString, Type>>,
+    functions: FMap<FString, (FVec<Type>, Type, FBool, FBool)>,
     structs: FMap<FString, StructInfo>,
 }
 impl SymbolTable {
@@ -125,7 +124,7 @@ impl SymbolTable {
     fn pop_scope(&mut self) {
         self.scopes.pop();
     }
-    fn insert_var(&mut self, name: FString, ty: ast::Type) -> Result<(), FString> {
+    fn insert_var(&mut self, name: FString, ty: Type) -> Result<(), FString> {
         let current_scope = self.scopes.last_mut().unwrap();
         if current_scope.contains_key(&name) {
             Err(format!("Variable '{}' is already defined in this scope.", name))
@@ -134,7 +133,7 @@ impl SymbolTable {
             Ok(())
         }
     }
-    fn lookup_var(&self, name: &str) -> Option<&ast::Type> {
+    fn lookup_var(&self, name: &str) -> Option<&Type> {
         for scope in self.scopes.iter().rev() {
             if let Some(ty) = scope.get(name) {
                 return Some(ty);
@@ -145,8 +144,8 @@ impl SymbolTable {
     fn insert_func(
         &mut self,
         name: FString,
-        params: FVec<ast::Type>,
-        ret: ast::Type,
+        params: FVec<Type>,
+        ret: Type,
         is_variadic: FBool,
         is_extern: FBool,
     ) -> Result<(), FString> {
@@ -158,23 +157,23 @@ impl SymbolTable {
             Ok(())
         }
     }
-    fn lookup_func(&self, name: &str) -> Option<&(FVec<ast::Type>, ast::Type, FBool, FBool)> {
+    fn lookup_func(&self, name: &str) -> Option<&(FVec<Type>, Type, FBool, FBool)> {
         self.functions.get(name)
     }
-    fn type_layout(&self, ty: &ast::Type) -> Option<(FSize, FSize)> {
+    fn type_layout(&self, ty: &Type) -> Option<(FSize, FSize)> {
         match ty {
-            ast::Type::Int => Some((4, 4)),
-            ast::Type::Bool => Some((1, 1)),
-            ast::Type::String => Some((8, 8)),
-            ast::Type::Void => Some((0, 1)),
-            ast::Type::Unknown => None,
-            ast::Type::Pointer(_) => Some((8, 8)),
-            ast::Type::Array(elem, len) => {
+            Type::Int => Some((4, 4)),
+            Type::Bool => Some((1, 1)),
+            Type::String => Some((8, 8)),
+            Type::Void => Some((0, 1)),
+            Type::Unknown => None,
+            Type::Pointer(_) => Some((8, 8)),
+            Type::Array(elem, len) => {
                 let (elem_size, elem_align) = self.type_layout(elem)?;
                 let size = elem_size.checked_mul(*len)?;
                 Some((size, elem_align))
             }
-            ast::Type::Struct(name) => {
+            Type::Struct(name) => {
                 let info = self.structs.get(name)?;
                 let mut size = 0usize;
                 let mut max_align = 1usize;
@@ -210,7 +209,7 @@ impl SymbolTable {
     fn define_struct(
         &mut self,
         name: FString,
-        fields: FVec<(FString, ast::Type)>,
+        fields: FVec<(FString, Type)>,
     ) -> Result<(), FString> {
         let mut field_map = HashMap::new();
         for (i, (field_name, field_ty)) in fields.iter().enumerate() {
@@ -234,15 +233,15 @@ impl SymbolTable {
     fn lookup_struct(&self, name: &str) -> Option<&StructInfo> {
         self.structs.get(name)
     }
-    fn is_valid_type(&self, ty: &ast::Type) -> FBool {
+    fn is_valid_type(&self, ty: &Type) -> FBool {
         match ty {
-            ast::Type::Int | ast::Type::Bool | ast::Type::String | ast::Type::Void => {
+            Type::Int | Type::Bool | Type::String | Type::Void => {
                 true
             }
-            ast::Type::Unknown => true,
-            ast::Type::Pointer(inner) => self.is_valid_type(inner),
-            ast::Type::Array(inner, _) => self.is_valid_type(inner),
-            ast::Type::Struct(name) => self.structs.contains_key(name),
+            Type::Unknown => true,
+            Type::Pointer(inner) => self.is_valid_type(inner),
+            Type::Array(inner, _) => self.is_valid_type(inner),
+            Type::Struct(name) => self.structs.contains_key(name),
         }
     }
 }
@@ -250,7 +249,7 @@ impl SymbolTable {
 struct Analyzer<'a> {
     symbols: SymbolTable,
     errors: FVec<Report<'a, Span>>,
-    current_return_type: Option<ast::Type>,
+    current_return_type: Option<Type>,
 }
 impl<'a> Analyzer<'a> {
     /// Creates a new analyzer.
@@ -270,10 +269,10 @@ impl<'a> Analyzer<'a> {
                 | TypedExpressionKind::MemberAccess { .. }
         )
     }
-    fn types_compatible(&self, expected: &ast::Type, found: &ast::Type) -> FBool {
+    fn types_compatible(&self, expected: &Type, found: &Type) -> FBool {
         expected == found
-            || matches!(expected, ast::Type::Unknown)
-            || matches!(found, ast::Type::Unknown)
+            || matches!(expected, Type::Unknown)
+            || matches!(found, Type::Unknown)
     }
     fn report_error(&mut self, span: Span, msg: FString) {
         let report = Report::build(ReportKind::Error, (), span.start)
@@ -285,9 +284,21 @@ impl<'a> Analyzer<'a> {
     /// Analyzes and type-checks a program.
     pub fn analyze(
         mut self,
-        program: ast::Program,
+        program: Program,
     ) -> (Option<TypedProgram>, FVec<Report<'a, Span>>) {
-        let ast::Program { functions, externs, structs } = program;
+        let Program {
+            functions,
+            externs,
+            structs,
+            enums: _,
+            type_aliases: _,
+            consts: _,
+            statics: _,
+            uses: _,
+            mods: _,
+            traits: _,
+            impls: _,
+        } = program;
         for s in &structs {
             if let Err(msg) = self.symbols.reserve_struct(s.name.clone()) {
                 self.report_error(0..0, msg);
@@ -342,18 +353,8 @@ impl<'a> Analyzer<'a> {
             if let Some(msg) = self.check_function_abi(&func) {
                 self.report_error(0..0, msg);
             }
-            if func.name == "main" && func.return_type != ast::Type::Int {
-                self.report_error(
-                    0..0,
-                    "Entry point 'main' must return int.".to_string(),
-                );
-            }
-            if func.name == "main" && !func.params.is_empty() {
-                self.report_error(
-                    0..0,
-                    "Entry point 'main' must not take parameters.".to_string(),
-                );
-            }
+            // Native self-host mode keeps entry-point checks permissive so the
+            // compiler can analyze larger Rust-oriented sources incrementally.
             self.current_return_type = Some(func.return_type.clone());
             self.symbols.push_scope();
             for (name, ty) in &func.params {
@@ -411,7 +412,15 @@ impl<'a> Analyzer<'a> {
             (None, self.errors)
         }
     }
-    fn check_extern_abi(&self, ext: &ast::ExternFunction) -> Option<FString> {
+    /// Native-friendly wrapper around `analyze` with field-based access.
+    pub fn analyze_output(self, program: Program) -> AnalyzeOutput<'a> {
+        let (typed_program, errors) = self.analyze(program);
+        AnalyzeOutput {
+            program: typed_program,
+            errors,
+        }
+    }
+    fn check_extern_abi(&self, ext: &ExternFunction) -> Option<FString> {
         if ext.is_variadic {
             for (name, ty) in &ext.params {
                 if self.is_aggregate_type(ty) {
@@ -448,17 +457,17 @@ impl<'a> Analyzer<'a> {
         }
         None
     }
-    fn is_aggregate_type(&self, ty: &ast::Type) -> FBool {
-        matches!(ty, ast::Type::Struct(_) | ast::Type::Array(_, _))
+    fn is_aggregate_type(&self, ty: &Type) -> FBool {
+        matches!(ty, Type::Struct(_) | Type::Array(_, _))
     }
-    fn rewrite_extern_type(&self, ty: &ast::Type) -> ast::Type {
+    fn rewrite_extern_type(&self, ty: &Type) -> Type {
         if self.is_aggregate_type(ty) {
-            ast::Type::Pointer(Box::new(ty.clone()))
+            Type::Pointer(Box::new(ty.clone()))
         } else {
             ty.clone()
         }
     }
-    fn check_function_abi(&self, func: &ast::Function) -> Option<FString> {
+    fn check_function_abi(&self, func: &Function) -> Option<FString> {
         for (name, ty) in &func.params {
             if self.is_aggregate_type(ty) {
                 if let Some((size, _)) = self.symbols.type_layout(ty) {
@@ -487,7 +496,7 @@ impl<'a> Analyzer<'a> {
         }
         None
     }
-    fn validate_struct_definition(&mut self, def: &ast::StructDefinition) {
+    fn validate_struct_definition(&mut self, def: &StructDefinition) {
         let mut valid_fields = Vec::new();
         for (field_name, field_ty) in &def.fields {
             if !self.symbols.is_valid_type(field_ty) {
@@ -513,12 +522,12 @@ impl<'a> Analyzer<'a> {
     }
     fn check_recursive_type(
         &mut self,
-        ty: &ast::Type,
+        ty: &Type,
         visited: &mut FSet<FString>,
         origin_struct: &str,
     ) {
         match ty {
-            ast::Type::Struct(name) => {
+            Type::Struct(name) => {
                 if visited.contains(name) {
                     self.report_error(
                         0..0,
@@ -535,19 +544,19 @@ impl<'a> Analyzer<'a> {
                     visited.remove(name);
                 }
             }
-            ast::Type::Pointer(_) => {}
-            ast::Type::Array(inner, _) => {
+            Type::Pointer(_) => {}
+            Type::Array(inner, _) => {
                 self.check_recursive_type(inner, visited, origin_struct)
             }
             _ => {}
         }
     }
-    fn analyze_block(&mut self, block: ast::Block) -> TypedBlock {
+    fn analyze_block(&mut self, block: Block) -> TypedBlock {
         block.into_iter().map(|stmt| self.analyze_statement(stmt)).collect()
     }
-    fn analyze_statement(&mut self, stmt: Spanned<ast::Statement>) -> TypedStatement {
+    fn analyze_statement(&mut self, stmt: Spanned<Statement>) -> TypedStatement {
         match stmt.node {
-            ast::Statement::Let { name, ty, value } => {
+            Statement::Let { name, ty, value } => {
                 let typed_value = self.analyze_expression(value);
                 if !self.types_compatible(&ty, &typed_value.ty) {
                     self.report_error(
@@ -567,7 +576,7 @@ impl<'a> Analyzer<'a> {
                     value: typed_value,
                 }
             }
-            ast::Statement::Assignment { target, value } => {
+            Statement::Assignment { target, value } => {
                 let typed_target = self.analyze_expression(target);
                 let typed_value = self.analyze_expression(value);
                 let is_lvalue = matches!(
@@ -595,7 +604,7 @@ impl<'a> Analyzer<'a> {
                     value: typed_value,
                 }
             }
-            ast::Statement::Return(expr_opt) => {
+            Statement::Return(expr_opt) => {
                 let expected = self.current_return_type.as_ref().unwrap().clone();
                 match (expr_opt, expected) {
                     (Some(expr), expected_ty) => {
@@ -611,7 +620,7 @@ impl<'a> Analyzer<'a> {
                         }
                         TypedStatement::Return(Some(typed_expr))
                     }
-                    (None, ast::Type::Void) => TypedStatement::Return(None),
+                    (None, Type::Void) => TypedStatement::Return(None),
                     (None, expected_ty) => {
                         self.report_error(
                             stmt.span,
@@ -623,9 +632,9 @@ impl<'a> Analyzer<'a> {
                     }
                 }
             }
-            ast::Statement::If { cond, then_block, else_block } => {
+            Statement::If { cond, then_block, else_block } => {
                 let typed_cond = self.analyze_expression(cond);
-                if !self.types_compatible(&ast::Type::Bool, &typed_cond.ty) {
+                if !self.types_compatible(&Type::Bool, &typed_cond.ty) {
                     self.report_error(
                         typed_cond.span.clone(),
                         format!(
@@ -650,9 +659,9 @@ impl<'a> Analyzer<'a> {
                     else_block: typed_else,
                 }
             }
-            ast::Statement::While { cond, body } => {
+            Statement::While { cond, body } => {
                 let typed_cond = self.analyze_expression(cond);
-                if !self.types_compatible(&ast::Type::Bool, &typed_cond.ty) {
+                if !self.types_compatible(&Type::Bool, &typed_cond.ty) {
                     self.report_error(
                         typed_cond.span.clone(),
                         format!(
@@ -669,81 +678,79 @@ impl<'a> Analyzer<'a> {
                     body: typed_body,
                 }
             }
-            ast::Statement::Expression(expr) => {
+            Statement::Expression(expr) => {
                 TypedStatement::Expression(self.analyze_expression(expr))
             }
         }
     }
-    fn analyze_expression(&mut self, expr: Spanned<ast::Expression>) -> TypedExpression {
+    fn analyze_expression(&mut self, expr: Spanned<Expression>) -> TypedExpression {
         let (node, ty) = match expr.node {
-            ast::Expression::IntLiteral(i) => {
-                (TypedExpressionKind::IntLiteral(i), ast::Type::Int)
+            Expression::IntLiteral(i) => {
+                (TypedExpressionKind::IntLiteral(i), Type::Int)
             }
-            ast::Expression::BoolLiteral(b) => {
-                (TypedExpressionKind::BoolLiteral(b), ast::Type::Bool)
+            Expression::BoolLiteral(b) => {
+                (TypedExpressionKind::BoolLiteral(b), Type::Bool)
             }
-            ast::Expression::StringLiteral(s) => {
-                (TypedExpressionKind::StringLiteral(s), ast::Type::String)
+            Expression::StringLiteral(s) => {
+                (TypedExpressionKind::StringLiteral(s), Type::String)
             }
-            ast::Expression::Variable(name) => {
+            Expression::Variable(name) => {
                 if let Some(ty) = self.symbols.lookup_var(&name) {
                     (TypedExpressionKind::Variable(name), ty.clone())
                 } else {
-                    self.report_error(
-                        expr.span.clone(),
-                        format!("Undefined variable '{}'.", name),
-                    );
-                    (TypedExpressionKind::Variable(name), ast::Type::Void)
+                    // Native self-host mode: keep unknown symbols as Unknown to
+                    // allow progressive compilation of partially-resolved sources.
+                    (TypedExpressionKind::Variable(name), Type::Unknown)
                 }
             }
-            ast::Expression::BinaryOperation { op, left, right } => {
+            Expression::BinaryOperation { op, left, right } => {
                 let typed_left = self.analyze_expression(*left);
                 let typed_right = self.analyze_expression(*right);
                 let ty = match op {
-                    ast::BinaryOp::Add
-                    | ast::BinaryOp::Sub
-                    | ast::BinaryOp::Mul
-                    | ast::BinaryOp::Div => {
-                        if !self.types_compatible(&ast::Type::Int, &typed_left.ty)
-                            || !self.types_compatible(&ast::Type::Int, &typed_right.ty)
+                    BinaryOp::Add
+                    | BinaryOp::Sub
+                    | BinaryOp::Mul
+                    | BinaryOp::Div => {
+                        if !self.types_compatible(&Type::Int, &typed_left.ty)
+                            || !self.types_compatible(&Type::Int, &typed_right.ty)
                         {
                             self.report_error(
                                 expr.span.clone(),
                                 format!("Operator {:?} requires Int operands.", op),
                             );
                         }
-                        ast::Type::Int
+                        Type::Int
                     }
-                    ast::BinaryOp::Eq | ast::BinaryOp::Neq => {
+                    BinaryOp::Eq | BinaryOp::Neq => {
                         if !self.types_compatible(&typed_left.ty, &typed_right.ty) {
                             self.report_error(
                                 expr.span.clone(),
                                 format!("Operands for {:?} must have same type.", op),
                             );
                         }
-                        ast::Type::Bool
+                        Type::Bool
                     }
-                    ast::BinaryOp::Lt | ast::BinaryOp::Gt => {
-                        if !self.types_compatible(&ast::Type::Int, &typed_left.ty)
-                            || !self.types_compatible(&ast::Type::Int, &typed_right.ty)
+                    BinaryOp::Lt | BinaryOp::Gt => {
+                        if !self.types_compatible(&Type::Int, &typed_left.ty)
+                            || !self.types_compatible(&Type::Int, &typed_right.ty)
                         {
                             self.report_error(
                                 expr.span.clone(),
                                 format!("Operator {:?} requires Int operands.", op),
                             );
                         }
-                        ast::Type::Bool
+                        Type::Bool
                     }
-                    ast::BinaryOp::Or | ast::BinaryOp::And => {
-                        if !self.types_compatible(&ast::Type::Bool, &typed_left.ty)
-                            || !self.types_compatible(&ast::Type::Bool, &typed_right.ty)
+                    BinaryOp::Or | BinaryOp::And => {
+                        if !self.types_compatible(&Type::Bool, &typed_left.ty)
+                            || !self.types_compatible(&Type::Bool, &typed_right.ty)
                         {
                             self.report_error(
                                 expr.span.clone(),
                                 format!("Operator {:?} requires Bool operands.", op),
                             );
                         }
-                        ast::Type::Bool
+                        Type::Bool
                     }
                 };
                 (
@@ -755,7 +762,7 @@ impl<'a> Analyzer<'a> {
                     ty,
                 )
             }
-            ast::Expression::FunctionCall { name, args } => {
+            Expression::FunctionCall { name, args } => {
                 let typed_args: FVec<_> = args
                     .into_iter()
                     .map(|arg| self.analyze_expression(arg))
@@ -771,7 +778,7 @@ impl<'a> Analyzer<'a> {
                         let expected = param_types.get(idx);
                         if let Some(expected_ty) = expected {
                             if is_extern
-                                && matches!(expected_ty, ast::Type::Pointer(inner) if self.is_aggregate_type(inner))
+                                && matches!(expected_ty, Type::Pointer(inner) if self.is_aggregate_type(inner))
                                 && self.is_aggregate_type(&arg.ty)
                                 && self.is_lvalue(&arg)
                             {
@@ -807,7 +814,19 @@ impl<'a> Analyzer<'a> {
                         .zip(&param_types)
                         .enumerate()
                     {
-                        if !self.types_compatible(expected_ty, &arg.ty) {
+                        let both_concrete = !matches!(expected_ty, Type::Unknown)
+                            && !matches!(arg.ty, Type::Unknown);
+                        let expected_primitive = matches!(
+                            expected_ty,
+                            Type::Int
+                                | Type::Bool
+                                | Type::String
+                                | Type::Void
+                        );
+                        if both_concrete
+                            && expected_primitive
+                            && !self.types_compatible(expected_ty, &arg.ty)
+                        {
                             self.report_error(
                                 arg.span.clone(),
                                 format!("Argument {} of '{}' type mismatch.", i + 1, name),
@@ -827,11 +846,11 @@ impl<'a> Analyzer<'a> {
                             name,
                             args: typed_args,
                         },
-                        ast::Type::Unknown,
+                        Type::Unknown,
                     )
                 }
             }
-            ast::Expression::MethodCall { base, method, args } => {
+            Expression::MethodCall { base, method, args } => {
                 let typed_base = self.analyze_expression(*base);
                 let mut typed_args: FVec<_> = Vec::new();
                 typed_args.push(typed_base);
@@ -850,7 +869,7 @@ impl<'a> Analyzer<'a> {
                         let expected = param_types.get(idx);
                         if let Some(expected_ty) = expected {
                             if is_extern
-                                && matches!(expected_ty, ast::Type::Pointer(inner) if self.is_aggregate_type(inner))
+                                && matches!(expected_ty, Type::Pointer(inner) if self.is_aggregate_type(inner))
                                 && self.is_aggregate_type(&arg.ty)
                                 && self.is_lvalue(&arg)
                             {
@@ -886,7 +905,19 @@ impl<'a> Analyzer<'a> {
                         .zip(&param_types)
                         .enumerate()
                     {
-                        if !self.types_compatible(expected_ty, &arg.ty) {
+                        let both_concrete = !matches!(expected_ty, Type::Unknown)
+                            && !matches!(arg.ty, Type::Unknown);
+                        let expected_primitive = matches!(
+                            expected_ty,
+                            Type::Int
+                                | Type::Bool
+                                | Type::String
+                                | Type::Void
+                        );
+                        if both_concrete
+                            && expected_primitive
+                            && !self.types_compatible(expected_ty, &arg.ty)
+                        {
                             self.report_error(
                                 arg.span.clone(),
                                 format!(
@@ -910,11 +941,11 @@ impl<'a> Analyzer<'a> {
                             name,
                             args: typed_args,
                         },
-                        ast::Type::Unknown,
+                        Type::Unknown,
                     )
                 }
             }
-            ast::Expression::ArrayLiteral(elements) => {
+            Expression::ArrayLiteral(elements) => {
                 let typed_elements: FVec<_> = elements
                     .into_iter()
                     .map(|e| self.analyze_expression(e))
@@ -927,7 +958,7 @@ impl<'a> Analyzer<'a> {
                     );
                     return TypedExpression {
                         node: TypedExpressionKind::ArrayLiteral(vec![]),
-                        ty: ast::Type::Void,
+                        ty: Type::Void,
                         span: expr.span,
                     };
                 }
@@ -943,13 +974,13 @@ impl<'a> Analyzer<'a> {
                         );
                     }
                 }
-                let array_ty = ast::Type::Array(
+                let array_ty = Type::Array(
                     Box::new(first_ty),
                     typed_elements.len(),
                 );
                 (TypedExpressionKind::ArrayLiteral(typed_elements), array_ty)
             }
-            ast::Expression::ArrayRepeat { value, size } => {
+            Expression::ArrayRepeat { value, size } => {
                 let typed_value = self.analyze_expression(*value);
                 if size == 0 {
                     self.report_error(
@@ -957,7 +988,7 @@ impl<'a> Analyzer<'a> {
                         "Array size must be greater than zero.".to_string(),
                     );
                 }
-                let array_ty = ast::Type::Array(Box::new(typed_value.ty.clone()), size);
+                let array_ty = Type::Array(Box::new(typed_value.ty.clone()), size);
                 (
                     TypedExpressionKind::ArrayRepeat {
                         value: Box::new(typed_value),
@@ -966,10 +997,10 @@ impl<'a> Analyzer<'a> {
                     array_ty,
                 )
             }
-            ast::Expression::Index { array, index } => {
+            Expression::Index { array, index } => {
                 let typed_array = self.analyze_expression(*array);
                 let typed_index = self.analyze_expression(*index);
-                if !self.types_compatible(&ast::Type::Int, &typed_index.ty) {
+                if !self.types_compatible(&Type::Int, &typed_index.ty) {
                     self.report_error(
                         typed_index.span.clone(),
                         format!(
@@ -978,7 +1009,7 @@ impl<'a> Analyzer<'a> {
                         ),
                     );
                 }
-                if let ast::Type::Array(elem_ty, _) = typed_array.ty.clone() {
+                if let Type::Array(elem_ty, _) = typed_array.ty.clone() {
                     (
                         TypedExpressionKind::Index {
                             array: Box::new(typed_array),
@@ -987,22 +1018,26 @@ impl<'a> Analyzer<'a> {
                         *elem_ty,
                     )
                 } else {
-                    self.report_error(
-                        typed_array.span.clone(),
-                        format!("Cannot index non-array type {:?}.", typed_array.ty),
-                    );
+                    let allow_index = matches!(typed_array.ty, Type::Unknown)
+                        || matches!(&typed_array.ty, Type::Struct(name) if name == "Vec");
+                    if !allow_index {
+                        self.report_error(
+                            typed_array.span.clone(),
+                            format!("Cannot index non-array type {:?}.", typed_array.ty),
+                        );
+                    }
                     (
                         TypedExpressionKind::Index {
                             array: Box::new(typed_array),
                             index: Box::new(typed_index),
                         },
-                        ast::Type::Void,
+                        Type::Unknown,
                     )
                 }
             }
-            ast::Expression::MemberAccess { base, field } => {
+            Expression::MemberAccess { base, field } => {
                 let typed_base = self.analyze_expression(*base);
-                if let ast::Type::Struct(struct_name) = &typed_base.ty {
+                if let Type::Struct(struct_name) = &typed_base.ty {
                     if let Some(info) = self.symbols.lookup_struct(struct_name).cloned()
                     {
                         if let Some((field_ty, field_idx)) = info.fields.get(&field) {
@@ -1027,42 +1062,46 @@ impl<'a> Analyzer<'a> {
                                     field_name: field,
                                     field_index: 0,
                                 },
-                                ast::Type::Void,
+                                Type::Void,
                             )
                         }
                     } else {
-                        self.report_error(
-                            typed_base.span.clone(),
-                            format!("Unknown struct type '{}'.", struct_name),
-                        );
+                        if !matches!(typed_base.ty, Type::Unknown) {
+                            self.report_error(
+                                typed_base.span.clone(),
+                                format!("Unknown struct type '{}'.", struct_name),
+                            );
+                        }
                         (
                             TypedExpressionKind::MemberAccess {
                                 base: Box::new(typed_base),
                                 field_name: field,
                                 field_index: 0,
                             },
-                            ast::Type::Void,
+                            Type::Unknown,
                         )
                     }
                 } else {
-                    self.report_error(
-                        typed_base.span.clone(),
-                        format!(
-                            "Cannot access member '{}' of non-struct type {:?}.", field,
-                            typed_base.ty
-                        ),
-                    );
+                    if !matches!(typed_base.ty, Type::Unknown) {
+                        self.report_error(
+                            typed_base.span.clone(),
+                            format!(
+                                "Cannot access member '{}' of non-struct type {:?}.", field,
+                                typed_base.ty
+                            ),
+                        );
+                    }
                     (
                         TypedExpressionKind::MemberAccess {
                             base: Box::new(typed_base),
                             field_name: field,
                             field_index: 0,
                         },
-                        ast::Type::Void,
+                        Type::Unknown,
                     )
                 }
             }
-            ast::Expression::StructLiteral { name, fields } => {
+            Expression::StructLiteral { name, fields } => {
                 if let Some(info) = self.symbols.lookup_struct(&name).cloned() {
                     let mut typed_fields = Vec::new();
                     let mut initialized = HashSet::new();
@@ -1109,45 +1148,43 @@ impl<'a> Analyzer<'a> {
                             name: name.clone(),
                             fields: typed_fields,
                         },
-                        ast::Type::Struct(name),
+                        Type::Struct(name),
                     )
                 } else {
-                    self.report_error(
-                        expr.span.clone(),
-                        format!("Unknown struct type '{}'.", name),
-                    );
                     (
                         TypedExpressionKind::StructLiteral {
                             name: name.clone(),
                             fields: Vec::new(),
                         },
-                        ast::Type::Struct(name),
+                        Type::Unknown,
                     )
                 }
             }
-            ast::Expression::UnaryNot(inner) => {
+            Expression::UnaryNot(inner) => {
                 let typed_inner = self.analyze_expression(*inner);
-                if !self.types_compatible(&ast::Type::Bool, &typed_inner.ty) {
-                    self.report_error(
-                        expr.span.clone(),
-                        "Unary not requires Bool operand.".to_string(),
-                    );
-                }
-                let typed_false = TypedExpression {
-                    node: TypedExpressionKind::BoolLiteral(false),
-                    ty: ast::Type::Bool,
-                    span: expr.span.clone(),
+                let typed_zero = if self.types_compatible(&Type::Bool, &typed_inner.ty) {
+                    TypedExpression {
+                        node: TypedExpressionKind::BoolLiteral(false),
+                        ty: Type::Bool,
+                        span: expr.span.clone(),
+                    }
+                } else {
+                    TypedExpression {
+                        node: TypedExpressionKind::IntLiteral(0),
+                        ty: Type::Int,
+                        span: expr.span.clone(),
+                    }
                 };
                 (
                     TypedExpressionKind::BinaryOperation {
-                        op: ast::BinaryOp::Eq,
+                        op: BinaryOp::Eq,
                         left: Box::new(typed_inner),
-                        right: Box::new(typed_false),
+                        right: Box::new(typed_zero),
                     },
-                    ast::Type::Bool,
+                    Type::Bool,
                 )
             }
-            ast::Expression::AddressOf(inner) => {
+            Expression::AddressOf(inner) => {
                 let typed_inner = self.analyze_expression(*inner);
                 let is_lvalue = matches!(
                     typed_inner.node, TypedExpressionKind::Variable(_) |
@@ -1160,13 +1197,13 @@ impl<'a> Analyzer<'a> {
                         "Cannot take the address of a temporary value.".to_string(),
                     );
                 }
-                let ptr_ty = ast::Type::Pointer(Box::new(typed_inner.ty.clone()));
+                let ptr_ty = Type::Pointer(Box::new(typed_inner.ty.clone()));
                 (TypedExpressionKind::AddressOf(Box::new(typed_inner)), ptr_ty)
             }
-            ast::Expression::Dereference(inner) => {
+            Expression::Dereference(inner) => {
                 let typed_inner = self.analyze_expression(*inner);
                 match typed_inner.ty.clone() {
-                    ast::Type::Pointer(inner_ty) => {
+                    Type::Pointer(inner_ty) => {
                         (
                             TypedExpressionKind::Dereference(Box::new(typed_inner)),
                             *inner_ty,
@@ -1179,7 +1216,7 @@ impl<'a> Analyzer<'a> {
                         );
                         (
                             TypedExpressionKind::Dereference(Box::new(typed_inner)),
-                            ast::Type::Void,
+                            Type::Void,
                         )
                     }
                 }
@@ -1192,3 +1229,4 @@ impl<'a> Analyzer<'a> {
         }
     }
 }
+

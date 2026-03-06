@@ -1,10 +1,8 @@
 //! IR lowering and definitions.
-#![allow(missing_docs)]
 use crate::ast;
 use crate::sema::{self, TypedExpressionKind};
 use generational_arena::{Arena, Index};
 /// IR module with functions, string constants, and externs.
-#[derive(Debug)]
 struct Module {
     /// IR functions.
     pub functions: FVec<Function>,
@@ -16,21 +14,19 @@ struct Module {
     pub structs: FVec<sema::TypedStructDefinition>,
 }
 /// IR function definition.
-#[derive(Debug)]
 struct Function {
     /// Name of the function.
     pub name: FString,
     /// Parameters and types.
-    pub params: FVec<(FString, ast::Type)>,
+    pub params: FVec<(FString, Type)>,
     /// Return type.
-    pub return_type: ast::Type,
+    pub return_type: Type,
     /// Basic blocks.
     pub blocks: Arena<BasicBlock>,
     /// Entry block index.
     pub entry_block: Index,
 }
 /// Basic block of IR instructions.
-#[derive(Debug)]
 struct BasicBlock {
     /// Block label.
     pub label: FString,
@@ -40,15 +36,13 @@ struct BasicBlock {
     pub terminator: Terminator,
 }
 /// Value with type information.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct TypedValue {
     /// Raw value.
     pub val: Value,
     /// Value type.
-    pub ty: ast::Type,
+    pub ty: Type,
 }
 /// IR values.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum Value {
     /// Integer constant.
     IntConst(FI64),
@@ -62,31 +56,29 @@ enum Value {
     Temporary(FSize),
 }
 /// Address forms for loads/stores.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum Address {
     /// Variable address with declared type.
-    Variable { name: FString, ty: ast::Type },
+    Variable { name: FString, ty: Type },
     /// Pointer value to a specific type.
-    Pointer { val: TypedValue, pointed_to_ty: ast::Type },
+    Pointer { val: TypedValue, pointed_to_ty: Type },
     /// Array element address.
-    Element { base: Box<Address>, index: TypedValue, element_ty: ast::Type },
+    Element { base: Box<Address>, index: TypedValue, element_ty: Type },
     /// Struct field address.
     Field {
         base: Box<Address>,
         field_index: FSize,
-        field_ty: ast::Type,
+        field_ty: Type,
         struct_name: FString,
     },
 }
 /// IR instructions.
-#[derive(Debug)]
 enum Instruction {
     /// Stack allocation for a local.
-    Alloca { name: FString, ty: ast::Type },
+    Alloca { name: FString, ty: Type },
     /// Binary operation.
     BinaryOperation {
         dest: TypedValue,
-        op: ast::BinaryOp,
+        op: BinaryOp,
         op1: TypedValue,
         op2: TypedValue,
     },
@@ -103,21 +95,20 @@ enum Instruction {
         dest: TypedValue,
         base_ptr: TypedValue,
         index: TypedValue,
-        element_ty: ast::Type,
+        element_ty: Type,
     },
     /// Compute struct field pointer.
     GetFieldPtr {
         dest: TypedValue,
         base_ptr: TypedValue,
         field_index: FSize,
-        field_ty: ast::Type,
+        field_ty: Type,
         struct_name: FString,
     },
     /// Emit a runtime bounds failure.
     BoundsFail { message: FString },
 }
 /// Terminator instructions.
-#[derive(Debug)]
 enum Terminator {
     /// Return from function.
     Return(Option<TypedValue>),
@@ -164,8 +155,8 @@ impl Lowerer {
             externs
                 .push(sema::TypedExternFunction {
                     name: "panic".to_string(),
-                    params: vec![("msg".to_string(), ast::Type::String)],
-                    return_type: ast::Type::Void,
+                    params: vec![("msg".to_string(), Type::String)],
+                    return_type: Type::Void,
                     is_variadic: false,
                 });
         }
@@ -176,7 +167,7 @@ impl Lowerer {
             structs,
         }
     }
-    fn typed_val(&self, val: Value, ty: ast::Type) -> TypedValue {
+    fn typed_val(&self, val: Value, ty: Type) -> TypedValue {
         TypedValue { val, ty }
     }
     fn new_tmp(&mut self) -> Value {
@@ -184,12 +175,12 @@ impl Lowerer {
         self.tmp_counter += 1;
         v
     }
-    fn new_tmp_typed(&mut self, ty: ast::Type) -> TypedValue {
+    fn new_tmp_typed(&mut self, ty: Type) -> TypedValue {
         let val = self.new_tmp();
         self.typed_val(val, ty)
     }
-    fn new_ptr_tmp(&mut self, pointee: ast::Type) -> TypedValue {
-        self.new_tmp_typed(ast::Type::Pointer(Box::new(pointee)))
+    fn new_ptr_tmp(&mut self, pointee: Type) -> TypedValue {
+        self.new_tmp_typed(Type::Pointer(Box::new(pointee)))
     }
     fn lower_function(&mut self, func: sema::TypedFunction) -> Function {
         self.blocks = Arena::new();
@@ -198,10 +189,10 @@ impl Lowerer {
         let entry_block = self.current_block;
         self.lower_block(func.body);
         if matches!(self.blocks[self.current_block].terminator, Terminator::Return(None))
-            && func.return_type == ast::Type::Void
+            && func.return_type == Type::Void
             && self.blocks[self.current_block].instrs.is_empty()
         {} else if !self.is_terminated(self.current_block) {
-            if func.return_type == ast::Type::Void {
+            if func.return_type == Type::Void {
                 self.set_terminator(Terminator::Return(None));
             }
         }
@@ -251,12 +242,12 @@ impl Lowerer {
                 match value.node {
                     TypedExpressionKind::ArrayLiteral(elements) => {
                         let element_ty = match ty.clone() {
-                            ast::Type::Array(elem, _) => *elem,
+                            Type::Array(elem, _) => *elem,
                             _ => ty.clone(),
                         };
                         for (idx, elem) in elements.into_iter().enumerate() {
                             let index_val = self
-                                .typed_val(Value::IntConst(idx as FI64), ast::Type::Int);
+                                .typed_val(Value::IntConst(idx as FI64), Type::Int);
                             let addr = Address::Element {
                                 base: Box::new(Address::Variable {
                                     name: name.clone(),
@@ -274,7 +265,7 @@ impl Lowerer {
                     }
                     TypedExpressionKind::ArrayRepeat { value, size } => {
                         let element_ty = match ty.clone() {
-                            ast::Type::Array(elem, _) => *elem,
+                            Type::Array(elem, _) => *elem,
                             _ => ty.clone(),
                         };
                         let base = Address::Variable {
@@ -299,7 +290,7 @@ impl Lowerer {
                 match value.node {
                     TypedExpressionKind::ArrayRepeat { value, size } => {
                         let element_ty = match &value.ty {
-                            ast::Type::Array(elem, _) => *elem.clone(),
+                            Type::Array(elem, _) => *elem.clone(),
                             _ => value.ty.clone(),
                         };
                         self.emit_array_repeat_into(dest_addr, element_ty, size, *value);
@@ -421,7 +412,7 @@ impl Lowerer {
                     .into_iter()
                     .map(|a| self.lower_expression(a))
                     .collect();
-                if expr_ty == ast::Type::Void {
+                if expr_ty == Type::Void {
                     self.emit(Instruction::Call {
                         dest: None,
                         func_name: name,
@@ -452,13 +443,13 @@ impl Lowerer {
                     var_name: tmp_name.clone(),
                 });
                 let element_ty = match &expr_ty {
-                    ast::Type::Array(elem, _) => *elem.clone(),
+                    Type::Array(elem, _) => *elem.clone(),
                     _ => expr_ty.clone(),
                 };
                 for (idx, elem) in elements.into_iter().enumerate() {
                     let element_val = self.lower_expression(elem);
                     let index_val = self
-                        .typed_val(Value::IntConst(idx as FI64), ast::Type::Int);
+                        .typed_val(Value::IntConst(idx as FI64), Type::Int);
                     let slot_ptr = self.new_ptr_tmp(element_ty.clone());
                     self.emit(Instruction::GetElementPtr {
                         dest: slot_ptr.clone(),
@@ -490,7 +481,7 @@ impl Lowerer {
                     var_name: tmp_name.clone(),
                 });
                 let element_ty = match &expr_ty {
-                    ast::Type::Array(elem, _) => *elem.clone(),
+                    Type::Array(elem, _) => *elem.clone(),
                     _ => expr_ty.clone(),
                 };
                 let repeated_val = self.lower_expression(*value);
@@ -498,13 +489,13 @@ impl Lowerer {
                 self.tmp_counter += 1;
                 self.emit(Instruction::Alloca {
                     name: counter_name.clone(),
-                    ty: ast::Type::Int,
+                    ty: Type::Int,
                 });
-                let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+                let zero = self.typed_val(Value::IntConst(0), Type::Int);
                 self.emit(Instruction::Store {
                     dest: Address::Variable {
                         name: counter_name.clone(),
-                        ty: ast::Type::Int,
+                        ty: Type::Int,
                     },
                     val: zero,
                 });
@@ -513,20 +504,20 @@ impl Lowerer {
                 let exit_bb = self.new_block("repeat_exit");
                 self.set_terminator(Terminator::Jump(header_bb));
                 self.switch_to_block(header_bb);
-                let current_i = self.new_tmp_typed(ast::Type::Int);
+                let current_i = self.new_tmp_typed(Type::Int);
                 self.emit(Instruction::Load {
                     dest: current_i.clone(),
                     src: Address::Variable {
                         name: counter_name.clone(),
-                        ty: ast::Type::Int,
+                        ty: Type::Int,
                     },
                 });
                 let size_val = self
-                    .typed_val(Value::IntConst(size as FI64), ast::Type::Int);
-                let cond_val = self.new_tmp_typed(ast::Type::Bool);
+                    .typed_val(Value::IntConst(size as FI64), Type::Int);
+                let cond_val = self.new_tmp_typed(Type::Bool);
                 self.emit(Instruction::BinaryOperation {
                     dest: cond_val.clone(),
-                    op: ast::BinaryOp::Lt,
+                    op: BinaryOp::Lt,
                     op1: current_i.clone(),
                     op2: size_val,
                 });
@@ -550,18 +541,18 @@ impl Lowerer {
                     },
                     val: repeated_val.clone(),
                 });
-                let one = self.typed_val(Value::IntConst(1), ast::Type::Int);
-                let next_i = self.new_tmp_typed(ast::Type::Int);
+                let one = self.typed_val(Value::IntConst(1), Type::Int);
+                let next_i = self.new_tmp_typed(Type::Int);
                 self.emit(Instruction::BinaryOperation {
                     dest: next_i.clone(),
-                    op: ast::BinaryOp::Add,
+                    op: BinaryOp::Add,
                     op1: current_i,
                     op2: one,
                 });
                 self.emit(Instruction::Store {
                     dest: Address::Variable {
                         name: counter_name,
-                        ty: ast::Type::Int,
+                        ty: Type::Int,
                     },
                     val: next_i,
                 });
@@ -635,37 +626,37 @@ impl Lowerer {
         &mut self,
         array: sema::TypedExpression,
         index: sema::TypedExpression,
-        element_ty: ast::Type,
+        element_ty: Type,
     ) -> Address {
         let array_ty = array.ty.clone();
         let base_addr = self.lower_to_address(array);
         let index_val = self.lower_expression(index);
         let array_size = match array_ty {
-            ast::Type::Array(_, size) => size as FI64,
+            Type::Array(_, size) => size as FI64,
             _ => 0,
         };
         if array_size > 0 {
-            let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+            let zero = self.typed_val(Value::IntConst(0), Type::Int);
             let max_index = self
-                .typed_val(Value::IntConst(array_size - 1), ast::Type::Int);
-            let lt_zero = self.new_tmp_typed(ast::Type::Bool);
+                .typed_val(Value::IntConst(array_size - 1), Type::Int);
+            let lt_zero = self.new_tmp_typed(Type::Bool);
             self.emit(Instruction::BinaryOperation {
                 dest: lt_zero.clone(),
-                op: ast::BinaryOp::Lt,
+                op: BinaryOp::Lt,
                 op1: index_val.clone(),
                 op2: zero,
             });
-            let gt_max = self.new_tmp_typed(ast::Type::Bool);
+            let gt_max = self.new_tmp_typed(Type::Bool);
             self.emit(Instruction::BinaryOperation {
                 dest: gt_max.clone(),
-                op: ast::BinaryOp::Gt,
+                op: BinaryOp::Gt,
                 op1: index_val.clone(),
                 op2: max_index,
             });
-            let out_of_bounds = self.new_tmp_typed(ast::Type::Bool);
+            let out_of_bounds = self.new_tmp_typed(Type::Bool);
             self.emit(Instruction::BinaryOperation {
                 dest: out_of_bounds.clone(),
-                op: ast::BinaryOp::Or,
+                op: BinaryOp::Or,
                 op1: lt_zero,
                 op2: gt_max,
             });
@@ -713,7 +704,7 @@ impl Lowerer {
     fn emit_array_repeat_into(
         &mut self,
         base: Address,
-        element_ty: ast::Type,
+        element_ty: Type,
         size: FSize,
         value: sema::TypedExpression,
     ) {
@@ -723,13 +714,13 @@ impl Lowerer {
         self.tmp_counter += 1;
         self.emit(Instruction::Alloca {
             name: counter_name.clone(),
-            ty: ast::Type::Int,
+            ty: Type::Int,
         });
-        let zero = self.typed_val(Value::IntConst(0), ast::Type::Int);
+        let zero = self.typed_val(Value::IntConst(0), Type::Int);
         self.emit(Instruction::Store {
             dest: Address::Variable {
                 name: counter_name.clone(),
-                ty: ast::Type::Int,
+                ty: Type::Int,
             },
             val: zero,
         });
@@ -738,19 +729,19 @@ impl Lowerer {
         let exit_bb = self.new_block("repeat_exit");
         self.set_terminator(Terminator::Jump(header_bb));
         self.switch_to_block(header_bb);
-        let current_i = self.new_tmp_typed(ast::Type::Int);
+        let current_i = self.new_tmp_typed(Type::Int);
         self.emit(Instruction::Load {
             dest: current_i.clone(),
             src: Address::Variable {
                 name: counter_name.clone(),
-                ty: ast::Type::Int,
+                ty: Type::Int,
             },
         });
-        let size_val = self.typed_val(Value::IntConst(size as FI64), ast::Type::Int);
-        let cond_val = self.new_tmp_typed(ast::Type::Bool);
+        let size_val = self.typed_val(Value::IntConst(size as FI64), Type::Int);
+        let cond_val = self.new_tmp_typed(Type::Bool);
         self.emit(Instruction::BinaryOperation {
             dest: cond_val.clone(),
-            op: ast::BinaryOp::Lt,
+            op: BinaryOp::Lt,
             op1: current_i.clone(),
             op2: size_val,
         });
@@ -774,18 +765,18 @@ impl Lowerer {
             },
             val: repeated_val.clone(),
         });
-        let one = self.typed_val(Value::IntConst(1), ast::Type::Int);
-        let next_i = self.new_tmp_typed(ast::Type::Int);
+        let one = self.typed_val(Value::IntConst(1), Type::Int);
+        let next_i = self.new_tmp_typed(Type::Int);
         self.emit(Instruction::BinaryOperation {
             dest: next_i.clone(),
-            op: ast::BinaryOp::Add,
+            op: BinaryOp::Add,
             op1: current_i,
             op2: one,
         });
         self.emit(Instruction::Store {
             dest: Address::Variable {
                 name: counter_name,
-                ty: ast::Type::Int,
+                ty: Type::Int,
             },
             val: next_i,
         });
@@ -796,10 +787,10 @@ impl Lowerer {
         &mut self,
         base: sema::TypedExpression,
         field_index: FSize,
-        field_ty: ast::Type,
+        field_ty: Type,
     ) -> Address {
         let struct_name = match &base.ty {
-            ast::Type::Struct(name) => name.clone(),
+            Type::Struct(name) => name.clone(),
             _ => "unknown".to_string(),
         };
         let base_addr = self.lower_to_address(base);
@@ -821,8 +812,8 @@ impl Lowerer {
             TypedExpressionKind::Dereference(inner) => {
                 let ptr_val = self.lower_expression(*inner);
                 let pointed_to_ty = match &ptr_val.ty {
-                    ast::Type::Pointer(inner_ty) => *inner_ty.clone(),
-                    _ => ast::Type::Void,
+                    Type::Pointer(inner_ty) => *inner_ty.clone(),
+                    _ => Type::Void,
                 };
                 Address::Pointer {
                     val: ptr_val,
@@ -835,13 +826,35 @@ impl Lowerer {
             TypedExpressionKind::MemberAccess { base, field_index, .. } => {
                 self.lower_member_address(*base, field_index, expr.ty)
             }
-            _ => panic!("Expression is not an L-value"),
+            _ => {
+                // Self-host tolerance: materialise temporaries so address-taking
+                // of non-lvalues no longer aborts IR lowering.
+                let tmp_name = format!("tmp_lvalue_{}", self.tmp_counter);
+                self.tmp_counter += 1;
+                let tmp_ty = expr.ty.clone();
+                self.emit(Instruction::Alloca {
+                    name: tmp_name.clone(),
+                    ty: tmp_ty.clone(),
+                });
+                let tmp_val = self.lower_expression(expr);
+                self.emit(Instruction::Store {
+                    dest: Address::Variable {
+                        name: tmp_name.clone(),
+                        ty: tmp_ty.clone(),
+                    },
+                    val: tmp_val,
+                });
+                Address::Variable {
+                    name: tmp_name,
+                    ty: tmp_ty,
+                }
+            }
         }
     }
     fn resolve_address_to_value(&mut self, addr: Address) -> TypedValue {
         match addr {
             Address::Variable { name, ty } => {
-                let dest = self.new_tmp_typed(ast::Type::Pointer(Box::new(ty.clone())));
+                let dest = self.new_tmp_typed(Type::Pointer(Box::new(ty.clone())));
                 self.emit(Instruction::GetAddress {
                     dest: dest.clone(),
                     var_name: name,
@@ -852,7 +865,7 @@ impl Lowerer {
             Address::Element { base, index, element_ty } => {
                 let base_ptr = self.resolve_address_to_value(*base);
                 let dest = self
-                    .new_tmp_typed(ast::Type::Pointer(Box::new(element_ty.clone())));
+                    .new_tmp_typed(Type::Pointer(Box::new(element_ty.clone())));
                 self.emit(Instruction::GetElementPtr {
                     dest: dest.clone(),
                     base_ptr,
@@ -864,7 +877,7 @@ impl Lowerer {
             Address::Field { base, field_index, field_ty, struct_name } => {
                 let base_ptr = self.resolve_address_to_value(*base);
                 let dest = self
-                    .new_tmp_typed(ast::Type::Pointer(Box::new(field_ty.clone())));
+                    .new_tmp_typed(Type::Pointer(Box::new(field_ty.clone())));
                 self.emit(Instruction::GetFieldPtr {
                     dest: dest.clone(),
                     base_ptr,
@@ -877,3 +890,4 @@ impl Lowerer {
         }
     }
 }
+

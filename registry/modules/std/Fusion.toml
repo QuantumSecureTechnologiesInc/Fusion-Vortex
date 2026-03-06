@@ -1,0 +1,43 @@
+[package]
+name = "fusion_std"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Foundation: Fusion standard library extensions and panic-free error handling primitives"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "error-handling", "std", "primitives"]
+categories = ["development-tools", "no-std"]
+readme = "README.md"
+
+[package.metadata.integrations]
+inventory = "../../../docs/Integrations_Inventory.md"
+reference_bundles = [
+  "registry/crates/std/stdlib_docs/source_files_standard_lib",
+  "registry/crates/std/stdlib_docs/matth_downloads_standard_lib",
+  "registry/crates/std/stdlib_docs/fusion_integrations_3",
+]
+
+[features]
+default = []
+# No default features - users opt-in explicitly
+
+[dependencies]
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+fusion_core = { path = "../fusion-core", default-features = false, package = "fusion-core" }
+regex = "1.10"
+serde = { workspace = true, features = ["derive"] }
+serde_json = "1.0"
+thiserror = { workspace = true }
+tokio = { version = "1.37", features = ["rt", "time"] }
+unicode-normalization = "0.1"
+uuid = { version = "1.7", features = ["v4"] }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "error_handling"
+# harness = false
