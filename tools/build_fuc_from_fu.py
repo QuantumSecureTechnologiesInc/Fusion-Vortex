@@ -68,6 +68,10 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
     main_obj = artifacts / "main_selfhost.o"
     stage1_obj = artifacts / "pure_fusion_compiler_minimal.o"
     if stage0.suffix.lower() == ".exe":
+        stage1_bin = artifacts / "pure_fusion_compiler_minimal.exe"
+    else:
+        stage1_bin = artifacts / "pure_fusion_compiler_minimal"
+    if stage0.suffix.lower() == ".exe":
         stage1_boot_bin = artifacts / "pure_fusion_stage1_bootstrap.exe"
     else:
         stage1_boot_bin = artifacts / "pure_fusion_stage1_bootstrap"
@@ -111,6 +115,28 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
                 "parse/sema checks still passed."
             )
             all_codegen_ok = False
+        stage1_emit_bin_check = [
+            str(stage0),
+            str(stage1_fu),
+            "-o",
+            str(stage1_bin),
+            "--emit-bin",
+        ]
+        stage1_emit_bin_result = subprocess.run(stage1_emit_bin_check, check=False)
+        if stage1_emit_bin_result.returncode != 0:
+            print(
+                ">>> Warning: stage0 could not emit-bin "
+                "crates/fuc/src/pure_fusion_compiler_minimal.fu."
+            )
+            all_codegen_ok = False
+        else:
+            stage1_run_result = subprocess.run([str(stage1_bin)], check=False)
+            if stage1_run_result.returncode != 0:
+                print(
+                    ">>> Warning: stage1 minimal binary exited with "
+                    f"status {stage1_run_result.returncode}."
+                )
+                all_codegen_ok = False
     if stage1_boot_fu.exists():
         stage1_boot_codegen_check = [
             str(stage0),
@@ -418,7 +444,7 @@ def build() -> None:
     stage1_suffixes: list[str] = []
     if (FUC_DIR / "src" / "pure_fusion_compiler_minimal.fu").exists():
         stage1_suffixes.append(
-            "parse/sema/lib-object on crates/fuc/src/pure_fusion_compiler_minimal.fu"
+            "parse/sema/lib-object/emit-bin+run on crates/fuc/src/pure_fusion_compiler_minimal.fu"
         )
     if (FUC_DIR / "src" / "pure_fusion_stage1_bootstrap.fu").exists():
         stage1_suffixes.append(

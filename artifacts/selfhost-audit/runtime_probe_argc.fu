@@ -1,0 +1,9 @@
+extern fn fusion_argc() -> int;
+
+pub fn main() -> int {
+    let c = fusion_argc();
+    if c > 0 {
+        return 0;
+    }
+    return 0;
+}

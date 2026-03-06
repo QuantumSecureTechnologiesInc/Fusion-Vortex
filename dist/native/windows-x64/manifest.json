@@ -1,8 +1,8 @@
 ﻿{
     "product":  "Fusion v2.0 Vortex",
     "package":  "native-windows-x64",
-    "generated_at":  "2026-03-05T09:19:30.1409193+00:00",
-    "git_commit":  "deaf310",
+    "generated_at":  "2026-03-06T01:24:12.2275238+00:00",
+    "git_commit":  "7ae89e3",
     "compiler":  "bin/fuc.exe",
     "stdlib":  "stdlib/*.fu",
     "compat_modules":  [

@@ -1,0 +1,12 @@
+/mnt/c/Personal/Antigravity/Fusion v2.0 Vortex/target_fuc/release/deps/yansi-d61237d4e0b28111.d: /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/mnt/c/Personal/Antigravity/Fusion v2.0 Vortex/target_fuc/release/deps/libyansi-d61237d4e0b28111.rlib: /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/mnt/c/Personal/Antigravity/Fusion v2.0 Vortex/target_fuc/release/deps/libyansi-d61237d4e0b28111.rmeta: /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs:
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs:
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs:
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs:
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs:
+/home/sylburne/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs:

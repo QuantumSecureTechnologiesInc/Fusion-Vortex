@@ -73,6 +73,24 @@ if ($smokeCompileExit -eq 0 -and (Test-Path $SmokeExe)) {
     Add-Result -Name "smoke_regression.exe" -Phase "run" -ExitCode $LASTEXITCODE -ExpectedPass $true
 }
 
+# Stage1 mode transitions (argc-driven behaviour in pure stage1 scaffold)
+$Stage1ModeSrc = Join-Path $Root "crates\fuc\src\pure_fusion_compiler_minimal.fu"
+$Stage1ModeExe = Join-Path $Artifacts "stage1_mode_regression.exe"
+if (Test-Path $Stage1ModeSrc) {
+    $stage1CompileExit = Invoke-Fuc $Stage1ModeSrc "-o" $Stage1ModeExe "--emit-bin"
+    Add-Result -Name "pure_fusion_compiler_minimal.fu" -Phase "emit-bin-stage1-mode" -ExitCode $stage1CompileExit -ExpectedPass $true
+    if ($stage1CompileExit -eq 0 -and (Test-Path $Stage1ModeExe)) {
+        & $Stage1ModeExe *> $null
+        Add-Result -Name "stage1_mode_regression.exe" -Phase "run-argc1" -ExitCode $LASTEXITCODE -ExpectedPass $true
+
+        & $Stage1ModeExe "--sema-only" *> $null
+        Add-Result -Name "stage1_mode_regression.exe" -Phase "run-argc2" -ExitCode $LASTEXITCODE -ExpectedPass $true
+
+        & $Stage1ModeExe "--emit-bin" "--opt" *> $null
+        Add-Result -Name "stage1_mode_regression.exe" -Phase "run-argc3" -ExitCode $LASTEXITCODE -ExpectedPass $true
+    }
+}
+
 $fixturesDir = Join-Path $Root "crates\fuc\tests\fixtures"
 $unsupportedAdvanced = @(
     "closures.fu",

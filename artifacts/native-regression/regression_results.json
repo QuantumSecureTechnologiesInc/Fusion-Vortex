@@ -1,9 +1,9 @@
 ﻿{
     "summary":  {
-                    "timestamp":  "2026-03-05T23:59:27.4395239+00:00",
+                    "timestamp":  "2026-03-06T01:24:11.5455609+00:00",
                     "compiler":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\target\\release\\fuc.exe",
-                    "total":  40,
-                    "passed":  40,
+                    "total":  44,
+                    "passed":  44,
                     "failed":  0
                 },
     "results":  [
@@ -17,6 +17,34 @@
                     {
                         "name":  "smoke_regression.exe",
                         "phase":  "run",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "pure_fusion_compiler_minimal.fu",
+                        "phase":  "emit-bin-stage1-mode",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_mode_regression.exe",
+                        "phase":  "run-argc1",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_mode_regression.exe",
+                        "phase":  "run-argc2",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_mode_regression.exe",
+                        "phase":  "run-argc3",
                         "exit_code":  0,
                         "expected_pass":  true,
                         "passed":  true

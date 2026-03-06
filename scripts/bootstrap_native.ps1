@@ -33,6 +33,7 @@ $SmokeExe = Join-Path $ArtifactsDir "smoke_main.exe"
 $SmokeObj = Join-Path $ArtifactsDir "smoke_main.o"
 $Stage1Src = Join-Path $Root "crates\fuc\src\pure_fusion_compiler_minimal.fu"
 $Stage1Obj = Join-Path $ArtifactsDir "pure_fusion_compiler_minimal.o"
+$Stage1Exe = Join-Path $ArtifactsDir "pure_fusion_compiler_minimal.exe"
 $Stage1BootSrc = Join-Path $Root "crates\fuc\src\pure_fusion_stage1_bootstrap.fu"
 $Stage1BootExe = Join-Path $ArtifactsDir "pure_fusion_stage1_bootstrap.exe"
 
@@ -77,6 +78,15 @@ if (Test-Path $Stage1Src) {
     & $CompilerExe --lib $Stage1Src -o $Stage1Obj
     if ($LASTEXITCODE -ne 0) {
         throw "Stage1 compiler source object build failed"
+    }
+    Write-Host ">>> Validating stage1 compiler source as native executable..." -ForegroundColor Yellow
+    & $CompilerExe $Stage1Src -o $Stage1Exe --emit-bin
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stage1 compiler source executable build failed"
+    }
+    & $Stage1Exe
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stage1 compiler source executable failed"
     }
 }
 

@@ -1,0 +1,6 @@
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main(argc: int) -> int {
+    printf("argc=%d\n", argc);
+    return 0;
+}

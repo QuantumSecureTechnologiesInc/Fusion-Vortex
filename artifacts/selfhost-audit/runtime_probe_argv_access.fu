@@ -1,0 +1,7 @@
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main(argc: int, argv: *string) -> int {
+    let a0 = *argv;
+    printf("argc=%d a0=%s\n", argc, a0);
+    return 0;
+}

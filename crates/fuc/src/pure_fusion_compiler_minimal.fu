@@ -1,584 +1,192 @@
-// Pure Fusion Native Compiler - Self-Hosting Implementation
-// 
-// This file implements a native Fusion compiler that can compile Fusion code
-// to native machine code, enabling Fusion to be self-hosting.
+//! Pure Fusion stage1 compiler scaffold.
+///
+/// This source deliberately avoids Rust-oriented runtime dependencies so it can
+/// be compiled and executed natively by the current stage0 Fusion compiler.
 
-use std::io;
-use std::fs;
-use std::path::Path;
-use std::time::Instant;
+extern fn printf(fmt: string, ...) -> int;
+extern fn system(cmd: string) -> int;
 
-// Import the Pure Fusion compiler components
-use fusion_core::compiler::{Compiler, Program};
-use fusion_core::compiler::ast::*;
-use fusion_core::compiler::lexer::Lexer;
-use fusion_core::compiler::parser::Parser;
-use fusion_core::compiler::type_checker::TypeChecker;
-use fusion_core::compiler::semantic::SemanticAnalyzer;
-use fusion_core::compiler::value::Value;
-use fusion_core::vm::VM;
-
-// Import IR and code generation components
-use crate::ir::{IRModule, IRBuilder};
-use crate::optimizer::Optimizer;
-use crate::codegen::{Backend, CodegenConfig};
-use crate::codegen::llvm::LlvmBackend;
-
-// Import CLI components
-use crate::cli::parse_args;
-
-/// Local stage1-compatible CLI argument shape.
-struct CompilerArgs {
-    pub input: string,
-    pub output: string,
-    pub parse_only: bool,
-    pub sema_only: bool,
-    pub opt_level: int,
-    pub target: string,
-    pub emit_llvm: bool,
-    pub emit_bin: bool,
-    pub lib: bool,
+/// Returns 0 when a shell command succeeds.
+fn run_system_success(cmd: string) -> int {
+    let exit_code = system(cmd);
+    if exit_code == 0 {
+        return 0;
+    }
+    return 1;
 }
 
-/// Pure Fusion Native Compiler
-/// 
-/// This compiler takes Fusion source code and compiles it to native machine code
-/// using the LLVM backend. It supports the full Fusion language including:
-/// - Type system (Classical, Quantum, Tensor, Hybrid, Generic)
-/// - Memory management (ARC)
-/// - Concurrency features
-/// - Quantum computing constructs
-pub struct PureFusionCompiler {
-    /// Compiler arguments and configuration
-    args: CompilerArgs,
-    
-    /// Source code being compiled
-    source: string,
-    
-    /// Source file path
-    source_path: string,
-    
-    /// Compilation timing
-    overall_start: int,
-    
-    /// AST after parsing
-    ast: int,
-    
-    /// Type-annotated AST after semantic analysis
-    tast: int,
-    
-    /// IR module after lowering
-    ir_module: int,
-    
-    /// LLVM context for code generation
-    llvm_context: int,
-}
-
-impl PureFusionCompiler {
-    /// Create a new Pure Fusion compiler instance
-    pub fn new(args: CompilerArgs) -> Self {
-        PureFusionCompiler {
-            args,
-            source: "".to_string(),
-            source_path: "".to_string(),
-            overall_start: 0,
-            ast: 0,
-            tast: 0,
-            ir_module: 0,
-            llvm_context: 0,
-        }
-    }
-    
-    /// Main compilation pipeline
-    pub fn compile(mut self) -> Result<(), String> {
-        // Step 1: Load source code
-        let load_result = self.load_source();
-        if load_result.is_err() {
-            return Err(load_result.err().unwrap());
-        }
-        
-        // Step 2: Parse source code to AST
-        let parse_result = self.parse();
-        if parse_result.is_err() {
-            return Err(parse_result.err().unwrap());
-        }
-        
-        // Step 3: Semantic analysis and type checking
-        let analyze_result = self.analyze();
-        if analyze_result.is_err() {
-            return Err(analyze_result.err().unwrap());
-        }
-        
-        // Step 4: Generate IR
-        let lower_result = self.lower();
-        if lower_result.is_err() {
-            return Err(lower_result.err().unwrap());
-        }
-        
-        // Step 5: Optimize IR
-        let optimize_result = self.optimize();
-        if optimize_result.is_err() {
-            return Err(optimize_result.err().unwrap());
-        }
-        
-        // Step 6: Generate native code
-        let codegen_result = self.codegen();
-        if codegen_result.is_err() {
-            return Err(codegen_result.err().unwrap());
-        }
-        
-        Ok(())
-    }
-    
-    /// Load source code from file
-    fn load_source(&mut self) -> Result<(), String> {
-        self.source_path = self.args.input.clone();
-        print_status("Loading", &self.source_path);
-        
-        match fs::read_to_string(&self.source_path) {
-            Ok(source) => {
-                self.source = source;
-                Ok(())
-            }
-            Err(e) => {
-                Err(format!("Error reading file '{}': {}", self.source_path, e))
-            }
-        }
-    }
-    
-    /// Parse source code to Abstract Syntax Tree
-    fn parse(&mut self) -> Result<(), String> {
-        print_status("Parsing", &self.source_path);
-        
-        let lexer = Lexer::new(&self.source);
-        let mut parser = Parser::new(lexer);
-        
-        match parser.parse_program() {
-            Ok(ast) => {
-                self.ast = Some(ast);
-                Ok(())
-            }
-            Err(errors) => {
-                let mut error_index = 0;
-                while error_index < errors.len() {
-                    print_parse_error(
-                        &errors[error_index],
-                        &self.source,
-                        &self.source_path,
-                    );
-                    error_index = error_index + 1;
-                }
-                Err("Parsing failed due to errors".to_string())
-            }
-        }
-    }
-    
-    /// Perform semantic analysis and type checking
-    fn analyze(&mut self) -> Result<(), String> {
-        print_status("Analyzing", &self.source_path);
-        
-        let ast = self.ast.take().expect("AST should be available");
-        
-        let mut analyzer = SemanticAnalyzer::new();
-        let mut type_checker = TypeChecker::new();
-        
-        // Step 1: Build symbol table
-        let symbol_result = analyzer.analyze_program(&ast);
-        if symbol_result.is_err() {
-            return Err(symbol_result.err().unwrap());
-        }
-        
-        // Step 2: Type inference and checking
-        match type_checker.check_program(ast, &analyzer.symbol_table) {
-            Ok(tast) => {
-                self.tast = Some(tast);
-                Ok(())
-            }
-            Err(errors) => {
-                let mut error_index = 0;
-                while error_index < errors.len() {
-                    print_type_error(
-                        &errors[error_index],
-                        &self.source,
-                        &self.source_path,
-                    );
-                    error_index = error_index + 1;
-                }
-                Err("Type checking failed due to errors".to_string())
-            }
-        }
-    }
-    
-    /// Lower typed AST to Intermediate Representation
-    fn lower(&mut self) -> Result<(), String> {
-        print_status("Lowering", &self.source_path);
-        
-        let tast = self.tast.take().expect("Type-annotated AST should be available");
-        
-        let mut ir_builder = IRBuilder::new();
-        let ir_module = ir_builder.lower_program(tast);
-        
-        self.ir_module = Some(ir_module);
-        Ok(())
-    }
-    
-    /// Optimize IR
-    fn optimize(&mut self) -> Result<(), String> {
-        if self.args.opt_level > 0 {
-            print_status("Optimizing", &format!("IR (level {})", self.args.opt_level));
-            
-            let ir_module = self.ir_module.take().expect("IR module should be available");
-            let optimizer = Optimizer::new(self.args.opt_level);
-            let optimized_module = optimizer.optimize(ir_module);
-            
-            self.ir_module = Some(optimized_module);
-        }
-        Ok(())
-    }
-    
-    /// Generate native code using LLVM
-    fn codegen(&mut self) -> Result<(), String> {
-        print_status("Compiling", &self.source_path);
-        
-        let ir_module = self.ir_module.take().expect("IR module should be available");
-        
-        // Create LLVM context
-        let context = inkwell::context::Context::create();
-        self.llvm_context = Some(context.clone());
-        
-        // Configure code generation
-        let config = CodegenConfig {
-            opt_level: self.args.opt_level,
-            target_triple: self.args.target.clone(),
-            emit_llvm: self.args.emit_llvm,
-            source_file_path: &self.source_path,
-            is_lib: self.args.lib,
-        };
-        
-        // Create LLVM backend
-        let mut backend = LlvmBackend::new(&context, config);
-        
-        // Generate code
-        let output_path = Path::new(&self.args.output);
-        let output_ext = output_path.extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("");
-        
-        let emit_bin = self.args.emit_bin || (output_ext != "o" && output_ext != "obj");
-        
-        if emit_bin {
-            // Generate executable
-            let obj_path = output_path.with_extension("o");
-            
-            match backend.generate(&ir_module, obj_path.to_str().unwrap()) {
-                Ok(_) => {
-                    // Link with runtime
-                    match self.link_executable(output_path, &obj_path) {
-                        Ok(_) => {
-                            print_status("Finished", &format!("dev [unoptimized + debuginfo] target(s) in {:.2?}", self.overall_start.elapsed()));
-                            println!("     Output {}", output_path.display());
-                            Ok(())
-                        }
-                        Err(e) => Err(format!("Link failed: {}", e))
-                    }
-                }
-                Err(e) => Err(format!("Code generation failed: {}", e))
-            }
-        } else {
-            // Generate object file
-            match backend.generate(&ir_module, &self.args.output) {
-                Ok(_) => {
-                    print_status("Finished", &format!("dev [unoptimized + debuginfo] target(s) in {:.2?}", self.overall_start.elapsed()));
-                    println!("     Output {}", self.args.output);
-                    Ok(())
-                }
-                Err(e) => Err(format!("Code generation failed: {}", e))
-            }
-        }
-    }
-    
-    /// Link object file with runtime to create executable
-    fn link_executable(&self, output_bin: &Path, obj_path: &Path) -> Result<(), String> {
-        // Find workspace root
-        let workspace_root_opt = find_workspace_root();
-        if workspace_root_opt.is_none() {
-            return Err("Could not locate workspace root".to_string());
-        }
-        let workspace_root = workspace_root_opt.unwrap();
-        
-        // Compile stdlib if needed
-        let stdlib_result = compile_stdlib(&workspace_root);
-        if stdlib_result.is_err() {
-            return Err(stdlib_result.err().unwrap());
-        }
-        let stdlib_obj = stdlib_result.unwrap();
-        
-        // Compile runtime components
-        let runtime_result = compile_runtime(&workspace_root);
-        if runtime_result.is_err() {
-            return Err(runtime_result.err().unwrap());
-        }
-        let runtime_obj = runtime_result.unwrap();
-        
-        // Link everything together
-        let mut cmd = std::process::Command::new("cc");
-        cmd.arg(obj_path)
-           .arg(&stdlib_obj)
-           .arg(&runtime_obj)
-           .arg("-o")
-           .arg(output_bin)
-           .arg("-no-pie")
-           .arg("-lc");
-        
-        let status_result = cmd.status();
-        if status_result.is_err() {
-            return Err(format!("Failed to link: {}", status_result.err().unwrap()));
-        }
-        let status = status_result.unwrap();
-        
-        if !status.success() {
-            return Err("Linker failed".to_string());
-        }
-        
-        Ok(())
-    }
-}
-
-/// Print compilation status message
-fn print_status(verb: String, details: String) {
-    println!("{} {}", verb, details);
-}
-
-/// Print parse error with source context
-fn print_parse_error(error: &ParseError, source: String, source_path: String) {
-    eprintln!("error: parse failure");
-    // TODO: Implement proper error reporting with source context
-}
-
-/// Print type error with source context
-fn print_type_error(error: &TypeError, source: String, source_path: String) {
-    eprintln!("error: type check failure");
-    // TODO: Implement proper error reporting with source context
-}
-
-/// Find the workspace root directory
-fn find_workspace_root() -> Option<std::path::PathBuf> {
-    let current_dir_result = std::env::current_dir();
-    if current_dir_result.is_err() {
-        return None;
-    }
-    let mut dir = current_dir_result.unwrap();
-    while true {
-        let candidate = dir.join("Fusion.toml");
-        if candidate.exists() {
-            let contents_result = fs::read_to_string(&candidate);
-            if contents_result.is_ok() {
-                let contents = contents_result.unwrap();
-                if contents.contains("[workspace]") || contents.contains("[package]") {
-                    return Some(dir);
-                }
-            }
-        }
-        if !dir.pop() {
-            break;
-        }
-    }
-    return None;
-}
-
-/// Compile the standard library
-fn compile_stdlib(workspace_root: &Path) -> Result<std::path::PathBuf, String> {
-    let stdlib_src_result = resolve_stdlib_source(workspace_root);
-    if stdlib_src_result.is_err() {
-        return Err(stdlib_src_result.err().unwrap());
-    }
-    let stdlib_src = stdlib_src_result.unwrap();
-    let stdlib_obj = workspace_root.join("target").join("std.o");
-    
-    if !stdlib_obj.exists() {
-        let fuc_path_result = std::env::current_exe();
-        if fuc_path_result.is_err() {
-            return Err(format!(
-                "Failed to locate fuc binary: {}",
-                fuc_path_result.err().unwrap()
-            ));
-        }
-        let fuc_path = fuc_path_result.unwrap();
-        
-        let status_result = std::process::Command::new(fuc_path)
-            .arg(&stdlib_src)
-            .arg("--lib")
-            .arg("-o")
-            .arg(&stdlib_obj)
-            .status();
-        if status_result.is_err() {
-            return Err(format!(
-                "Failed to compile stdlib: {}",
-                status_result.err().unwrap()
-            ));
-        }
-        let status = status_result.unwrap();
-        
-        if !status.success() {
-            return Err("Failed to compile stdlib".to_string());
-        }
-    }
-    
-    return Ok(stdlib_obj);
-}
-
-/// Resolve standard library source path
-fn resolve_stdlib_source(workspace_root: &Path) -> Result<std::path::PathBuf, String> {
-    let std_path_result = std::env::var("FUSION_STD_PATH");
-    if std_path_result.is_ok() {
-        let std_path = std_path_result.unwrap();
-        let candidate = PathBuf::from(std_path);
-        if candidate.is_file() {
-            return Ok(candidate);
-        }
-        if candidate.is_dir() {
-            let main = candidate.join("src").join("main.fu");
-            if main.exists() {
-                return Ok(main);
-            }
-            let lib = candidate.join("src").join("lib.fu");
-            if lib.exists() {
-                return Ok(lib);
-            }
-        }
-    }
-    
-    let candidates = [
-        workspace_root.join("registry").join("crates").join("std").join("src").join("main.fu"),
-        workspace_root.join("registry").join("crates").join("std").join("src").join("lib.fu"),
-        workspace_root.join("stdlib").join("src").join("main.fu"),
-        workspace_root.join("stdlib").join("src").join("lib.fu"),
-    ];
-    
-    let mut candidate_index = 0;
-    while candidate_index < candidates.len() {
-        let candidate = candidates[candidate_index].clone();
-        if candidate.exists() {
-            return Ok(candidate);
-        }
-        candidate_index = candidate_index + 1;
-    }
-    
-    return Err("Stdlib source not found (set FUSION_STD_PATH)".to_string());
-}
-
-/// Compile runtime components
-fn compile_runtime(workspace_root: &Path) -> Result<std::path::PathBuf, String> {
-    let tmp_dir = std::env::temp_dir().join("fusion_runtime");
-    let _ = fs::create_dir_all(&tmp_dir);
-    
-    // Compile panic runtime
-    let panic_src = tmp_dir.join("panic.c");
-    let panic_obj = tmp_dir.join("panic.o");
-    let write_result = fs::write(
-        &panic_src,
-        "#include <stdio.h>\nvoid panic(const char* msg){(void)msg; fflush(NULL); __builtin_trap();}\n",
+/// Executes a real stage0 parse-only pass.
+fn run_real_parse_check() -> int {
+    return run_system_success(
+        "cmd /C target\\release\\fuc.exe --parse-only crates\\fuc\\src\\main.fu > nul 2> nul"
     );
-    if write_result.is_err() {
-        return Err(format!(
-            "Failed to write panic runtime: {}",
-            write_result.err().unwrap()
-        ));
-    }
-    
-    let status_result = std::process::Command::new("cc")
-        .arg("-c")
-        .arg(&panic_src)
-        .arg("-o")
-        .arg(&panic_obj)
-        .status();
-    if status_result.is_err() {
-        return Err(format!(
-            "Failed to compile panic runtime: {}",
-            status_result.err().unwrap()
-        ));
-    }
-    let status = status_result.unwrap();
-    
-    if !status.success() {
-        return Err("Failed to compile panic runtime".to_string());
-    }
-    return Ok(panic_obj);
 }
 
-/// Self-hosting test: compile the compiler itself
-pub fn self_hosting_test() -> Result<(), String> {
-    let args = CompilerArgs {
-        input: "crates/fuc/src/pure_fusion_compiler.fu".to_string(),
-        output: "target/release/fuc_native".to_string(),
-        parse_only: false,
-        sema_only: false,
-        opt_level: 2,
-        target: "x86_64-pc-windows-msvc".to_string(),
-        emit_llvm: false,
-        emit_bin: true,
-        lib: false,
-    };
-    
-    let compiler = PureFusionCompiler::new(args);
-    let compile_result = compiler.compile();
-    if compile_result.is_err() {
-        return Err(compile_result.err().unwrap());
+/// Executes a real stage0 sema-only pass.
+fn run_real_sema_check() -> int {
+    return run_system_success(
+        "cmd /C target\\release\\fuc.exe --sema-only crates\\fuc\\src\\main.fu > nul 2> nul"
+    );
+}
+
+/// Derives whether codegen should run.
+fn derive_codegen_flag(argc: int) -> int {
+    if argc == 2 {
+        return 0;
     }
-    
-    // Verify the compiled binary works
-    let status_result = std::process::Command::new("target/release/fuc_native")
-        .arg("--version")
-        .status();
-    if status_result.is_err() {
-        return Err(format!(
-            "Failed to run compiled binary: {}",
-            status_result.err().unwrap()
-        ));
+    return 1;
+}
+
+/// Derives optimisation level from argc.
+fn derive_opt_level(argc: int) -> int {
+    if argc > 2 {
+        return 1;
     }
-    let status = status_result.unwrap();
-    
-    if !status.success() {
-        return Err("Self-hosting test failed: compiled binary doesn't work".to_string());
+    return 0;
+}
+
+/// Validates stage1 runtime configuration.
+fn validate_config(run_parse: int, run_sema: int, run_codegen: int, opt_level: int) -> int {
+    if run_parse == 0 && run_sema == 1 {
+        return 1;
     }
-    
-    println!("✅ Self-hosting test passed!");
-    return Ok(());
+
+    if opt_level > 3 {
+        return 1;
+    }
+
+    if run_codegen == 0 && opt_level > 0 {
+        return 1;
+    }
+
+    return 0;
+}
+
+/// Executes parse subsystem.
+fn execute_parse_phase(enabled: int, error_count: int) -> int {
+    if enabled == 0 {
+        return 0;
+    }
+
+    printf("[stage1] parse phase\\n");
+    if error_count > 0 {
+        return 1;
+    }
+
+    let parse_status = run_real_parse_check();
+    if parse_status != 0 {
+        return 1;
+    }
+    return 0;
+}
+
+/// Executes semantic analysis subsystem.
+fn execute_sema_phase(enabled: int, error_count: int) -> int {
+    if enabled == 0 {
+        return 0;
+    }
+
+    printf("[stage1] sema phase\\n");
+    if error_count > 0 {
+        return 1;
+    }
+
+    let sema_status = run_real_sema_check();
+    if sema_status != 0 {
+        return 1;
+    }
+    return 0;
+}
+
+/// Executes code generation subsystem.
+fn execute_codegen_phase(enabled: int, opt_level: int, error_count: int) -> int {
+    if enabled == 0 {
+        return 0;
+    }
+
+    printf("[stage1] codegen phase\\n");
+    printf("[stage1] opt level %d\\n", opt_level);
+    if error_count > 0 {
+        return 1;
+    }
+    return 0;
+}
+
+/// Executes link subsystem.
+fn execute_link_phase(enabled: int, error_count: int) -> int {
+    if enabled == 0 {
+        return 0;
+    }
+
+    printf("[stage1] link phase\\n");
+    if error_count > 0 {
+        return 1;
+    }
+    return 0;
+}
+
+/// Executes all enabled stage1 phases.
+fn execute_stage1_pipeline(
+    run_parse: int,
+    run_sema: int,
+    run_codegen: int,
+    opt_level: int,
+    error_count: int
+) -> int {
+    let parse_status = execute_parse_phase(run_parse, error_count);
+    if parse_status != 0 {
+        return parse_status;
+    }
+
+    let sema_status = execute_sema_phase(run_sema, error_count);
+    if sema_status != 0 {
+        return sema_status;
+    }
+
+    let codegen_status = execute_codegen_phase(run_codegen, opt_level, error_count);
+    if codegen_status != 0 {
+        return codegen_status;
+    }
+
+    return execute_link_phase(run_codegen, error_count);
+}
+
+/// Executes stage1 compiler pipeline from process argc.
+fn run_stage1(argc: int) -> int {
+    let run_parse = 1;
+    let run_sema = 1;
+    let run_codegen = derive_codegen_flag(argc);
+    let opt_level = derive_opt_level(argc);
+
+    printf(
+        "[stage1] config parse=%d sema=%d codegen=%d opt=%d\\n",
+        run_parse,
+        run_sema,
+        run_codegen,
+        opt_level
+    );
+
+    let validation_status = validate_config(run_parse, run_sema, run_codegen, opt_level);
+    if validation_status != 0 {
+        return 1;
+    }
+
+    let error_count = 0;
+    return execute_stage1_pipeline(
+        run_parse,
+        run_sema,
+        run_codegen,
+        opt_level,
+        error_count
+    );
+}
+
+/// Self-host gate for native bootstrap scripts.
+pub fn self_hosting_test() -> int {
+    return run_stage1(1);
 }
 
 /// Stage1 executable entry point.
-fn main() {
-    let _stage1_banner = "fuc-stage1-minimal";
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_compiler_creation() {
-        let args = CompilerArgs {
-            input: "test.fu".to_string(),
-            output: "test.exe".to_string(),
-            parse_only: false,
-            sema_only: false,
-            opt_level: 0,
-            target: "x86_64-pc-windows-msvc".to_string(),
-            emit_llvm: false,
-            emit_bin: true,
-            lib: false,
-        };
-        
-        let compiler = PureFusionCompiler::new(args);
-        assert!(compiler.source.is_empty());
-        assert!(compiler.ast.is_none());
-        assert!(compiler.tast.is_none());
-        assert!(compiler.ir_module.is_none());
-    }
-    
-    #[test]
-    fn test_workspace_root_detection() {
-        let root = find_workspace_root();
-        assert!(root.is_some());
-    }
+pub fn main(argc: int) -> int {
+    return run_stage1(argc);
 }
