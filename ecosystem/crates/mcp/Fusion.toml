@@ -1,5 +1,5 @@
 [package]
-name = "fusion-mcp"
+name = "mcp"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -16,3 +16,4 @@ async-trait = { workspace = true }
 tracing = { workspace = true }
 reqwest = { workspace = true }
 fusion_std = "1.0.0"
+

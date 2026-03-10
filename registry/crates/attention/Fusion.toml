@@ -1,5 +1,5 @@
 [package]
-name = "fusion_attention"
+name = "attention"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -22,4 +22,5 @@ criterion = { workspace = true }
 # [[bench]]
 # name = "attention_benchmark"
 # harness = false
+
 

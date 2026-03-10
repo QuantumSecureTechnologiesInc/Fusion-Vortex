@@ -1,5 +1,5 @@
 [package]
-name = "fusion_server_faas"
+name = "faas"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -16,5 +16,6 @@ fusion_std = { workspace = true }
 fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+
 
 

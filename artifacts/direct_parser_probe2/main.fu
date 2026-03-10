@@ -1,0 +1,12 @@
+mod ast;
+mod lexer;
+mod parser;
+
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main() -> int {
+    let s = "pub fn x() -> int { return 0; }";
+    let st = parser::parse_status(s);
+    printf("st=%d\n", st);
+    return 0;
+}

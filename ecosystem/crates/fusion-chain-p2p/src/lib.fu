@@ -1,0 +1,71 @@
+use std::collections::BTreeMap;
+
+#[derive(Debug, Clone)]
+pub struct PeerEndpoint {
+    pub id: String,
+    pub address: String,
+    pub validator_key_hex: String,
+    pub score: i64,
+    pub last_seen_unix: u64,
+    pub outbound: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum PeerPenalty {
+    InvalidSignature,
+    Spam,
+    SlowResponse,
+    Equivocation,
+}
+
+pub struct PeerRegistry {
+    peers: BTreeMap<String, PeerEndpoint>,
+    max_peers: usize,
+}
+
+impl PeerRegistry {
+    pub fn new(max_peers: usize) -> Self {
+        Self {
+            peers: BTreeMap::new(),
+            max_peers,
+        }
+    }
+
+    pub fn count(&self) -> usize {
+        self.peers.len()
+    }
+
+    pub fn register(&mut self, mut peer: PeerEndpoint) -> Result<(), String> {
+        if !self.peers.contains_key(&peer.id) && self.peers.len() >= self.max_peers {
+            return Err("peer capacity reached".to_string());
+        }
+        peer.score = peer.score.max(0);
+        self.peers.insert(peer.id.clone(), peer);
+        Ok(())
+    }
+
+    pub fn mark_seen(&mut self, peer_id: &str, seen_unix: u64) {
+        if let Some(peer) = self.peers.get_mut(peer_id) {
+            peer.last_seen_unix = seen_unix;
+            peer.score = peer.score.saturating_add(1);
+        }
+    }
+
+    pub fn apply_penalty(&mut self, peer_id: &str, penalty: PeerPenalty) {
+        if let Some(peer) = self.peers.get_mut(peer_id) {
+            let value = match penalty {
+                PeerPenalty::InvalidSignature => 50,
+                PeerPenalty::Spam => 25,
+                PeerPenalty::SlowResponse => 5,
+                PeerPenalty::Equivocation => 100,
+            };
+            peer.score = peer.score.saturating_sub(value);
+        }
+    }
+
+    pub fn top_gossip_set(&self, target_count: usize) -> Vec<PeerEndpoint> {
+        let mut ranked: Vec<&PeerEndpoint> = self.peers.values().collect();
+        ranked.sort_by(|a, b| b.score.cmp(&a.score).then(b.last_seen_unix.cmp(&a.last_seen_unix)));
+        ranked.into_iter().take(target_count).cloned().collect()
+    }
+}

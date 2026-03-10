@@ -1,6 +1,0 @@
-extern fn printf(fmt: string, ...) -> int;
-
-pub fn main(argc: int, arg1: string) -> int {
-    printf("argc=%d arg1=%s\n", argc, arg1);
-    return 0;
-}

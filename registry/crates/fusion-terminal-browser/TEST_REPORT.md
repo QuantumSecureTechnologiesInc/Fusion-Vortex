@@ -70,7 +70,7 @@ Time: 0.35s
 
 - WebGPU initialization
 - Graceful fallback when disabled
-- Mock GPU processing
+- Simulated GPU processing in controlled tests
 
 ### ✅ Browser Initialization
 

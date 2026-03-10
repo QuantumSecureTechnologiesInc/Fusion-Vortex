@@ -12,7 +12,7 @@ Fusion Tester (`fusion-tester`) is the unified testing framework for the Fusion 
 
 - **Test Discovery**: Automatically finds `#[test]` functions
 - **Assertions**: `assert_eq!`, `assert_throws!`, etc.
-- **Mocking**: Built-in mocking utilities
+- **Test Doubles**: Built-in test-double utilities
 - **Reporting**: Colored output and JUnit XML export
 
 ## Usage

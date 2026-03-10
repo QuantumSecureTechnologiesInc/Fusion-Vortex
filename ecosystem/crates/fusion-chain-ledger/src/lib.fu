@@ -1,0 +1,235 @@
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+use std::path::Path;
+
+use fusion_chain_primitives::{zero_hash, BlockHeader, Hash32};
+
+#[derive(Debug, Clone)]
+pub struct LedgerEntry {
+    pub height: u64,
+    pub block_hash: Hash32,
+    pub parent_hash: Hash32,
+    pub timestamp_unix: u64,
+    pub tx_count: usize,
+}
+
+pub struct AppendOnlyLedger {
+    entries: Vec<LedgerEntry>,
+    log_path: Option<String>,
+}
+
+impl AppendOnlyLedger {
+    pub fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+            log_path: None,
+        }
+    }
+
+    pub fn open_or_create(path: &str) -> Result<Self, String> {
+        let path_ref = Path::new(path);
+        if let Some(parent) = path_ref.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("failed to create ledger directory: {}", e))?;
+        }
+        if !path_ref.exists() {
+            fs::write(path_ref, b"")
+                .map_err(|e| format!("failed to create ledger file: {}", e))?;
+        }
+
+        let mut ledger = Self {
+            entries: Vec::new(),
+            log_path: Some(path.to_string()),
+        };
+        ledger.load_from_disk()?;
+        Ok(ledger)
+    }
+
+    pub fn latest_height(&self) -> u64 {
+        self.entries.last().map(|e| e.height).unwrap_or(0)
+    }
+
+    pub fn latest_hash(&self) -> Hash32 {
+        self.entries
+            .last()
+            .map(|e| e.block_hash)
+            .unwrap_or_else(zero_hash)
+    }
+
+    pub fn append(
+        &mut self,
+        header: &BlockHeader,
+        block_hash: Hash32,
+        tx_count: usize,
+    ) -> Result<LedgerEntry, String> {
+        let expected_height = self.latest_height() + 1;
+        if header.height != expected_height {
+            return Err(format!(
+                "expected height {}, got {}",
+                expected_height, header.height
+            ));
+        }
+
+        let expected_parent = self.latest_hash();
+        if header.parent_hash != expected_parent {
+            return Err("parent hash does not match ledger tip".to_string());
+        }
+
+        let entry = LedgerEntry {
+            height: header.height,
+            block_hash,
+            parent_hash: header.parent_hash,
+            timestamp_unix: header.timestamp_unix,
+            tx_count,
+        };
+        self.persist_entry(&entry)?;
+        self.entries.push(entry.clone());
+        Ok(entry)
+    }
+
+    pub fn by_height(&self, height: u64) -> Option<&LedgerEntry> {
+        self.entries.iter().find(|e| e.height == height)
+    }
+
+    pub fn verify_integrity(&self) -> bool {
+        let mut previous = zero_hash();
+        let mut expected_height = 1u64;
+        for entry in &self.entries {
+            if entry.height != expected_height {
+                return false;
+            }
+            if entry.parent_hash != previous {
+                return false;
+            }
+            previous = entry.block_hash;
+            expected_height += 1;
+        }
+        true
+    }
+
+    fn persist_entry(&self, entry: &LedgerEntry) -> Result<(), String> {
+        let Some(path) = &self.log_path else {
+            return Ok(());
+        };
+
+        let mut file = OpenOptions::new()
+            .append(true)
+            .open(path)
+            .map_err(|e| format!("failed to open ledger file for append: {}", e))?;
+        let line = format!(
+            "{}|{}|{}|{}|{}\n",
+            entry.height,
+            encode_hex(&entry.block_hash),
+            encode_hex(&entry.parent_hash),
+            entry.timestamp_unix,
+            entry.tx_count
+        );
+        file.write_all(line.as_bytes())
+            .map_err(|e| format!("failed to append ledger entry: {}", e))
+    }
+
+    fn load_from_disk(&mut self) -> Result<(), String> {
+        let Some(path) = &self.log_path else {
+            return Ok(());
+        };
+
+        let content = fs::read_to_string(path)
+            .map_err(|e| format!("failed to read ledger file: {}", e))?;
+        if content.trim().is_empty() {
+            return Ok(());
+        }
+
+        let mut loaded = Vec::new();
+        for raw_line in content.lines() {
+            let line = raw_line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            loaded.push(parse_line(line)?);
+        }
+        self.entries = loaded;
+
+        if !self.verify_integrity() {
+            return Err("ledger integrity check failed after replay".to_string());
+        }
+        Ok(())
+    }
+}
+
+impl Default for AppendOnlyLedger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn parse_line(line: &str) -> Result<LedgerEntry, String> {
+    let parts: Vec<&str> = line.split('|').collect();
+    if parts.len() != 5 {
+        return Err("ledger line must contain five fields".to_string());
+    }
+
+    Ok(LedgerEntry {
+        height: parts[0]
+            .parse::<u64>()
+            .map_err(|e| format!("invalid ledger height: {}", e))?,
+        block_hash: parse_hash(parts[1])?,
+        parent_hash: parse_hash(parts[2])?,
+        timestamp_unix: parts[3]
+            .parse::<u64>()
+            .map_err(|e| format!("invalid ledger timestamp: {}", e))?,
+        tx_count: parts[4]
+            .parse::<usize>()
+            .map_err(|e| format!("invalid tx_count: {}", e))?,
+    })
+}
+
+fn parse_hash(value: &str) -> Result<Hash32, String> {
+    let bytes = decode_hex(value)?;
+    if bytes.len() != 32 {
+        return Err("hash must be 32 bytes".to_string());
+    }
+    let mut hash = [0u8; 32];
+    hash.copy_from_slice(&bytes);
+    Ok(hash)
+}
+
+fn encode_hex(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        out.push(hex_nibble((b >> 4) & 0x0f));
+        out.push(hex_nibble(b & 0x0f));
+    }
+    out
+}
+
+fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
+    if value.len() % 2 != 0 {
+        return Err("hex length must be even".to_string());
+    }
+    let chars: Vec<char> = value.chars().collect();
+    let mut out = Vec::with_capacity(chars.len() / 2);
+    let mut index = 0usize;
+    while index < chars.len() {
+        let hi = from_hex(chars[index])?;
+        let lo = from_hex(chars[index + 1])?;
+        out.push((hi << 4) | lo);
+        index += 2;
+    }
+    Ok(out)
+}
+
+fn from_hex(value: char) -> Result<u8, String> {
+    match value {
+        '0'..='9' => Ok(value as u8 - b'0'),
+        'a'..='f' => Ok(10 + (value as u8 - b'a')),
+        'A'..='F' => Ok(10 + (value as u8 - b'A')),
+        _ => Err(format!("invalid hex character: {}", value)),
+    }
+}
+
+fn hex_nibble(value: u8) -> char {
+    match value {
+        0..=9 => (b'0' + value) as char,
+        _ => (b'a' + (value - 10)) as char,
+    }
+}

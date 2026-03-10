@@ -8,7 +8,7 @@ authors.workspace = true
 description = "High-performance networking leveraging fusion_runtime_core"
 
 [dependencies]
-fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_core = { path = "../../../registry/crates/fusion-core/" }
 fusion_runtime_core = { path = "../../../registry/crates/fusion_runtime_core/" }
 fusion_runtime_hal = { path = "../../../registry/crates/fusion_runtime_hal/" }
 socket2 = { workspace = true }
@@ -18,3 +18,4 @@ fusion_std = "1.0.0"
 
 [dev-dependencies]
 criterion = { workspace = true }
+

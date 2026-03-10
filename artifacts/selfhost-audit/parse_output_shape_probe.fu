@@ -1,0 +1,20 @@
+struct Program {
+    functions: [int;0],
+}
+
+struct ParseOutput {
+    program: Program,
+    errors: [int;0],
+}
+
+pub fn ok_simple() -> ParseOutput {
+    return ParseOutput {
+        program: Program { functions: [] },
+        errors: [],
+    };
+}
+
+pub fn main() -> int {
+    let out = ok_simple();
+    return 0;
+}

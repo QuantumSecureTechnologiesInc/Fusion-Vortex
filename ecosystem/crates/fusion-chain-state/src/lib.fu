@@ -1,0 +1,120 @@
+use std::collections::BTreeMap;
+
+use fusion_chain_primitives::Hash32;
+use sha2::{Digest, Sha256};
+
+#[derive(Debug, Clone)]
+pub enum WriteOp {
+    Set(Vec<u8>, Vec<u8>),
+    Delete(Vec<u8>),
+}
+
+#[derive(Debug, Clone)]
+pub struct StateProof {
+    pub key: Vec<u8>,
+    pub value: Option<Vec<u8>>,
+    pub state_root: Hash32,
+    pub witness_hash: Hash32,
+}
+
+pub struct StateStore {
+    version: u64,
+    root: Hash32,
+    kv: BTreeMap<Vec<u8>, Vec<u8>>,
+}
+
+impl StateStore {
+    pub fn new() -> Self {
+        Self {
+            version: 0,
+            root: [0u8; 32],
+            kv: BTreeMap::new(),
+        }
+    }
+
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
+    pub fn root(&self) -> Hash32 {
+        self.root
+    }
+
+    pub fn get(&self, key: &[u8]) -> Option<&Vec<u8>> {
+        self.kv.get(key)
+    }
+
+    pub fn apply_write_set(&mut self, writes: &[WriteOp]) {
+        for write in writes {
+            match write {
+                WriteOp::Set(key, value) => {
+                    self.kv.insert(key.clone(), value.clone());
+                }
+                WriteOp::Delete(key) => {
+                    self.kv.remove(key);
+                }
+            }
+        }
+
+        self.version += 1;
+        self.root = Self::compute_root(&self.kv, self.version);
+    }
+
+    pub fn prove(&self, key: &[u8]) -> StateProof {
+        let value = self.kv.get(key).cloned();
+        let witness_hash = Self::compute_witness(key, value.as_deref(), self.root);
+        StateProof {
+            key: key.to_vec(),
+            value,
+            state_root: self.root,
+            witness_hash,
+        }
+    }
+
+    pub fn verify_proof(proof: &StateProof) -> bool {
+        let expected = Self::compute_witness(&proof.key, proof.value.as_deref(), proof.state_root);
+        expected == proof.witness_hash
+    }
+
+    fn compute_root(kv: &BTreeMap<Vec<u8>, Vec<u8>>, version: u64) -> Hash32 {
+        let mut hasher = Sha256::new();
+        hasher.update(version.to_le_bytes());
+        for (key, value) in kv {
+            hasher.update((key.len() as u64).to_le_bytes());
+            hasher.update(key);
+            hasher.update((value.len() as u64).to_le_bytes());
+            hasher.update(value);
+        }
+        let digest = hasher.finalize();
+        let mut out = [0u8; 32];
+        out.copy_from_slice(&digest);
+        out
+    }
+
+    fn compute_witness(key: &[u8], value: Option<&[u8]>, root: Hash32) -> Hash32 {
+        let mut hasher = Sha256::new();
+        hasher.update((key.len() as u64).to_le_bytes());
+        hasher.update(key);
+        match value {
+            Some(raw) => {
+                hasher.update(1u8.to_le_bytes());
+                hasher.update((raw.len() as u64).to_le_bytes());
+                hasher.update(raw);
+            }
+            None => {
+                hasher.update(0u8.to_le_bytes());
+            }
+        }
+        hasher.update(root);
+        let digest = hasher.finalize();
+        let mut out = [0u8; 32];
+        out.copy_from_slice(&digest);
+        out
+    }
+}
+
+impl Default for StateStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}

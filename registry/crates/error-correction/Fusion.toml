@@ -1,5 +1,5 @@
 [package]
-name = "fusion_q_error_corr"
+name = "error-correction"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,6 @@ readme = "README.md"
 fusion_core = { workspace = true }
 fusion_quantum_sdk = { workspace = true }
 fusion_std = { workspace = true }
+
 
 

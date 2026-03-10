@@ -8,9 +8,9 @@ Official Python client SDK for interacting with the Fusion Runtime Core v2.0 (Ne
 pip install -r requirements.txt
 ```text
 
-## Generating Protobuf Stubs
+## Generating Protobuf Client Bindings
 
-Before using the SDK, you need to generate the Python protobuf stubs from the proto definitions:
+Before using the SDK, you need to generate the Python protobuf client bindings from the proto definitions:
 
 ```bash
 python generate_proto.py
@@ -18,7 +18,7 @@ python generate_proto.py
 
 This will create:
 - `fusion_core_v2_pb2.py` - Protocol buffer message definitions
-- `fusion_core_v2_pb2_grpc.py` - gRPC service stubs
+- `fusion_core_v2_pb2_grpc.py` - gRPC service clients
 
 ## Usage
 

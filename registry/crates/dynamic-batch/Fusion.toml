@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_batch_scheduler"
+name = "dynamic-batch"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,4 +15,5 @@ fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
 fusion_net = { path = "../fusion_net/", version = "0.2.0" }
 fusion_runtime_core = { workspace = true }
 fusion_std = "1.0.0"
+
 

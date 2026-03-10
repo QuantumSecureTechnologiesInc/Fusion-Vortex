@@ -11,6 +11,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-03-04
 
+## [Unreleased] - 2026-03-09
+
+### Added
+
+#### Tendermint blockchain workspace scaffold
+
+- Added a new Fusion-native blockchain crate stack under `ecosystem/crates/`:
+  - `fusion-chain-primitives`
+  - `fusion-chain-codec`
+  - `fusion-chain-crypto`
+  - `fusion-chain-ledger`
+  - `fusion-chain-state`
+  - `fusion-chain-tx`
+  - `fusion-chain-mempool`
+  - `fusion-chain-p2p`
+  - `fusion-chain-consensus-tendermint`
+  - `fusion-chain-finality`
+  - `fusion-chain-vm`
+  - `fusion-chain-contract-abi`
+  - `fusion-chain-contract-runtime`
+  - `fusion-chain-contract-sdk`
+  - `fusion-chain-rpc`
+  - `fusion-chain-node`
+  - `fusion-chain-node-local`
+  - `fusion-chain-audit`
+  - `fusion-chain-observability`
+  - `fusion-chain-testkit`
+- Upgraded `ecosystem/crates/fusion-blockchain` from hello-world to a façade crate that re-exports the full stack.
+- Added `ecosystem/crates/fusion-blockchain/Fusion.workspace.toml` and `ecosystem/crates/fusion-blockchain/WORKSPACE_LAYOUT.md` to define crate membership and dependency layers for Tendermint-first execution with smart contracts in MVP.
+- Added strict Tendermint signature verification for proposal, prevote, precommit, and commit checks in `fusion-chain-consensus-tendermint`.
+- Added node helpers for signed proposal and local validator vote/commit flow in `fusion-chain-node`.
+- Added integration-style test suites in `fusion-chain-testkit` for consensus safety, mempool policy, and contract determinism.
+- Expanded consensus safety tests with explicit Byzantine scenarios: double-sign precommit, delayed vote handling, and invalid proposer key rejection.
+- Added adversarial signature-corruption test coverage for tampered vote signature bytes.
+- Added commit-level corruption coverage for tampered precommit signatures inside an otherwise finalised commit.
+- Added companion commit-metadata corruption coverage for tampered `height`, `round`, and `block_hash` with untouched signatures.
+- Added table-driven corruption matrix coverage combining signature tamper, commit metadata tamper, and vote-type tamper in one adversarial suite.
+- Added reusable corruption-matrix helper utilities so new adversarial commit cases are one-line additions in the matrix list.
+- Added deterministic proposer selection and rotation enforcement in `fusion-chain-consensus-tendermint` proposal validation.
+- Added transaction sender-proof verification (`public_key || signature`) in `fusion-chain-tx` and sender-proof signing helpers in `fusion-chain-crypto`.
+- Added deterministic genesis document parsing and node bootstrap (`from_genesis_document`) in `fusion-chain-node`.
+- Added genesis bootstrap test coverage in `fusion-chain-testkit/src/genesis_loader.fu`.
+- Updated `fusion-chain-node-local` to bootstrap from deterministic genesis and submit cryptographically signed transactions.
+- Added append-only ledger file persistence and replay support via `fusion-chain-ledger::open_or_create`.
+- Added node bootstrap with persistent ledger path (`from_genesis_document_with_ledger`) and validator-set update hooks.
+
+### Changed
+
+#### Native compiler hardening
+
+- Enabled unresolved-call hard-fail as a non-disableable policy in LLVM codegen (`crates/fuc/src/codegen/llvm.fu`).
+- Expanded qualified symbol resolution candidates for call lowering (`crate::` stripping, suffix-based lookup, and `::` to `__` mapping) before unresolved-call failure.
+- Removed parser/sema-specific unresolved-call lowering for `lookup_func`/`analyze_output` and replaced it with direct owner-qualified resolution candidates (`Analyzer::`, `SymbolTable::`, `Parser::`, `Lexer::`, `Lowerer::`).
+- Added explicit unresolved lowering coverage for formatting helpers (`write`, `write_str`, `write_fmt`) to keep strict mode stable in current stage chains.
+- Switched `crates/fuc/src/stage1_parser_api.fu` phase checks to true in-process calls (`parser::parse_status`, `sema::analyze_source_status`) over real file contents, removing command-phase bridge dependence in stage1 API paths.
+- Propagated strict unresolved-call mode in native entry scripts:
+  - `scripts/strict_selfhost_gate.ps1`
+  - `scripts/run_native_regression.ps1`
+  - `scripts/bootstrap_native.ps1`
+- Verified full readiness gate still passes end-to-end after hardening (`scripts/strict_selfhost_gate.ps1` 5/5).
+
 ### Changed
 
 #### Native Compiler + Packaging Pipeline

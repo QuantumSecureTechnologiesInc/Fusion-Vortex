@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_tokenizers"
+name = "llm-tokenizers"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -11,14 +11,10 @@ categories = ["algorithms", "text-processing"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { workspace = true }
-serde = { workspace = true }
-fusion_std = "1.0.0"
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+fusion_std = { path = "../std" }
 
 [dev-dependencies]
-criterion = { workspace = true }
-
-# [[bench]]
-# name = "tokenizer_benchmark"
-# harness = false
+criterion = { version = "0.5.1" }
 

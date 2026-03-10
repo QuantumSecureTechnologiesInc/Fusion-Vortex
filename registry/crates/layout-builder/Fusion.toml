@@ -1,5 +1,5 @@
 [package]
-name = "fusion_ui_layout_builder"
+name = "layout-builder"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -16,5 +16,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 rand.workspace = true
 fusion_std = "1.0.0"
+
 
 

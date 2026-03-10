@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_model_server"
+name = "llm-model-server"
 version = "0.1.0"
 edition = "2021"
 description = "High-performance inference server optimized for custom Fusion LLMs"
@@ -12,4 +12,5 @@ fusion_http = { path = "../http", version = "0.1.0" }
 # fusion_llm_lora_manager = { path = "../llm-lora-manager", version = "0.1.0" }
 tokio = { workspace = true }
 fusion_std = "1.0.0"
+
 

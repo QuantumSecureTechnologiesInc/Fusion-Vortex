@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Protobuf Code Generation Script for Fusion Runtime Core v2.0
-Generates Python protobuf stubs from the proto definitions.
+Generates Python protobuf client bindings from the proto definitions.
 
 Usage:
     python generate_proto.py
@@ -27,7 +27,7 @@ def main():
         print(f"Error: Proto file not found at {proto_file}")
         sys.exit(1)
     
-    print(f"Generating Python protobuf stubs from {proto_file}...")
+    print(f"Generating Python protobuf client bindings from {proto_file}...")
     print(f"Output directory: {output_dir}")
     
     # Run protoc to generate Python code

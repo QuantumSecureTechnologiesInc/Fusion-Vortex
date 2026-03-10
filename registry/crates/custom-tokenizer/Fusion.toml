@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_custom_tokenizer"
+name = "custom-tokenizer"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -12,3 +12,4 @@ readme = "README.md"
 [dependencies]
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
+

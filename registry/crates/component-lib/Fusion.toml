@@ -1,5 +1,5 @@
 [package]
-name = "fusion_ui_component_lib"
+name = "component-lib"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,5 +15,6 @@ fusion_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 fusion_std.workspace = true
+
 
 

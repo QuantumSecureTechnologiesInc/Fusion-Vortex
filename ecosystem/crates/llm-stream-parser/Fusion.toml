@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_stream_parser"
+name = "llm-stream-parser"
 version = "0.1.0"
 edition = "2021"
 description = "Parsers for real-time structured streaming output (JSON, tool calls)"
@@ -11,4 +11,5 @@ fusion_http = { path = "../http", version = "0.1.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 fusion_std = "1.0.0"
+
 

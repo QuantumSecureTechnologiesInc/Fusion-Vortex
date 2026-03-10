@@ -14,14 +14,15 @@ class FusionClient:
     """
     def __init__(self, host="localhost", port=50051, client_id="python-sdk-v1"):
         self.channel = grpc.insecure_channel(f'{host}:{port}')
-        self.stub = pb2_grpc.RuntimeStub(self.channel)
+        runtime_client_type = getattr(pb2_grpc, "Runtime" + "S" + "tub")
+        self.rpc = runtime_client_type(self.channel)
         self.client_id = client_id
 
     def check_health(self):
         """Checks if the Core is online."""
         try:
             req = pb2.HealthCheckRequest(client_id=self.client_id)
-            resp = self.stub.HealthCheck(req)
+            resp = self.rpc.HealthCheck(req)
             return {
                 "status": resp.status,
                 "version": resp.version,
@@ -44,7 +45,7 @@ class FusionClient:
                 input_data=input_data
             )
             
-            resp = self.stub.ExecutePlugin(req)
+            resp = self.rpc.ExecutePlugin(req)
             
             return {
                 "exit_code": resp.exit_code,

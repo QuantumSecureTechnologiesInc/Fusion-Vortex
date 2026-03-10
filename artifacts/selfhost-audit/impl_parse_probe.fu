@@ -1,0 +1,13 @@
+struct A {
+    x: int,
+}
+
+impl A {
+    fn new() -> int {
+        return 7;
+    }
+}
+
+pub fn main() -> int {
+    return A::new();
+}

@@ -1,10 +1,29 @@
 [package]
 name = "fusion-blockchain"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Fusion Team"]
-description = "Fusion ecosystem crate: fusion-blockchain"
+description = "Fusion Tendermint-first blockchain stack with smart contracts"
 license = "MIT"
 
 [dependencies]
 fusion_std = "1.0.0"
+fusion-chain-primitives = { path = "../fusion-chain-primitives" }
+fusion-chain-codec = { path = "../fusion-chain-codec" }
+fusion-chain-crypto = { path = "../fusion-chain-crypto" }
+fusion-chain-ledger = { path = "../fusion-chain-ledger" }
+fusion-chain-state = { path = "../fusion-chain-state" }
+fusion-chain-tx = { path = "../fusion-chain-tx" }
+fusion-chain-mempool = { path = "../fusion-chain-mempool" }
+fusion-chain-p2p = { path = "../fusion-chain-p2p" }
+fusion-chain-consensus-tendermint = { path = "../fusion-chain-consensus-tendermint" }
+fusion-chain-finality = { path = "../fusion-chain-finality" }
+fusion-chain-vm = { path = "../fusion-chain-vm" }
+fusion-chain-contract-abi = { path = "../fusion-chain-contract-abi" }
+fusion-chain-contract-runtime = { path = "../fusion-chain-contract-runtime" }
+fusion-chain-contract-sdk = { path = "../fusion-chain-contract-sdk" }
+fusion-chain-rpc = { path = "../fusion-chain-rpc" }
+fusion-chain-node = { path = "../fusion-chain-node" }
+fusion-chain-audit = { path = "../fusion-chain-audit" }
+fusion-chain-observability = { path = "../fusion-chain-observability" }
+fusion-chain-testkit = { path = "../fusion-chain-testkit" }

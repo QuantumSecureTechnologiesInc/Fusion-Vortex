@@ -40,6 +40,7 @@ impl LspAdapter {
                 description: format!("Get diagnostics for {} files", self.language_id),
                 handler: Box::new(LspDiagnosticsHandler {
                     client: self.client.clone(),
+                    language_id: self.language_id.clone(),
                 }),
             });
         facets
@@ -50,6 +51,7 @@ impl LspAdapter {
                 ),
                 handler: Box::new(LspSymbolsHandler {
                     client: self.client.clone(),
+                    language_id: self.language_id.clone(),
                 }),
             });
         facets
@@ -58,16 +60,34 @@ impl LspAdapter {
 /// Handler for LSP diagnostics
 pub struct LspDiagnosticsHandler {
     client: Arc<Mutex<LspClient>>,
+    language_id: FString,
 }
 #[async_trait::async_trait]
 impl McpHandler for LspDiagnosticsHandler {
-    async fn handle(&self, _arguments: Option<Value>) -> Result<CallToolResult> {
-        let _ = &self.client;
+    async fn handle(&self, arguments: Option<Value>) -> Result<CallToolResult> {
+        let args = arguments.unwrap_or(Value::Null);
+        let uri = args
+            .get("uri")
+            .and_then(|v| v.as_str())
+            .unwrap_or("file:///virtual.fu");
+        let text = args
+            .get("text")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let mut client = self.client.lock().await;
+        if !text.is_empty() {
+            client
+                .did_open(uri, &self.language_id, 1, text)
+                .await
+                .context("Failed to open virtual document for diagnostics")?;
+        }
+        let diagnostics = client
+            .diagnostics(uri)
+            .await
+            .context("Diagnostics request failed")?;
+        let text = serde_json::to_string_pretty(&diagnostics)?;
         Ok(CallToolResult {
-            content: vec![
-                crate ::protocol::ToolContent::Text { text :
-                "LSP Diagnostics implementation placeholder".to_string(), }
-            ],
+            content: vec![crate::protocol::ToolContent::Text { text }],
             is_error: Some(false),
         })
     }
@@ -75,16 +95,34 @@ impl McpHandler for LspDiagnosticsHandler {
 /// Handler for LSP symbols
 pub struct LspSymbolsHandler {
     client: Arc<Mutex<LspClient>>,
+    language_id: FString,
 }
 #[async_trait::async_trait]
 impl McpHandler for LspSymbolsHandler {
-    async fn handle(&self, _arguments: Option<Value>) -> Result<CallToolResult> {
-        let _ = &self.client;
+    async fn handle(&self, arguments: Option<Value>) -> Result<CallToolResult> {
+        let args = arguments.unwrap_or(Value::Null);
+        let uri = args
+            .get("uri")
+            .and_then(|v| v.as_str())
+            .unwrap_or("file:///virtual.fu");
+        let text = args
+            .get("text")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let mut client = self.client.lock().await;
+        if !text.is_empty() {
+            client
+                .did_open(uri, &self.language_id, 1, text)
+                .await
+                .context("Failed to open virtual document for symbol extraction")?;
+        }
+        let symbols = client
+            .document_symbols(uri)
+            .await
+            .context("Symbol request failed")?;
+        let text = serde_json::to_string_pretty(&symbols)?;
         Ok(CallToolResult {
-            content: vec![
-                crate ::protocol::ToolContent::Text { text :
-                "LSP Symbols implementation placeholder".to_string(), }
-            ],
+            content: vec![crate::protocol::ToolContent::Text { text }],
             is_error: Some(false),
         })
     }

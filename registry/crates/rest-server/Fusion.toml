@@ -1,5 +1,5 @@
 [package]
-name = "fusion_api_rest_server"
+name = "rest-server"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,4 +15,5 @@ fusion_http = { path = "../http/", version = "0.2.0" }
 fusion_std = { path = "../std", version = "0.2.0" }
 fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
+
 

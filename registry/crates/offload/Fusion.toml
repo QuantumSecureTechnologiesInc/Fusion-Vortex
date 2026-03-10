@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_offload"
+name = "offload"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,6 @@ readme = "README.md"
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
 fusion_runtime_core = { workspace = true }
+
 
 

@@ -8,7 +8,7 @@ authors.workspace = true
 description = "Hardware Abstraction Layer for direct GPU/QPU/Network device access"
 
 [dependencies]
-fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_core = { path = "../../../registry/crates/fusion-core/" }
 fusion_q_aws_backend = { path = "../../../registry/crates/q-aws-backend/" }
 fusion_q_ibm_backend = { path = "../../../registry/crates/q-ibm-backend/" }
 parking_lot = { workspace = true }
@@ -34,3 +34,4 @@ cuda = []
 
 [dev-dependencies]
 criterion = { workspace = true }
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_clustering"
+name = "clustering"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -21,3 +21,4 @@ criterion = { workspace = true }
 # [[bench]]
 # name = "kmeans"
 # harness = false
+

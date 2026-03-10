@@ -1,0 +1,60 @@
+use std::collections::BTreeMap;
+
+use fusion_chain_primitives::Hash32;
+
+#[derive(Debug, Clone)]
+pub struct FinalityConfig {
+    pub checkpoint_interval: u64,
+    pub min_depth: u64,
+}
+
+impl Default for FinalityConfig {
+    fn default() -> Self {
+        Self {
+            checkpoint_interval: 100,
+            min_depth: 8,
+        }
+    }
+}
+
+pub struct FinalityTracker {
+    cfg: FinalityConfig,
+    last_finalized_height: u64,
+    checkpoints: BTreeMap<u64, Hash32>,
+}
+
+impl FinalityTracker {
+    pub fn new(cfg: FinalityConfig) -> Self {
+        Self {
+            cfg,
+            last_finalized_height: 0,
+            checkpoints: BTreeMap::new(),
+        }
+    }
+
+    pub fn observe_commit(&mut self, height: u64, block_hash: Hash32) {
+        if height % self.cfg.checkpoint_interval == 0 {
+            self.checkpoints.insert(height, block_hash);
+        }
+    }
+
+    pub fn try_finalize(&mut self, head_height: u64) -> u64 {
+        let target = head_height.saturating_sub(self.cfg.min_depth);
+        if target > self.last_finalized_height {
+            self.last_finalized_height = target;
+        }
+        self.last_finalized_height
+    }
+
+    pub fn last_finalized_height(&self) -> u64 {
+        self.last_finalized_height
+    }
+
+    pub fn is_final(&self, height: u64) -> bool {
+        height <= self.last_finalized_height
+    }
+
+    pub fn checkpoint(&self, height: u64) -> Option<Hash32> {
+        self.checkpoints.get(&height).copied()
+    }
+}

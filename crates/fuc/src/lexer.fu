@@ -2,7 +2,7 @@
 use std::ops::Range;
 /// Token definitions for the language.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-enum Token {
+pub enum Token {
     KwFn,
     KwLet,
     KwReturn,
@@ -37,8 +37,11 @@ enum Token {
     NotEquals,
     Bang,
     Or,
+    Pipe,
     And,
+    FatArrow,
     Arrow,
+    Range,
     Less,
     Greater,
     Plus,
@@ -55,6 +58,7 @@ enum Token {
     Comma,
     Ellipsis,
     Dot,
+    Question,
     Hash,
     TypeInt,
     TypeBool,
@@ -101,7 +105,7 @@ fn is_ident_start(ch: u8) -> FBool {
 fn is_ident_continue(ch: u8) -> FBool {
     return is_ident_start(ch) || (ch >= b'0' && ch <= b'9');
 }
-fn keyword_or_ident(text: &str) -> Token {
+fn keyword_or_ident(text: FString) -> Token {
     if text == "fn" {
         return Token::KwFn;
     }
@@ -189,10 +193,10 @@ fn keyword_or_ident(text: &str) -> Token {
     if text == "false" {
         return Token::False;
     }
-    return Token::Identifier(text.to_string());
+    return Token::Identifier(text);
 }
 /// Lexes the given input into tokens with spans.
-fn lex(input: &str) -> FVec<SpannedToken> {
+pub fn lex(input: &str) -> FVec<SpannedToken> {
     let bytes = input.as_bytes();
     let mut tokens: FVec<SpannedToken> = Vec::new();
     let mut i = 0usize;
@@ -227,12 +231,62 @@ fn lex(input: &str) -> FVec<SpannedToken> {
             continue;
         }
         let start = i;
+        if ch == b'\'' {
+            if i + 1 < len && is_ident_start(bytes[i + 1]) {
+                let mut j = i + 2;
+                while j < len && is_ident_continue(bytes[j]) {
+                    j = j + 1;
+                }
+                if j >= len || bytes[j] != b'\'' {
+                    let name = format!("'{}", input[i + 1..j].to_string());
+                    tokens.push((Token::Identifier(name), start..j));
+                    i = j;
+                    continue;
+                }
+            }
+            i = i + 1;
+            let mut value: FI64 = 0;
+            let mut valid = false;
+            if i < len {
+                if bytes[i] == b'\\' {
+                    if i + 1 < len {
+                        let esc = bytes[i + 1];
+                        value = if esc == b'n' {
+                            10
+                        } else if esc == b't' {
+                            9
+                        } else if esc == b'r' {
+                            13
+                        } else if esc == b'\\' {
+                            92
+                        } else if esc == b'\'' {
+                            39
+                        } else {
+                            esc as FI64
+                        };
+                        i = i + 2;
+                        valid = true;
+                    }
+                } else {
+                    value = bytes[i] as FI64;
+                    i = i + 1;
+                    valid = true;
+                }
+            }
+            if valid && i < len && bytes[i] == b'\'' {
+                i = i + 1;
+                tokens.push((Token::IntLiteral(value), start..i));
+            } else {
+                tokens.push((Token::Error, start..i));
+            }
+            continue;
+        }
         if is_ident_start(ch) {
             i = i + 1;
             while i < len && is_ident_continue(bytes[i]) {
                 i = i + 1;
             }
-            let text = &input[start..i];
+            let text = input[start..i].to_string();
             tokens.push((keyword_or_ident(text), start..i));
             continue;
         }
@@ -241,7 +295,7 @@ fn lex(input: &str) -> FVec<SpannedToken> {
             while i < len && bytes[i] >= b'0' && bytes[i] <= b'9' {
                 i = i + 1;
             }
-            let text = &input[start..i];
+            let text = input[start..i].to_string();
             let parsed = text.parse::<i64>();
             if parsed.is_ok() {
                 tokens.push((Token::IntLiteral(parsed.unwrap()), start..i));
@@ -250,7 +304,7 @@ fn lex(input: &str) -> FVec<SpannedToken> {
             }
             continue;
         }
-        if ch == b'"' {
+        if ch == 34 {
             i = i + 1;
             while i < len {
                 if bytes[i] == b'\\' {
@@ -261,7 +315,7 @@ fn lex(input: &str) -> FVec<SpannedToken> {
                     }
                     continue;
                 }
-                if bytes[i] == b'"' {
+                if bytes[i] == 34 {
                     i = i + 1;
                     break;
                 }
@@ -275,10 +329,10 @@ fn lex(input: &str) -> FVec<SpannedToken> {
             }
             continue;
         }
-        if ch == b'r' && i + 2 < len && bytes[i + 1] == b'#' && bytes[i + 2] == b'"' {
+        if ch == b'r' && i + 2 < len && bytes[i + 1] == b'#' && bytes[i + 2] == 34 {
             i = i + 3;
             while i + 1 < len {
-                if bytes[i] == b'"' && bytes[i + 1] == b'#' {
+                if bytes[i] == 34 && bytes[i + 1] == b'#' {
                     let end = i + 2;
                     let literal = &input[start + 3..i];
                     tokens.push((Token::StringLiteral(unescape_string(literal)), start..end));
@@ -292,6 +346,11 @@ fn lex(input: &str) -> FVec<SpannedToken> {
         if i + 2 < len && bytes[i] == b'.' && bytes[i + 1] == b'.' && bytes[i + 2] == b'.' {
             tokens.push((Token::Ellipsis, i..i + 3));
             i = i + 3;
+            continue;
+        }
+        if i + 1 < len && bytes[i] == b'.' && bytes[i + 1] == b'.' {
+            tokens.push((Token::Range, i..i + 2));
+            i = i + 2;
             continue;
         }
         if i + 1 < len && bytes[i] == b':' && bytes[i + 1] == b':' {
@@ -309,6 +368,11 @@ fn lex(input: &str) -> FVec<SpannedToken> {
             i = i + 2;
             continue;
         }
+        if i + 1 < len && bytes[i] == b'=' && bytes[i + 1] == b'>' {
+            tokens.push((Token::FatArrow, i..i + 2));
+            i = i + 2;
+            continue;
+        }
         if i + 1 < len && bytes[i] == b'!' && bytes[i + 1] == b'=' {
             tokens.push((Token::NotEquals, i..i + 2));
             i = i + 2;
@@ -322,6 +386,11 @@ fn lex(input: &str) -> FVec<SpannedToken> {
         if i + 1 < len && bytes[i] == b'&' && bytes[i + 1] == b'&' {
             tokens.push((Token::And, i..i + 2));
             i = i + 2;
+            continue;
+        }
+        if ch == b'|' {
+            tokens.push((Token::Pipe, i..i + 1));
+            i = i + 1;
             continue;
         }
         if ch == b':' {
@@ -416,6 +485,11 @@ fn lex(input: &str) -> FVec<SpannedToken> {
         }
         if ch == b'.' {
             tokens.push((Token::Dot, i..i + 1));
+            i = i + 1;
+            continue;
+        }
+        if ch == b'?' {
+            tokens.push((Token::Question, i..i + 1));
             i = i + 1;
             continue;
         }

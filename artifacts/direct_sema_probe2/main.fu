@@ -1,0 +1,13 @@
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
+
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main() -> int {
+    let s = "pub fn x() -> int { return 0; }";
+    let st = sema::analyze_source_status(s);
+    printf("st=%d\n", st);
+    return 0;
+}

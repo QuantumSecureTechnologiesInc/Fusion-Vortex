@@ -1,5 +1,5 @@
 [package]
-name = "fusion_safety_monitor"
+name = "safety-monitor"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -18,3 +18,4 @@ tokio = { workspace = true }
 fusion_runtime_core = { workspace = true }
 fusion_sec_audit_log = { workspace = true }
 fusion_sec_policy_engine = { workspace = true }
+

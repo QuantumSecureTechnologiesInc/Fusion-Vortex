@@ -1,5 +1,5 @@
 [package]
-name = "fusion_q_algo"
+name = "q-algo"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -18,3 +18,4 @@ fusion_std = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+

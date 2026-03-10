@@ -1,0 +1,12 @@
+[package]
+name = "fusion-chain-vm"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Deterministic smart contract VM interface"
+license = "MIT"
+
+[dependencies]
+fusion_std = "1.0.0"
+sha2 = { workspace = true }
+fusion-chain-primitives = { path = "../fusion-chain-primitives" }

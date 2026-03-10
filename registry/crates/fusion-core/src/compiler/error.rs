@@ -1,0 +1,15 @@
+#![allow(missing_docs)]
+#[allow(missing_docs, dead_code)]
+type FString = FString;
+use thiserror::Error;
+#[derive(Error, Debug)]
+enum CompilerError {
+    #[error("Lexer error: {0}")]
+    LexerError(FString),
+    #[error("Parser error: {0}")]
+    ParserError(FString),
+    #[error("Type error: {0}")]
+    TypeError(FString),
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+}

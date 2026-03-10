@@ -1,0 +1,519 @@
+use std::collections::BTreeMap;
+
+use fusion_chain_consensus_tendermint::{TendermintConfig, TendermintEngine, ValidatorInfo};
+use fusion_chain_crypto::SoftwareKeyPair;
+use fusion_chain_primitives::{BlockHeader, Commit, Vote, VoteType};
+
+fn validator_with_signer(
+    seed: u8,
+    id: &str,
+    power: u64,
+) -> (String, ValidatorInfo, SoftwareKeyPair) {
+    let signer = SoftwareKeyPair::from_seed([seed; 32]);
+    let info = ValidatorInfo {
+        power,
+        public_key: signer.public_key_bytes(),
+    };
+    (id.to_string(), info, signer)
+}
+
+fn signed_vote(
+    validator_id: &str,
+    signer: &SoftwareKeyPair,
+    vote_type: VoteType,
+    height: u64,
+    round: u32,
+    block_hash: [u8; 32],
+) -> Vote {
+    let signature = signer.sign_message(&Vote::signing_bytes(
+        validator_id,
+        vote_type,
+        height,
+        round,
+        block_hash,
+    ));
+    Vote {
+        validator_id: validator_id.to_string(),
+        validator_key: signer.public_key_bytes(),
+        vote_type,
+        height,
+        round,
+        block_hash,
+        signature,
+    }
+}
+
+#[derive(Clone, Copy)]
+enum CommitCorruptionCase {
+    SignatureTamper,
+    HeightTamper,
+    RoundTamper,
+    HashTamper,
+    VoteTypeTamper,
+}
+
+impl CommitCorruptionCase {
+    fn apply(self, commit: &mut Commit) {
+        match self {
+            CommitCorruptionCase::SignatureTamper => {
+                if !commit.signatures.is_empty() && !commit.signatures[0].signature.is_empty() {
+                    commit.signatures[0].signature[0] ^= 0x01;
+                }
+            }
+            CommitCorruptionCase::HeightTamper => {
+                commit.height = commit.height.saturating_add(1);
+            }
+            CommitCorruptionCase::RoundTamper => {
+                commit.round = commit.round.saturating_add(1);
+            }
+            CommitCorruptionCase::HashTamper => {
+                commit.block_hash[0] ^= 0x01;
+            }
+            CommitCorruptionCase::VoteTypeTamper => {
+                if !commit.signatures.is_empty() {
+                    commit.signatures[0].vote_type = VoteType::Prevote;
+                }
+            }
+        }
+    }
+}
+
+fn assert_corruption_matrix_rejected(
+    engine: &TendermintEngine,
+    valid_commit: &Commit,
+    matrix: &[(&str, CommitCorruptionCase)],
+) {
+    for (case_name, corruption) in matrix {
+        let mut tampered = valid_commit.clone();
+        corruption.apply(&mut tampered);
+        let verification = engine.verify_commit(&tampered);
+        assert!(
+            verification.is_err(),
+            "commit verification unexpectedly passed for case {}",
+            case_name
+        );
+    }
+}
+
+#[test]
+fn consensus_safety_rejects_precommit_without_quorum() {
+    let v1 = validator_with_signer(1, "v1", 1);
+    let v2 = validator_with_signer(2, "v2", 1);
+    let v3 = validator_with_signer(3, "v3", 1);
+    let v4 = validator_with_signer(4, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [9u8; 32];
+
+    engine
+        .record_vote(signed_vote("v1", &v1.2, VoteType::Precommit, 10, 0, block_hash))
+        .expect("first vote should be accepted");
+    engine
+        .record_vote(signed_vote("v2", &v2.2, VoteType::Precommit, 10, 0, block_hash))
+        .expect("second vote should be accepted");
+
+    let commit_result = engine.finalize_commit(10, 0, block_hash);
+    assert!(commit_result.is_err());
+}
+
+#[test]
+fn consensus_safety_accepts_valid_quorum_commit() {
+    let v1 = validator_with_signer(11, "v1", 1);
+    let v2 = validator_with_signer(12, "v2", 1);
+    let v3 = validator_with_signer(13, "v3", 1);
+    let v4 = validator_with_signer(14, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [1u8; 32];
+    let height = 20u64;
+    let round = 2u32;
+
+    for (id, signer) in [("v1", &v1.2), ("v2", &v2.2), ("v3", &v3.2)] {
+        engine
+            .record_vote(signed_vote(
+                id,
+                signer,
+                VoteType::Precommit,
+                height,
+                round,
+                block_hash,
+            ))
+            .expect("quorum vote should be accepted");
+    }
+
+    let commit = engine
+        .finalize_commit(height, round, block_hash)
+        .expect("commit should finalise with quorum");
+    assert_eq!(commit.signatures.len(), 3);
+}
+
+#[test]
+fn consensus_safety_rejects_equivocation() {
+    let v1 = validator_with_signer(21, "v1", 100);
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    engine
+        .record_vote(signed_vote("v1", &v1.2, VoteType::Prevote, 30, 0, [3u8; 32]))
+        .expect("first vote should be accepted");
+    let second = engine.record_vote(signed_vote(
+        "v1",
+        &v1.2,
+        VoteType::Prevote,
+        30,
+        0,
+        [4u8; 32],
+    ));
+    assert!(second.is_err());
+}
+
+#[test]
+fn consensus_safety_validates_signed_proposal() {
+    let proposer = validator_with_signer(31, "p1", 100);
+    let mut validators = BTreeMap::new();
+    validators.insert(proposer.0.clone(), proposer.1.clone());
+    let engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    let header = BlockHeader {
+        chain_id: 1,
+        height: 7,
+        round: 0,
+        timestamp_unix: 1_800_000_001,
+        parent_hash: [0u8; 32],
+        tx_root: [1u8; 32],
+        state_root: [2u8; 32],
+        proposer: proposer.2.public_key_bytes(),
+    };
+
+    let signable =
+        TendermintEngine::proposal_signing_bytes(7, 0, "p1", &header);
+    let signature = proposer.2.sign_message(&signable);
+    let proposal = engine
+        .propose_block(7, 0, "p1", header, proposer.2.public_key_bytes(), signature)
+        .expect("signed proposal should be accepted");
+
+    engine
+        .validate_proposal(&proposal)
+        .expect("proposal validation should pass");
+}
+
+#[test]
+fn consensus_safety_rejects_non_selected_round_proposer() {
+    let p1 = validator_with_signer(35, "p1", 50);
+    let p2 = validator_with_signer(36, "p2", 50);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(p1.0.clone(), p1.1.clone());
+    validators.insert(p2.0.clone(), p2.1.clone());
+    let engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    let height = 10u64;
+    let round = 1u32;
+    let (_expected_id, expected_key) = engine
+        .expected_proposer(height, round)
+        .expect("proposer should be selected");
+    let wrong = if expected_key == p1.2.public_key_bytes() {
+        (&p2.0, &p2.2)
+    } else {
+        (&p1.0, &p1.2)
+    };
+
+    let header = BlockHeader {
+        chain_id: 1,
+        height,
+        round,
+        timestamp_unix: 1_800_000_010,
+        parent_hash: [0u8; 32],
+        tx_root: [1u8; 32],
+        state_root: [2u8; 32],
+        proposer: wrong.1.public_key_bytes(),
+    };
+    let signable = TendermintEngine::proposal_signing_bytes(height, round, wrong.0, &header);
+    let signature = wrong.1.sign_message(&signable);
+
+    let proposal = engine.propose_block(
+        height,
+        round,
+        wrong.0,
+        header,
+        wrong.1.public_key_bytes(),
+        signature,
+    );
+    assert!(proposal.is_err());
+}
+
+#[test]
+fn byzantine_double_sign_precommit_is_rejected() {
+    let v1 = validator_with_signer(41, "v1", 100);
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    engine
+        .record_vote(signed_vote(
+            "v1",
+            &v1.2,
+            VoteType::Precommit,
+            100,
+            1,
+            [8u8; 32],
+        ))
+        .expect("first precommit should be accepted");
+    let second = engine.record_vote(signed_vote(
+        "v1",
+        &v1.2,
+        VoteType::Precommit,
+        100,
+        1,
+        [9u8; 32],
+    ));
+    assert!(second.is_err());
+}
+
+#[test]
+fn byzantine_delayed_precommit_breaks_commit_finalisation() {
+    let v1 = validator_with_signer(51, "v1", 1);
+    let v2 = validator_with_signer(52, "v2", 1);
+    let v3 = validator_with_signer(53, "v3", 1);
+    let v4 = validator_with_signer(54, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [6u8; 32];
+    let height = 60u64;
+    let round = 3u32;
+
+    engine
+        .record_vote(signed_vote(
+            "v1",
+            &v1.2,
+            VoteType::Precommit,
+            height,
+            round,
+            block_hash,
+        ))
+        .expect("first precommit should be accepted");
+    engine
+        .record_vote(signed_vote(
+            "v2",
+            &v2.2,
+            VoteType::Precommit,
+            height,
+            round,
+            block_hash,
+        ))
+        .expect("second precommit should be accepted");
+    engine
+        .record_vote(signed_vote(
+            "v3",
+            &v3.2,
+            VoteType::Precommit,
+            height - 1,
+            round,
+            block_hash,
+        ))
+        .expect("delayed precommit is recorded but should fail commit verification");
+
+    let commit = engine.finalize_commit(height, round, block_hash);
+    assert!(commit.is_err());
+}
+
+#[test]
+fn byzantine_invalid_proposer_key_is_rejected() {
+    let proposer = validator_with_signer(61, "p1", 100);
+    let rogue = validator_with_signer(62, "rogue", 100);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(proposer.0.clone(), proposer.1.clone());
+    let engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    let header = BlockHeader {
+        chain_id: 1,
+        height: 70,
+        round: 0,
+        timestamp_unix: 1_800_000_070,
+        parent_hash: [0u8; 32],
+        tx_root: [1u8; 32],
+        state_root: [2u8; 32],
+        proposer: rogue.2.public_key_bytes(),
+    };
+
+    let signable =
+        TendermintEngine::proposal_signing_bytes(70, 0, "p1", &header);
+    let signature = rogue.2.sign_message(&signable);
+
+    let proposal = engine.propose_block(
+        70,
+        0,
+        "p1",
+        header,
+        rogue.2.public_key_bytes(),
+        signature,
+    );
+    assert!(proposal.is_err());
+}
+
+#[test]
+fn byzantine_tampered_vote_signature_is_rejected() {
+    let v1 = validator_with_signer(71, "v1", 100);
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+
+    let mut vote = signed_vote("v1", &v1.2, VoteType::Prevote, 80, 0, [7u8; 32]);
+    vote.signature[0] ^= 0x01;
+
+    let result = engine.record_vote(vote);
+    assert!(result.is_err());
+}
+
+#[test]
+fn byzantine_tampered_precommit_inside_commit_is_rejected() {
+    let v1 = validator_with_signer(81, "v1", 1);
+    let v2 = validator_with_signer(82, "v2", 1);
+    let v3 = validator_with_signer(83, "v3", 1);
+    let v4 = validator_with_signer(84, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [2u8; 32];
+    let height = 90u64;
+    let round = 1u32;
+
+    for (id, signer) in [("v1", &v1.2), ("v2", &v2.2), ("v3", &v3.2)] {
+        engine
+            .record_vote(signed_vote(
+                id,
+                signer,
+                VoteType::Precommit,
+                height,
+                round,
+                block_hash,
+            ))
+            .expect("valid precommit should be accepted");
+    }
+
+    let valid_commit = engine
+        .finalize_commit(height, round, block_hash)
+        .expect("valid quorum commit should finalise");
+    let mut tampered_commit = valid_commit.clone();
+    tampered_commit.signatures[0].signature[0] ^= 0x01;
+
+    let verification = engine.verify_commit(&tampered_commit);
+    assert!(verification.is_err());
+}
+
+#[test]
+fn byzantine_tampered_commit_metadata_is_rejected() {
+    let v1 = validator_with_signer(91, "v1", 1);
+    let v2 = validator_with_signer(92, "v2", 1);
+    let v3 = validator_with_signer(93, "v3", 1);
+    let v4 = validator_with_signer(94, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [4u8; 32];
+    let height = 110u64;
+    let round = 2u32;
+
+    for (id, signer) in [("v1", &v1.2), ("v2", &v2.2), ("v3", &v3.2)] {
+        engine
+            .record_vote(signed_vote(
+                id,
+                signer,
+                VoteType::Precommit,
+                height,
+                round,
+                block_hash,
+            ))
+            .expect("valid precommit should be accepted");
+    }
+
+    let valid_commit = engine
+        .finalize_commit(height, round, block_hash)
+        .expect("valid commit should finalise");
+
+    let mut tampered_height = valid_commit.clone();
+    tampered_height.height += 1;
+    assert!(engine.verify_commit(&tampered_height).is_err());
+
+    let mut tampered_round = valid_commit.clone();
+    tampered_round.round += 1;
+    assert!(engine.verify_commit(&tampered_round).is_err());
+
+    let mut tampered_hash = valid_commit;
+    tampered_hash.block_hash[0] ^= 0x01;
+    assert!(engine.verify_commit(&tampered_hash).is_err());
+}
+
+#[test]
+fn byzantine_corruption_matrix_rejects_tampered_commit_variants() {
+    let v1 = validator_with_signer(101, "v1", 1);
+    let v2 = validator_with_signer(102, "v2", 1);
+    let v3 = validator_with_signer(103, "v3", 1);
+    let v4 = validator_with_signer(104, "v4", 1);
+
+    let mut validators = BTreeMap::new();
+    validators.insert(v1.0.clone(), v1.1.clone());
+    validators.insert(v2.0.clone(), v2.1.clone());
+    validators.insert(v3.0.clone(), v3.1.clone());
+    validators.insert(v4.0.clone(), v4.1.clone());
+
+    let mut engine = TendermintEngine::new(validators, TendermintConfig::default());
+    let block_hash = [5u8; 32];
+    let height = 120u64;
+    let round = 4u32;
+
+    for (id, signer) in [("v1", &v1.2), ("v2", &v2.2), ("v3", &v3.2)] {
+        engine
+            .record_vote(signed_vote(
+                id,
+                signer,
+                VoteType::Precommit,
+                height,
+                round,
+                block_hash,
+            ))
+            .expect("baseline precommit should be accepted");
+    }
+
+    let valid_commit = engine
+        .finalize_commit(height, round, block_hash)
+        .expect("baseline commit should finalise");
+    let matrix = vec![
+        ("signature_tamper", CommitCorruptionCase::SignatureTamper),
+        ("height_tamper", CommitCorruptionCase::HeightTamper),
+        ("round_tamper", CommitCorruptionCase::RoundTamper),
+        ("hash_tamper", CommitCorruptionCase::HashTamper),
+        ("vote_type_tamper", CommitCorruptionCase::VoteTypeTamper),
+    ];
+    assert_corruption_matrix_rejected(&engine, &valid_commit, &matrix);
+}

@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CudaDriver** - CUDA device management
 - **Stream management** - CUDA stream creation and synchronization
 - **Kernel launch** - GPU kernel execution support
-- **Linux-only** - Full support on Linux, stub on Windows/macOS
+- **Linux-only** - Full support on Linux, fallback mode on Windows/macOS
 
 #### Core Infrastructure
 

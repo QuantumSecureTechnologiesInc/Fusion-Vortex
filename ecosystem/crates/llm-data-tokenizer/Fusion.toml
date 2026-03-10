@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_data_tokenizer"
+name = "llm-data-tokenizer"
 version = "0.1.0"
 edition = "2021"
 description = "High-throughput, parallel data tokenization for training pipelines"
@@ -10,4 +10,5 @@ fusion-core = { workspace = true }
 fusion_llm_tokenizers = { path = "../llm-tokenizers", version = "0.1.0" }
 tokio = { workspace = true }
 fusion_std = "1.0.0"
+
 

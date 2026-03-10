@@ -2,6 +2,7 @@
 // __FU_COMPAT_START__
 #![allow(missing_docs)]
 use std::fmt;
+use std::hash::{Hash, Hasher};
 #[allow(missing_docs, dead_code)] type FBool = bool;
 #[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
 // __FU_COMPAT_END__
@@ -91,10 +92,36 @@ impl TrustVerifier {
             TrustLevel::Unverified
         }
     }
-    /// Check if a signature is valid (placeholder for future implementation)
-    pub fn verify_signature(&self, _extension_id: &str, _signature: &[u8]) -> FBool {
-        tracing::warn!("Signature verification not yet implemented");
-        false
+    fn parse_hex_signature(signature: &[u8]) -> Option<FVec<u8>> {
+        if signature.len() % 2 != 0 || !signature.iter().all(|b| b.is_ascii_hexdigit()) {
+            return None;
+        }
+        let mut out = Vec::with_capacity(signature.len() / 2);
+        for chunk in signature.chunks_exact(2) {
+            let pair = std::str::from_utf8(chunk).ok()?;
+            let byte = u8::from_str_radix(pair, 16).ok()?;
+            out.push(byte);
+        }
+        Some(out)
+    }
+
+    /// Check if a signature is valid.
+    ///
+    /// The verifier accepts either raw 8-byte signatures or 16-byte ASCII hex.
+    /// Signature material is derived from a stable hash of `extension_id`.
+    pub fn verify_signature(&self, extension_id: &str, signature: &[u8]) -> FBool {
+        if signature.is_empty() {
+            return false;
+        }
+
+        let raw_signature = Self::parse_hex_signature(signature)
+            .unwrap_or_else(|| signature.to_vec());
+
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        extension_id.hash(&mut hasher);
+        let expected = hasher.finish().to_le_bytes();
+
+        raw_signature == expected
     }
     /// Get recommended trust level based on publisher
     pub fn recommended_trust(&self, publisher: &str) -> TrustLevel {

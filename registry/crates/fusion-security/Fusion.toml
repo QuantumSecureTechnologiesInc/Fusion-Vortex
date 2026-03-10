@@ -1,5 +1,5 @@
 [package]
-name = "fusion_security"
+name = "fusion-security"
 version = "0.2.0"
 edition = "2021"
 description = "Security primitives for Fusion: PQC transport, policies, and encryption."
@@ -13,3 +13,4 @@ async-trait = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
+

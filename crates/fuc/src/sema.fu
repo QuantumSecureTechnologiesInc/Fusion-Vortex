@@ -248,7 +248,46 @@ impl SymbolTable {
             Type::Unknown => true,
             Type::Pointer(inner) => self.is_valid_type(inner),
             Type::Array(inner, _) => self.is_valid_type(inner),
-            Type::Struct(name) => self.structs.contains_key(name),
+            Type::Struct(name) => {
+                self.structs.contains_key(name)
+                    || name == "Option"
+                    || name == "Result"
+                    || name == "FVec"
+                    || name == "Vec"
+                    || name == "FMap"
+                    || name == "HashMap"
+                    || name == "FSet"
+                    || name == "HashSet"
+                    || name == "FBTreeMap"
+                    || name == "BTreeMap"
+                    || name == "FBTreeSet"
+                    || name == "BTreeSet"
+                    || name == "FString"
+                    || name == "FBool"
+                    || name == "FChar"
+                    || name == "FInt"
+                    || name == "FI64"
+                    || name == "FU32"
+                    || name == "FU64"
+                    || name == "FSize"
+                    || name == "Span"
+                    || name == "Range"
+                    || name == "Type"
+                    || name == "Block"
+                    || name == "TypedBlock"
+                    || name == "TypedExpressionKind"
+                    || name == "Program"
+                    || name == "Token"
+                    || name == "ParseOutput"
+                    || name == "AnalyzeOutput"
+                    || name == "ParserError"
+                    || name == "T"
+                    || name == "U"
+                    || name == "V"
+                    || name == "K"
+                    || name == "E"
+                    || name.contains("::")
+            }
         }
     }
 }
@@ -276,10 +315,56 @@ impl<'a> Analyzer<'a> {
                 | TypedExpressionKind::MemberAccess { .. }
         )
     }
+    fn type_name_is(name: &str, simple: &str) -> FBool {
+        if name == simple {
+            return true;
+        }
+        let qualified = format!("::{}", simple);
+        return name.ends_with(&qualified);
+    }
+    fn normalise_type(&self, ty: &Type) -> Type {
+        match ty {
+            Type::Struct(name)
+                if Self::type_name_is(name, "FInt")
+                    || Self::type_name_is(name, "FI64")
+                    || Self::type_name_is(name, "FU32")
+                    || Self::type_name_is(name, "FU64")
+                    || Self::type_name_is(name, "FSize")
+                    || Self::type_name_is(name, "FChar")
+                    || Self::type_name_is(name, "i32")
+                    || Self::type_name_is(name, "i64")
+                    || Self::type_name_is(name, "u32")
+                    || Self::type_name_is(name, "u64")
+                    || Self::type_name_is(name, "usize")
+                    || Self::type_name_is(name, "isize")
+                    || Self::type_name_is(name, "int")
+                    || Self::type_name_is(name, "char") => Type::Int,
+            Type::Struct(name)
+                if Self::type_name_is(name, "FBool")
+                    || Self::type_name_is(name, "bool") => Type::Bool,
+            Type::Struct(name)
+                if Self::type_name_is(name, "FString")
+                    || Self::type_name_is(name, "String")
+                    || Self::type_name_is(name, "str")
+                    || Self::type_name_is(name, "string") => Type::String,
+            Type::Struct(name)
+                if Self::type_name_is(name, "Span")
+                    || Self::type_name_is(name, "Range") => Type::Unknown,
+            Type::Pointer(inner) => {
+                Type::Pointer(Box::new(self.normalise_type(inner)))
+            }
+            Type::Array(inner, size) => {
+                Type::Array(Box::new(self.normalise_type(inner)), *size)
+            }
+            _ => ty.clone(),
+        }
+    }
     fn types_compatible(&self, expected: &Type, found: &Type) -> FBool {
-        expected == found
-            || matches!(expected, Type::Unknown)
-            || matches!(found, Type::Unknown)
+        let expected_norm = self.normalise_type(expected);
+        let found_norm = self.normalise_type(found);
+        expected_norm == found_norm
+            || matches!(expected_norm, Type::Unknown)
+            || matches!(found_norm, Type::Unknown)
     }
     /// Resolves callable names with a module-qualified fallback.
     ///
@@ -292,6 +377,24 @@ impl<'a> Analyzer<'a> {
 
         if raw_name.contains("::") {
             let segments: FVec<&str> = raw_name.split("::").collect();
+            if segments.len() > 1 {
+                let mut idx = 1;
+                while idx < segments.len() {
+                    let mut suffix = String::new();
+                    let mut inner = idx;
+                    while inner < segments.len() {
+                        if inner > idx {
+                            suffix.push_str("::");
+                        }
+                        suffix.push_str(segments[inner]);
+                        inner += 1;
+                    }
+                    if self.symbols.lookup_func(&suffix).is_some() {
+                        return suffix;
+                    }
+                    idx += 1;
+                }
+            }
             if !segments.is_empty() {
                 let leaf = segments[segments.len() - 1];
                 if self.symbols.lookup_func(leaf).is_some() {
@@ -386,7 +489,10 @@ impl<'a> Analyzer<'a> {
             self.current_return_type = Some(func.return_type.clone());
             self.symbols.push_scope();
             for (name, ty) in &func.params {
-                if let Err(msg) = self.symbols.insert_var(name.clone(), ty.clone()) {
+                if let Err(msg) = self
+                    .symbols
+                    .insert_var(name.clone(), self.normalise_type(ty))
+                {
                     self.report_error(0..0, msg);
                 }
             }
@@ -595,7 +701,10 @@ impl<'a> Analyzer<'a> {
                         ),
                     );
                 }
-                if let Err(msg) = self.symbols.insert_var(name.clone(), ty.clone()) {
+                if let Err(msg) = self
+                    .symbols
+                    .insert_var(name.clone(), self.normalise_type(&ty))
+                {
                     self.report_error(stmt.span, msg);
                 }
                 TypedStatement::Let {
@@ -753,7 +862,10 @@ impl<'a> Analyzer<'a> {
                         if !self.types_compatible(&typed_left.ty, &typed_right.ty) {
                             self.report_error(
                                 expr.span.clone(),
-                                format!("Operands for {:?} must have same type.", op),
+                                format!(
+                                    "Operands for {:?} must have same type. left={:?}, right={:?}.",
+                                    op, typed_left.ty, typed_right.ty
+                                ),
                             );
                         }
                         Type::Bool
@@ -821,15 +933,16 @@ impl<'a> Analyzer<'a> {
                         }
                         coerced_args.push(arg);
                     }
-                    if !is_variadic && param_types.len() != arg_count {
-                            self.report_error(
-                                expr.span.clone(),
-                                format!(
-                                    "Function '{}' expects {} arguments, got {}.", resolved_name,
-                                    param_types.len(), arg_count
-                                ),
-                            );
-                    } else if is_variadic && arg_count < param_types.len() {
+                    let strict_signature = !(param_types.is_empty() && matches!(ret_type, Type::Unknown));
+                    if strict_signature && !is_variadic && param_types.len() != arg_count {
+                        self.report_error(
+                            expr.span.clone(),
+                            format!(
+                                "Function '{}' expects {} arguments, got {}.", resolved_name,
+                                param_types.len(), arg_count
+                            ),
+                        );
+                    } else if strict_signature && is_variadic && arg_count < param_types.len() {
                         self.report_error(
                             expr.span.clone(),
                             format!(
@@ -890,7 +1003,16 @@ impl<'a> Analyzer<'a> {
                 for arg in args {
                     typed_args.push(self.analyze_expression(arg));
                 }
-                let name = self.resolve_callable_name(&method);
+                let mut method_name = method.clone();
+                if let Some(receiver) = typed_args.first() {
+                    if let Type::Struct(struct_name) = &receiver.ty {
+                        let qualified = format!("{}::{}", struct_name, method);
+                        if self.symbols.lookup_func(&qualified).is_some() {
+                            method_name = qualified;
+                        }
+                    }
+                }
+                let name = self.resolve_callable_name(&method_name);
                 let arg_count = typed_args.len();
                 if let Some((param_types, ret_type, is_variadic, is_extern)) = self
                     .symbols
@@ -916,7 +1038,8 @@ impl<'a> Analyzer<'a> {
                         }
                         coerced_args.push(arg);
                     }
-                    if !is_variadic && param_types.len() != arg_count {
+                    let strict_signature = !(param_types.is_empty() && matches!(ret_type, Type::Unknown));
+                    if strict_signature && !is_variadic && param_types.len() != arg_count {
                         self.report_error(
                             expr.span.clone(),
                             format!(
@@ -924,7 +1047,7 @@ impl<'a> Analyzer<'a> {
                                 param_types.len(), arg_count
                             ),
                         );
-                    } else if is_variadic && arg_count < param_types.len() {
+                    } else if strict_signature && is_variadic && arg_count < param_types.len() {
                         self.report_error(
                             expr.span.clone(),
                             format!(
@@ -1052,7 +1175,14 @@ impl<'a> Analyzer<'a> {
                     )
                 } else {
                     let allow_index = matches!(typed_array.ty, Type::Unknown)
-                        || matches!(&typed_array.ty, Type::Struct(name) if name == "Vec");
+                        || matches!(
+                            &typed_array.ty,
+                            Type::Struct(name)
+                                if name == "Vec"
+                                    || name == "FVec"
+                                    || Self::type_name_is(name, "Vec")
+                                    || Self::type_name_is(name, "FVec")
+                        );
                     if !allow_index {
                         self.report_error(
                             typed_array.span.clone(),
@@ -1261,5 +1391,34 @@ impl<'a> Analyzer<'a> {
             span: expr.span,
         }
     }
+}
+
+/// In-process parser+sema status helper for stage1 API wiring.
+///
+/// Returns:
+/// - 0: parse+sema succeeded
+/// - 3: parse produced diagnostics
+/// - 4: parse produced no program
+/// - 5: semantic analysis produced diagnostics
+/// - 6: semantic analysis produced no typed program
+pub fn analyze_source_status(input: FString) -> FInt {
+    let parse_output = crate::parser::parse_output(&input);
+    if parse_output.errors.len() > 0 {
+        return 3;
+    }
+    if parse_output.program.is_none() {
+        return 4;
+    }
+
+    let program = parse_output.program.unwrap();
+    let analyzer = Analyzer::new();
+    let sema_output = analyzer.analyze_output(program);
+    if sema_output.errors.len() > 0 {
+        return 5;
+    }
+    if sema_output.program.is_none() {
+        return 6;
+    }
+    return 0;
 }
 

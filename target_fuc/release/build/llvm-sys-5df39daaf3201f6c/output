@@ -1,8 +1,0 @@
-cargo:rerun-if-env-changed=LLVM_SYS_201_PREFIX
-cargo:rerun-if-env-changed=LLVM_SYS_201_IGNORE_BLOCKLIST
-cargo:rerun-if-env-changed=LLVM_SYS_201_STRICT_VERSIONING
-cargo:rerun-if-env-changed=LLVM_SYS_201_NO_CLEAN_CFLAGS
-cargo:rerun-if-env-changed=LLVM_SYS_201_USE_DEBUG_MSVCRT
-cargo:rerun-if-env-changed=LLVM_SYS_201_FFI_WORKAROUND
-found LLVM version 18.1.0 on PATH, but need 20.1.1
-cargo:rustc-cfg=LLVM_SYS_NOT_FOUND

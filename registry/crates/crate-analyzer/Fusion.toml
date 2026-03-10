@@ -1,5 +1,5 @@
 [package]
-name = "fusion_crate_analyzer"
+name = "crate-analyzer"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -14,5 +14,6 @@ fusion_core = { workspace = true }
 fusion_std = { workspace = true }
 toml = { workspace = true }
 thiserror = { workspace = true }
+
 
 

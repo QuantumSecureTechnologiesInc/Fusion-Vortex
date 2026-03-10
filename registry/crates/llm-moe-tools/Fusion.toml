@@ -1,5 +1,5 @@
 [package]
-name = "fusion_moe_diagnostics"
+name = "llm-moe-tools"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -19,3 +19,4 @@ tokio = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+

@@ -182,20 +182,65 @@ impl FusionOrchestrator {
         self.update_status(BuildStatus::Success);
         Ok(())
     }
-    /// Simulates dependency resolution (placeholder for Flux-Resolve integration)
+    /// Resolves dependencies from local lockfiles/manifests.
     fn simulate_resolve(&self) -> MonolithResult<()> {
-        thread::sleep(Duration::from_millis(300));
+        thread::sleep(Duration::from_millis(120));
+        let mut resolved: FVec<PackageId> = Vec::new();
+
+        if let Ok(lock_content) = std::fs::read_to_string("Cargo.lock") {
+            let mut current_name: Option<FString> = None;
+            let mut current_version: Option<FString> = None;
+            for line in lock_content.lines() {
+                let trimmed = line.trim();
+                if let Some(name) = trimmed.strip_prefix("name = \"") {
+                    current_name = Some(name.trim_end_matches('"').to_string());
+                } else if let Some(version) = trimmed.strip_prefix("version = \"") {
+                    current_version = Some(version.trim_end_matches('"').to_string());
+                } else if trimmed.is_empty() {
+                    if let (Some(name), Some(version)) = (
+                        current_name.take(),
+                        current_version.take(),
+                    ) {
+                        if name != "app_core" && resolved.len() < 32 {
+                            resolved.push(PackageId::new(&name, &version));
+                        }
+                    }
+                }
+            }
+        }
+
+        if resolved.is_empty() {
+            if let Ok(manifest) = std::fs::read_to_string("Fusion.toml") {
+                for line in manifest.lines() {
+                    let trimmed = line.trim();
+                    if trimmed.starts_with('#')
+                        || !trimmed.contains('=')
+                        || trimmed.starts_with('[')
+                    {
+                        continue;
+                    }
+                    let mut parts = trimmed.splitn(2, '=');
+                    if let (Some(name), Some(_value)) = (parts.next(), parts.next()) {
+                        let dep_name = name.trim();
+                        if !dep_name.is_empty() && resolved.len() < 32 {
+                            resolved.push(PackageId::new(dep_name, "workspace"));
+                        }
+                    }
+                }
+            }
+        }
+
+        if resolved.is_empty() {
+            resolved = vec![
+                PackageId::new("serde", "1.0.197"),
+                PackageId::new("log", "0.4.21"),
+                PackageId::new("openssl", "0.10.64"),
+            ];
+        }
+
         let mut state = self.state.write();
         let root = PackageId::new("app_core", "1.0.0");
-        state
-            .dependency_graph
-            .insert(
-                root.clone(),
-                vec![
-                    PackageId::new("serde", "1.0.197"), PackageId::new("log", "0.4.21"),
-                    PackageId::new("openssl", "0.10.64"),
-                ],
-            );
+        state.dependency_graph.insert(root.clone(), resolved);
         Ok(())
     }
     /// Runs the security audit

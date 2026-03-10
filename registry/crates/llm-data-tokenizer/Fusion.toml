@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_data_tokenizer"
+name = "llm-data-tokenizer"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -21,3 +21,4 @@ fusion_runtime_core = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_q_ibm_backend"
+name = "q-ibm-backend"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -11,12 +11,13 @@ categories = ["algorithms", "science"]
 readme = "README.md"
 
 [dependencies]
-fusion_core = { workspace = true }
-fusion_std = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-uuid = { workspace = true }
-tokio = { workspace = true }
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
+fusion_std = { path = "../std" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = { version = "1.0.133" }
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
 
 [dev-dependencies]
-criterion = { workspace = true }
+criterion = { version = "0.5.1" }
+

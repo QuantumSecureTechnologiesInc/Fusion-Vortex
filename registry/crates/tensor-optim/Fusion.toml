@@ -1,5 +1,5 @@
 [package]
-name = "fusion_tensor_optim"
+name = "tensor-optim"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,6 @@ readme = "README.md"
 fusion_core = { workspace = true }
 fusion-ai-core = { workspace = true } # For Variable/Grads
 fusion_std = "1.0.0"
+
 
 

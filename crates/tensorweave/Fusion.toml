@@ -1,5 +1,5 @@
 [package]
-name = "tensor_weave"
+name = "tensorweave"
 version = "1.0.0"
 edition = "2021"
 authors = ["TensorWeave Engineering <eng@tensorweave.ai>"]
@@ -36,3 +36,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 metrics = "0.21"
 fusion_std = "1.0.0"
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_python_pkg"
+name = "python-pkg"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,6 @@ readme = "README.md"
 fusion_core = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
 fusion_std = "1.0.0"
+
 
 

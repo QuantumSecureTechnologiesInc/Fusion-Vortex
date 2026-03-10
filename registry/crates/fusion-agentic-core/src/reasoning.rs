@@ -90,7 +90,8 @@ impl Default for ReasoningProcessor {
     }
 }
 pub mod uuid {
-    struct Uuid;
+    use super::FString;
+    pub struct Uuid;
     impl Uuid {
         pub fn new_v4() -> Self {
             Self

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_gqa_kernel"
+name = "llm-gqa-kernel"
 version = "0.1.0"
 edition = "2021"
 description = "Fused CUDA/Metal kernel for Grouped Query Attention"
@@ -9,4 +9,5 @@ license = "MIT"
 fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

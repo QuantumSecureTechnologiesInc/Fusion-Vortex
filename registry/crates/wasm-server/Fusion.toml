@@ -1,5 +1,5 @@
 [package]
-name = "fusion_server_wasm"
+name = "wasm-server"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,4 +15,5 @@ fusion_core = { workspace = true }
 fusion_std = { workspace = true }
 wasmtime = { workspace = true } # Standard Wasm runtime
 fusion_runtime_core = { workspace = true }
+
 

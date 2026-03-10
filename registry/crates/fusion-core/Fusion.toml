@@ -2,8 +2,9 @@
 name = "fusion-core"
 version = "0.2.0"
 edition = "2021"
+autobins = false
 license = "MIT"
-description = "Foundation: Core type system and abstractions for Fusion. The standard library base."
+description = "Foundation: Core type system and abstractions for Fusion."
 authors = ["Fusion Team"]
 repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
 keywords = ["foundation", "core", "primitives", "fusion"]
@@ -20,14 +21,10 @@ rand = { version = "0.8.5" }
 ndarray = { version = "0.15" }
 num-traits = { version = "0.2" }
 thiserror = { version = "2.0.6" }
-fusion_std = "1.0.0"
 
 [dev-dependencies]
 criterion = { version = "0.5.1" }
 
 [lib]
 name = "fusion_core"
-path = "src/lib.fu"
-[[bin]]
-name = "fuc"
-path = "src/bin/main.fu"
+path = "src/lib.rs"

@@ -5,7 +5,7 @@ use std::io::Write;
 #[allow(missing_docs, dead_code)] type FBool = bool;
 // __FU_COMPAT_END__
 use anyhow::Result;
-pub fn start_session(_offline: FBool) -> Result<()> {
+pub fn start_session(offline: FBool) -> Result<()> {
     println!("Starting interactive session...");
     println!("Type 'exit' to quit, 'help' for commands\n");
     loop {
@@ -24,7 +24,7 @@ pub fn start_session(_offline: FBool) -> Result<()> {
             }
             "" => continue,
             _ => {
-                println!("Response: Mock response to '{}'", input);
+                crate::commands::handle_prompt(input, offline)?;
             }
         }
     }

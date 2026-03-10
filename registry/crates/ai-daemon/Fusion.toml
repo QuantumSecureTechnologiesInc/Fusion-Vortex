@@ -1,5 +1,5 @@
 [package]
-name = "fusion-ai-daemon"
+name = "ai-daemon"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -29,5 +29,6 @@ fusion-ai-core = { workspace = true }
 fusion-ai-models = { path = "../ai-models/" }
 tokio = { workspace = true, features = ["full"] }
 fusion_std = "1.0.0"
+
 
 

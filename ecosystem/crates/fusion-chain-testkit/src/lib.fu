@@ -1,0 +1,98 @@
+use fusion_chain_contract_abi::{ContractCall, DeployContractTx};
+use fusion_chain_contract_sdk::ContractCallBuilder;
+use fusion_chain_crypto::SoftwareKeyPair;
+use fusion_chain_node::{BlockchainNode, NodeConfig, ValidatorIdentity};
+use fusion_chain_primitives::{Address, PublicKey, Transaction};
+use fusion_chain_rpc::NodeRpc;
+
+pub struct TestHarness {
+    pub node: BlockchainNode,
+    validator_id: String,
+    validator_signer: SoftwareKeyPair,
+}
+
+impl TestHarness {
+    pub fn single_validator(chain_id: u32) -> Self {
+        let validator_id = "validator-a".to_string();
+        let validator_signer = SoftwareKeyPair::from_seed([7u8; 32]);
+        let validator_key = validator_signer.public_key_bytes();
+        let cfg = NodeConfig {
+            chain_id,
+            validators: vec![ValidatorIdentity {
+                id: validator_id.clone(),
+                power: 100,
+                public_key: validator_key,
+            }],
+            ..NodeConfig::default()
+        };
+        Self {
+            node: BlockchainNode::new(cfg),
+            validator_id,
+            validator_signer,
+        }
+    }
+
+    pub fn register_account(&mut self, address: Address, nonce: u64, balance: u128) {
+        self.node.register_account(address, nonce, balance);
+    }
+
+    pub fn submit_and_build(
+        &mut self,
+        tx: Transaction,
+        proposer: PublicKey,
+        timestamp_unix: u64,
+    ) -> Result<(), String> {
+        let _ = proposer;
+        self.node.submit_tx(tx)?;
+        let block = self
+            .node
+            .build_block(self.validator_signer.public_key_bytes(), 0, timestamp_unix);
+        self.node
+            .commit_block_with_local_validator(
+                block,
+                &self.validator_id,
+                &self.validator_signer,
+            )?;
+        Ok(())
+    }
+
+    pub fn deploy_contract(&mut self, owner: Address, wasm: Vec<u8>, init_args: Vec<u8>) -> [u8; 32] {
+        self.node.deploy_contract(DeployContractTx {
+            owner,
+            wasm_bytecode: wasm,
+            init_args,
+        })
+    }
+
+    pub fn call_contract(
+        &mut self,
+        contract_id: [u8; 32],
+        caller: Address,
+        entrypoint: &str,
+        input: Vec<u8>,
+    ) -> Result<Vec<u8>, String> {
+        let call = ContractCallBuilder::new(contract_id, caller, entrypoint)
+            .with_input(input)
+            .with_max_gas(1_500_000)
+            .build();
+
+        let receipt = self.node.query_contract(&call)?;
+        if !receipt.success {
+            return Err("contract call reported failure".to_string());
+        }
+        Ok(receipt.return_data)
+    }
+
+    pub fn quick_call_template(contract_id: [u8; 32], caller: Address, entrypoint: &str) -> ContractCall {
+        ContractCallBuilder::new(contract_id, caller, entrypoint).build()
+    }
+}
+
+#[cfg(test)]
+mod consensus_safety;
+#[cfg(test)]
+mod contract_determinism;
+#[cfg(test)]
+mod genesis_loader;
+#[cfg(test)]
+mod mempool_policy;

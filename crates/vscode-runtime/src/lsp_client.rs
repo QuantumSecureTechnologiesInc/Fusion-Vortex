@@ -270,6 +270,19 @@ impl LspClient {
         let locations: FVec<Location> = serde_json::from_value(response)?;
         Ok(locations)
     }
+    /// Request document symbols
+    pub async fn document_symbols(&mut self, uri: &str) -> Result<Value> {
+        let params = serde_json::json!({ "textDocument": { "uri": uri } });
+        self.send_request("textDocument/documentSymbol", params).await
+    }
+    /// Request diagnostics (LSP 3.17 pull diagnostics)
+    pub async fn diagnostics(&mut self, uri: &str) -> Result<Value> {
+        let params = serde_json::json!({ "textDocument": { "uri": uri } });
+        match self.send_request("textDocument/diagnostic", params).await {
+            Ok(value) => Ok(value),
+            Err(_) => Ok(Value::Array(vec![])),
+        }
+    }
     /// Text document did open notification
     pub async fn did_open(
         &mut self,

@@ -1,5 +1,5 @@
 [package]
-name = "fusion-agents"
+name = "agents"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -20,4 +20,5 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 num_cpus = "1.16"
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

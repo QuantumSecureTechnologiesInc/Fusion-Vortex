@@ -1,4 +1,51 @@
 use anyhow::Result;
-async fn handle_request(_request: serde_json::Value) -> Result<serde_json::Value> {
-    Ok(serde_json::json!({ "status" : "ok", "response" : "Mock AI daemon response" }))
+fn build_prompt_analysis(prompt: &str) -> serde_json::Value {
+    let trimmed = prompt.trim();
+    let words = trimmed
+        .split_whitespace()
+        .filter(|part| !part.is_empty())
+        .count();
+    let chars = trimmed.chars().count();
+    let summary = trimmed
+        .split_terminator(&['.', '!', '?'][..])
+        .next()
+        .unwrap_or(trimmed)
+        .trim();
+    serde_json::json!({
+        "summary": summary,
+        "word_count": words,
+        "char_count": chars
+    })
+}
+
+async fn handle_request(request: serde_json::Value) -> Result<serde_json::Value> {
+    let action = request
+        .get("action")
+        .and_then(|value| value.as_str())
+        .unwrap_or("predict");
+
+    match action {
+        "health" => Ok(serde_json::json!({ "status": "ok", "service": "fusion-ai-daemon" })),
+        "predict" | "chat" | "summarise" => {
+            let prompt = request
+                .get("prompt")
+                .and_then(|value| value.as_str())
+                .unwrap_or("")
+                .trim();
+            if prompt.is_empty() {
+                anyhow::bail!("Missing required field: prompt");
+            }
+            let analysis = build_prompt_analysis(prompt);
+            Ok(serde_json::json!({
+                "status": "ok",
+                "action": action,
+                "analysis": analysis
+            }))
+        }
+        _ => Ok(serde_json::json!({
+            "status": "error",
+            "message": format!("Unsupported action: {}", action),
+            "supported_actions": ["health", "predict", "chat", "summarise"]
+        })),
+    }
 }

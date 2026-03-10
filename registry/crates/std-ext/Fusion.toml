@@ -1,5 +1,5 @@
 [package]
-name = "fusion_std_ext"
+name = "std-ext"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,6 @@ readme = "README.md"
 fusion_core = { workspace = true }
 num-complex = "0.4.6"
 fusion_std = "1.0.0"
+
 
 

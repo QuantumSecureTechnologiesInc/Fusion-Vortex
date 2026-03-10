@@ -1,5 +1,5 @@
 [package]
-name = "fusion_http"
+name = "http"
 version = "0.2.0"
 edition = "2021"
 description = "Integration: Ergonomic HTTP server and client library with async/blocking support"
@@ -31,3 +31,4 @@ fusion_std = "1.0.0"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+

@@ -1,14 +1,15 @@
 [package]
-name = "fusion-analyzer"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
+name = "analyzer"
 description = "Fusion static analyzer - Security lints and code analysis"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
 
 [dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-fusion-core = { path = "../../registry/crates/fusion-core" }
-fusion_std = "1.0.0"
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+fusion-core = { path = "../../registry/crates/fusion-core", package = "fusion-core" }
+fusion_std = { path = "../../registry/crates/std" }
+

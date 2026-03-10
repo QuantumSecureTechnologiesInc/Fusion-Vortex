@@ -1,5 +1,5 @@
 [package]
-name = "fusion_q_compiler_pass"
+name = "compiler-passes"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -14,4 +14,5 @@ fusion_quantum_sdk = { path = "../quantum-sdk", version = "0.2.0" }
 # fusion_quantfusion_core = { workspace = true }
 fusion_core = { workspace = true }
 fusion_std = "1.0.0"
+
 

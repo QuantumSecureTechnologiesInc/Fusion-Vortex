@@ -1,5 +1,5 @@
 [package]
-name = "fusion-ai-cli"
+name = "ai-cli"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -21,4 +21,5 @@ fusion-ai-core = { workspace = true }
 blake3 = { workspace = true }
 chrono = "0.4"
 fusion_std = "1.0.0"
+
 

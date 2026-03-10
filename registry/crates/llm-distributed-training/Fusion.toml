@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_distributed_training"
+name = "llm-distributed-training"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -21,3 +21,4 @@ tokio = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+

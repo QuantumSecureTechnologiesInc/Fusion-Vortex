@@ -1,5 +1,5 @@
 [package]
-name = "fusion-docgen"
+name = "docgen"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -14,4 +14,5 @@ serde_json = { workspace = true }
 handlebars = { workspace = true }
 fusion-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

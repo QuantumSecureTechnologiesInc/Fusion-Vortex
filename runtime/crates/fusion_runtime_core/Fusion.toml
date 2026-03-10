@@ -8,7 +8,7 @@ authors.workspace = true
 description = "Custom heterogeneous runtime for Quantum/AI/Classical hybrid workloads"
 
 [dependencies]
-fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_core = { path = "../../../registry/crates/fusion-core/" }
 fusion_runtime_scheduler = { path = "../../../registry/crates/fusion_runtime_scheduler/" }
 fusion_runtime_mem_mgr = { path = "../../../registry/crates/fusion_runtime_mem_mgr/" }
 fusion_runtime_hal = { path = "../../../registry/crates/fusion_runtime_hal/" }
@@ -41,3 +41,4 @@ proptest = { workspace = true }
 [[bench]]
 name = "runtime_benchmarks"
 harness = false
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_server_event_bus"
+name = "event-bus"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -17,4 +17,5 @@ fusion_runtime_core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
+
 

@@ -116,12 +116,92 @@ impl GpuBridge {
     pub fn should_offload(&self, complexity: FSize) -> FBool {
         self.enabled && complexity >= self.threshold
     }
-    /// Solve SAT problem on GPU (stub - would load CUDA kernel)
-    pub fn solve_sat(&self, _clauses: FVec<FVec<FInt>>) -> Result<FVec<FInt>, FString> {
+    /// Solve SAT problem using deterministic local search.
+    ///
+    /// For small variable counts we brute-force all assignments.
+    /// For larger inputs we use a frequency-guided heuristic.
+    pub fn solve_sat(&self, clauses: FVec<FVec<FInt>>) -> Result<FVec<FInt>, FString> {
         if !self.enabled {
             return Err("GPU disabled".to_string());
         }
-        Ok(vec![1, - 2, 3])
+        if clauses.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let var_count = clauses
+            .iter()
+            .flat_map(|clause| clause.iter())
+            .map(|lit| lit.abs() as FSize)
+            .max()
+            .unwrap_or(0);
+        if var_count == 0 {
+            return Ok(Vec::new());
+        }
+
+        let clause_satisfied = |assignment: &[FBool], clause: &[FInt]| -> FBool {
+            clause.iter().any(|literal| {
+                let idx = literal.abs() as FSize - 1;
+                if idx >= assignment.len() {
+                    return false;
+                }
+                let value = assignment[idx];
+                (*literal > 0 && value) || (*literal < 0 && !value)
+            })
+        };
+
+        if var_count <= 20 {
+            let total = 1u64 << var_count;
+            for mask in 0..total {
+                let mut assignment = vec![false; var_count];
+                for (idx, slot) in assignment.iter_mut().enumerate() {
+                    *slot = (mask & (1u64 << idx)) != 0;
+                }
+                if clauses
+                    .iter()
+                    .all(|clause| clause_satisfied(&assignment, clause))
+                {
+                    let model = assignment
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, value)| {
+                            if *value { (idx + 1) as FInt } else { -((idx + 1) as FInt) }
+                        })
+                        .collect();
+                    return Ok(model);
+                }
+            }
+            return Err("UNSAT".to_string());
+        }
+
+        let mut score = vec![0i64; var_count];
+        for clause in &clauses {
+            for literal in clause {
+                let idx = literal.abs() as FSize - 1;
+                if idx < score.len() {
+                    if *literal > 0 {
+                        score[idx] += 1;
+                    } else {
+                        score[idx] -= 1;
+                    }
+                }
+            }
+        }
+        let assignment: FVec<FBool> = score.into_iter().map(|s| s >= 0).collect();
+        if clauses
+            .iter()
+            .all(|clause| clause_satisfied(&assignment, clause))
+        {
+            let model = assignment
+                .iter()
+                .enumerate()
+                .map(|(idx, value)| {
+                    if *value { (idx + 1) as FInt } else { -((idx + 1) as FInt) }
+                })
+                .collect();
+            Ok(model)
+        } else {
+            Err("No satisfying assignment found with heuristic search".to_string())
+        }
     }
 }
 /// Registry bridge for fetching package metadata

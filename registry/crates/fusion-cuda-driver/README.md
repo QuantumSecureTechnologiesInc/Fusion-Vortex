@@ -12,7 +12,7 @@ Low-level CUDA driver bindings for the Fusion Runtime.
 ## Platform Support
 
 - **Linux**: Full CUDA support via FFI
-- **Windows/macOS**: Stub implementation (returns NotAvailable error)
+- **Windows/macOS**: Fallback mode (returns `NotAvailable` error)
 
 ## Usage
 

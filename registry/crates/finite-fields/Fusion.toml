@@ -1,5 +1,5 @@
 [package]
-name = "fusion_finite_fields"
+name = "finite-fields"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -20,4 +20,5 @@ fusion_std = { workspace = true, default-features = false }
 
 [dev-dependencies]
 criterion = { workspace = true }
+
 

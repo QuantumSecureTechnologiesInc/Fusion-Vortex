@@ -1,5 +1,5 @@
 [package]
-name = "fusion_nn_embed"
+name = "nn-embed"
 version = "0.1.0"
 edition = "2021"
 description = "Token and Positional Embeddings for sequence models"
@@ -9,4 +9,5 @@ license = "MIT"
 fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

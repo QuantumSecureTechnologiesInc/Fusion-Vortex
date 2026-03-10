@@ -1,5 +1,5 @@
 [package]
-name = "haft_fusion"
+name = "haft-fusion"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -27,4 +27,5 @@ path = "src/lib.rs"
 [[bin]]
 name = "haft-fusion"
 path = "src/main.rs"
+
 

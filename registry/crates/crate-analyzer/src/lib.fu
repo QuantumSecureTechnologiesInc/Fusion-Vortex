@@ -24,7 +24,7 @@ impl CrateAnalyzer {
         let value: Value = toml::from_str(&content)?;
         Ok(value)
     }
-    /// Step 2: Map Rust types to Fusion types and generate FFI stubs.
+    /// Step 2: Map Rust types to Fusion types and generate FFI bindings.
     /// This simulates the complex type analysis required.
     pub fn generate_fusion_bindings(
         &self,

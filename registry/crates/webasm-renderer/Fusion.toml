@@ -1,5 +1,5 @@
 [package]
-name = "fusion_ui_webasm_renderer"
+name = "webasm-renderer"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,5 +15,6 @@ fusion_std = { path = "../std", version = "0.2.0" }
 wasmtime = "14.0"
 fusion_ui_layout_builder = { path = "../layout-builder", version = "0.2.0" }
 # In prod: web-sys, js-sys (Rust FFI to browser APIs)
+
 
 

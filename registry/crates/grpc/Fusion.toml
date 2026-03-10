@@ -1,5 +1,5 @@
 [package]
-name = "fusion_server_grpc"
+name = "grpc"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -25,3 +25,4 @@ prost = "0.12"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+

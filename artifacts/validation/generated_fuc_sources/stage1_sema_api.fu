@@ -1,0 +1,20 @@
+//! Stage1 semantic API surface.
+///
+/// Executes semantic checks through strict native in-process parser/sema APIs.
+
+/// Runs semantic phase through strict native in-process phase checks.
+///
+/// Returns:
+/// - 0: semantic phase succeeded
+/// - 1: target path missing
+/// - 2: parser path unreadable
+/// - 3: parser checks failed
+/// - 4: semantic input unreadable
+/// - 5: semantic checks failed
+pub fn sema_file(path: string) -> int {
+    let parse_status = stage1_parser_api::parse_file(path);
+    if parse_status != 0 {
+        return parse_status;
+    }
+    return stage1_parser_api::sema_shape_check(path);
+}

@@ -1,0 +1,12 @@
+[package]
+name = "fusion-chain-consensus-tendermint"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Tendermint-style consensus engine"
+license = "MIT"
+
+[dependencies]
+fusion_std = "1.0.0"
+fusion-chain-primitives = { path = "../fusion-chain-primitives" }
+fusion-chain-crypto = { path = "../fusion-chain-crypto" }

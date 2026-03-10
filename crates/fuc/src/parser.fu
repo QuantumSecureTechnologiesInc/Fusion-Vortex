@@ -508,7 +508,7 @@ enum TopLevel {
     Use(ast::UseDefinition),
     Mod(ast::ModDefinition),
     Trait(ast::TraitDefinition),
-    Impl(ast::ImplDefinition),
+    Impl { def: ast::ImplDefinition, methods: FVec<ast::Function> },
 }
 fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let ident = select! {
@@ -629,6 +629,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .separated_by(just(Token::Comma))
         .map(|fields| fields.into_iter().collect::<FVec<_>>());
     let params_list_trailing = field_or_param
+        .clone()
         .separated_by(just(Token::Comma))
         .allow_trailing()
         .map(|fields| fields.into_iter().collect::<FVec<_>>());
@@ -666,7 +667,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .then(
             fields_or_params_list.delimited_by(just(Token::LParen), just(Token::RParen)),
         )
-        .then(return_type)
+        .then(return_type.clone())
         .then(
             just(Token::KwWhere)
                 .ignore_then(
@@ -938,7 +939,177 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 has_body: true,
             })
         });
+    let impl_self_ref = just(Token::Ampersand)
+        .ignore_then(
+            select! {
+                Token::Identifier(name) if name == "mut" => ()
+            }
+            .or_not(),
+        )
+        .ignore_then(
+            select! {
+                Token::Identifier(name) if name == "self" => name
+            },
+        )
+        .map(|name| (name, ast::Type::Unknown));
+    let impl_self_value = select! {
+            Token::Identifier(name) if name == "self" => name
+        }
+        .map(|name| (name, ast::Type::Unknown));
+    let impl_param = impl_self_ref
+        .or(impl_self_value)
+        .or(field_or_param.clone());
+    let impl_params_list = impl_param
+        .separated_by(just(Token::Comma))
+        .allow_trailing()
+        .map(|params| params.into_iter().collect::<FVec<_>>());
+    let impl_method_strict = visibility
+        .clone()
+        .ignore_then(just(Token::KwAsync).or_not())
+        .ignore_then(just(Token::KwFn))
+        .ignore_then(ident.clone())
+        .then(generic_header.clone().or_not())
+        .then(
+            impl_params_list
+                .clone()
+                .delimited_by(just(Token::LParen), just(Token::RParen)),
+        )
+        .then(return_type.clone())
+        .then(
+            just(Token::KwWhere)
+                .ignore_then(
+                    any()
+                        .try_map(|t, span| {
+                            if t == Token::LBrace {
+                                Err(Simple::custom(span, "where clause ended"))
+                            } else {
+                                Ok(t)
+                            }
+                        })
+                        .repeated(),
+                )
+                .or_not(),
+        )
+        .then(function_block.clone())
+        .map(|(((((name, _), params), return_type), _), body)| ast::Function {
+            name,
+            params,
+            return_type,
+            body,
+        });
+    let impl_method_opaque = visibility
+        .clone()
+        .ignore_then(just(Token::KwAsync).or_not())
+        .ignore_then(just(Token::KwFn))
+        .ignore_then(ident.clone())
+        .then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "start of impl method body"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated(),
+        )
+        .then(function_block.clone())
+        .map(|((name, _), body)| ast::Function {
+            name,
+            params: Vec::new(),
+            return_type: ast::Type::Unknown,
+            body,
+        });
+    let impl_method = impl_method_strict.or(impl_method_opaque);
     let impl_decl = visibility
+        .clone()
+        .ignore_then(just(Token::KwImpl))
+        .ignore_then(
+            any()
+                .try_map(|t, span| {
+                    if t == Token::LBrace {
+                        Err(Simple::custom(span, "end of impl header"))
+                    } else {
+                        Ok(t)
+                    }
+                })
+                .repeated(),
+        )
+        .then(impl_method.repeated().delimited_by(just(Token::LBrace), just(Token::RBrace)))
+        .map(|(header_tokens, methods)| {
+            let mut target = "impl".to_string();
+            for token in &header_tokens {
+                if let Token::Identifier(name) = token {
+                    if let Some(first) = name.chars().next() {
+                        if first.is_ascii_uppercase() {
+                            target = name.clone();
+                            break;
+                        }
+                    }
+                }
+            }
+            if target == "impl" {
+                for token in header_tokens {
+                    if let Token::Identifier(name) = token {
+                        target = name;
+                    }
+                }
+            }
+            let mut lowered_methods: FVec<ast::Function> = Vec::new();
+            for method in methods {
+                let rewritten_return_type = match method.return_type.clone() {
+                    ast::Type::Struct(name) if name == "Self" => {
+                        ast::Type::Struct(target.clone())
+                    }
+                    ast::Type::Pointer(inner) => {
+                        if let ast::Type::Struct(name) = *inner {
+                            if name == "Self" {
+                                ast::Type::Pointer(Box::new(ast::Type::Struct(target.clone())))
+                            } else {
+                                ast::Type::Pointer(Box::new(ast::Type::Struct(name)))
+                            }
+                        } else {
+                            ast::Type::Pointer(inner)
+                        }
+                    }
+                    other => other,
+                };
+                let mut rewritten_params: FVec<(FString, ast::Type)> = Vec::new();
+                for (param_name, param_ty) in method.params {
+                    let rewritten_ty = match param_ty {
+                        ast::Type::Struct(name) if name == "Self" => {
+                            ast::Type::Struct(target.clone())
+                        }
+                        ast::Type::Pointer(inner) => {
+                            if let ast::Type::Struct(name) = *inner {
+                                if name == "Self" {
+                                    ast::Type::Pointer(Box::new(ast::Type::Struct(target.clone())))
+                                } else {
+                                    ast::Type::Pointer(Box::new(ast::Type::Struct(name)))
+                                }
+                            } else {
+                                ast::Type::Pointer(inner)
+                            }
+                        }
+                        other => other,
+                    };
+                    rewritten_params.push((param_name, rewritten_ty));
+                }
+                lowered_methods.push(ast::Function {
+                    name: format!("{}::{}", target, method.name),
+                    params: rewritten_params,
+                    return_type: rewritten_return_type,
+                    body: method.body,
+                });
+            }
+            TopLevel::Impl {
+                def: ast::ImplDefinition {
+                    target,
+                },
+                methods: lowered_methods,
+            }
+        });
+    let impl_decl_opaque = visibility
         .clone()
         .ignore_then(just(Token::KwImpl))
         .ignore_then(
@@ -955,12 +1126,29 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         )
         .map(|header_tokens| {
             let mut target = "impl".to_string();
-            for token in header_tokens {
+            for token in &header_tokens {
                 if let Token::Identifier(name) = token {
-                    target = name;
+                    if let Some(first) = name.chars().next() {
+                        if first.is_ascii_uppercase() {
+                            target = name.clone();
+                            break;
+                        }
+                    }
                 }
             }
-            TopLevel::Impl(ast::ImplDefinition { target })
+            if target == "impl" {
+                for token in header_tokens {
+                    if let Token::Identifier(name) = token {
+                        target = name;
+                    }
+                }
+            }
+            TopLevel::Impl {
+                def: ast::ImplDefinition {
+                    target,
+                },
+                methods: Vec::new(),
+            }
         });
     let trait_decl = visibility
         .clone()
@@ -1015,6 +1203,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .or(mod_decl)
         .or(mod_block)
         .or(impl_decl)
+        .or(impl_decl_opaque)
         .or(trait_decl);
     let top_level_item = attributes.ignore_then(top_level_item);
     top_level_item
@@ -1043,7 +1232,12 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                     TopLevel::Use(u) => uses.push(u),
                     TopLevel::Mod(m) => mods.push(m),
                     TopLevel::Trait(t) => traits.push(t),
-                    TopLevel::Impl(i) => impls.push(i),
+                    TopLevel::Impl { def, methods } => {
+                        impls.push(def);
+                        for method in methods {
+                            functions.push(method);
+                        }
+                    }
                 }
             }
             ast::Program {
@@ -1063,7 +1257,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .then_ignore(end())
 }
 /// Parses source text into an AST program.
-fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
+pub fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
     let tokens = crate::lexer::lex(input);
     let token_stream = chumsky::Stream::from_iter(
         tokens.len()..tokens.len(),
@@ -1072,14 +1266,39 @@ fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
     program_parser().parse_recovery(token_stream)
 }
 /// Parse output container for native-friendly field access.
-struct ParseOutput {
+pub struct ParseOutput {
     /// Parsed program, if successful.
     pub program: Option<ast::Program>,
     /// Parser diagnostics.
     pub errors: FVec<ParserError>,
 }
-/// Parses source text and returns a field-addressable result.
-fn parse_output(input: &str) -> ParseOutput {
+/// Real parser output used by host compiler entry paths.
+pub fn parse_host_output(input: &str) -> ParseOutput {
     let (program, errors) = parse(input);
     ParseOutput { program, errors }
+}
+
+/// Parser output used by stage1 status helpers.
+///
+/// This now returns the real parser output path and no longer synthesises
+/// `Some(empty_program)` sentinel values.
+pub fn parse_output(input: &str) -> ParseOutput {
+    return parse_host_output(input);
+}
+
+/// In-process parser status helper for stage1 API wiring.
+///
+/// Returns:
+/// - 0: parse succeeded
+/// - 3: parse produced diagnostics
+/// - 4: parse produced no program
+pub fn parse_status(input: FString) -> FInt {
+    let output = parse_output(&input);
+    if output.errors.len() > 0 {
+        return 3;
+    }
+    if output.program.is_none() {
+        return 4;
+    }
+    return 0;
 }

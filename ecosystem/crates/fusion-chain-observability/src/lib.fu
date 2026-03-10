@@ -1,0 +1,75 @@
+#[derive(Debug, Clone)]
+pub struct ConsensusHealth {
+    pub healthy: bool,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct NodeMetrics {
+    pub blocks_committed: u64,
+    pub transactions_accepted: u64,
+    pub transactions_rejected: u64,
+    pub precommits_observed: u64,
+    pub average_block_time_ms: u64,
+}
+
+impl NodeMetrics {
+    pub fn new() -> Self {
+        Self {
+            blocks_committed: 0,
+            transactions_accepted: 0,
+            transactions_rejected: 0,
+            precommits_observed: 0,
+            average_block_time_ms: 0,
+        }
+    }
+
+    pub fn on_tx_accepted(&mut self) {
+        self.transactions_accepted = self.transactions_accepted.saturating_add(1);
+    }
+
+    pub fn on_tx_rejected(&mut self) {
+        self.transactions_rejected = self.transactions_rejected.saturating_add(1);
+    }
+
+    pub fn on_block_committed(&mut self, block_time_ms: u64) {
+        self.blocks_committed = self.blocks_committed.saturating_add(1);
+        if self.blocks_committed == 1 {
+            self.average_block_time_ms = block_time_ms;
+        } else {
+            let historical = self.average_block_time_ms.saturating_mul(self.blocks_committed.saturating_sub(1));
+            self.average_block_time_ms = (historical.saturating_add(block_time_ms)) / self.blocks_committed;
+        }
+    }
+
+    pub fn on_precommit(&mut self) {
+        self.precommits_observed = self.precommits_observed.saturating_add(1);
+    }
+
+    pub fn health(&self) -> ConsensusHealth {
+        if self.blocks_committed == 0 {
+            return ConsensusHealth {
+                healthy: false,
+                reason: "node has not committed any block".to_string(),
+            };
+        }
+
+        if self.average_block_time_ms > 10_000 {
+            return ConsensusHealth {
+                healthy: false,
+                reason: "average block time exceeds SLO".to_string(),
+            };
+        }
+
+        ConsensusHealth {
+            healthy: true,
+            reason: "consensus progression is stable".to_string(),
+        }
+    }
+}
+
+impl Default for NodeMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}

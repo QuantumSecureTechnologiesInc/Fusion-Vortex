@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    ".",
+    "../fusion-chain-primitives",
+    "../fusion-chain-codec",
+    "../fusion-chain-crypto",
+    "../fusion-chain-ledger",
+    "../fusion-chain-state",
+    "../fusion-chain-tx",
+    "../fusion-chain-mempool",
+    "../fusion-chain-p2p",
+    "../fusion-chain-consensus-tendermint",
+    "../fusion-chain-finality",
+    "../fusion-chain-vm",
+    "../fusion-chain-contract-abi",
+    "../fusion-chain-contract-runtime",
+    "../fusion-chain-contract-sdk",
+    "../fusion-chain-rpc",
+    "../fusion-chain-node",
+    "../fusion-chain-node-local",
+    "../fusion-chain-audit",
+    "../fusion-chain-observability",
+    "../fusion-chain-testkit"
+]

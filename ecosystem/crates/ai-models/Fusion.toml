@@ -1,5 +1,5 @@
 [package]
-name = "fusion-ai-models"
+name = "ai-models"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -20,5 +20,6 @@ fusion_std = "1.0.0"
 
 [features]
 default = []
-llama-cpp = []  # Placeholder for future llama-cpp integration
-onnx = []       # Placeholder for future ONNX integration
+llama-cpp = []  # Enables llama.cpp backend integration hooks
+onnx = []       # Enables ONNX Runtime backend integration hooks
+

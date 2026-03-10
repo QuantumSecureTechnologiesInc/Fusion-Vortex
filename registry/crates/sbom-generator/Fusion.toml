@@ -1,5 +1,5 @@
 [package]
-name = "fusion_sbom_generator"
+name = "sbom-generator"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -21,3 +21,4 @@ chrono = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_sec_supply_chain"
+name = "supply-chain"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -14,5 +14,6 @@ fusion_std = { path = "../std", version = "0.2.0" }
 fusion_core = { workspace = true } # For manifest parsing
 sha2 = { workspace = true }
 serde = { workspace = true }
+
 
 

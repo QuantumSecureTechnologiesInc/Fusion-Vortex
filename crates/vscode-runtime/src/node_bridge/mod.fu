@@ -93,6 +93,7 @@ impl NodeRuntime {
                 arch: 'x64',
                 env: {},
                 argv: ['node', 'extension.js'],
+                _listeners: {},
                 cwd: function() { return '/'; },
                 exit: function(code) { 
                     console.log('Process exit:', code); 
@@ -101,10 +102,21 @@ impl NodeRuntime {
                     setTimeout(callback, 0);
                 },
                 on: function(event, handler) {
-                    // Event listener stub
+                    if (typeof handler !== 'function') return this;
+                    if (!this._listeners[event]) this._listeners[event] = [];
+                    this._listeners[event].push(handler);
+                    return this;
                 },
                 emit: function(event, ...args) {
-                    // Event emitter stub
+                    const handlers = this._listeners[event] || [];
+                    for (const handler of handlers) {
+                        try {
+                            handler(...args);
+                        } catch (err) {
+                            console.error('process.emit handler error:', err);
+                        }
+                    }
+                    return handlers.length > 0;
                 }
             };
         "#;
@@ -188,7 +200,7 @@ impl NodeRuntime {
     }
     /// Set up core Node.js modules
     fn setup_core_modules(context: &mut Context) -> Result<()> {
-        let module_stubs = r#"
+        let module_registry = r#"
             var _nodeModules = {
                 'fs': null,
                 'path': null,
@@ -201,7 +213,7 @@ impl NodeRuntime {
             };
         "#;
         context
-            .eval(Source::from_bytes(module_stubs))
+            .eval(Source::from_bytes(module_registry))
             .map_err(|e| anyhow::anyhow!("JS Error: {:?}", e))?;
         Ok(())
     }

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_vision_adapter"
+name = "llm-vision-adapter"
 version = "0.1.0"
 edition = "2021"
 description = "Multimodal vision adapter for LLMs (image encoding and alignment)"
@@ -8,4 +8,5 @@ license = "MIT"
 [dependencies]
 fusion-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

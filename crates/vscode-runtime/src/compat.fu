@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub enum CompatibilityLevel {
     /// Fully compatible - Supports all requested capabilities
     Full,
-    /// Headless - UI components will be mocked or ignored, but logic works
+    /// Headless - UI components are emulated or ignored, while core logic remains available
     Headless,
     /// Minimal - Basic functionality only, many features disabled
     Minimal,

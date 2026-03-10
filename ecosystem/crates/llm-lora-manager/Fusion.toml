@@ -1,5 +1,5 @@
 [package]
-name = "fusion_llm_lora_manager"
+name = "llm-lora-manager"
 version = "0.1.0"
 edition = "2021"
 description = "LoRA adapter manager for LLM models"
@@ -8,4 +8,5 @@ license = "MIT"
 [dependencies]
 fusion-core = { workspace = true }
 fusion_std = "1.0.0"
+
 

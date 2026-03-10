@@ -1,5 +1,5 @@
 [package]
-name = "fusion_tokenizers"
+name = "tokenizers"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -13,3 +13,4 @@ readme = "README.md"
 fusion_core = { workspace = true }
 fusion_std = { path = "../std", version = "0.2.0" }
 # In prod: tokenizers = "0.15" (Rust library)
+

@@ -1,5 +1,5 @@
 [package]
-name = "fusion_sec_penetration"
+name = "sec-penetration"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -19,5 +19,6 @@ fusion_runtime_core = { workspace = true }
 futures = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+
 
 

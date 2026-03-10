@@ -1,0 +1,75 @@
+use fusion_chain_contract_abi::{ContractCall, DeployContractTx};
+use fusion_chain_contract_runtime::ContractRuntime;
+use fusion_chain_state::StateStore;
+use fusion_chain_vm::DeterministicVm;
+
+#[test]
+fn contract_determinism_same_input_same_output() {
+    let mut runtime = ContractRuntime::new(DeterministicVm);
+    let contract_id = runtime.deploy(DeployContractTx {
+        owner: [8u8; 20],
+        wasm_bytecode: vec![1u8, 2, 3, 4, 5, 6, 7],
+        init_args: vec![],
+    });
+
+    let call = ContractCall {
+        contract_id,
+        caller: [9u8; 20],
+        entrypoint: "execute".to_string(),
+        input: vec![10u8, 11, 12, 13],
+        max_gas: 1_000_000,
+    };
+
+    let mut state_a = StateStore::new();
+    let mut state_b = StateStore::new();
+
+    let receipt_a = runtime
+        .invoke(&call, &mut state_a, 42, 0)
+        .expect("first deterministic execution should succeed");
+    let receipt_b = runtime
+        .invoke(&call, &mut state_b, 42, 0)
+        .expect("second deterministic execution should succeed");
+
+    assert_eq!(receipt_a.success, true);
+    assert_eq!(receipt_b.success, true);
+    assert_eq!(receipt_a.return_data, receipt_b.return_data);
+    assert_eq!(receipt_a.gas_used, receipt_b.gas_used);
+    assert_eq!(state_a.root(), state_b.root());
+}
+
+#[test]
+fn contract_determinism_different_input_changes_output() {
+    let mut runtime = ContractRuntime::new(DeterministicVm);
+    let contract_id = runtime.deploy(DeployContractTx {
+        owner: [4u8; 20],
+        wasm_bytecode: vec![91u8, 92, 93, 94],
+        init_args: vec![],
+    });
+
+    let call_a = ContractCall {
+        contract_id,
+        caller: [6u8; 20],
+        entrypoint: "execute".to_string(),
+        input: vec![1u8, 2, 3],
+        max_gas: 1_000_000,
+    };
+    let call_b = ContractCall {
+        contract_id,
+        caller: [6u8; 20],
+        entrypoint: "execute".to_string(),
+        input: vec![3u8, 2, 1],
+        max_gas: 1_000_000,
+    };
+
+    let mut state = StateStore::new();
+    let out_a = runtime
+        .invoke(&call_a, &mut state, 50, 0)
+        .expect("execution A should succeed")
+        .return_data;
+    let out_b = runtime
+        .invoke(&call_b, &mut state, 50, 1)
+        .expect("execution B should succeed")
+        .return_data;
+
+    assert_ne!(out_a, out_b);
+}

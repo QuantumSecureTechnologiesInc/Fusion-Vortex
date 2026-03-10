@@ -1,0 +1,15 @@
+use crate::compiler::ast::Program;
+use crate::compiler::error::CompilerError;
+fn check(_program: &Program) -> Result<(), CompilerError> {
+    Ok(())
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::compiler::ast::Program;
+    #[test]
+    fn test_check_empty_program() {
+        let program = Program { declarations: vec![] };
+        assert!(check(& program).is_ok());
+    }
+}

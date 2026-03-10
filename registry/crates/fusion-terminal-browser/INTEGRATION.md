@@ -204,8 +204,8 @@ fn get_html(url: &str, output: Option<&str>) -> anyhow::Result<()> {
 }
 
 fn run_automation(url: &str, script_path: &str) -> anyhow::Result<()> {
-    // This is a placeholder for automation functionality
-    // In a real implementation, you would parse a YAML/JSON automation script
+    // Minimal automation entrypoint.
+    // Extend this by parsing a YAML/JSON automation script.
 
     let mut browser = Browser::new(BrowserConfig::default())?;
     browser.navigate(url)?;

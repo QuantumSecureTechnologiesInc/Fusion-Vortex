@@ -1,5 +1,5 @@
 [package]
-name = "fusion_vram_scheduler"
+name = "vram-scheduler"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -16,3 +16,4 @@ fusion_runtime_core = { workspace = true }
 fusion_llm_inference_engine = { version = "0.2.0", path = "../llm-inference" }
 fusion_kv_cache = { path = "../kv-cache" }
 tokio = { workspace = true }
+

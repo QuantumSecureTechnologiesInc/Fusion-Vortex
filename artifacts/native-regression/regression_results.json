@@ -1,9 +1,9 @@
 ﻿{
     "summary":  {
-                    "timestamp":  "2026-03-06T04:43:37.4393855+00:00",
+                    "timestamp":  "2026-03-10T03:37:42.3580571+00:00",
                     "compiler":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\target\\release\\fuc.exe",
-                    "total":  44,
-                    "passed":  44,
+                    "total":  50,
+                    "passed":  50,
                     "failed":  0
                 },
     "results":  [
@@ -57,6 +57,48 @@
                         "passed":  true
                     },
                     {
+                        "name":  "main.fu",
+                        "phase":  "emit-bin-native-main",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "main_native_regression.exe",
+                        "phase":  "run-native-main",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_status_deep_probe.fu",
+                        "phase":  "emit-bin-stage1-deep-probe",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_status_deep_probe.exe",
+                        "phase":  "run-stage1-deep-probe",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_full_status_probe.fu",
+                        "phase":  "emit-bin-stage1-full-probe",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stage1_full_status_probe.exe",
+                        "phase":  "run-stage1-full-probe",
+                        "exit_code":  0,
+                        "expected_pass":  true,
+                        "passed":  true
+                    },
+                    {
                         "name":  "arrays.fu",
                         "phase":  "parse-only",
                         "exit_code":  0,
@@ -206,8 +248,8 @@
                     {
                         "name":  "memory.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
-                        "expected_pass":  false,
+                        "exit_code":  0,
+                        "expected_pass":  true,
                         "passed":  true
                     },
                     {

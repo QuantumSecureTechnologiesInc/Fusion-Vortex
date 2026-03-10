@@ -130,7 +130,13 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
             )
             all_codegen_ok = False
         else:
-            stage1_run_result = subprocess.run([str(stage1_bin)], check=False)
+            run_env = os.environ.copy()
+            run_env["FUSION_ACTIVE_COMPILER"] = str(stage0)
+            stage1_run_result = subprocess.run(
+                [str(stage1_bin)],
+                check=False,
+                env=run_env,
+            )
             if stage1_run_result.returncode != 0:
                 print(
                     ">>> Warning: stage1 minimal binary exited with "
@@ -155,8 +161,12 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
             )
             all_codegen_ok = False
         else:
+            run_env = os.environ.copy()
+            run_env["FUSION_ACTIVE_COMPILER"] = str(stage0)
             stage1_boot_run_result = subprocess.run(
-                [str(stage1_boot_bin)], check=False
+                [str(stage1_boot_bin)],
+                check=False,
+                env=run_env,
             )
             if stage1_boot_run_result.returncode != 0:
                 print(
@@ -239,6 +249,7 @@ def build_compat(source: str) -> str:
             uses.insert(0, f"use std::collections::{needs[0]};")
         else:
             uses.insert(0, f"use std::collections::{{{', '.join(needs)}}};")
+    uses = [f"#[allow(unused_imports)] {line}" for line in uses]
 
     alias_lines = []
     for name, line in ALIAS_DEFS:
@@ -306,8 +317,124 @@ def sync_fu_to_rs(base: Path) -> int:
     return copied
 
 
+def reduce_main_warning_noise(main_source: str) -> str:
+    main_source = main_source.replace(
+        "let overall_start = std::time::Instant::now();",
+        "let _overall_start = std::time::Instant::now();",
+    )
+    # Keep runtime semantics identical while avoiding `while_true` lint noise.
+    return re.sub(r"\bwhile\s+true\s*\{", "loop {", main_source)
+
+
 def patch_generated_rust_sources(base: Path) -> None:
     llvm_rs = base / "src" / "codegen" / "llvm.rs"
+    parser_rs = base / "src" / "parser.rs"
+    lexer_rs = base / "src" / "lexer.rs"
+    ir_rs = base / "src" / "ir.rs"
+    optimizer_rs = base / "src" / "optimizer.rs"
+    main_rs = base / "src" / "main.rs"
+
+    if lexer_rs.exists():
+        lexer_source = lexer_rs.read_text(encoding="utf-8")
+        # Some .fu files may be flattened to a single line with a leading `//!`.
+        # Split the module docs from code and force the public lexer surface that
+        # parser.rs imports during source-refresh rebuilds.
+        lexer_source = re.sub(
+            r"^(//![^\n]*?)\s+(use\s+)",
+            r"\1\n\2",
+            lexer_source,
+            count=1,
+            flags=re.DOTALL,
+        )
+        lexer_source = re.sub(
+            r"(?<!pub\s)enum\s+Token\s*\{",
+            "pub enum Token {",
+            lexer_source,
+            count=1,
+        )
+        lexer_source = re.sub(
+            r"(?<!pub\s)fn\s+lex\s*\(",
+            "pub fn lex(",
+            lexer_source,
+            count=1,
+        )
+        lexer_rs.write_text(lexer_source, encoding="utf-8")
+
+    if parser_rs.exists():
+        parser_source = parser_rs.read_text(encoding="utf-8")
+        # Stabilize type inference for chumsky-heavy closures under Rust rebuild.
+        parser_source = parser_source.replace(
+            ".map_with_span(|name, span| {",
+            ".map_with_span(|name: FString, span| {",
+        )
+        parser_source = parser_source.replace(
+            ".map(|(method, args)| {",
+            ".map(|(method, args): (FString, Option<FVec<Spanned<ast::Expression>>>)| {",
+        )
+        parser_source = parser_source.replace(
+            ".map(|((name, ty), value)| ast::Statement::Let {",
+            ".map(|((name, ty), value): ((FString, Option<ast::Type>), Spanned<ast::Expression>)| ast::Statement::Let {",
+        )
+        parser_source = parser_source.replace(
+            ".map(|fields| fields.into_iter().collect::<FVec<_>>());",
+            ".map(|fields| fields);",
+        )
+        parser_source = parser_source.replace(
+            ".map(|t| t.unwrap_or(ast::Type::Void));",
+            ".map(|t: Option<ast::Type>| t.unwrap_or(ast::Type::Void));",
+        )
+        parser_source = parser_source.replace(
+            ".map(|opt| opt.unwrap_or_else(|| (Vec::new(), false)));",
+            ".map(|opt: Option<(FVec<(FString, ast::Type)>, bool)>| opt.unwrap_or_else(|| (Vec::new(), false)));",
+        )
+        parser_source = parser_source.replace(
+            ".map(|opt| opt.unwrap_or_else(|| Vec::new()));",
+            ".map(|opt: Option<FVec<ast::Type>>| opt.unwrap_or_else(|| Vec::new()));",
+            1,
+        )
+        parser_source = parser_source.replace(
+            ".map(|opt| opt.unwrap_or_else(|| Vec::new()));",
+            ".map(|opt: Option<FVec<(FString, ast::Type)>>| opt.unwrap_or_else(|| Vec::new()));",
+            1,
+        )
+        parser_source = parser_source.replace(
+            ".map(|((name, ty), value)| {",
+            ".map(|((name, ty), value): ((FString, Option<ast::Type>), Option<Spanned<ast::Expression>>)| {",
+        )
+        parser_source = parser_source.replace(
+            ".map(|(name, ty)| {",
+            ".map(|(name, ty): (FString, Option<ast::Type>)| {",
+        )
+        parser_source = re.sub(
+            r"(fn program_parser\(\) -> impl Parser<Token, ast::Program, Error = ParserError> \{\s*"
+            r"let ident = select!\s*\{[^}]*\}\s*;\s*)let path = ident",
+            r"\1let _path = ident",
+            parser_source,
+            count=1,
+            flags=re.DOTALL,
+        )
+        parser_rs.write_text(parser_source, encoding="utf-8")
+
+    if ir_rs.exists():
+        ir_source = ir_rs.read_text(encoding="utf-8")
+        ir_source = ir_source.replace(
+            "use crate::ast::{self, BinaryOp, Type};",
+            "use crate::ast::{BinaryOp, Type};",
+        )
+        ir_rs.write_text(ir_source, encoding="utf-8")
+
+    if optimizer_rs.exists():
+        optimizer_source = optimizer_rs.read_text(encoding="utf-8")
+        optimizer_source = optimizer_source.replace(
+            "use crate::ast::{self, BinaryOp};",
+            "use crate::ast::BinaryOp;",
+        )
+        optimizer_rs.write_text(optimizer_source, encoding="utf-8")
+
+    if main_rs.exists():
+        main_source = main_rs.read_text(encoding="utf-8")
+        main_rs.write_text(reduce_main_warning_noise(main_source), encoding="utf-8")
+
     if not llvm_rs.exists():
         return
 
@@ -372,6 +499,15 @@ def patch_generated_rust_sources(base: Path) -> None:
     llvm_rs.write_text(source, encoding="utf-8")
 
 
+def promote_rust_compat_main(base: Path) -> None:
+    compat_fu = base / "src" / "main_rust_compat.fu"
+    if not compat_fu.exists():
+        return
+    main_rs = base / "src" / "main.rs"
+    promoted = inject_compat(compat_fu.read_text(encoding="utf-8"))
+    main_rs.write_text(reduce_main_warning_noise(promoted), encoding="utf-8")
+
+
 def write_cargo_from_fusion(
     fusion_toml: Path, cargo_toml: Path, *, stdlib_path: Path | None
 ) -> None:
@@ -414,6 +550,7 @@ def refresh_stage0_from_source() -> Path:
     copied = sync_fu_to_rs(FUC_DIR)
     print(f">>> Synced {copied} Fusion source files to Rust stubs")
     patch_generated_rust_sources(FUC_DIR)
+    promote_rust_compat_main(FUC_DIR)
     write_cargo_from_fusion(
         FUC_DIR / "fusion.toml",
         FUC_DIR / "Cargo.toml",

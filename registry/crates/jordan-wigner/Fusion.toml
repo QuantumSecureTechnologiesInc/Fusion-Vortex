@@ -1,5 +1,5 @@
 [package]
-name = "fusion_jordan_wigner"
+name = "jordan-wigner"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -21,4 +21,5 @@ criterion = { workspace = true }
 # [[bench]]
 # name = "jordan_wigner_benchmark"
 # harness = false
+
 

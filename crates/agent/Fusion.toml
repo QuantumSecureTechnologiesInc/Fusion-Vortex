@@ -1,5 +1,5 @@
 [package]
-name = "fusion-agent"
+name = "agent"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -15,4 +15,5 @@ tracing = { workspace = true }
 fusion-mcp = { path = "../../registry/crates/mcp" }
 fusion-policy = { workspace = true }
 fusion_std = "1.0.0"
+
 

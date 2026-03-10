@@ -1,40 +1,32 @@
 [package]
-name = "fusion-ai-enhanced"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
+name = "ai-enhanced"
 description = "Enhanced AI capabilities with Claude Code, Codex, and Gemini-level features"
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
 
 [dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-tokio = { workspace = true }
-async-trait = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tracing = { workspace = true }
-reqwest = { workspace = true }
-futures = "0.3"
-uuid = { workspace = true }
-async-stream = { workspace = true }
-
-# AI provider APIs - external crates
-# Note: These may need to be added to workspace or kept as direct deps
-
-# Code analysis
-tree-sitter = "0.20"
-tree-sitter-rust = "0.20"
-tree-sitter-python = "0.20"
-
-# Context management
-dashmap = "5.5"
-lru = "0.12"
-
-# Extension integration
+anyhow = { version = "1.0.94" }
+thiserror = { version = "2.0.6" }
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+async-trait = { version = "0.1.83" }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+serde_json = { version = "1.0.133" }
+tracing = { version = "0.1.41" }
+reqwest = { version = "0.12.9", features = ["json", "stream", "multipart"] }
+futures = { version = "0.3.31" }
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+async-stream = { version = "0.3.5" }
+tree-sitter = { version = "0.20" }
+tree-sitter-rust = { version = "0.20" }
+tree-sitter-python = { version = "0.20" }
+dashmap = { version = "5.5" }
+lru = { version = "0.12" }
 fusion-mcp = { path = "../../registry/crates/mcp" }
 fusion-vscode-runtime = { path = "../vscode-runtime" }
-fusion_std = "1.0.0"
+fusion_std = { path = "../../registry/crates/std" }
 
 [dev-dependencies]
-tempfile = { workspace = true }
+tempfile = { version = "3.14.0" }
+

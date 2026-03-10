@@ -1,0 +1,12 @@
+[package]
+name = "fusion-chain-audit"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Tamper-evident audit trail for chain operations"
+license = "MIT"
+
+[dependencies]
+fusion_std = "1.0.0"
+fusion-chain-primitives = { path = "../fusion-chain-primitives" }
+fusion-chain-crypto = { path = "../fusion-chain-crypto" }

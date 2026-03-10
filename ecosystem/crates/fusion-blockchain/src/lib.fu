@@ -1,3 +1,36 @@
-fn hello() {
-    println!("Hello from fusion-blockchain!");
+pub use fusion_chain_primitives as primitives;
+pub use fusion_chain_codec as codec;
+pub use fusion_chain_crypto as crypto;
+pub use fusion_chain_ledger as ledger;
+pub use fusion_chain_state as state;
+pub use fusion_chain_tx as tx;
+pub use fusion_chain_mempool as mempool;
+pub use fusion_chain_p2p as p2p;
+pub use fusion_chain_consensus_tendermint as consensus_tendermint;
+pub use fusion_chain_finality as finality;
+pub use fusion_chain_vm as vm;
+pub use fusion_chain_contract_abi as contract_abi;
+pub use fusion_chain_contract_runtime as contract_runtime;
+pub use fusion_chain_contract_sdk as contract_sdk;
+pub use fusion_chain_rpc as rpc;
+pub use fusion_chain_node as node;
+pub use fusion_chain_audit as audit;
+pub use fusion_chain_observability as observability;
+pub use fusion_chain_testkit as testkit;
+
+use fusion_chain_node::{BlockchainNode, NodeConfig};
+use fusion_chain_observability::NodeMetrics;
+
+pub struct FusionBlockchainStack {
+    pub node: BlockchainNode,
+    pub metrics: NodeMetrics,
+}
+
+impl FusionBlockchainStack {
+    pub fn tendermint_default() -> Self {
+        Self {
+            node: BlockchainNode::new(NodeConfig::default()),
+            metrics: NodeMetrics::new(),
+        }
+    }
 }

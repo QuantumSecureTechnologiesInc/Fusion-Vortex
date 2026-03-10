@@ -1,0 +1,10 @@
+[package]
+name = "fusion-chain-p2p"
+version = "0.1.0"
+edition = "2021"
+authors = ["Fusion Team"]
+description = "Peer registry and secure gossip controls"
+license = "MIT"
+
+[dependencies]
+fusion_std = "1.0.0"

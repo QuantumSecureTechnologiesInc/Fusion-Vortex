@@ -25,7 +25,7 @@ impl Variable {
             grad: None,
         }
     }
-    /// Helper to create a variable from an existing name (for stubs compatibility)
+    /// Helper to create a variable from an existing name (compatibility path)
     pub fn from_name(name: impl Into<FString>) -> Self {
         Self {
             name: name.into(),

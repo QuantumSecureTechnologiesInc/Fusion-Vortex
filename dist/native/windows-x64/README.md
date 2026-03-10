@@ -175,6 +175,11 @@ Native bootstrap outputs:
 - Regression report: `artifacts/native-regression/regression_summary.txt`
 - Package zip: `artifacts/packages/Fusion-native-windows-x64-<timestamp>.zip`
 
+Native compiler safety default:
+
+- Unresolved call symbols now fail code generation by default.
+- Strict unresolved-call mode is always on in native flows.
+
 ### Creating a Project
 
 ```bash

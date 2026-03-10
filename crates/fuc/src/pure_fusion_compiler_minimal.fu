@@ -5,6 +5,10 @@
 
 mod stage1_parser_api;
 mod stage1_sema_api;
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
 
 extern fn printf(fmt: string, ...) -> int;
 
@@ -20,22 +24,22 @@ pub fn stage1_sema_file(path: string) -> int {
 
 /// Parser API check for primary target.
 fn run_parse_check_main_direct() -> int {
-    return stage1_parse_file("crates\\fuc\\src\\main.fu");
+    return stage1_parse_file("crates/fuc/src/main.fu");
 }
 
 /// Parser API check for negative target-path validation.
 fn run_parse_check_missing_direct() -> int {
-    return stage1_parse_file("crates\\fuc\\src\\__missing_stage1_target__.fu");
+    return stage1_parse_file("crates/fuc/src/__missing_stage1_target__.fu");
 }
 
 /// Semantic API check for primary target.
 fn run_sema_check_main_direct() -> int {
-    return stage1_sema_file("crates\\fuc\\src\\main.fu");
+    return stage1_sema_file("crates/fuc/src/main.fu");
 }
 
 /// Semantic API check for negative target-path validation.
 fn run_sema_check_missing_direct() -> int {
-    return stage1_sema_file("crates\\fuc\\src\\__missing_stage1_target__.fu");
+    return stage1_sema_file("crates/fuc/src/__missing_stage1_target__.fu");
 }
 
 /// Link-safe stage1 parser API bridge.

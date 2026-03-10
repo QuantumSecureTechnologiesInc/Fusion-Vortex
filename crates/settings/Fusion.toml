@@ -1,5 +1,5 @@
 [package]
-name = "fusion-settings"
+name = "settings"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -16,3 +16,4 @@ dirs = "5.0"
 regex = "1.10"
 tracing = { workspace = true }
 fusion_std = "1.0.0"
+

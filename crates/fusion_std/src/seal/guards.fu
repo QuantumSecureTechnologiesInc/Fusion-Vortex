@@ -23,14 +23,22 @@ impl NeuralGuard {
             })
         }
     }
-    /// Guard Clause: Verifies a user ID has basic clearance formatting.
-    /// (Placeholder for actual IAM integration, but structurally complete).
+    /// Guard Clause: Verifies a user ID has valid clearance formatting.
     pub fn ensure_clearance(user_id: &str) -> Result<(), SecurityViolation> {
-        if user_id.starts_with("usr_") || user_id.starts_with("admin_") {
+        let has_allowed_prefix = user_id.starts_with("usr_")
+            || user_id.starts_with("admin_");
+        let valid_length = (6..=64).contains(&user_id.len());
+        let valid_chars = user_id
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-');
+        if has_allowed_prefix && valid_length && valid_chars {
             Ok(())
         } else {
             Err(SecurityViolation::AccessDenied {
-                reason: format!("User ID '{}' lacks required prefix.", user_id),
+                reason: format!(
+                    "User ID '{}' failed clearance policy validation.",
+                    user_id
+                ),
             })
         }
     }

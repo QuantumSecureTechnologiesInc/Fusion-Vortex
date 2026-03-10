@@ -1,14 +1,37 @@
 [package]
 name = "fusion_runtime_core"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
 description = "Framework: Opinionated heterogeneous runtime for Quantum/AI/Classical hybrid workloads"
 keywords = ["runtime", "framework", "quantum", "ai", "fusion"]
 categories = ["development-tools::build-utils", "concurrency"]
 readme = "README.md"
+metadata = { docs = { rs = { all-features = true, rustdoc-args = ["--cfg", "docsrs"] } } }
+version = "0.2.0"
+edition = "2021"
+authors = ["Fusion Team"]
+license = "MIT"
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+
+[dependencies]
+fusion_core = { path = "../fusion-core", package = "fusion-core" }
+fusion_runtime_scheduler = { path = "../fusion_runtime_scheduler/", optional = true }
+fusion_runtime_mem_mgr = { path = "../fusion_runtime_mem_mgr/", optional = true }
+fusion_runtime_hal = { path = "../fusion_runtime_hal/", optional = true }
+fusion_llm_inference_engine = { path = "../llm-inference", optional = true }
+fusion_llm_tokenizers = { path = "../llm-tokenizers", optional = true }
+parking_lot = { version = "0.12.3" }
+crossbeam = { version = "0.8" }
+dashmap = { version = "5.5" }
+futures = { version = "0.3.31" }
+pin-project-lite = { version = "0.2.14" }
+tracing = { version = "0.1.41", optional = false }
+tracing-subscriber = { version = "0.3.19", optional = true }
+metrics = { version = "0.23.0", optional = true }
+serde = { version = "1.0.216", features = ["derive", "rc"] }
+fusion_std = { path = "../std" }
+
+[dev-dependencies]
+criterion = { version = "0.5.1" }
+proptest = { version = "1.6.0" }
 
 [features]
 default = ["full"]
@@ -19,34 +42,3 @@ hal = ["fusion_runtime_hal"]
 metrics = ["dep:metrics"]
 profiling = ["dep:tracing-subscriber"]
 llm = ["fusion_llm_inference_engine", "fusion_llm_tokenizers"]
-
-[dependencies]
-fusion_core = { workspace = true }
-fusion_runtime_scheduler = { path = "../fusion_runtime_scheduler/", optional = true }
-fusion_runtime_mem_mgr = { path = "../fusion_runtime_mem_mgr/", optional = true }
-fusion_runtime_hal = { path = "../fusion_runtime_hal/", optional = true }
-fusion_llm_inference_engine = { path = "../llm-inference", optional = true }
-fusion_llm_tokenizers = { path = "../llm-tokenizers", optional = true }
-
-parking_lot = { workspace = true }
-crossbeam = { workspace = true }
-dashmap = { workspace = true }
-futures = { workspace = true }
-pin-project-lite = { workspace = true }
-tracing = { workspace = true, optional = false }
-tracing-subscriber = { workspace = true, optional = true }
-metrics = { workspace = true, optional = true }
-serde = { workspace = true }
-fusion_std = "1.0.0"
-
-[dev-dependencies]
-criterion = { workspace = true }
-proptest = { workspace = true }
-
-[[bench]]
-name = "runtime_benchmarks"
-harness = false
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]

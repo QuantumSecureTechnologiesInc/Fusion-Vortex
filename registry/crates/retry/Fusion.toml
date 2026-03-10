@@ -1,5 +1,5 @@
 [package]
-name = "fusion_retry"
+name = "retry"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
@@ -15,5 +15,6 @@ rand.workspace = true
 fusion_std = { workspace = true }
 fusion_runtime_core = { workspace = true }
 tokio = { workspace = true }
+
 
 

@@ -1,6 +1,0 @@
-extern fn printf(fmt: string, ...) -> int;
-
-pub fn main() -> int {
-    printf("probe %d\n", 7);
-    return 0;
-}
