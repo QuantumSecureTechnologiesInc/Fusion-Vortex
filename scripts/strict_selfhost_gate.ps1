@@ -24,6 +24,55 @@ function Invoke-StrictStep {
     Write-Host ">>> $Name [ok]" -ForegroundColor Green
 }
 
+function Invoke-CompilerWithRetry {
+    param(
+        [string]$Compiler,
+        [string[]]$CompilerArgs,
+        [string]$FailureMessage,
+        [int]$MaxAttempts = 5
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $old = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            $output = & $Compiler @CompilerArgs 2>&1
+        } finally {
+            $ErrorActionPreference = $old
+        }
+        if ($null -ne $output) {
+            foreach ($line in $output) {
+                Write-Host ([string]$line)
+            }
+        }
+
+        $exitCode = $LASTEXITCODE
+        if ($exitCode -eq 0) {
+            return
+        }
+
+        $hasMappedSectionLock = $false
+        if ($null -ne $output) {
+            foreach ($line in $output) {
+                if ([string]$line -match '(?i)user-mapped section open') {
+                    $hasMappedSectionLock = $true
+                    break
+                }
+            }
+        }
+
+        if ($hasMappedSectionLock -and $attempt -lt $MaxAttempts) {
+            Write-Host ">>> transient file lock detected; retrying compiler invocation ($attempt/$MaxAttempts)" -ForegroundColor Yellow
+            Start-Sleep -Milliseconds 300
+            continue
+        }
+
+        throw $FailureMessage
+    }
+
+    throw $FailureMessage
+}
+
 function Get-UnexpectedWarningLines {
     param(
         [string]$Path,
@@ -135,10 +184,7 @@ pub fn main() -> int {
 "@
         Write-Utf8NoBom -Path $mainSrc -Content $mainContent
 
-        & $Compiler $mainSrc -o $modProbeExe --emit-bin
-        if ($LASTEXITCODE -ne 0) {
-            throw "mod probe compile failed"
-        }
+        Invoke-CompilerWithRetry -Compiler $Compiler -CompilerArgs @($mainSrc, "-o", $modProbeExe, "--emit-bin") -FailureMessage "mod probe compile failed"
 
         $probeOutput = & $modProbeExe
         if ($LASTEXITCODE -ne 0) {
@@ -164,10 +210,7 @@ pub fn main() -> int {
             throw "Missing stage1 source: $Stage1Src"
         }
 
-        & $Compiler $Stage1Src -o $Stage1Exe --emit-bin
-        if ($LASTEXITCODE -ne 0) {
-            throw "stage1 direct API compile failed"
-        }
+        Invoke-CompilerWithRetry -Compiler $Compiler -CompilerArgs @($Stage1Src, "-o", $Stage1Exe, "--emit-bin") -FailureMessage "stage1 direct API compile failed"
 
         & $Stage1Exe
         if ($LASTEXITCODE -ne 0) {
@@ -180,10 +223,7 @@ pub fn main() -> int {
         }
 
         if (Test-Path $NativeMainSrc) {
-            & $Compiler $NativeMainSrc -o $NativeMainExe --emit-bin
-            if ($LASTEXITCODE -ne 0) {
-                throw "native main emit-bin compile failed"
-            }
+            Invoke-CompilerWithRetry -Compiler $Compiler -CompilerArgs @($NativeMainSrc, "-o", $NativeMainExe, "--emit-bin") -FailureMessage "native main emit-bin compile failed"
             & $NativeMainExe
             if ($LASTEXITCODE -ne 0) {
                 throw "native main executable failed"
@@ -191,10 +231,7 @@ pub fn main() -> int {
         }
 
         if (Test-Path $DeepProbeSrc) {
-            & $Compiler $DeepProbeSrc -o $DeepProbeExe --emit-bin
-            if ($LASTEXITCODE -ne 0) {
-                throw "stage1 deep probe compile failed"
-            }
+            Invoke-CompilerWithRetry -Compiler $Compiler -CompilerArgs @($DeepProbeSrc, "-o", $DeepProbeExe, "--emit-bin") -FailureMessage "stage1 deep probe compile failed"
             $deepOutput = & $DeepProbeExe
             if ($LASTEXITCODE -ne 0) {
                 throw "stage1 deep probe executable failed"
@@ -206,10 +243,7 @@ pub fn main() -> int {
         }
 
         if (Test-Path $FullProbeSrc) {
-            & $Compiler $FullProbeSrc -o $FullProbeExe --emit-bin
-            if ($LASTEXITCODE -ne 0) {
-                throw "stage1 full probe compile failed"
-            }
+            Invoke-CompilerWithRetry -Compiler $Compiler -CompilerArgs @($FullProbeSrc, "-o", $FullProbeExe, "--emit-bin") -FailureMessage "stage1 full probe compile failed"
             $fullOutput = & $FullProbeExe
             if ($LASTEXITCODE -ne 0) {
                 throw "stage1 full probe executable failed"

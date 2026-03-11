@@ -42,7 +42,6 @@ reqwest = { workspace = true, features = ["blocking"] }
 num_cpus = "0.2"
 # Dependencies for examples and scripts
 anyhow = { workspace = true }
-fusion_core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_quantum = { path = "registry/crates/fusion_quantum" } 
 fusion_runtime_core = { path = "registry/crates/fusion_runtime_core" }
@@ -52,7 +51,6 @@ fusion_runtime_scheduler = { path = "registry/crates/fusion_runtime_scheduler" }
 # Phase 3: WebAssembly Backend
 wasm-encoder = "0.219"
 wasmparser = "0.219"
-fusion_std = "1.0.0"
 
 [dev-dependencies]
 tempfile = "3.8"
@@ -181,7 +179,7 @@ fusion_core = { path = "registry/crates/fusion-core", version = "0.2.0", package
 fusion-ai-core = { path = "registry/crates/ai-core", version = "0.2.0" }
 fusion_ai_core = { path = "registry/crates/fusion_ai_core", version = "0.2.0" }
 fusion-monolith-core = { path = "crates/fusion-monolith-core", version = "3.4.1" }
-fusion-policy = { path = "crates/policy", version = "0.1.0" }
+fusion-policy = { path = "crates/policy", version = "0.1.0", package = "policy" }
 fusion_std = { path = "registry/crates/std", version = "0.2.0" }
 fusion_runtime_core = { path = "registry/crates/fusion_runtime_core", version = "0.2.0" }
 fusion_net = { path = "registry/crates/fusion_net", version = "0.2.0" }

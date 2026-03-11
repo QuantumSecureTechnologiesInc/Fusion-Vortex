@@ -53,7 +53,6 @@ impl<T: Clone> Default for Cache<T> {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use std::thread;
 
     #[test]
     fn test_cache_insert_and_get() {

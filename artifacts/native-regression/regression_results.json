@@ -1,10 +1,10 @@
 ﻿{
     "summary":  {
-                    "timestamp":  "2026-03-10T03:37:42.3580571+00:00",
+                    "timestamp":  "2026-03-11T01:05:44.7988924+00:00",
                     "compiler":  "C:\\Personal\\Antigravity\\Fusion v2.0 Vortex\\target\\release\\fuc.exe",
                     "total":  50,
-                    "passed":  50,
-                    "failed":  0
+                    "passed":  47,
+                    "failed":  3
                 },
     "results":  [
                     {
@@ -213,9 +213,9 @@
                     {
                         "name":  "generics.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
+                        "exit_code":  0,
                         "expected_pass":  false,
-                        "passed":  true
+                        "passed":  false
                     },
                     {
                         "name":  "hello_world.fu",
@@ -332,9 +332,9 @@
                     {
                         "name":  "parse_error.fu",
                         "phase":  "parse-only",
-                        "exit_code":  1,
+                        "exit_code":  0,
                         "expected_pass":  false,
-                        "passed":  true
+                        "passed":  false
                     },
                     {
                         "name":  "parser_robustness.fu",
@@ -353,9 +353,9 @@
                     {
                         "name":  "sema_error.fu",
                         "phase":  "sema-only",
-                        "exit_code":  1,
+                        "exit_code":  0,
                         "expected_pass":  false,
-                        "passed":  true
+                        "passed":  false
                     }
                 ]
 }

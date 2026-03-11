@@ -1,7 +1,6 @@
 // __FU_COMPAT_START__
 #![allow(missing_docs)]
 #[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
 #[allow(missing_docs, dead_code)] type FU64 = u64;
 // __FU_COMPAT_END__
 use anyhow::Result;

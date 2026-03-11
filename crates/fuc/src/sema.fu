@@ -1,6 +1,13 @@
 //! Semantic analysis and type checking for the Fusion compiler.
 use crate::ast::*;
-use ariadne::{Color, Label, Report, ReportKind};
+/// Native semantic diagnostic payload.
+#[derive(Clone, Debug)]
+struct SemanticDiagnostic {
+    /// Source span associated with the diagnostic.
+    pub span: Span,
+    /// Human-readable diagnostic message.
+    pub message: FString,
+}
 /// Typed program with extern declarations.
 #[derive(Clone, Debug)]
 struct TypedProgram {
@@ -106,11 +113,11 @@ enum TypedExpressionKind {
     StructLiteral { name: FString, fields: FVec<(FString, FSize, TypedExpression)> },
 }
 /// Semantic analysis output for native-friendly field access.
-struct AnalyzeOutput<'a> {
+struct AnalyzeOutput {
     /// Typed program, if semantic analysis succeeded.
     pub program: Option<TypedProgram>,
     /// Semantic diagnostics.
-    pub errors: FVec<Report<'a, Span>>,
+    pub errors: FVec<SemanticDiagnostic>,
 }
 struct SymbolTable {
     scopes: FVec<FMap<FString, Type>>,
@@ -292,12 +299,12 @@ impl SymbolTable {
     }
 }
 /// Semantic analyzer.
-struct Analyzer<'a> {
+struct Analyzer {
     symbols: SymbolTable,
-    errors: FVec<Report<'a, Span>>,
+    errors: FVec<SemanticDiagnostic>,
     current_return_type: Option<Type>,
 }
-impl<'a> Analyzer<'a> {
+impl Analyzer {
     /// Creates a new analyzer.
     pub fn new() -> Self {
         Self {
@@ -406,17 +413,16 @@ impl<'a> Analyzer<'a> {
         return raw_name.to_string();
     }
     fn report_error(&mut self, span: Span, msg: FString) {
-        let report = Report::build(ReportKind::Error, (), span.start)
-            .with_message(msg.clone())
-            .with_label(Label::new(span).with_message(msg).with_color(Color::Red))
-            .finish();
-        self.errors.push(report);
+        self.errors.push(SemanticDiagnostic {
+            span,
+            message: msg,
+        });
     }
     /// Analyzes and type-checks a program.
     pub fn analyze(
         mut self,
         program: Program,
-    ) -> (Option<TypedProgram>, FVec<Report<'a, Span>>) {
+    ) -> (Option<TypedProgram>, FVec<SemanticDiagnostic>) {
         let Program {
             functions,
             externs,
@@ -547,7 +553,7 @@ impl<'a> Analyzer<'a> {
         }
     }
     /// Native-friendly wrapper around `analyze` with field-based access.
-    pub fn analyze_output(self, program: Program) -> AnalyzeOutput<'a> {
+    pub fn analyze_output(self, program: Program) -> AnalyzeOutput {
         let (typed_program, errors) = self.analyze(program);
         AnalyzeOutput {
             program: typed_program,

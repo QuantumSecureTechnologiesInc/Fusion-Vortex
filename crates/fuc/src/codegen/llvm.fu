@@ -375,26 +375,9 @@ impl<'ctx> LlvmBackend<'ctx> {
                     || owner == "VecDeque"
                     || owner == "Vec"
                     || owner == "String"
-                    || owner == "Label"
                     || owner == "PathBuf"
                     || owner == "OsString"
                     || owner == "Command";
-                if compat_owner {
-                    if let Some(dest_val) = dest_val_opt {
-                        if let Some(default_val) = self.default_return_value(&dest_val.ty) {
-                            let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                            self.map_builder(self.builder.build_store(dest_ptr, default_val))?;
-                        }
-                    }
-                    return Ok(true);
-                }
-            }
-        }
-        if Self::call_name_is(func_name, "build") && func_name.contains("::") {
-            let segments: FVec<&str> = func_name.split("::").collect();
-            if segments.len() > 1 {
-                let owner = segments[segments.len() - 2];
-                let compat_owner = owner == "Report" || owner == "Command";
                 if compat_owner {
                     if let Some(dest_val) = dest_val_opt {
                         if let Some(default_val) = self.default_return_value(&dest_val.ty) {
@@ -436,11 +419,6 @@ impl<'ctx> LlvmBackend<'ctx> {
             || Self::call_name_is(func_name, "expect")
             || Self::call_name_is(func_name, "clone")
             || Self::call_name_is(func_name, "to_owned")
-            || Self::call_name_is(func_name, "with_message")
-            || Self::call_name_is(func_name, "with_label")
-            || Self::call_name_is(func_name, "with_color")
-            || Self::call_name_is(func_name, "finish")
-            || Self::call_name_is(func_name, "print")
         {
             let lowered = if let Some(first_arg) = args.first() {
                 Some(self.get_llvm_value(first_arg)?)

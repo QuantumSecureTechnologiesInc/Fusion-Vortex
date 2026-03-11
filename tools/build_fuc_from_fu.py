@@ -2,43 +2,31 @@
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess  # trunk-ignore(bandit/B404)
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FUC_DIR = ROOT / "crates" / "fuc"
-DEFAULT_STD = ROOT / "registry" / "modules" / "std"
-STD_RUST_DIR = (
-    Path(os.environ.get("FUSION_STD_PATH", "")).expanduser()
-    if os.environ.get("FUSION_STD_PATH")
-    else DEFAULT_STD
-)
 OUT_DIR = ROOT / "target" / "release"
 BUILD_TARGET_DIR = Path(
     os.environ.get("FUC_BUILD_TARGET", str(ROOT / "target_fuc"))
 ).expanduser()
 
-ALIAS_DEFS = [
-    ("FBool", "type FBool = bool;"),
-    ("FChar", "type FChar = char;"),
-    ("FInt", "type FInt = i32;"),
-    ("FI64", "type FI64 = i64;"),
-    ("FString", "type FString = String;"),
-    ("FU32", "type FU32 = u32;"),
-    ("FU64", "type FU64 = u64;"),
-    ("FSize", "type FSize = usize;"),
-    ("FVec", "type FVec<T> = Vec<T>;"),
-    ("FMap", "type FMap<K, V> = HashMap<K, V>;"),
-    ("FBTreeMap", "type FBTreeMap<K, V> = BTreeMap<K, V>;"),
-    ("FSet", "type FSet<T> = HashSet<T>;"),
-    ("FBTreeSet", "type FBTreeSet<T> = BTreeSet<T>;"),
-]
-
 
 def env_flag(name: str) -> bool:
     return os.environ.get(name, "").lower() in {"1", "true", "yes"}
+
+
+def out_binary_name() -> str:
+    return "fuc.exe" if os.name == "nt" else "fuc"
+
+
+def compiler_from_stage0(stage0: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env["FUSION_ACTIVE_COMPILER"] = str(stage0)
+    return env
 
 
 def find_stage0_binary() -> Path | None:
@@ -59,22 +47,84 @@ def find_stage0_binary() -> Path | None:
     return None
 
 
+def find_refresh_stage0_binary() -> Path | None:
+    candidates: list[Path] = []
+    if os.environ.get("FUC_STAGE0"):
+        candidates.append(Path(os.environ["FUC_STAGE0"]).expanduser())
+    candidates.extend(
+        [
+            ROOT / "bin" / "fuc.exe",
+            ROOT / "bin" / "fuc",
+            OUT_DIR / "fuc.exe",
+            OUT_DIR / "fuc",
+        ]
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def run_with_retry(
+    cmd: list[str], *, env: dict[str, str] | None = None, failure_message: str
+) -> None:
+    max_attempts = 5
+    last_code = 0
+    for attempt in range(1, max_attempts + 1):
+        result = subprocess.run(cmd, check=False, env=env)
+        last_code = result.returncode
+        if last_code == 0:
+            return
+        if attempt >= max_attempts:
+            break
+        print(
+            ">>> transient native build failure detected; retrying "
+            f"({attempt}/{max_attempts})"
+        )
+        time.sleep(0.3)
+    raise SystemExit(f"{failure_message} (exit {last_code})")
+
+
+def copy_with_retry(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    last_error: OSError | None = None
+    max_attempts = 5
+    for attempt in range(1, max_attempts + 1):
+        try:
+            shutil.copy2(source, destination)
+            return
+        except OSError as exc:
+            last_error = exc
+            if attempt >= max_attempts:
+                break
+            print(
+                ">>> transient file copy lock detected; retrying "
+                f"({attempt}/{max_attempts})"
+            )
+            time.sleep(0.3)
+    raise SystemExit(f"Failed to copy {source} -> {destination}: {last_error}")
+
+
 def run_stage0_selfhost_checks(stage0: Path) -> bool:
     main_fu = FUC_DIR / "src" / "main.fu"
     stage1_fu = FUC_DIR / "src" / "pure_fusion_compiler_minimal.fu"
     stage1_boot_fu = FUC_DIR / "src" / "pure_fusion_stage1_bootstrap.fu"
     artifacts = ROOT / "artifacts" / "selfhost-audit"
     artifacts.mkdir(parents=True, exist_ok=True)
+    env = compiler_from_stage0(stage0)
+
     main_obj = artifacts / "main_selfhost.o"
     stage1_obj = artifacts / "pure_fusion_compiler_minimal.o"
-    if stage0.suffix.lower() == ".exe":
-        stage1_bin = artifacts / "pure_fusion_compiler_minimal.exe"
-    else:
-        stage1_bin = artifacts / "pure_fusion_compiler_minimal"
-    if stage0.suffix.lower() == ".exe":
-        stage1_boot_bin = artifacts / "pure_fusion_stage1_bootstrap.exe"
-    else:
-        stage1_boot_bin = artifacts / "pure_fusion_stage1_bootstrap"
+    stage1_bin = artifacts / (
+        "pure_fusion_compiler_minimal.exe"
+        if stage0.suffix.lower() == ".exe"
+        else "pure_fusion_compiler_minimal"
+    )
+    stage1_boot_bin = artifacts / (
+        "pure_fusion_stage1_bootstrap.exe"
+        if stage0.suffix.lower() == ".exe"
+        else "pure_fusion_stage1_bootstrap"
+    )
 
     mandatory_checks = [
         [str(stage0), "--parse-only", str(main_fu)],
@@ -86,12 +136,17 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
     if stage1_boot_fu.exists():
         mandatory_checks.append([str(stage0), "--parse-only", str(stage1_boot_fu)])
         mandatory_checks.append([str(stage0), "--sema-only", str(stage1_boot_fu)])
+
     for cmd in mandatory_checks:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env=env)
 
     all_codegen_ok = True
-    codegen_check = [str(stage0), "--lib", str(main_fu), "-o", str(main_obj)]
-    codegen_result = subprocess.run(codegen_check, check=False)
+
+    codegen_result = subprocess.run(
+        [str(stage0), "--lib", str(main_fu), "-o", str(main_obj)],
+        check=False,
+        env=env,
+    )
     if codegen_result.returncode != 0:
         print(
             ">>> Warning: stage0 could not codegen crates/fuc/src/main.fu yet; "
@@ -100,14 +155,11 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
         all_codegen_ok = False
 
     if stage1_fu.exists():
-        stage1_codegen_check = [
-            str(stage0),
-            "--lib",
-            str(stage1_fu),
-            "-o",
-            str(stage1_obj),
-        ]
-        stage1_codegen_result = subprocess.run(stage1_codegen_check, check=False)
+        stage1_codegen_result = subprocess.run(
+            [str(stage0), "--lib", str(stage1_fu), "-o", str(stage1_obj)],
+            check=False,
+            env=env,
+        )
         if stage1_codegen_result.returncode != 0:
             print(
                 ">>> Warning: stage0 could not codegen "
@@ -115,14 +167,12 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
                 "parse/sema checks still passed."
             )
             all_codegen_ok = False
-        stage1_emit_bin_check = [
-            str(stage0),
-            str(stage1_fu),
-            "-o",
-            str(stage1_bin),
-            "--emit-bin",
-        ]
-        stage1_emit_bin_result = subprocess.run(stage1_emit_bin_check, check=False)
+
+        stage1_emit_bin_result = subprocess.run(
+            [str(stage0), str(stage1_fu), "-o", str(stage1_bin), "--emit-bin"],
+            check=False,
+            env=env,
+        )
         if stage1_emit_bin_result.returncode != 0:
             print(
                 ">>> Warning: stage0 could not emit-bin "
@@ -130,12 +180,10 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
             )
             all_codegen_ok = False
         else:
-            run_env = os.environ.copy()
-            run_env["FUSION_ACTIVE_COMPILER"] = str(stage0)
             stage1_run_result = subprocess.run(
                 [str(stage1_bin)],
                 check=False,
-                env=run_env,
+                env=env,
             )
             if stage1_run_result.returncode != 0:
                 print(
@@ -143,16 +191,12 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
                     f"status {stage1_run_result.returncode}."
                 )
                 all_codegen_ok = False
+
     if stage1_boot_fu.exists():
-        stage1_boot_codegen_check = [
-            str(stage0),
-            str(stage1_boot_fu),
-            "-o",
-            str(stage1_boot_bin),
-            "--emit-bin",
-        ]
         stage1_boot_codegen_result = subprocess.run(
-            stage1_boot_codegen_check, check=False
+            [str(stage0), str(stage1_boot_fu), "-o", str(stage1_boot_bin), "--emit-bin"],
+            check=False,
+            env=env,
         )
         if stage1_boot_codegen_result.returncode != 0:
             print(
@@ -161,12 +205,10 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
             )
             all_codegen_ok = False
         else:
-            run_env = os.environ.copy()
-            run_env["FUSION_ACTIVE_COMPILER"] = str(stage0)
             stage1_boot_run_result = subprocess.run(
                 [str(stage1_boot_bin)],
                 check=False,
-                env=run_env,
+                env=env,
             )
             if stage1_boot_run_result.returncode != 0:
                 print(
@@ -174,422 +216,52 @@ def run_stage0_selfhost_checks(stage0: Path) -> bool:
                     f"status {stage1_boot_run_result.returncode}."
                 )
                 all_codegen_ok = False
+
     return all_codegen_ok
 
 
-def add_pub_to_toplevel(source: str) -> str:
-    lines = []
-    for line in source.splitlines():
-        stripped = line.lstrip()
-        if stripped == line:
-            if stripped.startswith(
-                (
-                    "struct ",
-                    "enum ",
-                    "type ",
-                    "fn ",
-                    "trait ",
-                    "const ",
-                    "static ",
-                    "mod ",
-                )
-            ):
-                if not stripped.startswith("pub "):
-                    line = "pub " + line
-        lines.append(line)
-    return "\n".join(lines) + "\n"
-
-
-def build_compat(source: str) -> str:
-    uses = []
-    if (
-        re.search(r"\bfmt::", source)
-        and "std::fmt::" not in source
-        and "core::fmt::" not in source
-    ):
-        uses.append("use std::fmt;")
-    if re.search(r"\bfs::", source) and "std::fs::" not in source:
-        uses.append("use std::fs;")
-    if (
-        re.search(r"\bCommand::", source)
-        and "std::process::Command::" not in source
-        and "use std::process::Command;" not in source
-    ):
-        uses.append("use std::process::Command;")
-    if re.search(r"\bRange\s*(<|::)", source) and "std::ops::Range" not in source:
-        uses.append("use std::ops::Range;")
-    if re.search(r"\bPath\b", source) and "std::path::Path" not in source:
-        uses.append("use std::path::Path;")
-    if re.search(r"\bPathBuf\b", source) and "std::path::PathBuf" not in source:
-        uses.append("use std::path::PathBuf;")
-
-    needs = []
-    if (
-        re.search(r"\b(HashMap|FMap)(<|\b)", source)
-        and "std::collections::HashMap" not in source
-    ):
-        needs.append("HashMap")
-    if (
-        re.search(r"\b(BTreeMap|FBTreeMap)(<|\b)", source)
-        and "std::collections::BTreeMap" not in source
-    ):
-        needs.append("BTreeMap")
-    if (
-        re.search(r"\b(HashSet|FSet)(<|\b)", source)
-        and "std::collections::HashSet" not in source
-    ):
-        needs.append("HashSet")
-    if (
-        re.search(r"\b(BTreeSet|FBTreeSet)(<|\b)", source)
-        and "std::collections::BTreeSet" not in source
-    ):
-        needs.append("BTreeSet")
-    if needs:
-        if len(needs) == 1:
-            uses.insert(0, f"use std::collections::{needs[0]};")
-        else:
-            uses.insert(0, f"use std::collections::{{{', '.join(needs)}}};")
-    uses = [f"#[allow(unused_imports)] {line}" for line in uses]
-
-    alias_lines = []
-    for name, line in ALIAS_DEFS:
-        if re.search(rf"\b{name}(<|\b)", source):
-            alias_lines.append(f"#[allow(missing_docs, dead_code)] {line}")
-
-    if not uses and not alias_lines:
-        return ""
-
-    parts = ["// __FU_COMPAT_START__", "#![allow(missing_docs)]"]
-    parts.extend(uses)
-    parts.extend(alias_lines)
-    parts.append("// __FU_COMPAT_END__")
-    return "\n".join(parts)
-
-
-def fix_fstring_variants(source: str) -> str:
-    return source.replace("Type::FString", "Type::String").replace(
-        "ast::Type::FString", "ast::Type::String"
-    )
-
-
-def wrap_unsafe_gep(source: str) -> str:
-    lines = []
-    for line in source.splitlines():
-        if "builder.build_gep(" in line and "unsafe" not in line:
-            stripped = line.strip()
-            trailing_comma = stripped.endswith(",")
-            if trailing_comma:
-                stripped = stripped[:-1].rstrip()
-                lines.append(f"unsafe {{ {stripped} }},")
-            else:
-                lines.append(f"unsafe {{ {stripped} }}")
-        else:
-            lines.append(line)
-    return "\n".join(lines) + "\n"
-
-
-def inject_compat(source: str) -> str:
-    if "__FU_COMPAT_START__" in source:
-        return source
-    compat = build_compat(source)
-    if not compat:
-        return add_pub_to_toplevel(source)
-    lines = source.splitlines()
-    insert_at = 0
-    while insert_at < len(lines) and (
-        lines[insert_at].startswith("#!") or lines[insert_at].startswith("//!")
-    ):
-        insert_at += 1
-    merged = "\n".join(lines[:insert_at] + [compat.rstrip()] + lines[insert_at:]) + "\n"
-    merged = fix_fstring_variants(merged)
-    merged = wrap_unsafe_gep(merged)
-    return add_pub_to_toplevel(merged)
-
-
-def sync_fu_to_rs(base: Path) -> int:
-    copied = 0
-    for path in base.rglob("*.fu"):
-        rs_path = path.with_suffix(".rs")
-        rs_path.write_text(
-            inject_compat(path.read_text(encoding="utf-8")), encoding="utf-8"
-        )
-        copied += 1
-    return copied
-
-
-def reduce_main_warning_noise(main_source: str) -> str:
-    main_source = main_source.replace(
-        "let overall_start = std::time::Instant::now();",
-        "let _overall_start = std::time::Instant::now();",
-    )
-    # Keep runtime semantics identical while avoiding `while_true` lint noise.
-    return re.sub(r"\bwhile\s+true\s*\{", "loop {", main_source)
-
-
-def patch_generated_rust_sources(base: Path) -> None:
-    llvm_rs = base / "src" / "codegen" / "llvm.rs"
-    parser_rs = base / "src" / "parser.rs"
-    lexer_rs = base / "src" / "lexer.rs"
-    ir_rs = base / "src" / "ir.rs"
-    optimizer_rs = base / "src" / "optimizer.rs"
-    main_rs = base / "src" / "main.rs"
-
-    if lexer_rs.exists():
-        lexer_source = lexer_rs.read_text(encoding="utf-8")
-        # Some .fu files may be flattened to a single line with a leading `//!`.
-        # Split the module docs from code and force the public lexer surface that
-        # parser.rs imports during source-refresh rebuilds.
-        lexer_source = re.sub(
-            r"^(//![^\n]*?)\s+(use\s+)",
-            r"\1\n\2",
-            lexer_source,
-            count=1,
-            flags=re.DOTALL,
-        )
-        lexer_source = re.sub(
-            r"(?<!pub\s)enum\s+Token\s*\{",
-            "pub enum Token {",
-            lexer_source,
-            count=1,
-        )
-        lexer_source = re.sub(
-            r"(?<!pub\s)fn\s+lex\s*\(",
-            "pub fn lex(",
-            lexer_source,
-            count=1,
-        )
-        lexer_rs.write_text(lexer_source, encoding="utf-8")
-
-    if parser_rs.exists():
-        parser_source = parser_rs.read_text(encoding="utf-8")
-        # Stabilize type inference for chumsky-heavy closures under Rust rebuild.
-        parser_source = parser_source.replace(
-            ".map_with_span(|name, span| {",
-            ".map_with_span(|name: FString, span| {",
-        )
-        parser_source = parser_source.replace(
-            ".map(|(method, args)| {",
-            ".map(|(method, args): (FString, Option<FVec<Spanned<ast::Expression>>>)| {",
-        )
-        parser_source = parser_source.replace(
-            ".map(|((name, ty), value)| ast::Statement::Let {",
-            ".map(|((name, ty), value): ((FString, Option<ast::Type>), Spanned<ast::Expression>)| ast::Statement::Let {",
-        )
-        parser_source = parser_source.replace(
-            ".map(|fields| fields.into_iter().collect::<FVec<_>>());",
-            ".map(|fields| fields);",
-        )
-        parser_source = parser_source.replace(
-            ".map(|t| t.unwrap_or(ast::Type::Void));",
-            ".map(|t: Option<ast::Type>| t.unwrap_or(ast::Type::Void));",
-        )
-        parser_source = parser_source.replace(
-            ".map(|opt| opt.unwrap_or_else(|| (Vec::new(), false)));",
-            ".map(|opt: Option<(FVec<(FString, ast::Type)>, bool)>| opt.unwrap_or_else(|| (Vec::new(), false)));",
-        )
-        parser_source = parser_source.replace(
-            ".map(|opt| opt.unwrap_or_else(|| Vec::new()));",
-            ".map(|opt: Option<FVec<ast::Type>>| opt.unwrap_or_else(|| Vec::new()));",
-            1,
-        )
-        parser_source = parser_source.replace(
-            ".map(|opt| opt.unwrap_or_else(|| Vec::new()));",
-            ".map(|opt: Option<FVec<(FString, ast::Type)>>| opt.unwrap_or_else(|| Vec::new()));",
-            1,
-        )
-        parser_source = parser_source.replace(
-            ".map(|((name, ty), value)| {",
-            ".map(|((name, ty), value): ((FString, Option<ast::Type>), Option<Spanned<ast::Expression>>)| {",
-        )
-        parser_source = parser_source.replace(
-            ".map(|(name, ty)| {",
-            ".map(|(name, ty): (FString, Option<ast::Type>)| {",
-        )
-        parser_source = re.sub(
-            r"(fn program_parser\(\) -> impl Parser<Token, ast::Program, Error = ParserError> \{\s*"
-            r"let ident = select!\s*\{[^}]*\}\s*;\s*)let path = ident",
-            r"\1let _path = ident",
-            parser_source,
-            count=1,
-            flags=re.DOTALL,
-        )
-        parser_rs.write_text(parser_source, encoding="utf-8")
-
-    if ir_rs.exists():
-        ir_source = ir_rs.read_text(encoding="utf-8")
-        ir_source = ir_source.replace(
-            "use crate::ast::{self, BinaryOp, Type};",
-            "use crate::ast::{BinaryOp, Type};",
-        )
-        ir_rs.write_text(ir_source, encoding="utf-8")
-
-    if optimizer_rs.exists():
-        optimizer_source = optimizer_rs.read_text(encoding="utf-8")
-        optimizer_source = optimizer_source.replace(
-            "use crate::ast::{self, BinaryOp};",
-            "use crate::ast::BinaryOp;",
-        )
-        optimizer_rs.write_text(optimizer_source, encoding="utf-8")
-
-    if main_rs.exists():
-        main_source = main_rs.read_text(encoding="utf-8")
-        main_rs.write_text(reduce_main_warning_noise(main_source), encoding="utf-8")
-
-    if not llvm_rs.exists():
-        return
-
-    source = llvm_rs.read_text(encoding="utf-8")
-
-    # Inkwell changed `try_as_basic_value()` from Either to ValueKind.
-    source = re.sub(
-        r"let cmp_val = call_site\s*\.try_as_basic_value\(\)\s*\.left\(\)\s*\.unwrap\(\)\s*\.into_int_value\(\);",
-        """let cmp_val = match call_site.try_as_basic_value() {
-                                        inkwell::values::ValueKind::Basic(v) => v.into_int_value(),
-                                        _ => return Err(CodegenError::LlvmError("strcmp returned void".to_string())),
-                                    };""",
-        source,
-    )
-    source = re.sub(
-        r"if let Some\(basic_val\) = call_site\s*\.try_as_basic_value\(\)\s*\.left\(\)\s*\{",
-        "if let inkwell::values::ValueKind::Basic(basic_val) = call_site.try_as_basic_value() {",
-        source,
-    )
-
-    # Borrow identifier arguments for Rust APIs that require references.
-    source = re.sub(
-        r"self\.as_llvm_type\((?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r"self.as_llvm_type(&\1)",
-        source,
-    )
-    source = re.sub(
-        r"self\.get_llvm_value\((?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r"self.get_llvm_value(&\1)",
-        source,
-    )
-    source = re.sub(
-        r"self\.get_address_ptr\((?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r"self.get_address_ptr(&\1)",
-        source,
-    )
-    source = re.sub(
-        r"self\.get_var_ptr\((?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r"self.get_var_ptr(&\1)",
-        source,
-    )
-    source = re.sub(
-        r"\.get_function\((?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r".get_function(&\1)",
-        source,
-    )
-    source = re.sub(
-        r"build_global_string_ptr\((?!&)([A-Za-z_][A-Za-z0-9_]*)\s*,",
-        r"build_global_string_ptr(&\1,",
-        source,
-    )
-    source = re.sub(
-        r"build_alloca\(([^,]+),\s*(?!&)([A-Za-z_][A-Za-z0-9_]*)\)",
-        r"build_alloca(\1, &\2)",
-        source,
-    )
-    source = source.replace(
-        "Target::initialize_x86(&InitializationConfig::default());",
-        'Target::initialize_native(&InitializationConfig::default())\n            .map_err(CodegenError::TargetError)?;',
-    )
-
-    llvm_rs.write_text(source, encoding="utf-8")
-
-
-def promote_rust_compat_main(base: Path) -> None:
-    compat_fu = base / "src" / "main_rust_compat.fu"
-    if not compat_fu.exists():
-        return
-    main_rs = base / "src" / "main.rs"
-    promoted = inject_compat(compat_fu.read_text(encoding="utf-8"))
-    main_rs.write_text(reduce_main_warning_noise(promoted), encoding="utf-8")
-
-
-def write_cargo_from_fusion(
-    fusion_toml: Path, cargo_toml: Path, *, stdlib_path: Path | None
-) -> None:
-    content = fusion_toml.read_text(encoding="utf-8")
-    if stdlib_path is not None:
-        content = content.replace(
-            'fusion_std = "1.0.0"',
-            f'fusion_std = {{ path = "{stdlib_path.as_posix()}" }}',
-        )
-    else:
-        content = content.replace('fusion_std = "1.0.0"\n', "")
-    if "inkwell" in content and "default-features" not in content:
-        content = re.sub(
-            r"(inkwell\s*=\s*\{[^}]*branch\s*=\s*\"master\",)",
-            r"\1 default-features = false,",
-            content,
-            count=1,
-            flags=re.DOTALL,
-        )
-    if "generational-arena" not in content:
-        if "thunderdome = " in content:
-            content = content.replace(
-                'thunderdome = "0.6"\n',
-                'thunderdome = "0.6"\ngenerational-arena = "0.2"\n',
-            )
-        elif "[dependencies]" in content:
-            content = content.replace(
-                "[dependencies]\n",
-                '[dependencies]\ngenerational-arena = "0.2"\n',
-                1,
-            )
-    # Add [[bin]] section if not present (needed for Cargo to recognize the binary)
-    if "[[bin]]" not in content:
-        content += '\n[[bin]]\nname = "fuc"\npath = "src/main.rs"\n'
-    cargo_toml.write_text(content, encoding="utf-8")
-
-
 def refresh_stage0_from_source() -> Path:
-    print(">>> Refreshing stage0 from patched .fu sources (.fu -> .rs -> Cargo)")
-    copied = sync_fu_to_rs(FUC_DIR)
-    print(f">>> Synced {copied} Fusion source files to Rust stubs")
-    patch_generated_rust_sources(FUC_DIR)
-    promote_rust_compat_main(FUC_DIR)
-    write_cargo_from_fusion(
-        FUC_DIR / "fusion.toml",
-        FUC_DIR / "Cargo.toml",
-        stdlib_path=None,
+    stage0 = find_refresh_stage0_binary()
+    if stage0 is None:
+        raise SystemExit(
+            "Zero-Cargo refresh requires an existing stage0 compiler binary "
+            "(set FUC_STAGE0 or provide target/release/fuc[.exe])."
+        )
+
+    print(">>> Refreshing stage0 from patched .fu sources (native stage0 -> native stage1)")
+    main_fu = FUC_DIR / "src" / "main_rust_compat.fu"
+    refresh_dir = BUILD_TARGET_DIR / "release"
+    refresh_dir.mkdir(parents=True, exist_ok=True)
+    refreshed = refresh_dir / out_binary_name()
+
+    if stage0.resolve() == refreshed.resolve():
+        if refreshed.suffix:
+            refreshed = refreshed.with_name(refreshed.stem + ".refresh" + refreshed.suffix)
+        else:
+            refreshed = refreshed.with_name(refreshed.name + ".refresh")
+
+    run_with_retry(
+        [str(stage0), str(main_fu), "-o", str(refreshed), "--emit-bin"],
+        env=compiler_from_stage0(stage0),
+        failure_message="Native stage0 refresh failed building crates/fuc/src/main_rust_compat.fu",
     )
-    env = os.environ.copy()
-    env["CARGO_TARGET_DIR"] = str(BUILD_TARGET_DIR)
-    subprocess.run(
-        [
-            "cargo",
-            "build",
-            "--manifest-path",
-            str(FUC_DIR / "Cargo.toml"),
-            "--release",
-        ],
-        check=True,
-        cwd=ROOT,
-        env=env,
-    )
-    out_name = "fuc.exe" if os.name == "nt" else "fuc"
-    stage0 = BUILD_TARGET_DIR / "release" / out_name
-    if not stage0.exists():
-        raise SystemExit(f"Refreshed stage0 binary not found: {stage0}")
-    return stage0
+
+    if not refreshed.exists():
+        raise SystemExit(f"Refreshed stage0 binary not found: {refreshed}")
+
+    return refreshed
 
 
 def build() -> None:
     if not FUC_DIR.exists():
         raise SystemExit("Missing crates/fuc")
+
     refresh_stage0 = env_flag("FUC_REFRESH_STAGE0_FROM_SOURCE")
-    allow_cargo = env_flag("FUC_ALLOW_CARGO")
-    if allow_cargo and not refresh_stage0:
+    if env_flag("FUC_ALLOW_CARGO"):
         raise SystemExit(
-            "Strict native mode forbids Cargo bootstrap. "
-            "Unset FUC_ALLOW_CARGO and provide a stage0 fuc binary."
+            "Cargo bootstrap has been removed from build_fuc_from_fu.py. "
+            "Unset FUC_ALLOW_CARGO."
         )
-    skip_std = env_flag("FUC_SKIP_STD")
-    # In native mode, we skip std build entirely - it's a Fusion module, not a Rust crate
-    # No need to check if STD_RUST_DIR exists
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     BUILD_TARGET_DIR.mkdir(parents=True, exist_ok=True)
@@ -604,12 +276,11 @@ def build() -> None:
                 "(set FUC_STAGE0 or provide target/release/fuc[.exe])."
             )
         print(f">>> Strict no-Cargo mode: reusing stage0 compiler {stage0}")
-    if stage0.suffix.lower() == ".exe":
-        out_bin = OUT_DIR / "fuc.exe"
-    else:
-        out_bin = OUT_DIR / "fuc"
+
+    out_bin = OUT_DIR / out_binary_name()
     if stage0.resolve() != out_bin.resolve():
-        shutil.copy2(stage0, out_bin)
+        copy_with_retry(stage0, out_bin)
+        stage0 = out_bin
 
     codegen_ok = run_stage0_selfhost_checks(stage0)
     stage1_suffixes: list[str] = []
@@ -634,15 +305,10 @@ def build() -> None:
             "(parse/sema on crates/fuc/src/main.fu, "
             f"{stage1_suffix.lstrip(', ') if stage1_suffix else 'no stage1 parse target configured'})."
         )
-    return
+
 
 def cleanup() -> None:
-    for path in FUC_DIR.rglob("*.rs"):
-        path.unlink()
-    for name in ("Cargo.toml", "Cargo.lock"):
-        p = FUC_DIR / name
-        if p.exists():
-            p.unlink()
+    return
 
 
 if __name__ == "__main__":

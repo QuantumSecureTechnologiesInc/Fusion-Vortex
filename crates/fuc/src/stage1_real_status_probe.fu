@@ -1,0 +1,68 @@
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
+extern fn printf(fmt: string, ...) -> int;
+extern fn access(path: string, mode: int) -> int;
+extern fn fusion_read_to_string(path: string) -> string;
+extern fn fusion_read_is_err(content: string) -> int;
+
+fn strict_parse(path: string) -> int {
+    let exists = access(path, 0);
+    if exists != 0 {
+        return 1;
+    }
+    let source = fusion_read_to_string(path);
+    if fusion_read_is_err(source) != 0 {
+        return 2;
+    }
+    let out = parser::parse_output(source);
+    if out.errors.len() > 0 {
+        return 3;
+    }
+    if out.program.is_none() {
+        return 4;
+    }
+    return 0;
+}
+
+fn strict_sema(path: string) -> int {
+    let exists = access(path, 0);
+    if exists != 0 {
+        return 1;
+    }
+    let source = fusion_read_to_string(path);
+    if fusion_read_is_err(source) != 0 {
+        return 2;
+    }
+    let out = parser::parse_output(source);
+    if out.errors.len() > 0 {
+        return 3;
+    }
+    let program = match out.program {
+        Some(p) => p,
+        None => {
+            return 4;
+        }
+    };
+    let analyzer = sema::Analyzer::new();
+    let sema_out = analyzer.analyze_output(program);
+    if sema_out.errors.len() > 0 {
+        return 5;
+    }
+    if sema_out.program.is_none() {
+        return 6;
+    }
+    return 0;
+}
+
+pub fn main() -> int {
+    let p_main = strict_parse("crates/fuc/src/main.fu");
+    let s_main = strict_sema("crates/fuc/src/main.fu");
+    let p_parser = strict_parse("crates/fuc/src/parser.fu");
+    let s_parser = strict_sema("crates/fuc/src/parser.fu");
+    let p_sema = strict_parse("crates/fuc/src/sema.fu");
+    let s_sema = strict_sema("crates/fuc/src/sema.fu");
+    printf("main p=%d s=%d | parser p=%d s=%d | sema p=%d s=%d\n", p_main, s_main, p_parser, s_parser, p_sema, s_sema);
+    return 0;
+}

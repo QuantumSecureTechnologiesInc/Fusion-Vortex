@@ -105,13 +105,37 @@ function Invoke-Fuc {
     $old = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        $output = & $Compiler @Args 2>&1
-        if ($null -ne $output) {
-            foreach ($line in $output) {
-                Add-Content -Path $FucOutputLog -Value ([string]$line)
+        $maxAttempts = 5
+        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+            $output = & $Compiler @Args 2>&1
+            if ($null -ne $output) {
+                foreach ($line in $output) {
+                    Add-Content -Path $FucOutputLog -Value ([string]$line)
+                }
             }
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+                return 0
+            }
+
+            $hasMappedSectionLock = $false
+            if ($null -ne $output) {
+                foreach ($line in $output) {
+                    if ([string]$line -match '(?i)user-mapped section open') {
+                        $hasMappedSectionLock = $true
+                        break
+                    }
+                }
+            }
+
+            if ($hasMappedSectionLock -and $attempt -lt $maxAttempts) {
+                Add-Content -Path $FucOutputLog -Value ">>> transient file lock detected; retrying compiler invocation ($attempt/$maxAttempts)"
+                Start-Sleep -Milliseconds 300
+                continue
+            }
+
+            return $exitCode
         }
-        return $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $old
     }

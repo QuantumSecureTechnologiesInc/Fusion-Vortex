@@ -1,0 +1,16 @@
+mod stage1_parser_api;
+mod stage1_sema_api;
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main() -> int {
+    let p_parser = stage1_parser_api::parse_file("crates/fuc/src/parser.fu");
+    let s_parser = stage1_sema_api::sema_file("crates/fuc/src/parser.fu");
+    let p_sema = stage1_parser_api::parse_file("crates/fuc/src/sema.fu");
+    let s_sema = stage1_sema_api::sema_file("crates/fuc/src/sema.fu");
+    printf("p_parser=%d s_parser=%d p_sema=%d s_sema=%d\n", p_parser, s_parser, p_sema, s_sema);
+    return 0;
+}
