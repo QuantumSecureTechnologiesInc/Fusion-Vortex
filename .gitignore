@@ -52,3 +52,6 @@ test_result.fu
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+target_fuc/
+target_fuc_native/
+target_fuc2/
