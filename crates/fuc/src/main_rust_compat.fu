@@ -1,7 +1,16 @@
+mod ast;
+mod cli;
+mod codegen;
+mod llvm;
+mod ir;
+mod lexer;
+mod optimizer;
+mod parser;
+mod sema;
+
 use ariadne::{Report, Source};
-use fuc::{cli, codegen, ir, optimizer, parser, sema};
-use fuc::codegen::Backend;
-use fuc::codegen::llvm::CodegenConfig;
+use codegen::Backend;
+use llvm::CodegenConfig;
 use inkwell::context::Context;
 
 extern fn printf(fmt: string, ...) -> int;
@@ -19,7 +28,7 @@ fn print_error(message: &str) {
 }
 
 fn main() {
-    let args = cli::parse();
+    let args = cli::parse_args();
     let src_path_str = args.input.clone();
     let overall_start = std::time::Instant::now();
 
@@ -193,7 +202,7 @@ fn main() {
         is_lib: args.lib,
     };
 
-    let mut backend = codegen::llvm::LlvmBackend::new(&context, config);
+    let mut backend = llvm::LlvmBackend::new(&context, config);
     let output_path = PathBuf::from(&args.output);
     let mut emit_bin = args.emit_bin;
     if !args.lib {

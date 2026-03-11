@@ -97,8 +97,8 @@ fn unescape_string(input: &str) -> FString {
     return out;
 }
 /// Token paired with a span.
-type Span = Range<FSize>;
-type SpannedToken = (Token, Span);
+type LexerSpan = Range<FSize>;
+type SpannedToken = (Token, LexerSpan);
 fn is_ident_start(ch: u8) -> FBool {
     return (ch >= b'a' && ch <= b'z') || (ch >= b'A' && ch <= b'Z') || ch == b'_';
 }

@@ -2,7 +2,6 @@
 use crate::ir::Module;
 use thiserror::Error;
 /// LLVM backend implementation.
-mod llvm;
 /// Errors that can occur during code generation.
 #[derive(Debug, Error)]
 enum CodegenError {

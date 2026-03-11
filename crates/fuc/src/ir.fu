@@ -6,7 +6,7 @@ use generational_arena::{Arena, Index};
 #[derive(Clone, Debug)]
 struct Module {
     /// IR functions.
-    pub functions: FVec<Function>,
+    pub functions: FVec<IrFunction>,
     /// Global string literals.
     pub strings: FVec<FString>,
     /// External function declarations.
@@ -16,7 +16,7 @@ struct Module {
 }
 /// IR function definition.
 #[derive(Clone, Debug)]
-struct Function {
+struct IrFunction {
     /// Name of the function.
     pub name: FString,
     /// Parameters and types.
@@ -190,7 +190,7 @@ impl Lowerer {
     fn new_ptr_tmp(&mut self, pointee: Type) -> TypedValue {
         self.new_tmp_typed(Type::Pointer(Box::new(pointee)))
     }
-    fn lower_function(&mut self, func: sema::TypedFunction) -> Function {
+    fn lower_function(&mut self, func: sema::TypedFunction) -> IrFunction {
         self.blocks = Arena::new();
         self.tmp_counter = 0;
         self.current_block = self.new_block("entry");
@@ -204,7 +204,7 @@ impl Lowerer {
                 self.set_terminator(Terminator::Return(None));
             }
         }
-        Function {
+        IrFunction {
             name: func.name,
             params: func.params,
             return_type: func.return_type,

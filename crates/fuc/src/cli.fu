@@ -32,6 +32,6 @@ struct Cli {
     pub lib: bool,
 }
 /// Parse CLI arguments.
-fn parse() -> Cli {
+fn parse_args() -> Cli {
     return Cli::parse();
 }

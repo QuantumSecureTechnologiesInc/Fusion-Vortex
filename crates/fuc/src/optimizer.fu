@@ -1,6 +1,6 @@
 //! IR optimization passes.
 use crate::ast::{self, BinaryOp};
-use crate::ir::{Address, BasicBlock, Function, Instruction, Module, TypedValue, Value};
+use crate::ir::{Address, BasicBlock, Instruction, IrFunction, Module, TypedValue, Value};
 use generational_arena::Index;
 /// Applies optimization passes to the module.
 fn optimize(module: Module) -> Module {
@@ -44,7 +44,7 @@ fn resolve_address(addr: &Address, consts: &FMap<Value, TypedValue>) -> Address 
         }
     }
 }
-fn optimize_function(func: &mut Function) {
+fn optimize_function(func: &mut IrFunction) {
     let mut changed = true;
     while changed {
         changed = false;
