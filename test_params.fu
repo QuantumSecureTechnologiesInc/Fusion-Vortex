@@ -1,0 +1,20 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn test5(a: int, b: int, c: int, d: int, e: int) -> int {
+    printf("5 params: %d %d %d %d %d\n", a, b, c, d, e);
+    return 0;
+}
+
+fn test6(a: int, b: int, c: int, d: int, e: int, f: int) -> int {
+    printf("6 params: %d %d %d %d %d %d\n", a, b, c, d, e, f);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Start\n");
+    let r5 = test5(1, 2, 3, 4, 5);
+    printf("After 5-param call\n");
+    let r6 = test6(1, 2, 3, 4, 5, 6);
+    printf("After 6-param call\n");
+    return 0;
+}

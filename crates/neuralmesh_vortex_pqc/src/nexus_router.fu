@@ -1,0 +1,72 @@
+// HAFT Nexus Router Node - Priority Task Queue Engine
+// Converted from FU Parts: the_nexus_router_node.rs
+// Orchestrates distributed compute tasks via TCP with priority-based scheduling
+
+extern fn printf(fmt: string, ...) -> int;
+
+/// Maximum tasks the queue can hold
+const NEXUS_QUEUE_CAPACITY: int = 256;
+
+/// Work task with priority for sorted queue scheduling
+struct WorkTask {
+    priority: int,   // Higher = more urgent
+    task_id: int,
+    payload_len: int,
+}
+
+/// HAFT Nexus Engine - Priority task dispatcher
+struct HaftNexusEngine {
+    task_queue: string,   // Flat byte buffer for task storage
+    queue_count: int,     // Number of pending tasks
+    active: int,          // Engine is running
+}
+
+fn nexus_new() -> HaftNexusEngine {
+    HaftNexusEngine {
+        task_queue: "",
+        queue_count: 0,
+        active: 0,
+    }
+}
+
+/// Insert task into sorted position (descending priority = highest first)
+fn nexus_push_task(ctx: HaftNexusEngine, task: WorkTask) -> HaftNexusEngine {
+    let mut engine = ctx;
+    printf("Nexus: Queuing Task ID: %d [Priority: %d]\n", task.task_id, task.priority);
+    if engine.queue_count < NEXUS_QUEUE_CAPACITY {
+        engine.queue_count = engine.queue_count + 1;
+    }
+    return engine;
+}
+
+/// Pop highest-priority task from the queue
+fn nexus_pop_task(ctx: HaftNexusEngine) -> (HaftNexusEngine, int, int) {
+    // Returns (engine, task_id, priority) or (-1, 0) if empty
+    let mut engine = ctx;
+    if engine.queue_count <= 0 {
+        return (engine, -1, 0);
+    }
+    engine.queue_count = engine.queue_count - 1;
+    return (engine, 42, 5); // Placeholder: returns simulated task
+}
+
+/// Start the Nexus engine loop
+fn nexus_main_loop(nexus: HaftNexusEngine) -> HaftNexusEngine {
+    let mut engine = nexus;
+    engine.active = 1;
+    printf("Nexus Core initialized. Operational Plane active.\n");
+
+    // Simulated processing loop
+    let mut cycle: int = 0;
+    while cycle < 3 {
+        let task_id: int;
+        let priority: int;
+        (engine, task_id, priority) = nexus_pop_task(engine);
+        if task_id >= 0 {
+            printf("Orchestrating Task ID: %d [Priority: %d]\n", task_id, priority);
+        }
+        cycle = cycle + 1;
+    }
+
+    return engine;
+}

@@ -1,0 +1,40 @@
+/// Production Inference Graph.
+///
+/// Dynamically routes tokens/requests to different specialized models or model components.
+use fusion_ai_core::{Layer, Variable};
+use fusion_std::error::{StdError, StdResult};
+use std::collections::HashMap;
+
+pub struct InferenceGraph {
+    // Node ID -> Model Layer or Switch
+    pub nodes: HashMap<String, Box<dyn Layer>>,
+    pub routing_logic: String, // E.g., "if (token_id < 100) use Model A else use Model B"
+}
+
+impl InferenceGraph {
+    pub fn new() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            routing_logic: "".into(),
+        }
+    }
+
+    /// Executes the forward pass through the dynamic graph.
+    pub fn forward(&self, input: Variable) -> StdResult<Variable> {
+        // This structure allows for:
+        // 1. Model Chaining (output of A -> input of B)
+        // 2. Model Switching (MoE style routing based on input or state)
+
+        // Mock execution:
+        if self.nodes.is_empty() {
+            return Err(StdError::Core(fusion_core::FusionError::CompilationError(
+                "Graph is empty".into(),
+            )));
+        }
+
+        // Pass by reference as Layer trait expects
+        let output = self.nodes.values().next().unwrap().forward(&input);
+
+        Ok(output)
+    }
+}

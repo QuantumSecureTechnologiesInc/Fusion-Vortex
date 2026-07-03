@@ -1,0 +1,20 @@
+// Fusion Standard Library: I/O
+// Handles text and numeric output for diagnostics and user programs.
+
+extern fn printf(fmt: string, val: int) -> int;
+extern fn puts(s: string) -> int;
+
+/// Prints a string followed by a newline to standard output.
+fn print(s: string) -> void {
+    puts(s);
+}
+
+/// Prints an integer followed by a newline.
+fn print_int(n: int) -> void {
+    printf("%d\n", n);
+}
+
+/// Prints a single character.
+fn print_char(c: char) -> void {
+    printf("%c", c);
+}

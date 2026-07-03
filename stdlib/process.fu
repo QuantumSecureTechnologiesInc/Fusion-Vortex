@@ -1,22 +1,60 @@
-// stdlib/process.fu
-// Process Management
+// stdlib/process.fu - Process management for Fusion
+// Wrappers around the C runtime environment and process functions.
 
-fn exit(code: int) -> void {
-    // Intrinsic: exit(code: int) -> void
-    __intrinsic_exit(code);
+extern fn fusion_exit(code: int) -> void;
+extern fn fusion_env_get(key: string) -> string;
+extern fn fusion_sleep_ms(ms: int) -> void;
+extern fn fusion_time_now_ms() -> int;
+extern fn fusion_argc() -> int;
+extern fn fusion_argv(idx: int) -> string;
+extern fn fusion_rand_seed(seed: int) -> void;
+extern fn fusion_rand_next() -> int;
+
+// ============================================================
+// Process control
+// ============================================================
+fn exit_process(code: int) -> void {
+    fusion_exit(code);
 }
 
-fn env(key: string) -> string {
-    // Intrinsic: getenv(key: string) -> string
-    return getenv(key);
+fn sleep(ms: int) -> void {
+    fusion_sleep_ms(ms);
 }
 
-fn args() -> Vector<string> {
-    // Intrinsic: get_args() -> Vector<string>
-    return get_args();
+fn now_ms() -> int {
+    return fusion_time_now_ms();
 }
 
-fn sleep(ms: int) {
-    // Intrinsic: sleep_ms(ms: int) -> void
-    sleep_ms(ms);
+// ============================================================
+// Environment
+// ============================================================
+fn env_get(key: string) -> string {
+    return fusion_env_get(key);
+}
+
+fn arg_count() -> int {
+    return fusion_argc();
+}
+
+fn arg_at(idx: int) -> string {
+    return fusion_argv(idx);
+}
+
+// ============================================================
+// Random
+// ============================================================
+fn rand_seed(seed: int) -> void {
+    fusion_rand_seed(seed);
+}
+
+fn rand_next() -> int {
+    return fusion_rand_next();
+}
+
+fn rand_range(min_val: int, max_val: int) -> int {
+    let r: int = fusion_rand_next();
+    if r < 0 { r = 0 - r; }
+    let range_val: int = max_val - min_val;
+    if range_val <= 0 { return min_val; }
+    return min_val + (r % range_val);
 }

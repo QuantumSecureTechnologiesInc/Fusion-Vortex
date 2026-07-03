@@ -303,7 +303,7 @@ This entropy-based model provides several advantages. It's more intuitive: devel
 
 ### Implementation Location
 
-The complete implementation is in `Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu`. This 163-line file demonstrates the power of Fusion's expressiveness: a complete borrow checker in less than 200 lines of code.
+The implementation was originally in `Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu` (directory removed during restructure). The 163-line file demonstrated the power of Fusion's expressiveness: a complete borrow checker in less than 200 lines of code.
 
 ### Core Data Structures
 

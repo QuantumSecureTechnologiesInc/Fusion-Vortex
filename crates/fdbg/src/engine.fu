@@ -1,0 +1,764 @@
+//! Debug engine for fdbg.
+//!
+//! Orchestrates all debugger components — process control, breakpoints,
+//! register/memory access, disassembly, and stack unwinding — using
+//! the Windows Debug API event loop via FFI.
+
+use super::breakpoint::BreakpointManager;
+use super::context;
+use super::disasm::{DisasmLine, Disassembler};
+use super::error::{FdbgError, FdbgResult};
+use super::ffi;
+use super::process::DebugProcess;
+use super::symbols::SymbolTable;
+use super::unwind::{self, StackFrame};
+
+/// The state of the debugger/debuggee.
+pub enum DebugState {
+    /// No process has been loaded.
+    NotLoaded,
+    /// Process is loaded and waiting for a command.
+    Loaded,
+    /// Process is running (awaiting a debug event).
+    Running,
+    /// Stopped at a specific address (breakpoint, step, or initial stop).
+    Stopped(u64),
+    /// Process has exited with the given exit code.
+    Exited(u32),
+}
+
+impl DebugState {
+    /// Check equality with another DebugState (match-like helper).
+    pub fn is_not_loaded(&self) -> bool {
+        match self {
+            DebugState::NotLoaded => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_stopped(&self) -> bool {
+        match self {
+            DebugState::Stopped(_) => true,
+            _ => false,
+        }
+    }
+}
+
+/// Size of a DEBUG_EVENT struct on Windows x64.
+const DEBUG_EVENT_SIZE: usize = 312;
+
+/// Offsets within the raw DEBUG_EVENT byte buffer.
+const EVENT_CODE_OFFSET: usize = 0;
+const EVENT_PID_OFFSET: usize = 4;
+const EVENT_TID_OFFSET: usize = 8;
+const EVENT_UNION_OFFSET: usize = 16;
+
+/// Within the union, exception record offsets.
+const EXCEPTION_CODE_OFFSET: usize = 0;   // relative to union start
+const EXCEPTION_ADDR_OFFSET: usize = 16;  // relative to union start
+
+// Exit process: exit code is at union offset 0
+const EXIT_CODE_OFFSET: usize = 0;  // relative to union start
+
+/// The main debugger engine.
+pub struct Fdbg {
+    /// The debuggee process (None if no process loaded).
+    process: Option<DebugProcess>,
+    /// Symbol table for the loaded executable.
+    symbols: SymbolTable,
+    /// Breakpoint manager.
+    breakpoints: BreakpointManager,
+    /// Current debugger state.
+    state: DebugState,
+    /// x86-64 disassembler.
+    disassembler: Disassembler,
+    /// Address of the last pending single-step (for re-inserting INT3).
+    pending_single_step: Option<u64>,
+    /// Pending raw DEBUG_EVENT bytes.
+    pending_event: Option<Vec<u8>>,
+    /// Thread handle obtained during process creation.
+    thread_handle: u64,
+}
+
+impl Fdbg {
+    /// Create a new debugger instance (no process loaded).
+    pub fn new() -> Self {
+        Fdbg {
+            process: None,
+            symbols: SymbolTable::new(),
+            breakpoints: BreakpointManager::new(),
+            state: DebugState::NotLoaded,
+            disassembler: Disassembler::new(),
+            pending_single_step: None,
+            pending_event: None,
+            thread_handle: 0,
+        }
+    }
+
+    /// Launch an executable for debugging.
+    /// Waits through startup DLL loads to reach the loader breakpoint.
+    pub fn load(&mut self, path: &str) -> FdbgResult<()> {
+        match &self.process {
+            Some(_) => {
+                return Err(FdbgError::ProcessError(
+                    "a process is already loaded".to_string(),
+                ));
+            }
+            None => {}
+        }
+
+        // Build command line
+        let cmd_line = path.to_string();
+
+        // Launch the process via FFI
+        let mut out_pid: u64 = 0;
+        let mut out_proc: u64 = 0;
+        let mut out_thread: u64 = 0;
+
+        let cmd_ptr = cmd_line.as_ptr();
+
+        let ok = ffi::fusion_debug_create_process(
+            cmd_ptr,
+            &mut out_pid as *mut u64,
+            &mut out_proc as *mut u64,
+            &mut out_thread as *mut u64,
+        );
+
+        if ok == 0 {
+            return Err(FdbgError::ProcessError(
+                format!("Failed to create process: {}", cmd_line),
+            ));
+        }
+
+        let mut process = DebugProcess {
+            handle: out_proc,
+            pid: out_pid as u32,
+            image_path: path.to_string(),
+            image_base: 0,
+        };
+
+        self.thread_handle = out_thread;
+
+        // Wait for CREATE_PROCESS_DEBUG_EVENT and run through DLL loads
+        // until we hit the loader breakpoint (EXCEPTION_BREAKPOINT).
+        self.wait_for_loader_breakpoint(&mut process)?;
+
+        self.process = Some(process);
+        self.state = DebugState::Loaded;
+        Ok(())
+    }
+
+    /// Run through initial debug events until the loader breakpoint.
+    fn wait_for_loader_breakpoint(&mut self, process: &mut DebugProcess) -> FdbgResult<()> {
+        let mut event_buf: Vec<u8> = Vec::with_capacity(DEBUG_EVENT_SIZE);
+        for _ in 0..DEBUG_EVENT_SIZE {
+            event_buf.push(0);
+        }
+
+        loop {
+            let ret = ffi::fusion_debug_wait_for_event(
+                event_buf.as_mut_ptr(),
+                0xFFFFFFFF, // INFINITE
+            );
+
+            if ret == 0 {
+                return Err(FdbgError::ProcessError(
+                    "WaitForDebugEvent failed during load".to_string(),
+                ));
+            }
+
+            let event_code = read_u32(&event_buf, EVENT_CODE_OFFSET);
+            let pid = read_u32(&event_buf, EVENT_PID_OFFSET);
+            let tid = read_u32(&event_buf, EVENT_TID_OFFSET);
+
+            match event_code {
+                // CREATE_PROCESS_DEBUG_EVENT
+                3 => {
+                    // Extract image base from the event
+                    // CreateProcessInfo.lpBaseOfImage is at union offset 48 (x64)
+                    let image_base = read_u64(&event_buf, EVENT_UNION_OFFSET + 48);
+                    process.image_base = image_base;
+
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // LOAD_DLL_DEBUG_EVENT
+                6 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // EXCEPTION_DEBUG_EVENT
+                1 => {
+                    let exc_code = read_u32(&event_buf, EVENT_UNION_OFFSET + EXCEPTION_CODE_OFFSET);
+
+                    if exc_code == ffi::EXCEPTION_BREAKPOINT {
+                        // Loader breakpoint — we're stopped at the initial break
+                        // Get RIP from the thread context
+                        let rip = self.read_rip_from_thread(self.thread_handle)?;
+
+                        // Continue past the loader breakpoint
+                        ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+
+                        // Now load symbols for the process
+                        // NOTE: Symbol loading from PE exports requires the C helper
+                        // self.symbols = SymbolTable::load_exports(process.handle, process.image_base)?;
+
+                        self.state = DebugState::Stopped(rip);
+                        return Ok(());
+                    }
+
+                    // Other exception during load — pass to debuggee
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_EXCEPTION_NOT_HANDLED);
+                }
+                _ => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+            }
+        }
+    }
+
+    /// Continue execution until the next stop event.
+    pub fn cont(&mut self) -> FdbgResult<()> {
+        self.ensure_loaded()?;
+
+        // Continue from pending event if any
+        self.continue_pending_event();
+
+        self.state = DebugState::Running;
+        self.wait_for_stop()
+    }
+
+    /// Single-step one instruction (set trap flag, continue, wait for SINGLE_STEP).
+    pub fn step(&mut self) -> FdbgResult<()> {
+        self.ensure_loaded()?;
+
+        // Stop if we're at a breakpoint location
+        // Set trap flag in EFLAGS
+        let mut regs = context::read_registers(self.thread_handle)?;
+        context::set_trap_flag(&mut regs);
+        self.write_registers(&regs)?;
+
+        // Continue from pending event if any
+        self.continue_pending_event();
+
+        self.state = DebugState::Running;
+        self.wait_for_stop()
+    }
+
+    /// Run to the next breakpoint (alias for cont).
+    pub fn run(&mut self) -> FdbgResult<()> {
+        self.cont()
+    }
+
+    /// Set a breakpoint at a symbol name or hex address.
+    pub fn break_at(&mut self, location: &str) -> FdbgResult<()> {
+        self.ensure_loaded()?;
+
+        let addr = self.resolve_address(location)?;
+        let proc = self.process_handle()?;
+
+        // Read original byte and write INT3
+        let mut orig: u8 = 0;
+        let ret = ffi::fusion_debug_read_byte(proc, addr, &mut orig as *mut u8);
+        if ret == 0 {
+            return Err(FdbgError::BreakpointError(
+                format!("Cannot read byte at 0x{:x}", addr),
+            ));
+        }
+
+        ffi::fusion_debug_write_byte(proc, addr, 0xCC); // INT3
+
+        // Register the breakpoint with the original byte
+        self.breakpoints.set(addr, orig)?;
+        Ok(())
+    }
+
+    /// Remove a breakpoint.
+    pub fn break_remove(&mut self, location: &str) -> FdbgResult<()> {
+        self.ensure_loaded()?;
+
+        let addr = self.resolve_address(location)?;
+        let proc = self.process_handle()?;
+
+        // Find the breakpoint to get original byte
+        match self.breakpoints.find(addr) {
+            Some(idx) => {
+                // Remove breakpoint and get the original byte
+                let original_byte = self.breakpoints.remove(idx)?;
+                // Restore original byte in the target process
+                ffi::fusion_debug_write_byte(proc, addr, original_byte);
+                Ok(())
+            }
+            None => Err(FdbgError::BreakpointError(
+                format!("No breakpoint at '{}'", location),
+            )),
+        }
+    }
+
+    /// Read the current register set from the debuggee.
+    pub fn info_registers(&self) -> FdbgResult<String> {
+        let regs = context::read_registers(self.thread_handle)?;
+        Ok(context::format_registers(&regs))
+    }
+
+    /// Read a single register value.
+    pub fn get_register(&self, name: &str) -> FdbgResult<u64> {
+        let regs = context::read_registers(self.thread_handle)?;
+        match name {
+            "rax" => Ok(regs.rax),
+            "rbx" => Ok(regs.rbx),
+            "rcx" => Ok(regs.rcx),
+            "rdx" => Ok(regs.rdx),
+            "rsi" => Ok(regs.rsi),
+            "rdi" => Ok(regs.rdi),
+            "r8" => Ok(regs.r8),
+            "r9" => Ok(regs.r9),
+            "r10" => Ok(regs.r10),
+            "r11" => Ok(regs.r11),
+            "r12" => Ok(regs.r12),
+            "r13" => Ok(regs.r13),
+            "r14" => Ok(regs.r14),
+            "r15" => Ok(regs.r15),
+            "rbp" => Ok(regs.rbp),
+            "rsp" => Ok(regs.rsp),
+            "rip" => Ok(regs.rip),
+            "eflags" => Ok(regs.eflags as u64),
+            _ => Err(FdbgError::MemoryError(format!("unknown register: {}", name))),
+        }
+    }
+
+    /// Disassemble instructions around the current RIP.
+    pub fn disassemble(&self, count: usize) -> FdbgResult<Vec<DisasmLine>> {
+        let proc = self.process_handle()?;
+        let regs = context::read_registers(self.thread_handle)?;
+
+        // Read enough bytes for `count` instructions (estimate 15 bytes each)
+        let buf_size = count * 16;
+        let mut buf: Vec<u8> = Vec::with_capacity(buf_size);
+        for _ in 0..buf_size {
+            buf.push(0);
+        }
+
+        let mut bytes_read: u64 = 0;
+        let ret = ffi::fusion_debug_read_memory(
+            proc,
+            regs.rip,
+            buf.as_mut_ptr(),
+            buf_size as u64,
+            &mut bytes_read as *mut u64,
+        );
+
+        if ret == 0 {
+            return Err(FdbgError::MemoryError(
+                format!("Cannot read memory at 0x{:x}", regs.rip),
+            ));
+        }
+
+        self.disassembler.disassemble(&buf, regs.rip, count)
+    }
+
+    /// Format disassembly around RIP for display.
+    pub fn disassemble_formatted(&self, count: usize) -> FdbgResult<String> {
+        let lines = self.disassemble(count)?;
+        let mut out = String::new();
+        for line in &lines {
+            if !out.is_empty() {
+                out.push('\n');
+            }
+            out.push_str(&line.to_display_string());
+        }
+        Ok(out)
+    }
+
+    /// Examine memory at the given address.
+    pub fn examine_memory(&self, addr: u64, count: usize) -> FdbgResult<Vec<u8>> {
+        let proc = self.process_handle()?;
+        let mut buf: Vec<u8> = Vec::with_capacity(count);
+        for _ in 0..count {
+            buf.push(0);
+        }
+
+        let mut bytes_read: u64 = 0;
+        let ret = ffi::fusion_debug_read_memory(
+            proc,
+            addr,
+            buf.as_mut_ptr(),
+            count as u64,
+            &mut bytes_read as *mut u64,
+        );
+
+        if ret == 0 {
+            return Err(FdbgError::MemoryError(
+                format!("Cannot read memory at 0x{:x}", addr),
+            ));
+        }
+
+        Ok(buf)
+    }
+
+    /// Format a hexdump of memory at the given address.
+    pub fn examine_memory_formatted(&self, addr: u64, count: usize) -> FdbgResult<String> {
+        let data = self.examine_memory(addr, count)?;
+        Ok(context::format_hexdump(&data, addr))
+    }
+
+    /// Produce a stack backtrace.
+    pub fn backtrace(&self) -> FdbgResult<Vec<StackFrame>> {
+        let proc = self.process_handle()?;
+        unwind::unwind(proc, self.thread_handle, &self.symbols)
+    }
+
+    /// Format a backtrace for display.
+    pub fn backtrace_formatted(&self) -> FdbgResult<String> {
+        let frames = self.backtrace()?;
+        Ok(unwind::format_backtrace(&frames))
+    }
+
+    /// Return the current debug state.
+    pub fn state(&self) -> &DebugState {
+        &self.state
+    }
+
+    /// Return the RIP where the debuggee is currently stopped, if any.
+    pub fn stopped_address(&self) -> Option<u64> {
+        match &self.state {
+            DebugState::Stopped(addr) => Some(*addr),
+            _ => None,
+        }
+    }
+
+    /// Return a reference to the symbol table.
+    pub fn symbols(&self) -> &SymbolTable {
+        &self.symbols
+    }
+
+    /// Return the process ID, if loaded.
+    pub fn pid(&self) -> Option<u32> {
+        match &self.process {
+            Some(p) => Some(p.pid),
+            None => None,
+        }
+    }
+
+    /// Return the image base, if loaded.
+    pub fn image_base(&self) -> Option<u64> {
+        match &self.process {
+            Some(p) => Some(p.image_base),
+            None => None,
+        }
+    }
+
+    // ─── Private helpers ───────────────────────────────────────────────
+
+    fn ensure_loaded(&self) -> FdbgResult<()> {
+        match &self.process {
+            Some(_) => Ok(()),
+            None => Err(FdbgError::ProcessError("no process loaded".to_string())),
+        }
+    }
+
+    fn process_handle(&self) -> FdbgResult<u64> {
+        match &self.process {
+            Some(p) => Ok(p.handle),
+            None => Err(FdbgError::ProcessError("no process loaded".to_string())),
+        }
+    }
+
+    /// Resolve a location string to an address.
+    /// Accepts hex addresses ("0x401000") or symbol names ("main").
+    fn resolve_address(&self, location: &str) -> FdbgResult<u64> {
+        // Try hex first
+        let hex_str = if location.starts_with("0x") || location.starts_with("0X") {
+            &location[2..]
+        } else {
+            location
+        };
+
+        // Try to parse as u64 from hex
+        match parse_hex_u64(hex_str) {
+            Some(addr) => return Ok(addr),
+            None => {}
+        }
+
+        // Try symbol name
+        match self.symbols.resolve(location) {
+            Some(addr) => return Ok(addr),
+            None => {}
+        }
+
+        Err(FdbgError::SymbolError(format!(
+            "cannot resolve '{}' — not a valid hex address or known symbol",
+            location
+        )))
+    }
+
+    /// Read RIP from a thread handle via GetThreadContext.
+    fn read_rip_from_thread(&self, thread: u64) -> FdbgResult<u64> {
+        let regs = context::read_registers(thread)?;
+        Ok(regs.rip)
+    }
+
+    /// Write registers to the target thread.
+    fn write_registers(&self, regs: &context::RegisterSet) -> FdbgResult<()> {
+        // Build CONTEXT buffer and call SetThreadContext
+        let mut ctx_buf: [u8; 1232] = [0; 1232];
+        // Set ContextFlags
+        ctx_buf[48] = 0x07;
+        ctx_buf[49] = 0x00;
+        ctx_buf[50] = 0x01;
+        ctx_buf[51] = 0x00;
+
+        // Write register values into the context buffer
+        // Rax is at offset 120, Rbx at 128, etc. (simplified)
+        write_u64_le(&mut ctx_buf, 120, regs.rax);
+        write_u64_le(&mut ctx_buf, 128, regs.rbx);
+        write_u64_le(&mut ctx_buf, 136, regs.rcx);
+        write_u64_le(&mut ctx_buf, 144, regs.rdx);
+        write_u64_le(&mut ctx_buf, 152, regs.rsi);
+        write_u64_le(&mut ctx_buf, 160, regs.rdi);
+        write_u64_le(&mut ctx_buf, 168, regs.r8);
+        write_u64_le(&mut ctx_buf, 176, regs.r9);
+        write_u64_le(&mut ctx_buf, 184, regs.r10);
+        write_u64_le(&mut ctx_buf, 192, regs.r11);
+        write_u64_le(&mut ctx_buf, 200, regs.r12);
+        write_u64_le(&mut ctx_buf, 208, regs.r13);
+        write_u64_le(&mut ctx_buf, 216, regs.r14);
+        write_u64_le(&mut ctx_buf, 224, regs.r15);
+        write_u64_le(&mut ctx_buf, 232, regs.rbp);
+        write_u64_le(&mut ctx_buf, 240, regs.rsp);
+        write_u64_le(&mut ctx_buf, 248, regs.rip);
+        write_u32_le(&mut ctx_buf, 60, regs.eflags); // EFlags at offset 56+4=60 in CONTEXT
+
+        let ret = ffi::fusion_debug_set_thread_context(
+            self.thread_handle,
+            &ctx_buf as *const u8,
+        );
+
+        if ret == 0 {
+            return Err(FdbgError::MemoryError(
+                "Failed to set thread context".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Continue from the pending debug event if one exists.
+    fn continue_pending_event(&mut self) {
+        match &self.pending_event {
+            Some(event) => {
+                let pid = read_u32(event, EVENT_PID_OFFSET);
+                let tid = read_u32(event, EVENT_TID_OFFSET);
+                ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                self.pending_event = None;
+            }
+            None => {}
+        }
+    }
+
+    /// Internal event loop: wait for a debug event and handle it.
+    fn wait_for_stop(&mut self) -> FdbgResult<()> {
+        let process = match &self.process {
+            Some(p) => p,
+            None => return Err(FdbgError::ProcessError("no process loaded".to_string())),
+        };
+
+        let proc_handle = process.handle;
+
+        let mut event_buf: Vec<u8> = Vec::with_capacity(DEBUG_EVENT_SIZE);
+        for _ in 0..DEBUG_EVENT_SIZE {
+            event_buf.push(0);
+        }
+
+        loop {
+            let ret = ffi::fusion_debug_wait_for_event(
+                event_buf.as_mut_ptr(),
+                0xFFFFFFFF, // INFINITE
+            );
+
+            if ret == 0 {
+                return Err(FdbgError::ProcessError(
+                    "WaitForDebugEvent failed".to_string(),
+                ));
+            }
+
+            let event_code = read_u32(&event_buf, EVENT_CODE_OFFSET);
+            let pid = read_u32(&event_buf, EVENT_PID_OFFSET);
+            let tid = read_u32(&event_buf, EVENT_TID_OFFSET);
+
+            match event_code {
+                // EXCEPTION_DEBUG_EVENT
+                1 => {
+                    let exc_code = read_u32(
+                        &event_buf,
+                        EVENT_UNION_OFFSET + EXCEPTION_CODE_OFFSET,
+                    );
+
+                    match exc_code {
+                        code if code == ffi::EXCEPTION_BREAKPOINT => {
+                            // RIP points after the INT3, so adjust
+                            let rip = self.read_rip_from_thread(self.thread_handle)?;
+                            let bp_addr = rip - 1;
+
+                            // Check if this is one of our breakpoints
+                            match self.breakpoints.find(bp_addr) {
+                                Some(_idx) => {
+                                    // Handle breakpoint:
+                                    // 1. Restore original byte (read from breakpoint data)
+                                    // 2. Rewind RIP by 1
+                                    // 3. Set TF for single-step
+                                    let mut saved_byte: u8 = 0;
+                                    ffi::fusion_debug_read_byte(
+                                        proc_handle,
+                                        bp_addr,
+                                        &mut saved_byte as *mut u8,
+                                    );
+                                    ffi::fusion_debug_write_byte(proc_handle, bp_addr, saved_byte);
+
+                                    // Rewind RIP
+                                    let mut regs = context::read_registers(self.thread_handle)?;
+                                    regs.rip = bp_addr;
+                                    context::set_trap_flag(&mut regs);
+                                    self.write_registers(&regs)?;
+
+                                    self.pending_single_step = Some(bp_addr);
+
+                                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                                    continue; // Wait for SINGLE_STEP
+                                }
+                                None => {
+                                    // Unknown breakpoint — stop here
+                                    self.state = DebugState::Stopped(rip);
+                                    self.pending_event = Some(event_buf.clone());
+                                    return Ok(());
+                                }
+                            }
+                        }
+                        code if code == ffi::EXCEPTION_SINGLE_STEP => {
+                            // Re-insert pending breakpoint
+                            match self.pending_single_step.take() {
+                                Some(bp_addr) => {
+                                    ffi::fusion_debug_write_byte(proc_handle, bp_addr, 0xCC);
+                                }
+                                None => {}
+                            }
+
+                            let rip = self.read_rip_from_thread(self.thread_handle)?;
+                            self.state = DebugState::Stopped(rip);
+                            self.pending_event = Some(event_buf.clone());
+                            return Ok(());
+                        }
+                        code if code == ffi::EXCEPTION_ACCESS_VIOLATION => {
+                            let rip = self.read_rip_from_thread(self.thread_handle)?;
+                            self.state = DebugState::Stopped(rip);
+                            self.pending_event = Some(event_buf.clone());
+                            return Ok(());
+                        }
+                        _ => {
+                            // Pass unknown exceptions to the debuggee
+                            ffi::fusion_debug_continue(pid, tid, ffi::DBG_EXCEPTION_NOT_HANDLED);
+                            continue;
+                        }
+                    }
+                }
+                // EXIT_PROCESS_DEBUG_EVENT
+                5 => {
+                    let exit_code = read_u32(&event_buf, EVENT_UNION_OFFSET + EXIT_CODE_OFFSET);
+                    self.state = DebugState::Exited(exit_code);
+                    self.pending_event = Some(event_buf.clone());
+                    return Ok(());
+                }
+                // LOAD_DLL_DEBUG_EVENT
+                6 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // CREATE_PROCESS_DEBUG_EVENT
+                3 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // CREATE_THREAD_DEBUG_EVENT
+                2 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // EXIT_THREAD_DEBUG_EVENT
+                4 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // UNLOAD_DLL_DEBUG_EVENT
+                7 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                // OUTPUT_DEBUG_STRING_EVENT
+                8 => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+                _ => {
+                    ffi::fusion_debug_continue(pid, tid, ffi::DBG_CONTINUE);
+                }
+            }
+        }
+    }
+}
+
+// ─── Raw byte buffer helpers ───────────────────────────────────────
+
+/// Read a u32 from a byte buffer at the given offset (little-endian).
+fn read_u32(buf: &[u8], offset: usize) -> u32 {
+    if offset + 4 > buf.len() {
+        return 0;
+    }
+    (buf[offset] as u32)
+        | ((buf[offset + 1] as u32) << 8)
+        | ((buf[offset + 2] as u32) << 16)
+        | ((buf[offset + 3] as u32) << 24)
+}
+
+/// Read a u64 from a byte buffer at the given offset (little-endian).
+fn read_u64(buf: &[u8], offset: usize) -> u64 {
+    let lo = read_u32(buf, offset) as u64;
+    let hi = read_u32(buf, offset + 4) as u64;
+    lo | (hi << 32)
+}
+
+/// Write a u64 into a byte buffer at the given offset (little-endian).
+fn write_u64_le(buf: &mut [u8], offset: usize, value: u64) {
+    if offset + 8 > buf.len() {
+        return;
+    }
+    buf[offset] = (value & 0xFF) as u8;
+    buf[offset + 1] = ((value >> 8) & 0xFF) as u8;
+    buf[offset + 2] = ((value >> 16) & 0xFF) as u8;
+    buf[offset + 3] = ((value >> 24) & 0xFF) as u8;
+    buf[offset + 4] = ((value >> 32) & 0xFF) as u8;
+    buf[offset + 5] = ((value >> 40) & 0xFF) as u8;
+    buf[offset + 6] = ((value >> 48) & 0xFF) as u8;
+    buf[offset + 7] = ((value >> 56) & 0xFF) as u8;
+}
+
+/// Write a u32 into a byte buffer at the given offset (little-endian).
+fn write_u32_le(buf: &mut [u8], offset: usize, value: u32) {
+    if offset + 4 > buf.len() {
+        return;
+    }
+    buf[offset] = (value & 0xFF) as u8;
+    buf[offset + 1] = ((value >> 8) & 0xFF) as u8;
+    buf[offset + 2] = ((value >> 16) & 0xFF) as u8;
+    buf[offset + 3] = ((value >> 24) & 0xFF) as u8;
+}
+
+/// Parse a hexadecimal string to u64.
+fn parse_hex_u64(s: &str) -> Option<u64> {
+    if s.is_empty() {
+        return None;
+    }
+
+    let mut result: u64 = 0;
+    for c in s.chars() {
+        let digit = match c {
+            '0'..='9' => (c as u64) - ('0' as u64),
+            'a'..='f' => (c as u64) - ('a' as u64) + 10,
+            'A'..='F' => (c as u64) - ('A' as u64) + 10,
+            _ => return None,
+        };
+        result = result.wrapping_mul(16).wrapping_add(digit);
+    }
+    Some(result)
+}

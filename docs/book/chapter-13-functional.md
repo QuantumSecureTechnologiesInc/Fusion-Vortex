@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 13: Functional Language Features: Iterators and Closures
 
 Fusion’s design is heavily influenced by functional programming. Functional programming allows you to treat functions as values, pass them around, and process data streams without explicit loops.

@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # PHASE 3 PLANNING - Ecosystem & Registry (v0.2.0)
 
 **Status**: 🎯 **PLANNING COMPLETE - READY FOR IMPLEMENTATION**

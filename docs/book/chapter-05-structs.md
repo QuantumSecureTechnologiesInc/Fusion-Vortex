@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 5: Using Classes and Structs
 
 In Chapter 3, we discussed primitive types and simple compound types like tuples and arrays. While useful, they can only express simple data relationships. When building complex applications, you need to model real-world concepts with custom data structures.

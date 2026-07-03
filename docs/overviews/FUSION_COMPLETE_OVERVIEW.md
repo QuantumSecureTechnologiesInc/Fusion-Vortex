@@ -80,7 +80,7 @@ Fusion achieves **true self-hosting**: the compiler is written in Fusion itself,
 
 ## The Entropic Borrow Checker (Vortex Engine)
 
-**Location:** `Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu`
+**Location:** ~~`Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu`~~ *(directory removed during restructure)*
 
 ### Revolutionary Concept
 

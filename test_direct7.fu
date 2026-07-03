@@ -1,0 +1,13 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn dispatch(active: int, mx: int, nid: int, ab: int, it: int, cc: int, ps: int) -> int {
+    printf("Node %d\n", nid);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Start\n");
+    let r = dispatch(0, 4, 1, 512, 850000, 3142, 6);
+    printf("End: %d\n", r);
+    return 0;
+}

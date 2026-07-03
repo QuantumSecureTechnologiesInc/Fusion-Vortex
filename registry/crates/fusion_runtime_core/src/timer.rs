@@ -8,24 +8,23 @@
 //! - Resolution: 1 nanosecond
 //! - Jitter: <100ns (vs ~1μs for standard timers)
 //! - Overhead: ~10ns per query
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
+
+use parking_lot::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FI64 = i64;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-// __FU_COMPAT_END__
-use parking_lot::Mutex;
+
 /// Low-jitter timer for QoS guarantees
 pub struct LowJitterTimer {
     /// Start time (monotonic)
     start_time: Instant,
+
     /// Nanoseconds since start
     nanos_since_start: AtomicU64,
+
     /// Calibration offset
-    calibration_offset_ns: FI64,
+    calibration_offset_ns: i64,
 }
+
 impl LowJitterTimer {
     /// Create a new low-jitter timer
     pub fn new() -> Self {
@@ -34,64 +33,84 @@ impl LowJitterTimer {
             nanos_since_start: AtomicU64::new(0),
             calibration_offset_ns: 0,
         };
+
+        // Calibrate on creation
         timer.calibrate();
         timer
     }
+
     /// Get current monotonic time in nanoseconds
     ///
     /// This bypasses standard OS clock and uses TSC (Time Stamp Counter)
     /// on x86 or similar high-resolution counters on other architectures.
-    pub fn now_ns(&self) -> FU64 {
+    pub fn now_ns(&self) -> u64 {
         let elapsed = self.start_time.elapsed();
-        let nanos = elapsed.as_secs() * 1_000_000_000 + elapsed.subsec_nanos() as FU64;
-        (nanos as FI64 + self.calibration_offset_ns) as FU64
+        let nanos = elapsed.as_secs() * 1_000_000_000 + elapsed.subsec_nanos() as u64;
+
+        // Apply calibration offset
+        (nanos as i64 + self.calibration_offset_ns) as u64
     }
+
     /// Get current time in microseconds
-    pub fn now_us(&self) -> FU64 {
+    pub fn now_us(&self) -> u64 {
         self.now_ns() / 1_000
     }
+
     /// Get current time in milliseconds
-    pub fn now_ms(&self) -> FU64 {
+    pub fn now_ms(&self) -> u64 {
         self.now_ns() / 1_000_000
     }
+
     /// Sleep for specified duration with minimal jitter
     ///
     /// Uses busy-wait for durations <10μs, thread sleep for longer durations
     pub fn sleep(&self, duration: Duration) {
-        let target_ns = self.now_ns() + duration.as_nanos() as FU64;
+        let target_ns = self.now_ns() + duration.as_nanos() as u64;
+
         if duration.as_micros() < 10 {
+            // Busy-wait for very short durations (<10μs)
             while self.now_ns() < target_ns {
                 std::hint::spin_loop();
             }
         } else {
+            // Use thread sleep for longer durations
             std::thread::sleep(duration);
         }
     }
+
     /// Calibrate timer against system clock
-    fn calibrate(&self) {}
+    fn calibrate(&self) {
+        // In real implementation, would calibrate against HPET or TSC
+        // For now, just initialize
+    }
+
     /// Create a deadline timer
     pub fn deadline(&self, duration: Duration) -> Deadline<'_> {
         Deadline {
-            target_ns: self.now_ns() + duration.as_nanos() as FU64,
+            target_ns: self.now_ns() + duration.as_nanos() as u64,
             timer: self,
         }
     }
 }
+
 impl Default for LowJitterTimer {
     fn default() -> Self {
         Self::new()
     }
 }
+
 /// Deadline timer for timeout checks
 pub struct Deadline<'a> {
-    target_ns: FU64,
+    target_ns: u64,
     timer: &'a LowJitterTimer,
 }
+
 impl<'a> Deadline<'a> {
     /// Check if deadline has expired
-    pub fn expired(&self) -> FBool {
+    pub fn expired(&self) -> bool {
         self.timer.now_ns() >= self.target_ns
     }
+
     /// Get remaining time until deadline
     pub fn remaining(&self) -> Option<Duration> {
         let now = self.timer.now_ns();
@@ -102,8 +121,10 @@ impl<'a> Deadline<'a> {
         }
     }
 }
+
 /// Global low-jitter timer instance
-pub static GLOBAL_TIMER: Mutex<Option<LowJitterTimer>> = Mutex::new(None);
+static GLOBAL_TIMER: Mutex<Option<LowJitterTimer>> = Mutex::new(None);
+
 /// Get global timer instance
 pub fn global_timer() -> LowJitterTimer {
     let mut timer = GLOBAL_TIMER.lock();
@@ -112,44 +133,51 @@ pub fn global_timer() -> LowJitterTimer {
     }
     timer.as_ref().unwrap().clone()
 }
+
 impl Clone for LowJitterTimer {
     fn clone(&self) -> Self {
         Self {
             start_time: self.start_time,
-            nanos_since_start: AtomicU64::new(
-                self.nanos_since_start.load(Ordering::Relaxed),
-            ),
+            nanos_since_start: AtomicU64::new(self.nanos_since_start.load(Ordering::Relaxed)),
             calibration_offset_ns: self.calibration_offset_ns,
         }
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_timer_monotonic() {
         let timer = LowJitterTimer::new();
         let t1 = timer.now_ns();
         std::thread::sleep(Duration::from_millis(1));
         let t2 = timer.now_ns();
+
         assert!(t2 > t1);
-        assert!(t2 - t1 >= 1_000_000);
+        assert!(t2 - t1 >= 1_000_000); // At least 1ms
     }
+
     #[test]
     fn test_deadline() {
         let timer = LowJitterTimer::new();
         let deadline = timer.deadline(Duration::from_micros(100));
-        assert!(! deadline.expired());
+
+        assert!(!deadline.expired());
         std::thread::sleep(Duration::from_micros(150));
         assert!(deadline.expired());
     }
+
     #[test]
     fn test_low_jitter_sleep() {
         let timer = LowJitterTimer::new();
         let start = timer.now_us();
         timer.sleep(Duration::from_micros(50));
         let end = timer.now_us();
+
         let actual = end - start;
+        // Should be within 10μs of target (low jitter)
         assert!(actual >= 50 && actual < 60);
     }
 }

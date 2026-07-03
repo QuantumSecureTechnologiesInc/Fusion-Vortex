@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # The Fusion v2.0 Vortex Programming Language
 
 **The Complete Guide to Tri-brid Computing**

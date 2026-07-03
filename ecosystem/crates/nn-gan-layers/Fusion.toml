@@ -1,5 +1,5 @@
 [package]
-name = "nn-gan-layers"
+name = "fusion_nn_gan_layers"
 version = "0.1.0"
 edition = "2021"
 description = "Generative layers (Transpose Conv, Pixel Shuffler) "
@@ -9,5 +9,4 @@ license = "MIT"
 fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
-
 

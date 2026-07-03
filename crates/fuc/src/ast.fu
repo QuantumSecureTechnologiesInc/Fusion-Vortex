@@ -1,9 +1,9 @@
 //! AST definitions for the Fusion compiler.
 /// Byte span for source ranges.
-type Span = Range<FSize>;
+pub type Span = Range<FSize>;
 /// AST node with source span.
 #[derive(Clone, Debug, PartialEq)]
-struct Spanned<T> {
+pub struct Spanned<T> {
     /// Node payload.
     pub node: T,
     /// Byte span in the source.
@@ -11,7 +11,7 @@ struct Spanned<T> {
 }
 /// Language types.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-enum Type {
+pub enum Type {
     /// Signed 32-bit integer.
     Int,
     /// Boolean.
@@ -28,10 +28,24 @@ enum Type {
     Array(Box<Type>, FSize),
     /// Struct type, identified by name.
     Struct(FString),
+    /// Generic type parameter (e.g., T in fn foo<T>(x: T)).
+    GenericParam(FString),
+    /// Slice type (view into array).
+    Slice(Box<Type>),
+    /// Closure type with captured environment.
+    Closure(FVec<Type>, Box<Type>),
+}
+/// Item visibility.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Visibility {
+    /// Private (default).
+    Private,
+    /// Public (accessible from other modules).
+    Public,
 }
 /// Top-level program container.
 #[derive(Clone, Debug, PartialEq)]
-struct Program {
+pub struct Program {
     /// Defined functions.
     pub functions: FVec<Function>,
     /// External declarations.
@@ -57,9 +71,11 @@ struct Program {
 }
 /// Struct definition.
 #[derive(Clone, Debug, PartialEq)]
-struct StructDefinition {
+pub struct StructDefinition {
     /// Struct name.
     pub name: FString,
+    /// Generic type parameters.
+    pub generics: FVec<FString>,
     /// Struct fields with types.
     pub fields: FVec<(FString, Type)>,
 }
@@ -75,7 +91,7 @@ struct EnumVariant {
 }
 /// Enum definition.
 #[derive(Clone, Debug, PartialEq)]
-struct EnumDefinition {
+pub struct EnumDefinition {
     /// Enum name.
     pub name: FString,
     /// Variants.
@@ -123,17 +139,35 @@ struct ModDefinition {
     /// Whether this module has an inline body.
     pub has_body: FBool,
 }
+/// Trait method signature.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TraitMethodSig {
+    /// Method name.
+    pub name: FString,
+    /// Parameter names and types.
+    pub params: FVec<(FString, Type)>,
+    /// Return type.
+    pub return_type: Type,
+}
 /// Trait declaration.
 #[derive(Clone, Debug, PartialEq)]
-struct TraitDefinition {
+pub struct TraitDefinition {
     /// Trait name.
     pub name: FString,
+    /// Generic type parameters.
+    pub generics: FVec<FString>,
+    /// Required method signatures.
+    pub methods: FVec<TraitMethodSig>,
 }
 /// Impl declaration.
 #[derive(Clone, Debug, PartialEq)]
-struct ImplDefinition {
-    /// Implemented target type/trait label.
+pub struct ImplDefinition {
+    /// Optional trait being implemented.
+    pub trait_name: Option<FString>,
+    /// Target type being implemented for.
     pub target: FString,
+    /// Generic type parameters.
+    pub generics: FVec<FString>,
 }
 /// Resolved struct definition info for later compiler phases.
 #[derive(Clone, Debug, PartialEq)]
@@ -145,7 +179,7 @@ struct StructInfo {
 }
 /// External function declaration.
 #[derive(Clone, Debug, PartialEq)]
-struct ExternFunction {
+pub struct ExternFunction {
     /// Function name.
     pub name: FString,
     /// Parameters and types.
@@ -157,9 +191,11 @@ struct ExternFunction {
 }
 /// Function definition.
 #[derive(Clone, Debug, PartialEq)]
-struct Function {
+pub struct Function {
     /// Function name.
     pub name: FString,
+    /// Generic type parameters.
+    pub generics: FVec<FString>,
     /// Parameters and types.
     pub params: FVec<(FString, Type)>,
     /// Return type.
@@ -184,6 +220,45 @@ enum Statement {
     While { cond: Spanned<Expression>, body: Block },
     /// Expression statement.
     Expression(Spanned<Expression>),
+}
+/// Match arm pattern (struct-based for bootstrap compatibility).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MatchPattern {
+    /// Pattern kind: "wildcard", "int", "bool", "string", "var".
+    pub kind: FString,
+    /// Integer value (for int patterns).
+    pub int_val: FI64,
+    /// Boolean value (for bool patterns).
+    pub bool_val: FBool,
+    /// String value (for string/var patterns).
+    pub str_val: FString,
+}
+impl MatchPattern {
+    pub fn wildcard() -> Self {
+        MatchPattern { kind: "wildcard".to_string(), int_val: 0, bool_val: false, str_val: "".to_string() }
+    }
+    pub fn int_literal(val: FI64) -> Self {
+        MatchPattern { kind: "int".to_string(), int_val: val, bool_val: false, str_val: "".to_string() }
+    }
+    pub fn bool_literal(val: FBool) -> Self {
+        MatchPattern { kind: "bool".to_string(), int_val: 0, bool_val: val, str_val: "".to_string() }
+    }
+    pub fn string_literal(val: FString) -> Self {
+        MatchPattern { kind: "string".to_string(), int_val: 0, bool_val: false, str_val: val }
+    }
+    pub fn variable(name: FString) -> Self {
+        MatchPattern { kind: "var".to_string(), int_val: 0, bool_val: false, str_val: name }
+    }
+}
+/// Match arm: pattern => expression.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MatchArm {
+    /// Pattern to match against.
+    pub pattern: MatchPattern,
+    /// Optional guard condition.
+    pub guard: Option<Box<Spanned<Expression>>>,
+    /// Arm body.
+    pub body: Spanned<Expression>,
 }
 /// Expressions.
 #[derive(Clone, Debug, PartialEq)]
@@ -222,10 +297,16 @@ enum Expression {
     Dereference(Box<Spanned<Expression>>),
     /// Logical NOT expression.
     UnaryNot(Box<Spanned<Expression>>),
+    /// Match expression: match scrutinee { arms }.
+    Match { scrutinee: Box<Spanned<Expression>>, arms: FVec<MatchArm> },
+    /// Lambda/closure expression: |params| body.
+    Lambda { params: FVec<(FString, Type)>, body: Box<Spanned<Expression>>, captures: FVec<FString> },
+    /// Array slice expression: expr[start..end].
+    Slice { array: Box<Spanned<Expression>>, start: Option<Box<Spanned<Expression>>>, end: Option<Box<Spanned<Expression>>> },
 }
 /// Binary operators.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-enum BinaryOp {
+pub enum BinaryOp {
     /// Addition.
     Add,
     /// Subtraction.

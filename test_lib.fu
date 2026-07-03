@@ -1,0 +1,10 @@
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+pub fn greet() -> int {
+    printf("Library function called\n");
+    return 42;
+}

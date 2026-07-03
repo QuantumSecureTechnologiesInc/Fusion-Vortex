@@ -1,0 +1,103 @@
+{
+  "generated": "2026-07-01",
+  "overview": "Prioritized feature roadmap based on capability matrix and aspirational file audit. Features ranked by impact on self-compilation, WASM backend, and developer experience.",
+
+  "priority_levels": {
+    "P0_blocker": "Blocks self-compilation or WASM e2e pipeline",
+    "P1_high": "Needed for full library compilation or WASM feature parity",
+    "P2_medium": "Improves developer experience and code quality",
+    "P3_nice": "Aspirational features for future Fusion releases"
+  },
+
+  "gaps": [
+    {
+      "feature": "import keyword support",
+      "priority": "P0_blocker",
+      "category": "declarations",
+      "effort": "1 day",
+      "impact": "Unblocks 7 aspirational .fu files (lexer_selfhost, main_selfhost, mem, parser_selfhost, vortex, hypercycle_suite)",
+      "approach": "Add 'import' to bootstrap lexer/parser or convert aspirational files to mod/use syntax"
+    },
+    {
+      "feature": "for loop support",
+      "priority": "P1_high",
+      "category": "statements",
+      "effort": "2 days",
+      "impact": "Enables idiomatic iteration patterns in self-hosted code",
+      "approach": "Add 'for' token to lexer, desugar for-in to while loops"
+    },
+    {
+      "feature": "match expression",
+      "priority": "P1_high",
+      "category": "expressions",
+      "effort": "3 days",
+      "impact": "Enables pattern matching in self-hosted compiler (used in pure_fusion_compiler.fu)",
+      "approach": "Add 'match' token, pattern arms, exhaustiveness checking"
+    },
+    {
+      "feature": "struct literal expressions",
+      "priority": "P2_medium",
+      "category": "expressions",
+      "effort": "1 day",
+      "impact": "Enables Struct { field: value } syntax for struct construction",
+      "approach": "Parse LBrace field: expr, ... RBrace as struct literal"
+    },
+    {
+      "feature": "array literal expressions",
+      "priority": "P2_medium",
+      "category": "expressions",
+      "effort": "1 day",
+      "impact": "Enables [elem1, elem2, ...] syntax for array construction",
+      "approach": "Parse LBracket expr, ... RBracket as array literal"
+    },
+    {
+      "feature": "closure/function expressions",
+      "priority": "P2_medium",
+      "category": "expressions",
+      "effort": "3 days",
+      "impact": "Enables |params| body closure syntax for functional patterns",
+      "approach": "Parse pipe-delimited params + arrow + body, generate anonymous functions"
+    },
+    {
+      "feature": "generic types",
+      "priority": "P2_medium",
+      "category": "types",
+      "effort": "5 days",
+      "impact": "Enables parametric polymorphism (Vec<T>, Option<T>, Result<T, E>)",
+      "approach": "Add type parameters to fn/struct, monomorphization pass"
+    },
+    {
+      "feature": "enum types",
+      "priority": "P2_medium",
+      "category": "types",
+      "effort": "3 days",
+      "impact": "Enables tagged unions and sum types",
+      "approach": "Add enum keyword, variant parsing, discriminant generation"
+    },
+    {
+      "feature": "Vortex borrow checking",
+      "priority": "P3_nice",
+      "category": "compiler_features",
+      "effort": "10+ days",
+      "impact": "Memory safety without garbage collection",
+      "approach": "Implement ownership analysis, lifetime tracking, borrow rules"
+    }
+  ],
+
+  "recommended_order": [
+    "1. import keyword (P0) — unblocks 7 files, highest impact/lowest effort",
+    "2. for loop + match (P1) — needed for idiomatic self-hosted code",
+    "3. struct/array literals (P2) — completes expression syntax",
+    "4. generics + enums (P2) — type system completeness",
+    "5. closures (P2) — functional programming patterns",
+    "6. Vortex (P3) — advanced memory safety"
+  ],
+
+  "current_state": {
+    "parser_tests": "38/38 passing (12 parser + 10 codegen + 5 integration + 11 runtime)",
+    "fuc2_tests": "4/4 passing",
+    "self_compilation": "fuc_self.exe produced and runs correctly",
+    "wasm_e2e": "All 4 .fu test files compile to valid WASM, 11 runtime tests pass",
+    "workspace_check": "cargo check clean"
+  }
+}

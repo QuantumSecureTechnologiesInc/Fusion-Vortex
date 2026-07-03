@@ -1,0 +1,114 @@
+//! Example: Using the AI-enhanced CLI
+
+use fusion_ai_cli_enhanced::{AiCli, AiCliBuilder, Result};
+
+fn main() -> Result<()> {
+    println!("=== Fusion AI-Enhanced CLI Example ===\n");
+
+    // Create the AI CLI
+    let cli = AiCli::new();
+
+    // Example 1: Standard command parsing
+    println!("Example 1: Command Parsing");
+    println!("---");
+    match cli.parse_command("build --release --verbose") {
+        Ok(cmd) => {
+            println!("Command: {}", cmd.command);
+            println!("Flags: {:?}", cmd.bool_flags);
+            println!("Confidence: {:.2}\n", cmd.confidence);
+        }
+        Err(e) => println!("Error: {}\n", e),
+    }
+
+    // Example 2: Natural language parsing
+    println!("Example 2: Natural Language");
+    println!("---");
+    let nl_inputs = vec![
+        "build the project",
+        "run my application in release mode",
+        "test everything",
+        "clean all build artifacts",
+    ];
+
+    for input in nl_inputs {
+        match cli.parse_natural_language(input) {
+            Ok(cmd) => {
+                println!(
+                    "'{}' → {} (confidence: {:.2})",
+                    input, cmd.command, cmd.confidence
+                );
+            }
+            Err(e) => println!("Error: {}", e),
+        }
+    }
+    println!();
+
+    // Example 3: Intelligent suggestions
+    println!("Example 3: Smart Suggestions");
+    println!("---");
+    match cli.suggest("bui") {
+        Ok(suggestions) => {
+            for sug in suggestions.iter().take(3) {
+                println!(
+                    "  {} - {} (relevance: {:.2})",
+                    sug.command, sug.description, sug.relevance
+                );
+            }
+        }
+        Err(e) => println!("Error: {}", e),
+    }
+    println!();
+
+    // Example 4: Tab completions
+    println!("Example 4: Tab Completions");
+    println!("---");
+    match cli.complete("build --rel", 11) {
+        Ok(completions) => {
+            for comp in completions {
+                println!("  {} - {}", comp.text, comp.description);
+            }
+        }
+        Err(e) => println!("Error: {}", e),
+    }
+    println!();
+
+    // Example 5: Error explanations
+    println!("Example 5: Enhanced Error Messages");
+    println!("---");
+    match cli.explain_error("command not found: buidl") {
+        Ok(explanation) => {
+            println!("Error: {}", explanation.error);
+            println!("Explanation: {}", explanation.explanation);
+            println!("\nSuggestions:");
+            for sug in &explanation.suggestions {
+                println!("  - {}", sug);
+            }
+            if let Some(ex) = explanation.example {
+                println!("\nExample: {}", ex);
+            }
+        }
+        Err(e) => println!("Error: {}", e),
+    }
+    println!();
+
+    // Example 6: Builder pattern
+    println!("Example 6: Custom Configuration");
+    println!("---");
+    let custom_cli = AiCliBuilder::new()
+        .with_suggestions(true)
+        .with_natural_language(true)
+        .with_completions(true)
+        .build();
+
+    println!("Custom CLI configured successfully");
+
+    // Test the custom CLI
+    match custom_cli.parse_command("test --all") {
+        Ok(cmd) => println!("Parsed: {} with intent {:?}", cmd.command, cmd.intent),
+        Err(e) => println!("Error: {}", e),
+    }
+
+    println!("\n=== Example Complete ===");
+
+    Ok(())
+}

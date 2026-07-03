@@ -1,0 +1,8 @@
+struct TypeTest {
+    a: int,
+    b: bool,
+    c: string,
+    d: u8,
+    e: u64,
+    f: i64,
+}

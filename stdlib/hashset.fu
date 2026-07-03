@@ -1,183 +1,126 @@
-// stdlib/hashset.fu - HashSet<T> implementation
+// stdlib/hashset.fu - Handle-based HashSet implementations for Fusion.
+// Structs are small (handle <= 16 bytes); real data lives in the C runtime.
+// Two set types: HashSetInt, HashSetString.
+// Linear probing, 256 slots per set.
 
-// HashSet - set of unique values (wrapper around HashMap)
-class HashSet<T> where T: Hash + Eq {
-    // Internal storage using HashMap with dummy bool values
-    size: int;
-    capacity: int;
+extern fn fusion_hash32(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+
+extern fn fusion_hsi_create() -> int;
+extern fn fusion_hsi_destroy(h: int) -> void;
+extern fn fusion_hsi_size(h: int) -> int;
+extern fn fusion_hsi_is_empty(h: int) -> int;
+extern fn fusion_hsi_insert(h: int, value: int) -> void;
+extern fn fusion_hsi_contains(h: int, value: int) -> int;
+extern fn fusion_hsi_remove(h: int, value: int) -> void;
+extern fn fusion_hsi_clear(h: int) -> void;
+
+extern fn fusion_hss_create() -> int;
+extern fn fusion_hss_destroy(h: int) -> void;
+extern fn fusion_hss_size(h: int) -> int;
+extern fn fusion_hss_is_empty(h: int) -> int;
+extern fn fusion_hss_insert(h: int, value: string) -> void;
+extern fn fusion_hss_contains(h: int, value: string) -> int;
+extern fn fusion_hss_remove(h: int, value: string) -> void;
+extern fn fusion_hss_clear(h: int) -> void;
+
+// ============================================================
+// HashSetInt - set of unique int values
+// ============================================================
+struct HashSetInt {
+    handle: int,
+    _pad: int,
 }
 
-impl<T: Hash + Eq> HashSet<T> {
-    // Create new empty HashSet
-    fn new() -> HashSet<T> {
-        return HashSet {
-            size: 0,
-            capacity: 16
-        };
+impl HashSetInt {
+    fn new() -> HashSetInt {
+        let h: int = fusion_hsi_create();
+        return HashSetInt { handle: h, _pad: 0 };
     }
-    
-    // Create with specific capacity
-    fn with_capacity(capacity: int) -> HashSet<T> {
-        return HashSet {
-            size: 0,
-            capacity: capacity
-        };
+    fn len(s: HashSetInt) -> int {
+        return fusion_hsi_size(s.handle);
     }
-    
-    // Get number of elements
-    fn len(self) -> int {
-        return self.size;
+    fn is_empty(s: HashSetInt) -> bool {
+        return fusion_hsi_size(s.handle) == 0;
     }
-    
-    // Check if empty
-    fn is_empty(self) -> bool {
-        return self.size == 0;
+    fn insert(s: HashSetInt, value: int) -> HashSetInt {
+        fusion_hsi_insert(s.handle, value);
+        return s;
     }
-    
-    // Insert value into set
-    // Returns true if value was newly inserted
-    fn insert(mut self, value: T) -> bool {
-        let hash = value.hash();
-        
-        // Stub: In real implementation using HashMap:
-        // let old_value = self.map.insert(value, true);
-        // return old_value.is_none();
-        
-        // For now, assume always new
-        self.size = self.size + 1;
-        return true;
+    fn contains(s: HashSetInt, value: int) -> bool {
+        return fusion_hsi_contains(s.handle, value) != 0;
     }
-    
-    // Check if set contains value
-    fn contains(self, value: T) -> bool {
-        let hash = value.hash();
-        
-        // Stub: In real implementation:
-        // return self.map.contains_key(value);
-        
-        return false;
+    fn remove(s: HashSetInt, value: int) -> HashSetInt {
+        fusion_hsi_remove(s.handle, value);
+        return s;
     }
-    
-    // Remove value from set
-    // Returns true if value was present
-    fn remove(mut self, value: T) -> bool {
-        let hash = value.hash();
-        
-        // Stub: In real implementation:
-        // return self.map.remove(value).is_some();
-        
-        if self.size > 0 {
-            self.size = self.size - 1;
-            return true;
-        } else {
-            return false;
-        }
+    fn clear(s: HashSetInt) -> HashSetInt {
+        fusion_hsi_clear(s.handle);
+        return s;
     }
-    
-    // Clear all elements
-    fn clear(mut self) {
-        self.size = 0;
+    fn destroy(s: HashSetInt) -> void {
+        fusion_hsi_destroy(s.handle);
     }
 }
 
-// Set operations
-impl<T: Hash + Eq> HashSet<T> {
-    // Union - elements in either set
-    fn union(self, other: HashSet<T>) -> HashSet<T> {
-        let mut result = HashSet::with_capacity(self.len() + other.len());
-        
-        // Stub: In real implementation:
-        // for value in self.iter() {
-        //     result.insert(value);
-        // }
-        // for value in other.iter() {
-        //     result.insert(value);
-        // }
-        
-        return result;
+fn hashset_int_new() -> HashSetInt {
+    return HashSetInt::new();
+}
+fn hashset_int_insert(s: HashSetInt, value: int) -> HashSetInt {
+    return HashSetInt::insert(s, value);
+}
+fn hashset_int_contains(s: HashSetInt, value: int) -> bool {
+    return HashSetInt::contains(s, value);
+}
+fn hashset_int_remove(s: HashSetInt, value: int) -> HashSetInt {
+    return HashSetInt::remove(s, value);
+}
+
+// ============================================================
+// HashSetString - set of unique string values
+// ============================================================
+struct HashSetString {
+    handle: int,
+    _pad: int,
+}
+
+impl HashSetString {
+    fn new() -> HashSetString {
+        let h: int = fusion_hss_create();
+        return HashSetString { handle: h, _pad: 0 };
     }
-    
-    // Intersection - elements in both sets
-    fn intersection(self, other: HashSet<T>) -> HashSet<T> {
-        let capacity = if self.len() < other.len() {
-            self.len()
-        } else {
-            other.len()
-        };
-        
-        let mut result = HashSet::with_capacity(capacity);
-        
-        // Stub: In real implementation:
-        // for value in self.iter() {
-        //     if other.contains(value) {
-        //         result.insert(value);
-        //     }
-        // }
-        
-        return result;
+    fn len(s: HashSetString) -> int {
+        return fusion_hss_size(s.handle);
     }
-    
-    // Difference - elements in self but not in other
-    fn difference(self, other: HashSet<T>) -> HashSet<T> {
-        let mut result = HashSet::with_capacity(self.len());
-        
-        // Stub: In real implementation:
-        // for value in self.iter() {
-        //     if !other.contains(value) {
-        //         result.insert(value);
-        //     }
-        // }
-        
-        return result;
+    fn is_empty(s: HashSetString) -> bool {
+        return fusion_hss_size(s.handle) == 0;
     }
-    
-    // Check if subset
-    fn is_subset(self, other: HashSet<T>) -> bool {
-        if self.len() > other.len() {
-            return false;
-        }
-        
-        // Stub: In real implementation:
-        // for value in self.iter() {
-        //     if !other.contains(value) {
-        //         return false;
-        //     }
-        // }
-        
-        return true;
+    fn insert(s: HashSetString, value: string) -> HashSetString {
+        fusion_hss_insert(s.handle, value);
+        return s;
     }
-    
-    // Check if superset
-    fn is_superset(self, other: HashSet<T>) -> bool {
-        return other.is_subset(self);
+    fn contains(s: HashSetString, value: string) -> bool {
+        return fusion_hss_contains(s.handle, value) != 0;
     }
-    
-    // Check if disjoint (no common elements)
-    fn is_disjoint(self, other: HashSet<T>) -> bool {
-        // Stub: In real implementation:
-        // for value in self.iter() {
-        //     if other.contains(value) {
-        //         return false;
-        //     }
-        // }
-        
-        return true;
+    fn remove(s: HashSetString, value: string) -> HashSetString {
+        fusion_hss_remove(s.handle, value);
+        return s;
+    }
+    fn clear(s: HashSetString) -> HashSetString {
+        fusion_hss_clear(s.handle);
+        return s;
+    }
+    fn destroy(s: HashSetString) -> void {
+        fusion_hss_destroy(s.handle);
     }
 }
 
-// Example usage:
-// let mut set = HashSet::<int>::new();
-// set.insert(1);
-// set.insert(2);
-// set.insert(1); // Returns false (already exists)
-// 
-// let contains_one = set.contains(1); // true
-// let contains_three = set.contains(3); // false
-// 
-// let mut other = HashSet::<int>::new();
-// other.insert(2);
-// other.insert(3);
-// 
-// let union = set.union(other); // {1, 2, 3}
-// let intersection = set.intersection(other); // {2}
-// let difference = set.difference(other); // {1}
+fn hashset_string_new() -> HashSetString {
+    return HashSetString::new();
+}
+fn hashset_string_insert(s: HashSetString, value: string) -> HashSetString {
+    return HashSetString::insert(s, value);
+}
+fn hashset_string_contains(s: HashSetString, value: string) -> bool {
+    return HashSetString::contains(s, value);
+}

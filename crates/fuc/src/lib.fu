@@ -7,6 +7,8 @@ mod cli;
 mod codegen;
 /// IR lowering.
 mod ir;
+/// LLVM backend.
+mod llvm;
 /// Lexer.
 mod lexer;
 /// Optimizer passes.
@@ -15,5 +17,38 @@ mod optimizer;
 mod parser;
 /// Semantic analysis.
 mod sema;
+/// Vortex borrow checker.
+mod vortex;
+/// WASM code generation backend.
+mod wasm;
+/// Stage1 parser API bridge.
+mod stage1_parser_api;
+/// Stage1 sema API bridge.
+mod stage1_sema_api;
+
+/// Re-export backend trait and config.
+pub use crate::codegen::Backend;
+pub use crate::codegen::CodegenConfig;
+pub use crate::codegen::compile_program;
+pub use crate::codegen::LlvmBackend;
+pub use crate::codegen::WasmBackend;//! Fusion compiler library.
+/// AST definitions.
+mod ast;
+/// CLI helpers.
+mod cli;
+/// Code generation backends.
+mod codegen;
+/// IR lowering.
+mod ir;
+/// Lexer.
+mod lexer;
+/// Optimizer passes.
+mod optimizer;
+/// Parser.
+mod parser;
+/// Semantic analysis.
+mod sema;
+/// WASM code generation backend.
+mod wasm;
 /// Re-export backend trait.
 pub use crate::codegen::Backend;

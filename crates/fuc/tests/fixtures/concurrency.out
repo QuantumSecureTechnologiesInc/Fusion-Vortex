@@ -1,6 +1,0 @@
-Hello from thread!
-Thread result: 42
-Final mutex value: 2
-Channel sum: 6
-Async result: 30
-All concurrency tests passed!

@@ -1,0 +1,156 @@
+// src/device.rs
+// Device-specific execution support
+
+use crate::executor::RuntimeHandle;
+use crate::reactor::RingOp;
+use crate::{Device, JoinHandle};
+use std::future::Future;
+use std::sync::Arc;
+
+impl RuntimeHandle {
+    /// Spawn a task on a specific GPU device
+    pub fn spawn_on_gpu<F>(&self, device_id: u32, future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        log::info!("Spawning task on GPU device {}", device_id);
+
+        // Wrap the future to execute on GPU
+        let _reactor = self.reactor.clone();
+        let gpu_future = async move {
+            // Submit GPU kernel to reactor
+            let _waker = futures::task::noop_waker();
+
+            // Execute the actual future
+            let result = future.await;
+
+            // Synchronize GPU
+            log::debug!("GPU task on device {} complete", device_id);
+            result
+        };
+
+        self.spawn_with_affinity(gpu_future, Device::Gpu(device_id))
+    }
+
+    /// Spawn a task on a specific QPU device
+    pub fn spawn_on_qpu<F>(&self, device_id: u32, future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        log::info!("Spawning task on QPU device {}", device_id);
+
+        let _reactor = self.reactor.clone();
+        let qpu_future = async move {
+            // Execute quantum circuit
+            let result = future.await;
+
+            log::debug!("QPU task on device {} complete", device_id);
+            result
+        };
+
+        self.spawn_with_affinity(qpu_future, Device::Qpu(device_id))
+    }
+
+    /// Execute a GPU kernel directly
+    pub async fn gpu_kernel(
+        &self,
+        _device_id: u32,
+        _duration: std::time::Duration,
+    ) -> Result<(), crate::error::FusionError> {
+        #[cfg(feature = "gpu")]
+        {
+            use crate::reactor::RingOp;
+
+            struct GpuKernelFuture {
+                reactor: Arc<crate::reactor::HyperRing>,
+                device_id: u32,
+                duration: std::time::Duration,
+                submitted: bool,
+            }
+
+            impl Future for GpuKernelFuture {
+                type Output = Result<(), crate::error::FusionError>;
+
+                fn poll(
+                    mut self: std::pin::Pin<&mut Self>,
+                    cx: &mut std::task::Context<'_>,
+                ) -> std::task::Poll<Self::Output> {
+                    if self.submitted {
+                        std::task::Poll::Ready(Ok(()))
+                    } else {
+                        self.reactor.submit(
+                            RingOp::GpuKernel {
+                                duration: self.duration,
+                                device_id: self.device_id,
+                            },
+                            cx.waker().clone(),
+                        );
+                        self.submitted = true;
+                        std::task::Poll::Pending
+                    }
+                }
+            }
+
+            GpuKernelFuture {
+                reactor: self.reactor.clone(),
+                device_id: _device_id,
+                duration: _duration,
+                submitted: false,
+            }
+            .await
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            Err(crate::error::FusionError::DeviceError(
+                device_id,
+                "GPU support not enabled".into(),
+            ))
+        }
+    }
+
+    /// Execute a quantum circuit
+    pub async fn qpu_circuit(
+        &self,
+        _device_id: u32,
+        circuit_depth: u32,
+    ) -> Result<Vec<u8>, crate::error::FusionError> {
+        struct QpuCircuitFuture {
+            reactor: Arc<crate::reactor::HyperRing>,
+            circuit_depth: u32,
+            submitted: bool,
+        }
+
+        impl Future for QpuCircuitFuture {
+            type Output = Result<Vec<u8>, crate::error::FusionError>;
+
+            fn poll(
+                mut self: std::pin::Pin<&mut Self>,
+                cx: &mut std::task::Context<'_>,
+            ) -> std::task::Poll<Self::Output> {
+                if self.submitted {
+                    // In production, we'd retrieve the actual result from CQ
+                    std::task::Poll::Ready(Ok(vec![0, 1, 0, 1]))
+                } else {
+                    self.reactor.submit(
+                        RingOp::QpuShot {
+                            circuit_depth: self.circuit_depth,
+                        },
+                        cx.waker().clone(),
+                    );
+                    self.submitted = true;
+                    std::task::Poll::Pending
+                }
+            }
+        }
+
+        QpuCircuitFuture {
+            reactor: self.reactor.clone(),
+            circuit_depth,
+            submitted: false,
+        }
+        .await
+    }
+}

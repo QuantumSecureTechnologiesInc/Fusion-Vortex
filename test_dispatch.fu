@@ -1,0 +1,17 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn dispatch_workload(active_nodes: int, max_nodes: int, node_id: int, align_bits: int, iterations: int, chaos_coeff: int, payload_size: int) -> int {
+    printf("Dispatching node %d\n", node_id);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Test start\n");
+    let mut node_id: int = 1;
+    while node_id <= 3 {
+        let result = dispatch_workload(node_id - 1, 4, node_id, 512, 850000, 3142, 6);
+        node_id = node_id + 1;
+    }
+    printf("Test end\n");
+    return 0;
+}

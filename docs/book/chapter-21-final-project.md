@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 21: Final Project: A Tri-brid Portfolio Optimizer
 
 Congratulations! You have journeyed through the entire Fusion v2.0 Vortex language, from basic variables to quantum circuits. Now, we will prove the power of **Tri-brid Computing** by building a single application that leverages all three paradigms:

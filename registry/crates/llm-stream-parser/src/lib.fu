@@ -1,18 +1,25 @@
 /// Production Streaming Parser.
-///
+/// 
 /// Implements a state machine for robust, non-blocking JSON parsing from LLM streams.
-use fusion_std::error::{StdError, StdResult};
+
+use fusion_std::error::{StdResult, StdError};
+use std::collections::VecDeque;
+use serde_json;
+
 #[derive(Debug)]
 enum JsonParseState {
     WaitingForStart,
     InObject,
     Completed,
+    Error,
 }
-struct StreamingJsonParser {
+
+pub struct StreamingJsonParser {
     buffer: VecDeque<char>,
     state: JsonParseState,
-    brace_count: FInt,
+    brace_count: i32,
 }
+
 impl StreamingJsonParser {
     pub fn new() -> Self {
         Self {
@@ -21,21 +28,27 @@ impl StreamingJsonParser {
             brace_count: 0,
         }
     }
-    /// Feeds a chunk of streaming text into the parser.
-    /// Returns the first completed JSON object if found.
+
+    /// Feeds a chunk of streaming text into the parser and extracts completed JSON objects.
     pub fn ingest_chunk(&mut self, chunk: &str) -> StdResult<Option<FString>> {
-        let mut _start_index = None;
-        let mut _end_index = None;
-        for (i, char) in chunk.chars().enumerate() {
+        let mut reset_needed = false;
+
+        for char in chunk.chars() {
+            if reset_needed {
+                self.state = JsonParseState::WaitingForStart;
+                self.brace_count = 0;
+                self.buffer.clear();
+                reset_needed = false;
+            }
+            
             match self.state {
                 JsonParseState::WaitingForStart => {
                     if char == '{' {
                         self.state = JsonParseState::InObject;
                         self.brace_count = 1;
-                        _start_index = Some(i);
                         self.buffer.push_back(char);
                     }
-                }
+                },
                 JsonParseState::InObject => {
                     self.buffer.push_back(char);
                     if char == '{' {
@@ -43,29 +56,36 @@ impl StreamingJsonParser {
                     } else if char == '}' {
                         self.brace_count -= 1;
                         if self.brace_count == 0 {
-                            _end_index = Some(i);
-                            self.state = JsonParseState::Completed;
-                            break;
+                            // Object boundary found
+                            return self.finalize_object();
                         }
                     }
+                },
+                JsonParseState::Completed | JsonParseState::Error => {
+                    // Handle trailing whitespace/newlines after a completed object
+                    if !char.is_whitespace() {
+                        reset_needed = true;
+                    }
                 }
-                JsonParseState::Completed => {}
             }
         }
-        if let JsonParseState::Completed = self.state {
-            let result: FString = self.buffer.drain(..).collect();
-            self.state = JsonParseState::WaitingForStart;
-            if serde_json::from_str::<serde_json::Value>(&result).is_ok() {
-                Ok(Some(result))
-            } else {
-                Err(
-                    StdError::Serialization(
-                        "Malformed stream resulted in incomplete JSON object.".into(),
-                    ),
-                )
-            }
+        
+        Ok(None)
+    }
+    
+    /// Finalizes the object and validates it as complete JSON.
+    fn finalize_object(&mut self) -> StdResult<Option<FString>> {
+        let result: FString = self.buffer.drain(..).collect();
+        self.state = JsonParseState::Completed; // Set to completed state
+        
+        // Strict validation
+        if serde_json::from_str::<serde_json::Value>(&result).is_ok() {
+             Ok(Some(result))
         } else {
-            Ok(None)
+             // If structural brace count was zero, but JSON parsing failed (e.g., trailing comma),
+             // this implies a stream corruption. We reset the state and report the error.
+             self.state = JsonParseState::Error;
+             Err(StdError::Serialization("Stream ended with structurally corrupt JSON object.".into()))
         }
     }
 }

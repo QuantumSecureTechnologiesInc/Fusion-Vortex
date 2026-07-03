@@ -1,0 +1,63 @@
+//! Process management — launch target executable under debug control.
+
+use super::error::{FdbgError, FdbgResult};
+use crate::ffi as win32;
+
+/// Information about a debugged process.
+pub struct DebugProcess {
+    /// Windows process handle.
+    pub handle: u64,
+    /// Process ID.
+    pub pid: u32,
+    /// Path to the executable being debugged.
+    pub image_path: String,
+    /// Base address of the main executable module.
+    pub image_base: u64,
+}
+
+impl DebugProcess {
+    /// Launch a new process under debug control.
+    /// `exe_path` is the full path to the executable.
+    pub fn launch(exe_path: &str) -> FdbgResult<Self> {
+        // Build command line
+        let cmd_line = exe_path.to_string();
+
+        // Call the C helper to create the process with DEBUG_ONLY_THIS_PROCESS
+        // NOTE: FFI call — requires fusion_win32_debug.dll at runtime
+        // The helper fills out_pid, out_proc, out_thread via pointer args
+        let out_pid: u64 = 0;
+        let out_proc: u64 = 0;
+        let out_thread: u64 = 0;
+
+        let ok = win32::fusion_debug_create_process(
+            cmd_line.as_ptr() as *const i8,
+            &out_pid as *const _ as *const i8,
+            &out_proc as *const _ as *const i8,
+            &out_thread as *const _ as *const i8,
+        );
+
+        if ok == 0 {
+            return Err(FdbgError::ProcessError(
+                format!("Failed to create process: {}", cmd_line),
+            ));
+        }
+
+        // The first debug event will be CREATE_PROCESS_DEBUG_EVENT
+        // which gives us the image base. We'll populate it in the engine.
+        Ok(DebugProcess {
+            handle: out_proc as u64,
+            pid: out_pid as u32,
+            image_path: exe_path.to_string(),
+            image_base: 0, // Will be set from CREATE_PROCESS_DEBUG_EVENT
+        })
+    }
+
+    /// Terminate the debugged process.
+    pub fn kill(&self) -> FdbgResult<()> {
+        let ok = win32::fusion_debug_terminate_process(self.handle, 0);
+        if ok == 0 {
+            return Err(FdbgError::ProcessError("Failed to terminate process".into()));
+        }
+        Ok(())
+    }
+}

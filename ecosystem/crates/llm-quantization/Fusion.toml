@@ -1,5 +1,5 @@
 [package]
-name = "llm-quantization"
+name = "fusion_llm_quantization"
 version = "0.1.0"
 edition = "2021"
 description = "INT8/INT4 quantization for LLM weights and KV cache"
@@ -8,5 +8,4 @@ license = "MIT"
 [dependencies]
 fusion-core = { workspace = true }
 fusion_std = "1.0.0"
-
 

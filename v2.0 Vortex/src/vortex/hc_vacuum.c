@@ -10,11 +10,6 @@
 #include <math.h>
 #include <string.h>
 
-// Fallback M_PI definition for strict C11 compliance
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 
 // Health test state (static per process)
 static hc_rct_state_t g_rct;

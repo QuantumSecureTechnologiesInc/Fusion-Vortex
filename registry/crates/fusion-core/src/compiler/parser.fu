@@ -1,14 +1,13 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FBool = FBool;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)] type FBool = bool;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 use crate::compiler::ast::*;
 use crate::compiler::lexer::Lexer;
 use crate::compiler::token::{SpannedToken, Token};
-struct Parser {
+pub struct Parser {
     lexer: Lexer,
     current_token: SpannedToken,
     peek_token: SpannedToken,
@@ -70,7 +69,7 @@ impl Parser {
                 match s.as_str() {
                     "Int" => Ok(Type::Int),
                     "Bool" => Ok(Type::Bool),
-                    "String" => Ok(Type::FString),
+                    "String" => Ok(Type::String),
                     "Void" => Ok(Type::Void),
                     _ => Ok(Type::Custom(s.clone())),
                 }
@@ -453,7 +452,7 @@ impl Parser {
             Token::StringLiteral(s) => {
                 let val = s.clone();
                 self.advance_token();
-                Ok(Expression::Literal(Literal::FString(val)))
+                Ok(Expression::Literal(Literal::String(val)))
             }
             Token::True => {
                 self.advance_token();

@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Fusion v2.0 Vortex Feature Index
 
 Welcome to the feature documentation for the **Fusion v2.0 Vortex Programming Language**. This index tracks the unique, cutting-edge capabilities that distinguish Fusion from traditional systems languages.

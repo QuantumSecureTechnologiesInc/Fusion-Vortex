@@ -1,13 +1,13 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FBool = FBool;
-#[allow(missing_docs, dead_code)]
-type FI64 = FI64;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
+use std::collections::HashMap;
+#[allow(missing_docs, dead_code)] type FBool = bool;
+#[allow(missing_docs, dead_code)] type FI64 = i64;
+#[allow(missing_docs, dead_code)] type FString = String;
+// __FU_COMPAT_END__
 use core::fmt;
 #[derive(Clone)]
-struct NativeFunction {
+pub struct NativeFunction {
     pub name: FString,
     pub func: fn(&[Value]) -> Value,
 }
@@ -22,13 +22,13 @@ impl fmt::Debug for NativeFunction {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-enum Value {
+pub enum Value {
     Int(FI64),
     Bool(FBool),
     String(FString),
     Function(Box<crate::compiler::function::Function>),
     Native(NativeFunction),
-    Struct(std::rc::Rc<std::cell::RefCell<FMap<FString, Value>>>),
+    Struct(std::rc::Rc<std::cell::RefCell<HashMap<FString, Value>>>),
     Void,
 }
 impl std::fmt::Display for Value {
@@ -36,7 +36,7 @@ impl std::fmt::Display for Value {
         match self {
             Value::Int(v) => write!(f, "{}", v),
             Value::Bool(v) => write!(f, "{}", v),
-            Value::FString(s) => write!(f, "{}", s),
+            Value::String(s) => write!(f, "{}", s),
             Value::Function(fun) => write!(f, "{}", fun),
             Value::Native(nat) => write!(f, "<native fn {}>", nat.name),
             Value::Struct(instance) => {

@@ -1,0 +1,212 @@
+// wasm_encoder.fu — Pure-Fusion WASM binary format encoder
+// Minimal implementation providing the primitives needed by codegen.fu
+
+// --- WASM Constants ---
+
+// Section IDs
+const SECTION_TYPE: int     = 1;
+const SECTION_FUNCTION: int = 3;
+const SECTION_MEMORY: int   = 5;
+const SECTION_EXPORT: int   = 7;
+const SECTION_CODE: int     = 10;
+
+// Value Types
+const VALTYPE_I32: int = 0x7F;
+const VALTYPE_I64: int = 0x7E;
+const VALTYPE_F32: int = 0x7D;
+const VALTYPE_F64: int = 0x7C;
+
+// Export Kind
+const EXPORT_KIND_FUNC: int = 0;
+
+// Memory limits
+const MEMORY_MIN_PAGES: int = 1;
+const MEMORY_MAX_PAGES: int = 10;
+
+// Instruction opcodes (selected subset)
+const OP_UNREACHABLE: int       = 0x00;
+const OP_END: int               = 0x0B;
+const OP_RETURN: int            = 0x0F;
+const OP_DROP: int              = 0x1A;
+const OP_LOCAL_GET: int         = 0x20;
+const OP_LOCAL_SET: int         = 0x21;
+const OP_CALL: int              = 0x10;
+const OP_I32_CONST: int         = 0x41;
+const OP_I64_CONST: int         = 0x42;
+const OP_I64_ADD: int           = 0x7C;
+const OP_I64_SUB: int           = 0x7D;
+const OP_I64_MUL: int           = 0x7E;
+const OP_I64_DIV_S: int         = 0x7F;
+const OP_I64_REM_S: int         = 0x81;
+const OP_I64_EQ: int            = 0x51;
+const OP_I64_NE: int            = 0x52;
+const OP_I64_LT_S: int          = 0x53;
+const OP_I64_GT_S: int          = 0x55;
+
+// WASM function type tag
+const FUNC_TYPE_TAG: int = 0x60;
+
+// --- Encoder state ---
+// Holds the accumulated WASM binary as a byte array with a count
+
+// Use a large buffer for the encoded output (64KB max)
+const MAX_ENCODED_SIZE: int = 65536;
+
+struct WasmEncoder {
+    bytes: [u8; MAX_ENCODED_SIZE],
+    len: int,
+}
+
+fn encoder_new() -> WasmEncoder {
+    WasmEncoder {
+        bytes: [0; MAX_ENCODED_SIZE],
+        len: 0,
+    }
+}
+
+// --- Helper: emit a single byte ---
+fn encoder_emit_byte(enc: &mut WasmEncoder, b: int) {
+    if enc.len < MAX_ENCODED_SIZE {
+        enc.bytes[enc.len] = b as u8;
+        enc.len = enc.len + 1;
+    }
+}
+
+// --- Helper: emit raw bytes from an array ---
+fn encoder_emit_bytes(enc: &mut WasmEncoder, data: &[u8], count: int) {
+    let mut i: int = 0;
+    while i < count {
+        encoder_emit_byte(enc, data[i] as int);
+        i = i + 1;
+    }
+}
+
+// --- LEB128 unsigned encoding ---
+fn encoder_emit_leb128_u32(enc: &mut WasmEncoder, mut value: int) {
+    let mut again: int = 1;
+    while again != 0 {
+        let byte: int = value & 0x7F;
+        value = value >> 7;
+        if value != 0 {
+            encoder_emit_byte(enc, byte | 0x80);
+        } else {
+            encoder_emit_byte(enc, byte);
+            again = 0;
+        }
+    }
+}
+
+// --- Signed LEB128 ---
+fn encoder_emit_leb128_i32(enc: &mut WasmEncoder, mut value: int) {
+    let mut more: int = 1;
+    while more != 0 {
+        let byte: int = value & 0x7F;
+        value = value >> 7;
+        let sign_bit_set: int = byte & 0x40;
+        if ((value == 0) & (sign_bit_set == 0)) | ((value == -1) & (sign_bit_set != 0)) {
+            more = 0;
+            encoder_emit_byte(enc, byte);
+        } else {
+            encoder_emit_byte(enc, byte | 0x80);
+        }
+    }
+}
+
+// --- Emit i32 constant (opcode + signed LEB128) ---
+fn encoder_emit_i32_const(enc: &mut WasmEncoder, value: int) {
+    encoder_emit_byte(enc, OP_I32_CONST);
+    encoder_emit_leb128_i32(enc, value);
+}
+
+// --- Emit i64 constant (opcode + signed LEB128) ---
+fn encoder_emit_i64_const(enc: &mut WasmEncoder, value: int) {
+    encoder_emit_byte(enc, OP_I64_CONST);
+    encoder_emit_leb128_i32(enc, value);
+}
+
+// --- Module header ---
+fn encoder_emit_module_header(enc: &mut WasmEncoder) {
+    // Magic: \0asm
+    encoder_emit_byte(enc, 0x00);
+    encoder_emit_byte(enc, 0x61);
+    encoder_emit_byte(enc, 0x73);
+    encoder_emit_byte(enc, 0x6D);
+    // Version: 1
+    encoder_emit_byte(enc, 0x01);
+    encoder_emit_byte(enc, 0x00);
+    encoder_emit_byte(enc, 0x00);
+    encoder_emit_byte(enc, 0x00);
+}
+
+// --- Memory section ---
+fn encoder_emit_memory_section(enc: &mut WasmEncoder, min_pages: int, max_pages: int) {
+    encoder_emit_byte(enc, SECTION_MEMORY);
+    // section size: 7 bytes (1 flag + 2 leb128 for min+max if max present, or smaller)
+    let has_max: int = if max_pages > 0 { 1 } else { 0 };
+    if has_max != 0 {
+        encoder_emit_leb128_u32(enc, 7); // size = 1(memories count) + 1(flags) + leb128(min) + leb128(max)
+        encoder_emit_leb128_u32(enc, 1); // 1 memory
+        encoder_emit_byte(enc, 0x01);    // flags: has max
+        encoder_emit_leb128_u32(enc, min_pages);
+        encoder_emit_leb128_u32(enc, max_pages);
+    } else {
+        encoder_emit_leb128_u32(enc, 4); // size = 1 + 1 + leb128(min)
+        encoder_emit_leb128_u32(enc, 1); // 1 memory
+        encoder_emit_byte(enc, 0x00);    // flags: no max
+        encoder_emit_leb128_u32(enc, min_pages);
+    }
+}
+
+// --- Type section (function types) ---
+// Encodes a single function type: params -> results
+fn encoder_emit_type_section(enc: &mut WasmEncoder, param_types: &[int], param_count: int, result_types: &[int], result_count: int) {
+    encoder_emit_byte(enc, SECTION_TYPE);
+    // Calculate section size: 1 (type count) + 1 (func tag) + leb128(param_count) + params + leb128(result_count) + results
+    let size: int = 1 + 1 + param_count + result_count;
+    // leb128 for param count and result count need variable length - approximate
+    // For simplicity, assume leb128 fits in 1 byte for small counts
+    encoder_emit_leb128_u32(enc, size + 2); // +2 for the two leb128 count fields
+    encoder_emit_leb128_u32(enc, 1); // 1 type
+    encoder_emit_byte(enc, FUNC_TYPE_TAG);
+    encoder_emit_leb128_u32(enc, param_count);
+    let mut i: int = 0;
+    while i < param_count {
+        encoder_emit_byte(enc, param_types[i]);
+        i = i + 1;
+    }
+    encoder_emit_leb128_u32(enc, result_count);
+    let mut j: int = 0;
+    while j < result_count {
+        encoder_emit_byte(enc, result_types[j]);
+        j = j + 1;
+    }
+}
+
+// --- Function section ---
+fn encoder_emit_function_section(enc: &mut WasmEncoder, type_indices: &[int], count: int) {
+    encoder_emit_byte(enc, SECTION_FUNCTION);
+    encoder_emit_leb128_u32(enc, count + 1); // size: count + leb128 fields
+    encoder_emit_leb128_u32(enc, count);
+    let mut i: int = 0;
+    while i < count {
+        encoder_emit_leb128_u32(enc, type_indices[i]);
+        i = i + 1;
+    }
+}
+
+// --- Export section ---
+fn encoder_emit_export_section_start(enc: &mut WasmEncoder, export_count: int) {
+    encoder_emit_byte(enc, SECTION_EXPORT);
+    encoder_emit_leb128_u32(enc, 0); // placeholder — caller must calculate size
+}
+
+// --- Code section ---
+fn encoder_emit_code_section_start(enc: &mut WasmEncoder, code_count: int) {
+    encoder_emit_byte(enc, SECTION_CODE);
+    encoder_emit_leb128_u32(enc, 0); // placeholder
+}
+
+// --- Finalize the module (adds no bytes) ---
+fn encoder_finalize(enc: &mut WasmEncoder) -> int {
+    return enc.len;
+}

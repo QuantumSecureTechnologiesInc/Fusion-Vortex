@@ -1,0 +1,2 @@
+extern fn printf(fmt: string, ...) -> int;
+pub fn main() -> int { printf("=== A ===\n"); let mut buf: [int; 256] = [0; 256]; printf("=== B buf[0]=%d ===\n", buf[0]); return 0; }

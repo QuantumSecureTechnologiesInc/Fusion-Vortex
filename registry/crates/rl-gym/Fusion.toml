@@ -1,0 +1,14 @@
+[package]
+name = "rl-gym"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Reinforcement Learning environment and algorithms"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["rl gym"]
+categories = ["algorithms"]
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = "1.0.0"

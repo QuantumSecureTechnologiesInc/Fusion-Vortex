@@ -1,0 +1,10 @@
+// SOURCE: src/wasm/mod.rs
+// NOTE: Converted from FSN mirror.
+// WebAssembly Backend Module
+
+// Sub-modules declared in lib.fu as top-level to avoid
+// bootstrap parser nested-module-resolution issues.
+// mod backend;  -- in lib.fu as mod wasm_backend;
+// mod codegen;  -- in lib.fu as mod wasm_codegen;
+// mod types;    -- in lib.fu as mod wasm_types;
+// mod wasm_encoder; -- in lib.fu as mod wasm_encoder;

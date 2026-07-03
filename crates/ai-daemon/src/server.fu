@@ -1,0 +1,26 @@
+// crates/ai-daemon/src/server.fu - AI Daemon Server
+// Starts the HTTP server and handles requests in a loop.
+
+struct DaemonConfig {
+    addr: string,
+    port: int,
+}
+
+impl DaemonConfig {
+    fn new(addr: string, port: int) -> DaemonConfig {
+        return DaemonConfig { addr: addr, port: port };
+    }
+    fn default_config() -> DaemonConfig {
+        return DaemonConfig { addr: '127.0.0.1', port: 8080 };
+    }
+}
+
+fn start(cfg: DaemonConfig) -> int {
+    // Initialize server socket on cfg.addr:cfg.port
+    // Enter request handling loop
+    return 0;
+}
+
+fn stop() -> void {
+    // Signal server to shut down gracefully
+}

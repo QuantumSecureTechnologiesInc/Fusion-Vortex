@@ -1,0 +1,45 @@
+// NeuralSeal Guardrails Facade - Unified Security Entry Point
+// Converted from FU Parts: neuralseal_guardrails_facade.rs
+// Wires NeuralSanitiser + NeuralGuard into a single security checkpoint
+
+use crate::safety::error_states;
+use crate::safety::sanitiser;
+use crate::safety::guards;
+
+/// Unified NeuralSeal security facade
+struct NeuralSealFacade {
+    sanitiser_instance: sanitiser::NeuralSanitiser,
+    guard_instance: guards::NeuralGuard,
+}
+
+/// Initialize the NeuralSeal facade with fresh sanitiser and guard
+fn neuralseal_new() -> NeuralSealFacade {
+    NeuralSealFacade {
+        sanitiser_instance: sanitiser::sanitiser_new(),
+        guard_instance: guards::guard_initialize(),
+    }
+}
+
+/// Process untrusted ingress data through full security pipeline
+/// Returns (cleaned_text, status_code)
+fn neuralseal_process_ingress(facade: NeuralSealFacade, untrusted_input: string, input_len: int, clearance_level: int) -> (string, int) {
+    // Step 1: Cleanse input layer against canonical homoglyph structures
+    let (clean_text, cleanse_status) = sanitiser::sanitiser_cleanse(facade.sanitiser_instance, untrusted_input, input_len);
+    if error_states::is_security_violation(cleanse_status) {
+        return (clean_text, cleanse_status);
+    }
+
+    // Step 2: Enforce atomic check guidelines against current runtime state vectors
+    let guard_status: int = guards::guard_ensure_clearance(facade.guard_instance, clearance_level);
+    if error_states::is_security_violation(guard_status) {
+        let empty: string = "";
+        return (empty, guard_status);
+    }
+
+    return (clean_text, error_states::SECURITY_OK);
+}
+
+/// Check if the facade reports a clean security status
+fn neuralseal_is_clean(status: int) -> int {
+    return status == error_states::SECURITY_OK;
+}

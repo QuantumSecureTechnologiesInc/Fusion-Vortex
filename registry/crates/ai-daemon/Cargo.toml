@@ -1,0 +1,32 @@
+﻿[package]
+name = "fusion-ai-daemon"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Background daemon for heavy LLM inference workloads."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "tool", "daemon", "background-service", "tool"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+[[bin]]
+name = "fusion-ai-daemon"
+path = "src/main.rs"
+
+[dependencies]
+fusion_core = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+fusion_runtime_core = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+hyper = { workspace = true }
+tower = { workspace = true }
+fusion-ai-core = { workspace = true }
+fusion-ai-models = { path = "../ai-models/" }
+tokio = { workspace = true, features = ["full"] }
+
+

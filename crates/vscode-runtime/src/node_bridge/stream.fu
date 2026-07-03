@@ -13,34 +13,11 @@ pub fn get_stream_module() -> FString {
                 super();
                 this.readable = true;
                 this.reading = false;
-                this._queue = [];
-                this._ended = false;
             }
             
             read(size) {
-                if (this._queue.length === 0) {
-                    if (this._ended) {
-                        this.readable = false;
-                        this.emit('end');
-                    }
-                    return null;
-                }
-                const chunk = this._queue.shift();
-                this.emit('data', chunk);
-                return chunk;
-            }
-
-            push(chunk) {
-                if (chunk === null || chunk === undefined) {
-                    this._ended = true;
-                    this.emit('end');
-                    return false;
-                }
-                this._queue.push(chunk);
-                if (this.reading) {
-                    this.emit('readable');
-                }
-                return this._queue.length > 0;
+                // Stub implementation
+                return null;
             }
             
             pipe(destination) {

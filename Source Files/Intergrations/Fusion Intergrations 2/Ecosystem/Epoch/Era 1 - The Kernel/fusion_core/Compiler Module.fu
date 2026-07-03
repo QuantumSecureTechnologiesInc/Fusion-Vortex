@@ -1,0 +1,5 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Compiler Module.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod type_checker;
+
+pub use type_checker::{SemanticAnalyzer, Expr, TypeError};

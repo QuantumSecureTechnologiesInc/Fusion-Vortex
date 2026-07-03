@@ -1,32 +1,113 @@
-class String {
-    buffer: int; // ptr to char (i8)
-    length: int;
-    
-    fn from_raw(ptr: int) -> String {
-        let len = strlen(ptr);
-        let buf = malloc(len + 1);
-        memcpy(buf, ptr, len + 1);
-        return String { buffer: buf, length: len };
+// stdlib/string.fu - String utilities for Fusion
+// The built-in `string` type handles basic operations.
+// This module adds managed string wrappers and utility functions.
+
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+extern fn fusion_strcpy(src: string) -> int;
+extern fn fusion_free(ptr: int) -> void;
+
+// ============================================================
+// ManagedString - heap-allocated string with explicit length
+// ============================================================
+struct ManagedString {
+    ptr: int,
+    len: int,
+}
+
+impl ManagedString {
+    fn from_str(s: string) -> ManagedString {
+        let p: int = fusion_strcpy(s);
+        let n: int = fusion_strlen(s);
+        return ManagedString { ptr: p, len: n };
     }
-    
-    fn len() -> int {
-        return self.length;
+    fn len(ms: ManagedString) -> int {
+        return ms.len;
     }
-    
-    fn concat(other: String) -> String {
-        let new_len = self.length + other.length;
-        let new_buf = malloc(new_len + 1);
-        
-        memcpy(new_buf, self.buffer, self.length);
-        let dest_offset = ptr_add(new_buf, self.length);
-        memcpy(dest_offset, other.buffer, other.length);
-        
-        // Null terminate? We are just using memcpy for now, assuming external strings.
-        // But for safety, let's just keep track of length.
-        // Actually we should zero terminate for C compat if we use print/printf.
-        
-        // memcpy(new_buf, self.buffer, self.length); is fine.
-        
-        return String { buffer: new_buf, length: new_len };
+    fn is_empty(ms: ManagedString) -> bool {
+        return ms.len == 0;
+    }
+    fn free(ms: ManagedString) -> ManagedString {
+        if ms.ptr != 0 {
+            fusion_free(ms.ptr);
+        }
+        return ManagedString { ptr: 0, len: 0 };
     }
 }
+
+fn managed_string_from(s: string) -> ManagedString {
+    let p: int = fusion_strcpy(s);
+    let n: int = fusion_strlen(s);
+    return ManagedString { ptr: p, len: n };
+}
+fn managed_string_len(ms: ManagedString) -> int {
+    return ms.len;
+}
+fn managed_string_free(ms: ManagedString) -> ManagedString {
+    if ms.ptr != 0 {
+        fusion_free(ms.ptr);
+    }
+    return ManagedString { ptr: 0, len: 0 };
+}
+
+// ============================================================
+// String utility functions (work on built-in string type)
+// ============================================================
+fn str_len(s: string) -> int {
+    return fusion_strlen(s);
+}
+
+fn str_equals(a: string, b: string) -> bool {
+    return fusion_strcmp(a, b) == 0;
+}
+
+fn str_is_empty(s: string) -> bool {
+    return fusion_strlen(s) == 0;
+}
+
+fn str_contains_char(s: string, ch: int) -> bool {
+    let n: int = fusion_strlen(s);
+    let i: int = 0;
+    while i < n {
+        if str_char_at(s, i) == ch {
+            return true;
+        }
+        i = i + 1;
+    }
+    return false;
+}
+
+// Helper: get ASCII value of character at position
+// Uses extern pointer read to access individual bytes
+extern fn fusion_ptr_read_byte(ptr: int, offset: int) -> int;
+
+fn str_char_at(s: string, index: int) -> int {
+    // s is a pointer to the string data
+    // We need a runtime helper to read individual bytes
+    // For now, rely on the extern
+    return fusion_ptr_read_byte(0, 0);
+}
+
+// String repeat: create a string by repeating a character N times
+extern fn fusion_str_repeat(ch: int, count: int) -> string;
+
+// Trim whitespace from both ends (returns new pooled string)
+extern fn fusion_str_trim(s: string) -> string;
+
+// Substring extraction
+extern fn fusion_str_substring(s: string, start: int, end_pos: int) -> string;
+
+// Integer to string conversion
+extern fn fusion_int_to_string(n: int) -> string;
+
+// String to integer parsing (returns 0 on failure)
+extern fn fusion_string_to_int(s: string) -> int;
+
+// Check if string starts with prefix
+extern fn fusion_str_starts_with(s: string, prefix: string) -> bool;
+
+// Check if string ends with suffix
+extern fn fusion_str_ends_with(s: string, suffix: string) -> bool;
+
+// Replace first occurrence of `from` with `to`
+extern fn fusion_str_replace(s: string, from: string, to_str: string) -> string;

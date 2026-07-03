@@ -1,5 +1,5 @@
 [package]
-name = "llm-rerope"
+name = "fusion_llm_rerope"
 version = "0.1.0"
 edition = "2021"
 description = "Rotary Positional Embeddings with relative position bias (REROPE)"
@@ -9,5 +9,4 @@ license = "MIT"
 fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
-
 

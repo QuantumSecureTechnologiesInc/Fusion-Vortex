@@ -1,12 +1,18 @@
+> **Phase 0 audit (2026-06-25):** This sign-off predates the repo restructure.
+> `dist/` has not been built; gate scripts have not been re-validated on the current layout.
+> Treat this as a *target* readiness state, not a confirmed one.
+
 # Fusion v2.0 Vortex Production Readiness Sign‑Off
 
-Status: **READY**
-Date: 2026‑01‑25
-Workspace: `/mnt/c/Projects/Fusion - Programming Language`
+Status: **NOT YET RE-VALIDATED** (target: READY after first successful build)
+Date: 2026‑01‑25 (original) / 2026-06-25 (audit revision)
+Workspace: `Fusion v2.0 Vortex` (restructured)
 
 ## Scope
 
-This sign‑off covers the compiler (fuc), toolchain (fusion), runtime C layer, standard library, interop conversion to `.fu`, and distribution layout in `dist/`.
+This sign‑off covers the compiler (fuc), toolchain (fusion), runtime C layer, standard library, interop conversion to `.fu`, and distribution layout.
+
+> **Note (2026-06-25):** `dist/` has not been built yet. The layout below is the *target* layout once `./install.sh` runs successfully.
 
 ## Verified Gates
 
@@ -16,11 +22,11 @@ This sign‑off covers the compiler (fuc), toolchain (fusion), runtime C layer, 
   - Runtime gates: PASS
   - Fixture suite: PASS
 
-## Toolchain Layout (dist/)
+## Toolchain Layout (target — `dist/` not yet built)
 
-- `dist/bin/` contains `fusion`, `fuc` and related tooling.
-- `dist/lib/fusion/` contains runtime (`runtime.o`), stdlib sources, HAFT nodes, core runtime evolution.
-- **No `.rs` or `.fu` in dist** (validated).
+- `dist/bin/` will contain `fusion`, `fuc` and related tooling.
+- `dist/lib/fusion/` will contain runtime (`runtime.o`), stdlib sources, HAFT nodes, core runtime evolution.
+- **No `.rs` or `.fu` in dist** (to be validated after first build).
 
 ## ABI Policy
 
@@ -60,4 +66,4 @@ Implemented externs:
 
 ---
 
-**Conclusion**: Fusion is production‑ready per the defined criteria in this repository.
+**Conclusion**: Fusion is *targeting* production‑ready per the defined criteria. Re-validation required after first successful `./install.sh` build.

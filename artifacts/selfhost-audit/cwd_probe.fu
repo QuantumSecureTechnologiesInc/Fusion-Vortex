@@ -1,9 +1,0 @@
-extern fn printf(fmt: string, ...) -> int;
-extern fn access(path: string, mode: int) -> int;
-
-pub fn main() -> int {
-    let a = access("target/release/fuc.exe", 0);
-    let b = access("crates/fuc/src/main.fu", 0);
-    printf("a=%d b=%d\n", a, b);
-    return 0;
-}

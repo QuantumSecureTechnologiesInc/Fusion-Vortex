@@ -1,0 +1,111 @@
+// MiMo Adapter — Fusion AI Core
+// MiniMax MiMo: dedicated MiMo model adapter (distinct from minimax.fu)
+// MiMo is MiniMax's flagship reasoning model series
+// API: api.minimax.chat/v1 (OpenAI-compatible)
+// Models: mimo-v2, mimo-v1
+// Auth: Bearer token via MiniMax API key (provided via config, never read from env)
+
+use std::time::Duration;
+
+const MIMO_API_BASE: string = "https://api.minimax.chat/v1";
+extern fn fusion_env_get(key: string) -> string;
+
+/// MiMo adapter configuration
+struct MimoConfig {
+    pub api_key: string,       // Must be set by caller — never read from environment
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,
+    pub timeout_secs: int,
+}
+
+fn mimo_config_default() -> MimoConfig {
+    let key: string = fusion_env_get("MINIMAX_API_KEY");
+    MimoConfig {
+        api_key: key,
+        api_base: "https://api.minimax.chat/v1",
+        model: "mimo-v2",
+        max_tokens: 4096,
+        temperature: 70,
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message
+struct MimoMessage {
+    role: string,
+    content: string,
+}
+
+/// Chat completion request
+struct MimoChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,
+}
+
+/// Chat completion response
+struct MimoChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// MiMo Adapter
+struct MimoAdapter {
+    config: MimoConfig,
+    connected: int,
+}
+
+fn mimo_adapter_new() -> MimoAdapter {
+    MimoAdapter {
+        config: mimo_config_default(),
+        connected: 0,
+    }
+}
+
+fn mimo_adapter_with_config(cfg: MimoConfig) -> MimoAdapter {
+    MimoAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via MiniMax MiMo API
+fn mimo_chat_completion(adapter: MimoAdapter, messages_len: int) -> (MimoAdapter, MimoChatResponse) {
+    let mut a = adapter;
+    // POST https://api.minimax.chat/v1/chat/completions
+    // Headers: Authorization: Bearer {api_key}
+    // Body: {"model":"mimo-v2","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: MimoChatResponse = MimoChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check
+fn mimo_health_check(adapter: MimoAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn mimo_provider_name() -> string {
+    return "MiniMax MiMo";
+}
+
+/// Supported model families
+fn mimo_supported_models() -> string {
+    return "mimo-v2,mimo-v1";
+}

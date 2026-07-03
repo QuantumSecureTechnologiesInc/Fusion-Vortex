@@ -1,0 +1,80 @@
+{
+  "generated": "2026-07-01",
+  "compiler": "fuc.exe (bootstrap, 10.6 MB)",
+  "test_method": "fuc.exe --parse-only against 35 .fu fixture files",
+
+  "language_features": {
+    "declarations": {
+      "fn_declaration": { "status": "supported", "notes": "Full support: name, params, return type, body" },
+      "extern_fn": { "status": "supported", "notes": "Variadic (...), void return, all type params" },
+      "struct_definition": { "status": "supported", "notes": "Named fields with type annotations" },
+      "mod_declaration": { "status": "supported", "notes": "mod name; syntax" },
+      "use_declaration": { "status": "supported", "notes": "use path::to::item; syntax" },
+      "pub_visibility": { "status": "supported", "notes": "pub fn, pub struct" },
+      "import_declaration": { "status": "unsupported", "notes": "import keyword not recognized; 7 files blocked" }
+    },
+
+    "statements": {
+      "let_binding": { "status": "supported", "notes": "let name: type = expr;" },
+      "let_mut_variable": { "status": "supported", "notes": "let mut name: type = expr;" },
+      "return_statement": { "status": "supported", "notes": "return expr; and return;" },
+      "if_else": { "status": "supported", "notes": "if/else if/else with blocks" },
+      "while_loop": { "status": "supported", "notes": "while cond { body }" },
+      "for_loop": { "status": "unsupported", "notes": "Not in bootstrap lexer; aspirational" },
+      "expression_statement": { "status": "supported", "notes": "expr; syntax" },
+      "assignment": { "status": "supported", "notes": "target = expr;" },
+      "match_expression": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" }
+    },
+
+    "expressions": {
+      "integer_literal": { "status": "supported", "notes": "i64 literals" },
+      "string_literal": { "status": "supported", "notes": "Double-quoted strings" },
+      "boolean_literal": { "status": "supported", "notes": "true/false keywords" },
+      "variable_reference": { "status": "supported" },
+      "function_call": { "status": "supported", "notes": "name(args) with comma-separated args" },
+      "member_access": { "status": "supported", "notes": "expr.field syntax" },
+      "binary_arithmetic": { "status": "supported", "notes": "+, -, *, /, %" },
+      "binary_comparison": { "status": "supported", "notes": "==, !=, <, >, <=, >=" },
+      "binary_logical": { "status": "supported", "notes": "& (bitwise AND), | (bitwise OR)" },
+      "unary_negation": { "status": "supported", "notes": "-expr" },
+      "unary_not": { "status": "supported", "notes": "!expr" },
+      "grouped_expression": { "status": "supported", "notes": "(expr)" },
+      "struct_literal": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" },
+      "array_literal": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" },
+      "closure_expression": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" }
+    },
+
+    "types": {
+      "int": { "status": "supported" },
+      "bool": { "status": "supported" },
+      "string": { "status": "supported" },
+      "void": { "status": "supported" },
+      "struct_type": { "status": "supported", "notes": "Named struct types" },
+      "pointer_type": { "status": "supported", "notes": "*T syntax" },
+      "array_type": { "status": "supported", "notes": "[T; N] syntax" },
+      "closure_type": { "status": "supported", "notes": "(T1, T2) -> T3 syntax" },
+      "generic_type": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" },
+      "enum_type": { "status": "unsupported", "notes": "Not in bootstrap compiler; aspirational" }
+    },
+
+    "compiler_features": {
+      "llvm_codegen": { "status": "supported", "notes": "Full LLVM IR → native binary via --emit-bin" },
+      "wasm_codegen": { "status": "supported", "notes": "Rust-based WASM codegen with full test suite" },
+      "semantic_analysis": { "status": "supported", "notes": "Full sema pass in self-hosted sema.fu" },
+      "module_resolution": { "status": "supported", "notes": "fuc2 preprocessor resolves mod declarations" },
+      "borrow_checking": { "status": "unsupported", "notes": "Vortex borrow checker is aspirational" },
+      "optimization": { "status": "supported", "notes": "Optimization levels 0-3" },
+      "self_hosting": { "status": "supported", "notes": "fuc.exe can compile itself from .fu sources" }
+    }
+  },
+
+  "summary": {
+    "total_features": 42,
+    "supported": 33,
+    "unsupported": 9,
+    "support_percentage": 78.6,
+    "blocking_for_self_compilation": ["import keyword"],
+    "blocking_for_wasm": [],
+    "nice_to_have": ["for_loop", "match_expression", "struct_literal", "array_literal", "closure_expression", "generic_type", "enum_type", "borrow_checking"]
+  }
+}

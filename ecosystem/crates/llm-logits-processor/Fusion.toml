@@ -1,5 +1,5 @@
 [package]
-name = "llm-logits-processor"
+name = "fusion_llm_logits_processor"
 version = "0.1.0"
 edition = "2021"
 description = "Post-processing chain for raw model logits (repetition penalty, output bias)"
@@ -8,5 +8,4 @@ license = "MIT"
 [dependencies]
 fusion-core = { workspace = true }
 fusion_std = "1.0.0"
-
 

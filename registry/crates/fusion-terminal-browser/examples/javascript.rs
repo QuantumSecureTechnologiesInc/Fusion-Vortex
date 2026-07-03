@@ -1,0 +1,63 @@
+//! JavaScript execution example
+
+use fusion_terminal_browser::{Browser, BrowserConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize logging
+    tracing_subscriber::fmt::init();
+
+    // Create browser
+    let mut browser = Browser::new(BrowserConfig::default())?;
+
+    // Navigate to a page
+    println!("Navigating to example.com...");
+    browser.navigate("https://example.com")?;
+
+    // Wait for page load
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    // Execute various JavaScript commands
+
+    println!("\n--- Page Information ---");
+
+    let title = browser.execute_script("document.title")?;
+    println!("Title: {}", title);
+
+    let url = browser.execute_script("document.location.href")?;
+    println!("URL: {}", url);
+
+    let links_count = browser.execute_script("document.querySelectorAll('a').length")?;
+    println!("Number of links: {}", links_count);
+
+    let paragraphs = browser
+        .execute_script("Array.from(document.querySelectorAll('p')).map(p => p.textContent)")?;
+    println!("\nParagraphs:");
+    if let Some(arr) = paragraphs.as_array() {
+        for (i, p) in arr.iter().enumerate() {
+            println!("  {}. {}", i + 1, p.as_str().unwrap_or(""));
+        }
+    }
+
+    // Complex JavaScript example
+    let metadata = browser.execute_script(
+        r#"
+        ({
+            title: document.title,
+            url: document.location.href,
+            links: document.querySelectorAll('a').length,
+            images: document.querySelectorAll('img').length,
+            scripts: document.querySelectorAll('script').length,
+            stylesheets: document.querySelectorAll('link[rel="stylesheet"]').length,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            }
+        })
+    "#,
+    )?;
+
+    println!("\n--- Page Metadata ---");
+    println!("{}", serde_json::to_string_pretty(&metadata)?);
+
+    Ok(())
+}

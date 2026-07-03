@@ -2,7 +2,7 @@
 
 ## Source Bundles
 
-- Source Files/Standard Lib (mirrored)
+- ~~Source Files/Standard Lib (mirrored)~~ *(directory removed during restructure)*
   - registry/crates/std/stdlib_docs/source_files_standard_lib/
 - Downloads/Standard Lib (mirrored)
   - registry/crates/std/stdlib_docs/matth_downloads_standard_lib/

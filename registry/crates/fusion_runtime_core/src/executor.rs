@@ -1,35 +1,37 @@
 //! Task executor implementation
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::sync::Arc;
-use std::future::Future;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+
 use crate::config::RuntimeConfig;
 use crate::task::TaskHandle;
+// use crossbeam::channel; // Unused
 use fusion_runtime_scheduler::{Scheduler, TaskPriority};
 use parking_lot::Mutex;
+use std::future::Future;
+// use std::pin::Pin; // Unused
+use std::sync::Arc;
+// use std::task::{Context, Poll}; // Unused
+
 /// Multi-threaded task executor
 pub struct Executor {
     scheduler: Arc<Scheduler>,
     #[allow(dead_code)]
-    workers: FVec<Worker>,
-    shutdown: Arc<Mutex<FBool>>,
+    workers: Vec<Worker>,
+    shutdown: Arc<Mutex<bool>>,
 }
+
 impl Executor {
     pub fn new(scheduler: Arc<Scheduler>, config: &RuntimeConfig) -> Self {
         let shutdown = Arc::new(Mutex::new(false));
         let workers = (0..config.worker_threads)
             .map(|id| Worker::new(id, scheduler.clone(), shutdown.clone()))
             .collect();
+
         Self {
             scheduler,
             workers,
             shutdown,
         }
     }
+
     pub fn spawn<F>(&self, future: F, priority: TaskPriority) -> TaskHandle<F::Output>
     where
         F: Future + Send + 'static,
@@ -37,26 +39,34 @@ impl Executor {
     {
         self.scheduler.spawn_task(future, priority)
     }
+
     pub fn block_on<F>(&self, future: F) -> F::Output
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
     {
+        // Simple block_on implementation
+        // In production, this would integrate with the scheduler
         futures::executor::block_on(future)
     }
 }
+
 impl Drop for Executor {
     fn drop(&mut self) {
         *self.shutdown.lock() = true;
+        // Wait for workers to finish - joined in Worker Drop if we kept handles,
+        // but here we just signal shutdown. Real impl might join.
     }
 }
-pub struct Worker {
+
+struct Worker {
     #[allow(dead_code)]
-    id: FSize,
+    id: usize,
     _handle: std::thread::JoinHandle<()>,
 }
+
 impl Worker {
-    fn new(id: FSize, scheduler: Arc<Scheduler>, shutdown: Arc<Mutex<FBool>>) -> Self {
+    fn new(id: usize, scheduler: Arc<Scheduler>, shutdown: Arc<Mutex<bool>>) -> Self {
         let handle = std::thread::Builder::new()
             .name(format!("fusion-worker-{}", id))
             .spawn(move || {
@@ -64,14 +74,22 @@ impl Worker {
                     if *shutdown.lock() {
                         break;
                     }
+
                     if let Some(task) = scheduler.next_task() {
+                        // Execute task synchronously on this thread
                         futures::executor::block_on(task);
                     } else {
+                        // Backoff to avoid busy loop
+                        // In a real implementation this would use a condition variable or channel
                         std::thread::sleep(std::time::Duration::from_millis(1));
                     }
                 }
             })
             .expect("Failed to spawn worker thread");
-        Self { id, _handle: handle }
+
+        Self {
+            id,
+            _handle: handle,
+        }
     }
 }

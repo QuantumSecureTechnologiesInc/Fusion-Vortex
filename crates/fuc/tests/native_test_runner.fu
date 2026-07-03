@@ -1,0 +1,86 @@
+// native_test_runner.fu — Pure-Fusion test driver
+// Compiles and runs test fixtures without string concatenation.
+// Uses only extern fn system() and extern fn printf().
+
+extern fn printf(fmt: string, ...) -> int;
+extern fn system(cmd: string) -> int;
+
+fn main() -> int {
+    printf("=== Fusion Native Test Runner ===\n");
+    let mut passed: int = 0;
+    let mut failed: int = 0;
+    let r: int = 0;
+
+    // --- Test 1: hello_world ---
+    printf("  [TEST] hello_world\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\hello_world.exe crates\\fuc\\tests\\fixtures\\hello_world.fu");
+    if r == 0 {
+        system("target\\tests\\hello_world.exe > target\\tests\\hello_world.actual.txt 2>&1");
+        r = system("fc target\\tests\\hello_world.actual.txt crates\\fuc\\tests\\fixtures\\hello_world.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 2: arrays ---
+    printf("  [TEST] arrays\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\arrays.exe crates\\fuc\\tests\\fixtures\\arrays.fu");
+    if r == 0 {
+        system("target\\tests\\arrays.exe > target\\tests\\arrays.actual.txt 2>&1");
+        r = system("fc target\\tests\\arrays.actual.txt crates\\fuc\\tests\\fixtures\\arrays.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 3: string_eq ---
+    printf("  [TEST] string_eq\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\string_eq.exe crates\\fuc\\tests\\fixtures\\string_eq.fu");
+    if r == 0 {
+        system("target\\tests\\string_eq.exe > target\\tests\\string_eq.actual.txt 2>&1");
+        r = system("fc target\\tests\\string_eq.actual.txt crates\\fuc\\tests\\fixtures\\string_eq.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 4: final_struct_test ---
+    printf("  [TEST] final_struct_test\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\final_struct_test.exe crates\\fuc\\tests\\fixtures\\final_struct_test.fu");
+    if r == 0 {
+        system("target\\tests\\final_struct_test.exe > target\\tests\\final_struct_test.actual.txt 2>&1");
+        r = system("fc target\\tests\\final_struct_test.actual.txt crates\\fuc\\tests\\fixtures\\final_struct_test.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 5: complex_arrays ---
+    printf("  [TEST] complex_arrays\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\complex_arrays.exe crates\\fuc\\tests\\fixtures\\complex_arrays.fu");
+    if r == 0 {
+        system("target\\tests\\complex_arrays.exe > target\\tests\\complex_arrays.actual.txt 2>&1");
+        r = system("fc target\\tests\\complex_arrays.actual.txt crates\\fuc\\tests\\fixtures\\complex_arrays.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 6: safety_and_repeat ---
+    printf("  [TEST] safety_and_repeat\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\safety_and_repeat.exe crates\\fuc\\tests\\fixtures\\safety_and_repeat.fu");
+    if r == 0 {
+        system("target\\tests\\safety_and_repeat.exe > target\\tests\\safety_and_repeat.actual.txt 2>&1");
+        r = system("fc target\\tests\\safety_and_repeat.actual.txt crates\\fuc\\tests\\fixtures\\safety_and_repeat.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    // --- Test 7: sema_struct ---
+    printf("  [TEST] sema_struct\n");
+    r = system("bin\\fuc.exe --emit-bin -o target\\tests\\sema_struct.exe crates\\fuc\\tests\\fixtures\\sema_struct.fu");
+    if r == 0 {
+        system("target\\tests\\sema_struct.exe > target\\tests\\sema_struct.actual.txt 2>&1");
+        r = system("fc target\\tests\\sema_struct.actual.txt crates\\fuc\\tests\\fixtures\\sema_struct.out >nul 2>&1");
+        if r == 0 { printf("    PASS\n"); passed = passed + 1; }
+        else { printf("    OUTPUT MISMATCH\n"); failed = failed + 1; }
+    } else { printf("    COMPILE FAIL\n"); failed = failed + 1; }
+
+    printf("\n=== Results: %d passed, %d failed ===\n", passed, failed);
+    return failed;
+}

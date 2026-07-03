@@ -6,14 +6,20 @@ pub mod resource;
 pub mod servers;
 pub mod stream;
 pub mod tool;
+
 pub use client::McpClient;
 pub use protocol::*;
 pub use servers::{FilesystemServer, GitHubServer, WebServer};
+
 pub mod extension_bridge;
+
 pub use extension_bridge::ExtensionMcpBridge;
+
 pub mod host;
 pub use host::FusionMcpHost;
+
 pub mod lsp_bridge;
 pub use lsp_bridge::LspAdapter;
+
 /// MCP library version
 pub const MCP_LIB_VERSION: &str = env!("CARGO_PKG_VERSION");

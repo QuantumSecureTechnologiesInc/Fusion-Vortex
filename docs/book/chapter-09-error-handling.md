@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 9: Error Handling
 
 Fusion’s commitment to reliability extends to error handling. Errors are a fact of life in software, so Fusion provides a number of features for handling situations in which something goes wrong.

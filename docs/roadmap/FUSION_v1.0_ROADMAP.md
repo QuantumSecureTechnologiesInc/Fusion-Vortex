@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # FUSION v1.0 - COMPREHENSIVE ECOSYSTEM ROADMAP
 
 **Fusion v2.0 Vortex Programming Language - Enterprise Ecosystem Development**
@@ -12,7 +16,7 @@
 
 ### Discovery: The Complete Ecosystem
 
-After analyzing the **Source Files/Ecosystem** directory, we've discovered a **production-ready enterprise ecosystem** with:
+After analyzing the ~~**Source Files/Ecosystem**~~ directory *(removed during restructure)*, we've discovered a **production-ready enterprise ecosystem** with:
 
 - **233+ Rust crates** fully designed and specified
 - **50+ core crates** organized in 4 Epochs (Interwoven Build Strategy)

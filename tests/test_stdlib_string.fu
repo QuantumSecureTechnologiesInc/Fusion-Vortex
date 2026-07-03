@@ -1,0 +1,98 @@
+// tests/test_stdlib_string.fu - Tests for ManagedString and string utilities
+// Validates string operations using extern functions from the C runtime.
+
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+extern fn fusion_strcpy(src: string) -> int;
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print_int(n: int) -> void;
+extern fn fusion_exit(code: int) -> void;
+extern fn fusion_str_starts_with(s: string, prefix: string) -> bool;
+extern fn fusion_str_ends_with(s: string, suffix: string) -> bool;
+extern fn fusion_int_to_string(n: int) -> string;
+extern fn fusion_string_to_int(s: string) -> int;
+
+// ManagedString struct (mirrors stdlib/string.fu)
+struct ManagedString { ptr: int, len: int }
+
+fn managed_string_from_str(s: string) -> ManagedString {
+    let p: int = fusion_strcpy(s);
+    let n: int = fusion_strlen(s);
+    return ManagedString { ptr: p, len: n };
+}
+
+fn managed_string_len(ms: ManagedString) -> int {
+    return ms.len;
+}
+
+fn managed_string_is_empty(ms: ManagedString) -> bool {
+    return ms.len == 0;
+}
+
+fn assert_eq_int(actual: int, expected: int, msg: string) -> void {
+    if actual != expected {
+        fusion_println(msg);
+        fusion_println("FAIL: expected");
+        fusion_print_int(expected);
+        fusion_println("but got");
+        fusion_print_int(actual);
+        fusion_exit(1);
+    }
+}
+
+fn assert_true(cond: bool, msg: string) -> void {
+    if cond == false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected true");
+        fusion_exit(1);
+    }
+}
+
+fn assert_false(cond: bool, msg: string) -> void {
+    if cond != false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected false");
+        fusion_exit(1);
+    }
+}
+
+fn main() -> void {
+    fusion_println("=== Test: String Length ===");
+
+    assert_eq_int(fusion_strlen("hello"), 5, "strlen hello");
+    assert_eq_int(fusion_strlen(""), 0, "strlen empty");
+    assert_eq_int(fusion_strlen("a"), 1, "strlen single char");
+    assert_eq_int(fusion_strlen("Fusion Vortex"), 13, "strlen Fusion Vortex");
+
+    fusion_println("=== Test: String Compare ===");
+
+    assert_eq_int(fusion_strcmp("abc", "abc"), 0, "strcmp equal");
+    assert_true(fusion_strcmp("abc", "xyz") != 0, "strcmp not equal");
+    assert_eq_int(fusion_strcmp("", ""), 0, "strcmp both empty");
+
+    fusion_println("=== Test: ManagedString ===");
+
+    let ms: ManagedString = managed_string_from_str("hello world");
+    assert_eq_int(managed_string_len(ms), 11, "ManagedString len");
+    assert_false(managed_string_is_empty(ms), "ManagedString not empty");
+
+    let empty_ms: ManagedString = managed_string_from_str("");
+    assert_eq_int(managed_string_len(empty_ms), 0, "empty ManagedString len");
+    assert_true(managed_string_is_empty(empty_ms), "empty ManagedString is empty");
+
+    fusion_println("=== Test: String Starts/Ends With ===");
+
+    assert_true(fusion_str_starts_with("hello world", "hello"), "starts with hello");
+    assert_false(fusion_str_starts_with("hello world", "world"), "not starts with world");
+    assert_true(fusion_str_ends_with("hello world", "world"), "ends with world");
+    assert_false(fusion_str_ends_with("hello world", "hello"), "not ends with hello");
+
+    fusion_println("=== Test: Int/String Conversion ===");
+
+    let s: string = fusion_int_to_string(42);
+    assert_eq_int(fusion_string_to_int("123"), 123, "string_to_int 123");
+    assert_eq_int(fusion_string_to_int("0"), 0, "string_to_int 0");
+    assert_eq_int(fusion_string_to_int("-7"), -7, "string_to_int -7");
+
+    fusion_println("All string tests PASSED");
+}

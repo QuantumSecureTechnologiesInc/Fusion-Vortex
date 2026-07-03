@@ -235,7 +235,7 @@ Fusion is a `.fu` language, but the toolchain intentionally includes **non‑Fus
 
 These pieces are wired into the Fusion build flow and ship as part of the official toolchain.
 
-- **Interop store**: installed at `dist/lib/fusion/interop` and exported via `FUSION_INTEROP`
+- **Interop store**: target location `dist/lib/fusion/interop` (not yet built); exported via `FUSION_INTEROP`
 
 ---
 

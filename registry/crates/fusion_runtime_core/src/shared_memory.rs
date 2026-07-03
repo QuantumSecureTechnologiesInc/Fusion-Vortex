@@ -9,43 +9,44 @@
 //! - Transfer tensors between `ai-daemon` and `fusion-cli`
 //! - Share KV cache across inference processes
 //! - Zero-copy model loading
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
+
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
-use parking_lot::RwLock;
+
 /// Shared memory region identifier
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShmId(pub FU64);
+pub struct ShmId(pub u64);
+
 /// Shared memory region
 pub struct ShmRegion {
     /// Region ID
     pub id: ShmId,
+
     /// Size in bytes
-    pub size: FSize,
+    pub size: usize,
+
     /// Base pointer (platform-specific)
     pub ptr: *mut u8,
+
     /// Is this region owned by this process?
-    pub owned: FBool,
+    pub owned: bool,
 }
+
 unsafe impl Send for ShmRegion {}
 unsafe impl Sync for ShmRegion {}
+
 /// Shared Memory Manager
 ///
 /// Manages shared memory regions accessible across processes
 pub struct SharedMemoryManager {
     /// Active regions
-    regions: Arc<RwLock<FMap<ShmId, ShmRegion>>>,
+    regions: Arc<RwLock<HashMap<ShmId, ShmRegion>>>,
+
     /// Next region ID
-    next_id: Arc<RwLock<FU64>>,
+    next_id: Arc<RwLock<u64>>,
 }
+
 impl SharedMemoryManager {
     /// Create a new shared memory manager
     pub fn new() -> Self {
@@ -54,6 +55,7 @@ impl SharedMemoryManager {
             next_id: Arc::new(RwLock::new(1)),
         }
     }
+
     /// Allocate a new shared memory region
     ///
     /// # Arguments
@@ -71,27 +73,41 @@ impl SharedMemoryManager {
     /// let shm = SharedMemoryManager::new();
     /// let id = shm.allocate(1024 * 1024, Some("tensor_buffer"));  // 1MB
     /// ```
-    pub fn allocate(&self, size: FSize, _name: Option<&str>) -> Result<ShmId, FString> {
+    pub fn allocate(&self, size: usize, _name: Option<&str>) -> Result<ShmId, String> {
         let mut next_id = self.next_id.write();
         let id = ShmId(*next_id);
         *next_id += 1;
         drop(next_id);
+
+        // In real implementation, would call:
+        // - Linux: shm_open() + mmap()
+        // - Windows: CreateFileMapping() + MapViewOfFile()
+        // - macOS: shm_open() + mmap()
+
+        // For now, allocate regular heap memory
         let layout = std::alloc::Layout::from_size_align(size, 4096)
             .map_err(|e| format!("Invalid layout: {}", e))?;
+
         let ptr = unsafe { std::alloc::alloc(layout) };
+
         if ptr.is_null() {
             return Err("Failed to allocate memory".to_string());
         }
+
         let region = ShmRegion {
             id,
             size,
             ptr,
             owned: true,
         };
+
         self.regions.write().insert(id, region);
+
         tracing::info!("Allocated shared memory: id={:?}, size={} bytes", id, size);
+
         Ok(id)
     }
+
     /// Attach to existing shared memory region (from another process)
     ///
     /// # Arguments
@@ -101,9 +117,12 @@ impl SharedMemoryManager {
     /// # Returns
     ///
     /// Shared memory ID
-    pub fn attach(&self, name: &str) -> Result<ShmId, FString> {
+    pub fn attach(&self, name: &str) -> Result<ShmId, String> {
+        // In real implementation, would open existing shared memory by name
+
         Err(format!("Shared memory '{}' not found", name))
     }
+
     /// Get pointer to shared memory region
     ///
     /// # Safety
@@ -115,113 +134,131 @@ impl SharedMemoryManager {
     pub unsafe fn get_ptr(&self, id: ShmId) -> Option<*mut u8> {
         self.regions.read().get(&id).map(|r| r.ptr)
     }
+
     /// Write data to shared memory
     ///
     /// # Safety
     ///
     /// This is safe because we check bounds and own the memory
-    pub fn write(&self, id: ShmId, offset: FSize, data: &[u8]) -> Result<(), FString> {
+    pub fn write(&self, id: ShmId, offset: usize, data: &[u8]) -> Result<(), String> {
         let regions = self.regions.read();
         let region = regions
             .get(&id)
             .ok_or_else(|| format!("Region {:?} not found", id))?;
+
         if offset + data.len() > region.size {
             return Err("Write would exceed region size".to_string());
         }
+
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                data.as_ptr(),
-                region.ptr.add(offset),
-                data.len(),
-            );
+            std::ptr::copy_nonoverlapping(data.as_ptr(), region.ptr.add(offset), data.len());
         }
+
         Ok(())
     }
+
     /// Read data from shared memory
-    pub fn read(
-        &self,
-        id: ShmId,
-        offset: FSize,
-        len: FSize,
-    ) -> Result<FVec<u8>, FString> {
+    pub fn read(&self, id: ShmId, offset: usize, len: usize) -> Result<Vec<u8>, String> {
         let regions = self.regions.read();
         let region = regions
             .get(&id)
             .ok_or_else(|| format!("Region {:?} not found", id))?;
+
         if offset + len > region.size {
             return Err("Read would exceed region size".to_string());
         }
+
         let mut buffer = vec![0u8; len];
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                region.ptr.add(offset),
-                buffer.as_mut_ptr(),
-                len,
-            );
+            std::ptr::copy_nonoverlapping(region.ptr.add(offset), buffer.as_mut_ptr(), len);
         }
+
         Ok(buffer)
     }
+
     /// Free shared memory region
-    pub fn free(&self, id: ShmId) -> Result<(), FString> {
+    pub fn free(&self, id: ShmId) -> Result<(), String> {
         let mut regions = self.regions.write();
         let region = regions
             .remove(&id)
             .ok_or_else(|| format!("Region {:?} not found", id))?;
+
         if region.owned {
+            // In real implementation, would call munmap() or UnmapViewOfFile()
             let layout = std::alloc::Layout::from_size_align(region.size, 4096).unwrap();
             unsafe {
                 std::alloc::dealloc(region.ptr, layout);
             }
         }
+
         tracing::info!("Freed shared memory: id={:?}", id);
+
         Ok(())
     }
+
     /// Get total allocated memory
-    pub fn total_allocated(&self) -> FSize {
+    pub fn total_allocated(&self) -> usize {
         self.regions.read().values().map(|r| r.size).sum()
     }
 }
+
 impl Default for SharedMemoryManager {
     fn default() -> Self {
         Self::new()
     }
 }
+
 impl Drop for SharedMemoryManager {
     fn drop(&mut self) {
-        let ids: FVec<ShmId> = self.regions.read().keys().copied().collect();
+        // Free all owned regions
+        let ids: Vec<ShmId> = self.regions.read().keys().copied().collect();
         for id in ids {
             let _ = self.free(id);
         }
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_allocate_and_free() {
         let shm = SharedMemoryManager::new();
         let id = shm.allocate(4096, Some("test_buffer")).unwrap();
+
         assert_eq!(shm.total_allocated(), 4096);
+
         shm.free(id).unwrap();
         assert_eq!(shm.total_allocated(), 0);
     }
+
     #[test]
     fn test_write_read() {
         let shm = SharedMemoryManager::new();
         let id = shm.allocate(1024, None).unwrap();
+
         let data = b"Hello, Shared Memory!";
         shm.write(id, 0, data).unwrap();
+
         let read_data = shm.read(id, 0, data.len()).unwrap();
-        assert_eq!(data, & read_data[..]);
+        assert_eq!(data, &read_data[..]);
+
         shm.free(id).unwrap();
     }
+
     #[test]
     fn test_bounds_checking() {
         let shm = SharedMemoryManager::new();
         let id = shm.allocate(100, None).unwrap();
+
+        // Try to write beyond bounds
         let data = vec![0u8; 200];
-        assert!(shm.write(id, 0, & data).is_err());
+        assert!(shm.write(id, 0, &data).is_err());
+
+        // Try to read beyond bounds
         assert!(shm.read(id, 50, 100).is_err());
+
         shm.free(id).unwrap();
     }
 }

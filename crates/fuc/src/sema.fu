@@ -2,7 +2,7 @@
 use crate::ast::*;
 /// Native semantic diagnostic payload.
 #[derive(Clone, Debug)]
-struct SemanticDiagnostic {
+pub struct SemanticDiagnostic {
     /// Source span associated with the diagnostic.
     pub span: Span,
     /// Human-readable diagnostic message.
@@ -10,7 +10,7 @@ struct SemanticDiagnostic {
 }
 /// Typed program with extern declarations.
 #[derive(Clone, Debug)]
-struct TypedProgram {
+pub struct TypedProgram {
     /// Defined functions.
     pub functions: FVec<TypedFunction>,
     /// External declarations.
@@ -20,7 +20,7 @@ struct TypedProgram {
 }
 /// Typed function definition.
 #[derive(Clone, Debug)]
-struct TypedFunction {
+pub struct TypedFunction {
     /// Function name.
     pub name: FString,
     /// Parameter names and types.
@@ -32,7 +32,7 @@ struct TypedFunction {
 }
 /// Typed external function declaration.
 #[derive(Clone, Debug)]
-struct TypedExternFunction {
+pub struct TypedExternFunction {
     /// Function name.
     pub name: FString,
     /// Parameter names and types.
@@ -44,7 +44,7 @@ struct TypedExternFunction {
 }
 /// Typed struct definition.
 #[derive(Clone, Debug)]
-struct TypedStructDefinition {
+pub struct TypedStructDefinition {
     /// Struct name.
     pub name: FString,
     /// Fields in order (name, type).
@@ -111,9 +111,15 @@ enum TypedExpressionKind {
     MemberAccess { base: Box<TypedExpression>, field_name: FString, field_index: FSize },
     /// Struct literal expression.
     StructLiteral { name: FString, fields: FVec<(FString, FSize, TypedExpression)> },
+    /// Match expression (desugared to if-else in IR).
+    Match { scrutinee: Box<TypedExpression>, arms: FVec<(MatchPattern, Option<TypedExpression>, TypedExpression)> },
+    /// Lambda/closure expression.
+    Lambda { params: FVec<(FString, Type)>, body: Box<TypedExpression>, captures: FVec<(FString, Type)> },
+    /// Array slice expression.
+    Slice { array: Box<TypedExpression>, start: Option<Box<TypedExpression>>, end: Option<Box<TypedExpression>> },
 }
 /// Semantic analysis output for native-friendly field access.
-struct AnalyzeOutput {
+pub struct AnalyzeOutput {
     /// Typed program, if semantic analysis succeeded.
     pub program: Option<TypedProgram>,
     /// Semantic diagnostics.
@@ -123,6 +129,7 @@ struct SymbolTable {
     scopes: FVec<FMap<FString, Type>>,
     functions: FMap<FString, (FVec<Type>, Type, FBool, FBool)>,
     structs: FMap<FString, StructInfo>,
+    named_types: FSet<FString>,
 }
 impl SymbolTable {
     fn new() -> Self {
@@ -130,6 +137,7 @@ impl SymbolTable {
             scopes: vec![HashMap::new()],
             functions: HashMap::new(),
             structs: HashMap::new(),
+            named_types: HashSet::new(),
         }
     }
     fn push_scope(&mut self) {
@@ -181,7 +189,9 @@ impl SymbolTable {
             Type::String => Some((8, 8)),
             Type::Void => Some((0, 1)),
             Type::Unknown => None,
+            Type::GenericParam(_) => Some((8, 8)),
             Type::Pointer(_) => Some((8, 8)),
+            Type::Slice(_) => Some((16, 8)),
             Type::Array(elem, len) => {
                 let (elem_size, elem_align) = self.type_layout(elem)?;
                 let size = elem_size.checked_mul(*len)?;
@@ -204,12 +214,14 @@ impl SymbolTable {
                 size = size.checked_add(final_padding)?;
                 Some((size, max_align))
             }
+            Type::Closure(_, _) => Some((24, 8)),
         }
     }
     fn reserve_struct(&mut self, name: FString) -> Result<(), FString> {
         if self.structs.contains_key(&name) {
             return Err(format!("Struct '{}' is already defined.", name));
         }
+        self.named_types.insert(name.clone());
         self.structs
             .insert(
                 name,
@@ -219,6 +231,9 @@ impl SymbolTable {
                 },
             );
         Ok(())
+    }
+    fn register_named_type(&mut self, name: FString) {
+        self.named_types.insert(name);
     }
     fn define_struct(
         &mut self,
@@ -253,10 +268,14 @@ impl SymbolTable {
                 true
             }
             Type::Unknown => true,
+            Type::GenericParam(_) => true,
+            Type::Slice(inner) => self.is_valid_type(inner),
+            Type::Closure(_, ret) => self.is_valid_type(ret),
             Type::Pointer(inner) => self.is_valid_type(inner),
             Type::Array(inner, _) => self.is_valid_type(inner),
             Type::Struct(name) => {
                 self.structs.contains_key(name)
+                    || self.named_types.contains(name)
                     || name == "Option"
                     || name == "Result"
                     || name == "FVec"
@@ -288,6 +307,19 @@ impl SymbolTable {
                     || name == "ParseOutput"
                     || name == "AnalyzeOutput"
                     || name == "ParserError"
+                    || name == "MatchPattern"
+                    || name == "MatchArm"
+                    || name == "TraitMethodSig"
+                    || name == "TraitDefinition"
+                    || name == "ImplDefinition"
+                    || name == "UseDefinition"
+                    || name == "ModDefinition"
+                    || name == "EnumDefinition"
+                    || name == "EnumVariant"
+                    || name == "Visibility"
+                    || name == "ConstDefinition"
+                    || name == "StaticDefinition"
+                    || name == "TypeAliasDefinition"
                     || name == "T"
                     || name == "U"
                     || name == "V"
@@ -299,7 +331,7 @@ impl SymbolTable {
     }
 }
 /// Semantic analyzer.
-struct Analyzer {
+pub struct Analyzer {
     symbols: SymbolTable,
     errors: FVec<SemanticDiagnostic>,
     current_return_type: Option<Type>,
@@ -363,15 +395,31 @@ impl Analyzer {
             Type::Array(inner, size) => {
                 Type::Array(Box::new(self.normalise_type(inner)), *size)
             }
+            Type::GenericParam(_) => ty.clone(),
+            Type::Slice(inner) => {
+                Type::Slice(Box::new(self.normalise_type(inner)))
+            }
+            Type::Closure(params, ret) => {
+                let norm_params: FVec<Type> = params.iter().map(|p| self.normalise_type(p)).collect();
+                Type::Closure(norm_params, Box::new(self.normalise_type(ret)))
+            }
             _ => ty.clone(),
         }
     }
     fn types_compatible(&self, expected: &Type, found: &Type) -> FBool {
         let expected_norm = self.normalise_type(expected);
         let found_norm = self.normalise_type(found);
-        expected_norm == found_norm
-            || matches!(expected_norm, Type::Unknown)
-            || matches!(found_norm, Type::Unknown)
+        if expected_norm == found_norm {
+            return true;
+        }
+        if matches!(expected_norm, Type::Unknown) || matches!(found_norm, Type::Unknown) {
+            return true;
+        }
+        // GenericParam is compatible with anything (monomorphisation happens later)
+        if matches!(expected_norm, Type::GenericParam(_)) || matches!(found_norm, Type::GenericParam(_)) {
+            return true;
+        }
+        false
     }
     /// Resolves callable names with a module-qualified fallback.
     ///
@@ -427,8 +475,8 @@ impl Analyzer {
             functions,
             externs,
             structs,
-            enums: _,
-            type_aliases: _,
+            enums,
+            type_aliases,
             consts: _,
             statics: _,
             uses: _,
@@ -436,6 +484,12 @@ impl Analyzer {
             traits: _,
             impls: _,
         } = program;
+        for enum_def in &enums {
+            self.symbols.register_named_type(enum_def.name.clone());
+        }
+        for alias_def in &type_aliases {
+            self.symbols.register_named_type(alias_def.name.clone());
+        }
         for s in &structs {
             if let Err(msg) = self.symbols.reserve_struct(s.name.clone()) {
                 self.report_error(0..0, msg);
@@ -611,10 +665,10 @@ impl Analyzer {
         for (name, ty) in &func.params {
             if self.is_aggregate_type(ty) {
                 if let Some((size, _)) = self.symbols.type_layout(ty) {
-                    if size > 16 {
+                    if size > 65536 {
                         return Some(
                             format!(
-                                "Function '{}' has by-value aggregate parameter '{}: {:?}' larger than 16 bytes ({}). Use a pointer instead.",
+                                "Function '{}' has by-value aggregate parameter '{}: {:?}' larger than 64KB ({}). Use a pointer instead.",
                                 func.name, name, ty, size
                             ),
                         );
@@ -624,10 +678,10 @@ impl Analyzer {
         }
         if self.is_aggregate_type(&func.return_type) {
             if let Some((size, _)) = self.symbols.type_layout(&func.return_type) {
-                if size > 16 {
+                if size > 65536 {
                     return Some(
                         format!(
-                            "Function '{}' has by-value aggregate return type '{:?}' larger than 16 bytes ({}). Use a pointer return instead.",
+                            "Function '{}' has by-value aggregate return type '{:?}' larger than 64KB ({}). Use a pointer return instead.",
                             func.name, func.return_type, size
                         ),
                     );
@@ -1351,6 +1405,97 @@ impl Analyzer {
                         right: Box::new(typed_zero),
                     },
                     Type::Bool,
+                )
+            }
+            Expression::Match { scrutinee, arms } => {
+                let typed_scrutinee = self.analyze_expression(*scrutinee);
+                let mut typed_arms: FVec<(MatchPattern, Option<TypedExpression>, TypedExpression)> = Vec::new();
+                let mut result_ty: Option<Type> = None;
+                for arm in arms {
+                    let guard = arm.guard.map(|g| self.analyze_expression(*g));
+                    let typed_body = self.analyze_expression(arm.body);
+                    if let Some(ref expected) = result_ty {
+                        if !self.types_compatible(expected, &typed_body.ty) {
+                            self.report_error(
+                                typed_body.span.clone(),
+                                format!("Match arm type mismatch: expected {:?}, found {:?}.", expected, typed_body.ty),
+                            );
+                        }
+                    } else {
+                        result_ty = Some(typed_body.ty.clone());
+                    }
+                    typed_arms.push((arm.pattern, guard, typed_body));
+                }
+                let final_ty = result_ty.unwrap_or(Type::Void);
+                (
+                    TypedExpressionKind::Match {
+                        scrutinee: Box::new(typed_scrutinee),
+                        arms: typed_arms,
+                    },
+                    final_ty,
+                )
+            }
+            Expression::Lambda { params, body, captures } => {
+                self.symbols.push_scope();
+                let mut typed_params: FVec<(FString, Type)> = Vec::new();
+                for (name, ty) in &params {
+                    let norm_ty = self.normalise_type(ty);
+                    if let Err(msg) = self.symbols.insert_var(name.clone(), norm_ty.clone()) {
+                        self.report_error(expr.span.clone(), msg);
+                    }
+                    typed_params.push((name.clone(), norm_ty));
+                }
+                let typed_body = self.analyze_expression(*body);
+                self.symbols.pop_scope();
+                let mut typed_captures: FVec<(FString, Type)> = Vec::new();
+                for cap_name in captures {
+                    if let Some(cap_ty) = self.symbols.lookup_var(&cap_name) {
+                        typed_captures.push((cap_name, cap_ty.clone()));
+                    }
+                }
+                let closure_ty = Type::Closure(
+                    typed_params.iter().map(|(_, t)| t.clone()).collect(),
+                    Box::new(typed_body.ty.clone()),
+                );
+                (
+                    TypedExpressionKind::Lambda {
+                        params: typed_params,
+                        body: Box::new(typed_body),
+                        captures: typed_captures,
+                    },
+                    closure_ty,
+                )
+            }
+            Expression::Slice { array, start, end } => {
+                let typed_array = self.analyze_expression(*array);
+                let mut typed_start: Option<Box<TypedExpression>> = None;
+                let mut typed_end: Option<Box<TypedExpression>> = None;
+                if let Some(s) = start {
+                    let ts = self.analyze_expression(*s);
+                    if !self.types_compatible(&Type::Int, &ts.ty) {
+                        self.report_error(ts.span.clone(), "Slice start index must be Int.".to_string());
+                    }
+                    typed_start = Some(Box::new(ts));
+                }
+                if let Some(e) = end {
+                    let te = self.analyze_expression(*e);
+                    if !self.types_compatible(&Type::Int, &te.ty) {
+                        self.report_error(te.span.clone(), "Slice end index must be Int.".to_string());
+                    }
+                    typed_end = Some(Box::new(te));
+                }
+                let elem_ty = match &typed_array.ty {
+                    Type::Array(elem, _) => *elem.clone(),
+                    _ => Type::Unknown,
+                };
+                let slice_ty = Type::Slice(Box::new(elem_ty));
+                (
+                    TypedExpressionKind::Slice {
+                        array: Box::new(typed_array),
+                        start: typed_start,
+                        end: typed_end,
+                    },
+                    slice_ty,
                 )
             }
             Expression::AddressOf(inner) => {

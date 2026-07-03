@@ -1,0 +1,9 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Ops Module for Conversions.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod tensor_ops;
+mod quantum_ops;
+mod conversions; // Phase 4: Now active
+
+pub use tensor_ops::*;
+pub use quantum_ops::*;
+pub use conversions::*;

@@ -1,0 +1,99 @@
+// HAFT Warden Sentinel - Crash/Heal Cluster Supervisor
+// Converted from FU Parts: the_warden_supervisor.rs
+// Monitors distributed nodes via liveness loops, catches crashes with
+// exponential backoff, and automates rollback upgrades on failure.
+
+extern fn printf(fmt: string, ...) -> int;
+
+/// Maximum backoff ceiling in seconds
+const SENTINEL_MAX_BACKOFF: int = 60;
+
+/// Warden Sentinel - network-aware crash/heal supervisor
+struct WardenSentinel {
+    monitored_binary: string,
+    network_probe_address: string,
+    shutdown_flag: int,
+    restart_count: int,
+}
+
+fn sentinel_new(binary_path: string, probe_addr: string) -> WardenSentinel {
+    WardenSentinel {
+        monitored_binary: binary_path,
+        network_probe_address: probe_addr,
+        shutdown_flag: 0,
+        restart_count: 0,
+    }
+}
+
+/// Simulate TCP liveness check (in production: TcpStream::connect_timeout)
+fn sentinel_check_network_liveness(sentinel: WardenSentinel) -> int {
+    // Simulated: returns 1 for alive, 0 for dead
+    // In production: TCP connect to probe address with 150ms timeout
+    if sentinel.restart_count < 5 {
+        return 1; // Alive
+    }
+    return 0; // Dead
+}
+
+/// Simulate pending upgrade check (in production: checks filesystem path)
+fn sentinel_check_pending_upgrade() -> int {
+    // In production: checks /var/lib/fusion/upgrade_pending
+    return 0; // No upgrade pending
+}
+
+/// Simulate atomic upgrade rollback
+fn sentinel_execute_upgrade(sentinel: WardenSentinel) -> WardenSentinel {
+    let mut s = sentinel;
+    printf("Warden: Pending upgrade detected. Triggering hot-swap...\n");
+
+    let liveness: int = sentinel_check_network_liveness(s);
+    if liveness != 0 {
+        printf("Warden: Upgrade applied successfully. Thermal states stable.\n");
+    } else {
+        printf("Warden: Upgrade failed liveness testing! Triggering automatic rollback.\n");
+        printf("Warden: System safely rolled back to legacy stable binary version.\n");
+    }
+
+    return s;
+}
+
+/// Main monitor-and-heal loop
+fn sentinel_monitor_and_heal(sentinel: WardenSentinel) -> WardenSentinel {
+    let mut s = sentinel;
+    let mut retry_backoff: int = 1;
+
+    printf("Warden Sentinel: Monitoring child instance: %s\n", s.monitored_binary);
+    s.restart_count = s.restart_count + 1;
+
+    // Simulated health-probing loop
+    let mut is_healthy: int = 1;
+    let mut tick: int = 0;
+    while is_healthy != 0 && s.shutdown_flag == 0 && tick < 8 {
+        // Step 1: Check child process health
+        tick = tick + 1;
+
+        // Step 2: Perform TCP liveness check
+        let net_ok: int = sentinel_check_network_liveness(s);
+        if net_ok == 0 {
+            printf("Warden: Node failed networking handshake check. Initiating crash recovery.\n");
+            is_healthy = 0;
+        }
+    }
+
+    // Crash/Heal upgrade and backoff
+    if s.shutdown_flag == 0 {
+        let has_upgrade: int = sentinel_check_pending_upgrade();
+        if has_upgrade != 0 {
+            s = sentinel_execute_upgrade(s);
+        } else {
+            printf("Throttling restart sequence. Backoff duration: %ds\n", retry_backoff);
+            retry_backoff = retry_backoff * 2;
+            if retry_backoff > SENTINEL_MAX_BACKOFF {
+                retry_backoff = SENTINEL_MAX_BACKOFF;
+            }
+        }
+    }
+
+    printf("Warden Sentinel: Monitoring cycle complete.\n");
+    return s;
+}

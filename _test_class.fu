@@ -1,0 +1,9 @@
+class MyClass {
+    x: int;
+}
+
+impl MyClass {
+    fn new(v: int) -> MyClass {
+        return MyClass { x: v };
+    }
+}

@@ -1,9 +1,8 @@
 //! IR optimization passes.
 use crate::ast::{self, BinaryOp};
 use crate::ir::{Address, BasicBlock, Instruction, IrFunction, Module, TypedValue, Value};
-use generational_arena::Index;
 /// Applies optimization passes to the module.
-fn optimize(module: Module) -> Module {
+pub fn optimize(module: Module) -> Module {
     let mut module = module;
     for func in &mut module.functions {
         optimize_function(func);
@@ -48,7 +47,12 @@ fn optimize_function(func: &mut IrFunction) {
     let mut changed = true;
     while changed {
         changed = false;
-        let block_indices: FVec<Index> = func.blocks.iter().map(|(i, _)| i).collect();
+        let mut block_indices: FVec<FSize> = Vec::new();
+        let mut idx = 0;
+        while idx < func.blocks.len() {
+            block_indices.push(idx);
+            idx = idx + 1;
+        }
         for block_idx in block_indices {
             if let Some(block) = func.blocks.get_mut(block_idx) {
                 if constant_fold_block(block) {

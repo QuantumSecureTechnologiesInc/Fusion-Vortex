@@ -1,31 +1,30 @@
 //! Agentic reasoning engine with self-reflection and multi-layer reasoning
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::collections::HashMap;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
+
 use crate::{AgenticError, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
 /// Context for agentic reasoning
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgenticContext {
     /// The problem statement
-    pub problem: FString,
+    pub problem: String,
+
     /// Current understanding level (0.0 - 1.0)
     pub understanding: f64,
+
     /// Confidence in solution (0.0 - 1.0)
     pub confidence: f64,
+
     /// Metadata for reasoning
-    pub metadata: FMap<FString, FString>,
+    pub metadata: HashMap<String, String>,
+
     /// Reasoning history
-    pub history: FVec<ReasoningStep>,
+    pub history: Vec<ReasoningStep>,
 }
+
 impl AgenticContext {
-    pub fn new(problem: FString) -> Self {
+    pub fn new(problem: String) -> Self {
         Self {
             problem,
             understanding: 0.0,
@@ -34,10 +33,12 @@ impl AgenticContext {
             history: Vec::new(),
         }
     }
+
     pub fn add_step(&mut self, step: ReasoningStep) {
         self.history.push(step);
         self.update_metrics();
     }
+
     fn update_metrics(&mut self) {
         if !self.history.is_empty() {
             let sum: f64 = self.history.iter().map(|s| s.confidence).sum();
@@ -49,39 +50,51 @@ impl AgenticContext {
         }
     }
 }
+
 /// A single reasoning step
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReasoningStep {
     /// Step description
-    pub description: FString,
+    pub description: String,
+
     /// Confidence in this step (0.0 - 1.0)
     pub confidence: f64,
+
     /// Insights gained
-    pub insights: FVec<FString>,
+    pub insights: Vec<String>,
+
     /// Alternative approaches considered
-    pub alternatives: FVec<FString>,
+    pub alternatives: Vec<String>,
 }
+
 /// Result of agentic reasoning
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgenticResult {
     /// The solution
-    pub solution: FString,
+    pub solution: String,
+
     /// Reasoning chain
-    pub reasoning: FVec<ReasoningStep>,
+    pub reasoning: Vec<ReasoningStep>,
+
     /// Overall confidence (0.0 - 1.0)
     pub confidence: f64,
+
     /// Reflection on the solution
-    pub reflection: FString,
+    pub reflection: String,
 }
+
 /// The agentic reasoning engine
 pub struct AgenticEngine {
     /// Maximum reasoning iterations
-    max_iterations: FSize,
+    max_iterations: usize,
+
     /// Minimum confidence threshold
     confidence_threshold: f64,
+
     /// Enable self-reflection
-    self_reflection: FBool,
+    self_reflection: bool,
 }
+
 impl AgenticEngine {
     pub fn new() -> Self {
         Self {
@@ -90,120 +103,142 @@ impl AgenticEngine {
             self_reflection: true,
         }
     }
+
     /// Perform agentic reasoning on a problem
     pub fn reason(
         &mut self,
         context: &AgenticContext,
         _chain: &crate::chain_of_thought::ReasoningChain,
-    ) -> Result<FString> {
+    ) -> Result<String> {
         let mut current_context = context.clone();
         let mut iterations = 0;
+
         while iterations < self.max_iterations {
+            // Layer 1: Problem decomposition
             let decomposed = self.decompose_problem(&current_context)?;
+
+            // Layer 2: Solution exploration
             let solutions = self.explore_solutions(&decomposed)?;
+
+            // Layer 3: Solution evaluation
             let best_solution = self.evaluate_solutions(&solutions)?;
+
+            // Layer 4: Self-reflection
             if self.self_reflection {
-                let reflection = self
-                    .reflect_on_solution(&best_solution, &current_context)?;
+                let reflection = self.reflect_on_solution(&best_solution, &current_context)?;
+
                 if reflection.confidence >= self.confidence_threshold {
                     return Ok(best_solution.solution);
                 }
-                current_context
-                    .add_step(ReasoningStep {
-                        description: format!(
-                            "Iteration {}: {}", iterations, reflection.description
-                        ),
-                        confidence: reflection.confidence,
-                        insights: reflection.insights.clone(),
-                        alternatives: vec![],
-                    });
+
+                // Update context with reflection insights
+                current_context.add_step(ReasoningStep {
+                    description: format!("Iteration {}: {}", iterations, reflection.description),
+                    confidence: reflection.confidence,
+                    insights: reflection.insights.clone(),
+                    alternatives: vec![],
+                });
             } else {
                 return Ok(best_solution.solution);
             }
+
             iterations += 1;
         }
+
         Err(AgenticError::IterationLimitReached)
     }
-    fn decompose_problem(&self, context: &AgenticContext) -> Result<FVec<FString>> {
+
+    fn decompose_problem(&self, context: &AgenticContext) -> Result<Vec<String>> {
+        // Decompose problem into sub-problems
         let problem = &context.problem;
+
+        // Simple decomposition strategy - split by logical components
         let sub_problems = vec![
-            format!("Understand: {}", problem), format!("Analyse requirements: {}",
-            problem), format!("Design solution: {}", problem),
-            format!("Implement solution: {}", problem), format!("Validate solution: {}",
-            problem),
+            format!("Understand: {}", problem),
+            format!("Analyse requirements: {}", problem),
+            format!("Design solution: {}", problem),
+            format!("Implement solution: {}", problem),
+            format!("Validate solution: {}", problem),
         ];
+
         Ok(sub_problems)
     }
-    fn explore_solutions(
-        &self,
-        sub_problems: &[FString],
-    ) -> Result<FVec<SolutionCandidate>> {
+
+    fn explore_solutions(&self, sub_problems: &[String]) -> Result<Vec<SolutionCandidate>> {
+        // Generate multiple solution candidates
         let mut candidates = Vec::new();
+
         for (i, sub_problem) in sub_problems.iter().enumerate() {
-            candidates
-                .push(SolutionCandidate {
-                    solution: format!("Solution for: {}", sub_problem),
-                    confidence: 0.7 + (i as f64 * 0.05),
-                    _reasoning: vec![format!("Addressed sub-problem: {}", sub_problem)],
-                });
+            candidates.push(SolutionCandidate {
+                solution: format!("Solution for: {}", sub_problem),
+                confidence: 0.7 + (i as f64 * 0.05),
+                _reasoning: vec![format!("Addressed sub-problem: {}", sub_problem)],
+            });
         }
+
         Ok(candidates)
     }
-    fn evaluate_solutions(
-        &self,
-        candidates: &[SolutionCandidate],
-    ) -> Result<SolutionCandidate> {
+
+    fn evaluate_solutions(&self, candidates: &[SolutionCandidate]) -> Result<SolutionCandidate> {
+        // Select the best solution based on confidence
         candidates
             .iter()
             .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap())
             .cloned()
-            .ok_or_else(|| AgenticError::ReasoningFailed(
-                "No solutions found".to_string(),
-            ))
+            .ok_or_else(|| AgenticError::ReasoningFailed("No solutions found".to_string()))
     }
+
     fn reflect_on_solution(
         &self,
         solution: &SolutionCandidate,
         context: &AgenticContext,
     ) -> Result<ReflectionResult> {
+        // Self-reflection on the proposed solution
         let confidence = solution.confidence * (1.0 + context.understanding) / 2.0;
+
         Ok(ReflectionResult {
             description: format!("Reflected on: {}", solution.solution),
             confidence: confidence.min(1.0),
             insights: vec![
                 "Solution addresses core problem".to_string(),
-                "Implementation is feasible".to_string(), "Quality standards met"
-                .to_string(),
+                "Implementation is feasible".to_string(),
+                "Quality standards met".to_string(),
             ],
         })
     }
 }
+
 impl Default for AgenticEngine {
     fn default() -> Self {
         Self::new()
     }
 }
+
 #[derive(Debug, Clone)]
-pub struct SolutionCandidate {
-    solution: FString,
+struct SolutionCandidate {
+    solution: String,
     confidence: f64,
-    _reasoning: FVec<FString>,
+    _reasoning: Vec<String>,
 }
+
 #[derive(Debug, Clone)]
-pub struct ReflectionResult {
-    description: FString,
+struct ReflectionResult {
+    description: String,
     confidence: f64,
-    insights: FVec<FString>,
+    insights: Vec<String>,
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_agentic_context() {
         let context = AgenticContext::new("Test problem".to_string());
         assert_eq!(context.problem, "Test problem");
         assert_eq!(context.confidence, 0.0);
     }
+
     #[test]
     fn test_agentic_engine() {
         let engine = AgenticEngine::new();

@@ -1,0 +1,17 @@
+﻿[package]
+name = "fusion_llm_batch_scheduler"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Dynamic batching scheduler for LLM inference."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework", "scheduler", "batching", "llm"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[dependencies]
+fusion_core.workspace = true
+fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
+fusion_net = { path = "../fusion_net/", version = "0.2.0" }
+fusion_runtime_core = { workspace = true }
+

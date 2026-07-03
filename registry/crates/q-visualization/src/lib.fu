@@ -1,3 +1,45 @@
-fn init() {
-    println!("Initializing q-visualization...");
+/// Production Quantum Visualization Data Preparation.
+/// 
+/// Generates standardized JSON schemas for plotting state vectors and circuits using external tools.
+
+use fusion_core::types::quantum::{QuantumCircuit, QuantumState};
+use fusion_std::error::{StdResult, StdError};
+use serde_json::json;
+
+pub struct VisualizationData;
+
+impl VisualizationData {
+    /// Generates a structured JSON object for Circuit visualization (e.g., a gate diagram).
+    pub fn circuit_to_json(circuit: &QuantumCircuit) -> StdResult<serde_json::Value> {
+        let gate_list: FVec<serde_json::Value> = circuit.gates.iter().map(|(g, t)| {
+            json!({
+                "name": g.name,
+                "qubits": t,
+                "type": "unitary"
+            })
+        }).collect();
+
+        Ok(json!({
+            "type": "Circuit",
+            "num_qubits": circuit.num_qubits,
+            "layers": gate_list, // Simplified layer mapping
+        }))
+    }
+
+    /// Generates a structured JSON object for State Vector / Density Matrix visualization.
+    pub fn state_to_json(state: &QuantumState) -> StdResult<serde_json::Value> {
+        let probabilities: FVec<(FString, f64)> = state.amplitudes.iter()
+            .enumerate()
+            .map(|(i, amp)| {
+                let basis_state = format!("{:0width$b}", i, width=state.num_qubits);
+                (basis_state, amp.norm_sqr())
+            })
+            .collect();
+
+        Ok(json!({
+            "type": "StateVector",
+            "num_qubits": state.num_qubits,
+            "probabilities": probabilities,
+        }))
+    }
 }

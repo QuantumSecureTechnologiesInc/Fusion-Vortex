@@ -1,0 +1,30 @@
+//! Native-first compiler entrypoint for stage chaining.
+///
+/// Rust-oriented compatibility entry remains in `main_rust_compat.fu` for
+/// source-refresh Cargo builds.
+
+mod stage1_parser_api;
+mod stage1_sema_api;
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
+
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main() -> int {
+    let parse_status = stage1_parser_api::parse_file("crates/fuc/src/main.fu");
+    if parse_status != 0 {
+        printf("[fuc-native] parser check failed: %d\n", parse_status);
+        return parse_status;
+    }
+
+    let sema_status = stage1_sema_api::sema_file("crates/fuc/src/main.fu");
+    if sema_status != 0 {
+        printf("[fuc-native] sema check failed: %d\n", sema_status);
+        return sema_status;
+    }
+
+    printf("[fuc-native] parser/sema checks passed\n");
+    return 0;
+}

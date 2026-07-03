@@ -1,287 +1,326 @@
 //! Vibe coding: Pattern-based intuitive code generation
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::collections::HashMap;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
+
 use crate::{AgenticError, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
 /// A code pattern recognized by the vibe engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodePattern {
     /// Pattern name
-    pub name: FString,
+    pub name: String,
+
     /// Pattern category
     pub category: PatternCategory,
+
     /// Pattern template
-    pub template: FString,
+    pub template: String,
+
     /// Variables in the pattern
-    pub variables: FVec<FString>,
+    pub variables: Vec<String>,
+
     /// Pattern confidence score
     pub confidence: f64,
+
     /// Usage examples
-    pub examples: FVec<FString>,
+    pub examples: Vec<String>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PatternCategory {
     /// Functional programming patterns
     Functional,
+
     /// Object-oriented patterns
     ObjectOriented,
+
     /// Algorithmic patterns
     Algorithm,
+
     /// Data structure patterns
     DataStructure,
+
     /// Concurrency patterns
     Concurrency,
+
     /// Error handling patterns
     ErrorHandling,
+
     /// Testing patterns
     Testing,
+
     /// Performance patterns
     Performance,
 }
+
 /// A matched pattern with its context
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PatternMatch {
     /// The matched pattern
     pub pattern: CodePattern,
+
     /// Match confidence (0.0 - 1.0)
     pub confidence: f64,
+
     /// Variable bindings
-    pub bindings: FMap<FString, FString>,
+    pub bindings: HashMap<String, String>,
+
     /// Context information
-    pub context: FString,
+    pub context: String,
 }
+
 /// The vibe coding engine
 pub struct VibeEngine {
     /// Known patterns
-    patterns: FVec<CodePattern>,
+    patterns: Vec<CodePattern>,
+
     /// Pattern matching threshold
     match_threshold: f64,
 }
+
 impl VibeEngine {
     pub fn new() -> Self {
         let mut engine = Self {
             patterns: Vec::new(),
             match_threshold: 0.7,
         };
+
         engine.load_default_patterns();
         engine
     }
+
     fn load_default_patterns(&mut self) {
-        self.patterns
-            .push(CodePattern {
-                name: "map_transform".to_string(),
-                category: PatternCategory::Functional,
-                template: "collection.iter().map(|item| transform(item)).collect()"
-                    .to_string(),
-                variables: vec!["collection".to_string(), "transform".to_string()],
-                confidence: 0.95,
-                examples: vec![
-                    "numbers.iter().map(|n| n * 2).collect()".to_string(),
-                    "names.iter().map(|s| s.to_uppercase()).collect()".to_string(),
-                ],
-            });
-        self.patterns
-            .push(CodePattern {
-                name: "filter_select".to_string(),
-                category: PatternCategory::Functional,
-                template: "collection.iter().filter(|item| condition(item)).collect()"
-                    .to_string(),
-                variables: vec!["collection".to_string(), "condition".to_string()],
-                confidence: 0.95,
-                examples: vec![
-                    "numbers.iter().filter(|n| n % 2 == 0).collect()".to_string()
-                ],
-            });
-        self.patterns
-            .push(CodePattern {
-                name: "reduce_aggregate".to_string(),
-                category: PatternCategory::Functional,
-                template: "collection.iter().fold(initial, |acc, item| operation(acc, item))"
-                    .to_string(),
-                variables: vec![
-                    "collection".to_string(), "initial".to_string(), "operation"
-                    .to_string(),
-                ],
-                confidence: 0.9,
-                examples: vec!["numbers.iter().fold(0, |acc, n| acc + n)".to_string()],
-            });
-        self.patterns
-            .push(CodePattern {
-                name: "result_chain".to_string(),
-                category: PatternCategory::ErrorHandling,
-                template: "operation1()?.operation2()?.operation3()?".to_string(),
-                variables: vec![
-                    "operation1".to_string(), "operation2".to_string(), "operation3"
-                    .to_string(),
-                ],
-                confidence: 0.85,
-                examples: vec!["read_file()?.parse()?.validate()?".to_string()],
-            });
-        self.patterns
-            .push(CodePattern {
-                name: "builder_pattern".to_string(),
-                category: PatternCategory::DataStructure,
-                template: "Builder::new().field1(value1).field2(value2).build()"
-                    .to_string(),
-                variables: vec![
-                    "Builder".to_string(), "field1".to_string(), "value1".to_string(),
-                ],
-                confidence: 0.9,
-                examples: vec![
-                    "RequestBuilder::new().url(endpoint).method(POST).build()"
-                    .to_string()
-                ],
-            });
-        self.patterns
-            .push(CodePattern {
-                name: "parallel_processing".to_string(),
-                category: PatternCategory::Performance,
-                template: "collection.par_iter().map(|item| process(item)).collect()"
-                    .to_string(),
-                variables: vec!["collection".to_string(), "process".to_string()],
-                confidence: 0.85,
-                examples: vec![
-                    "data.par_iter().map(|item| compute(item)).collect()".to_string()
-                ],
-            });
+        // Functional patterns
+        self.patterns.push(CodePattern {
+            name: "map_transform".to_string(),
+            category: PatternCategory::Functional,
+            template: "collection.iter().map(|item| transform(item)).collect()".to_string(),
+            variables: vec!["collection".to_string(), "transform".to_string()],
+            confidence: 0.95,
+            examples: vec![
+                "numbers.iter().map(|n| n * 2).collect()".to_string(),
+                "names.iter().map(|s| s.to_uppercase()).collect()".to_string(),
+            ],
+        });
+
+        self.patterns.push(CodePattern {
+            name: "filter_select".to_string(),
+            category: PatternCategory::Functional,
+            template: "collection.iter().filter(|item| condition(item)).collect()".to_string(),
+            variables: vec!["collection".to_string(), "condition".to_string()],
+            confidence: 0.95,
+            examples: vec!["numbers.iter().filter(|n| n % 2 == 0).collect()".to_string()],
+        });
+
+        self.patterns.push(CodePattern {
+            name: "reduce_aggregate".to_string(),
+            category: PatternCategory::Functional,
+            template: "collection.iter().fold(initial, |acc, item| operation(acc, item))"
+                .to_string(),
+            variables: vec![
+                "collection".to_string(),
+                "initial".to_string(),
+                "operation".to_string(),
+            ],
+            confidence: 0.9,
+            examples: vec!["numbers.iter().fold(0, |acc, n| acc + n)".to_string()],
+        });
+
+        // Error handling patterns
+        self.patterns.push(CodePattern {
+            name: "result_chain".to_string(),
+            category: PatternCategory::ErrorHandling,
+            template: "operation1()?.operation2()?.operation3()?".to_string(),
+            variables: vec![
+                "operation1".to_string(),
+                "operation2".to_string(),
+                "operation3".to_string(),
+            ],
+            confidence: 0.85,
+            examples: vec!["read_file()?.parse()?.validate()?".to_string()],
+        });
+
+        // Data structure patterns
+        self.patterns.push(CodePattern {
+            name: "builder_pattern".to_string(),
+            category: PatternCategory::DataStructure,
+            template: "Builder::new().field1(value1).field2(value2).build()".to_string(),
+            variables: vec![
+                "Builder".to_string(),
+                "field1".to_string(),
+                "value1".to_string(),
+            ],
+            confidence: 0.9,
+            examples: vec!["RequestBuilder::new().url(endpoint).method(POST).build()".to_string()],
+        });
+
+        // Performance patterns
+        self.patterns.push(CodePattern {
+            name: "parallel_processing".to_string(),
+            category: PatternCategory::Performance,
+            template: "collection.par_iter().map(|item| process(item)).collect()".to_string(),
+            variables: vec!["collection".to_string(), "process".to_string()],
+            confidence: 0.85,
+            examples: vec!["data.par_iter().map(|item| compute(item)).collect()".to_string()],
+        });
     }
+
     /// Detect patterns from user intent
-    pub fn detect_patterns(&self, intent: &str) -> Result<FVec<PatternMatch>> {
+    pub fn detect_patterns(&self, intent: &str) -> Result<Vec<PatternMatch>> {
         let mut matches = Vec::new();
         let intent_lower = intent.to_lowercase();
+
         for pattern in &self.patterns {
             let confidence = self.calculate_pattern_confidence(&intent_lower, pattern);
+
             if confidence >= self.match_threshold {
-                matches
-                    .push(PatternMatch {
-                        pattern: pattern.clone(),
-                        confidence,
-                        bindings: self.extract_bindings(&intent_lower, pattern),
-                        context: intent.to_string(),
-                    });
+                matches.push(PatternMatch {
+                    pattern: pattern.clone(),
+                    confidence,
+                    bindings: self.extract_bindings(&intent_lower, pattern),
+                    context: intent.to_string(),
+                });
             }
         }
+
+        // Sort by confidence
         matches.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+
         if matches.is_empty() {
             Err(AgenticError::PatternNotFound(intent.to_string()))
         } else {
             Ok(matches)
         }
     }
+
     fn calculate_pattern_confidence(&self, intent: &str, pattern: &CodePattern) -> f64 {
         let mut score: f64 = 0.0;
+
+        // Check for category keywords
         let category_keywords = self.get_category_keywords(&pattern.category);
         for keyword in category_keywords {
             if intent.contains(keyword) {
                 score += 0.3;
             }
         }
-        let name_words: FVec<&str> = pattern.name.split('_').collect();
+
+        // Check for pattern name keywords
+        let name_words: Vec<&str> = pattern.name.split('_').collect();
         for word in name_words {
             if intent.contains(word) {
                 score += 0.2;
             }
         }
+
+        // Check for variable hints
         for var in &pattern.variables {
             if intent.contains(var.as_str()) {
                 score += 0.1;
             }
         }
+
         score.min(1.0)
     }
-    fn get_category_keywords(&self, category: &PatternCategory) -> FVec<&str> {
+
+    fn get_category_keywords(&self, category: &PatternCategory) -> Vec<&str> {
         match category {
-            PatternCategory::Functional => {
-                vec!["map", "filter", "reduce", "fold", "transform"]
-            }
-            PatternCategory::ObjectOriented => {
-                vec!["class", "object", "method", "inheritance"]
-            }
+            PatternCategory::Functional => vec!["map", "filter", "reduce", "fold", "transform"],
+            PatternCategory::ObjectOriented => vec!["class", "object", "method", "inheritance"],
             PatternCategory::Algorithm => vec!["sort", "search", "algorithm", "optimize"],
-            PatternCategory::DataStructure => {
-                vec!["list", "tree", "graph", "hash", "builder"]
-            }
-            PatternCategory::Concurrency => {
-                vec!["parallel", "concurrent", "thread", "async"]
-            }
-            PatternCategory::ErrorHandling => {
-                vec!["error", "result", "try", "catch", "handle"]
-            }
-            PatternCategory::Testing => vec!["test", "assert", "double", "verify"],
-            PatternCategory::Performance => {
-                vec!["fast", "optimize", "performance", "parallel"]
-            }
+            PatternCategory::DataStructure => vec!["list", "tree", "graph", "hash", "builder"],
+            PatternCategory::Concurrency => vec!["parallel", "concurrent", "thread", "async"],
+            PatternCategory::ErrorHandling => vec!["error", "result", "try", "catch", "handle"],
+            PatternCategory::Testing => vec!["test", "assert", "mock", "verify"],
+            PatternCategory::Performance => vec!["fast", "optimize", "performance", "parallel"],
         }
     }
-    fn extract_bindings(
-        &self,
-        _intent: &str,
-        pattern: &CodePattern,
-    ) -> FMap<FString, FString> {
+
+    fn extract_bindings(&self, _intent: &str, pattern: &CodePattern) -> HashMap<String, String> {
         let mut bindings = HashMap::new();
+
+        // Simple extraction - in a real implementation, use NLP or AST parsing
         for var in &pattern.variables {
             bindings.insert(var.clone(), format!("extracted_{}", var));
         }
+
         bindings
     }
+
     /// Generate code from detected patterns
-    pub fn generate_from_patterns(&self, matches: &[PatternMatch]) -> Result<FString> {
+    pub fn generate_from_patterns(&self, matches: &[PatternMatch]) -> Result<String> {
         if matches.is_empty() {
-            return Err(
-                AgenticError::PatternNotFound("No patterns to generate from".to_string()),
-            );
+            return Err(AgenticError::PatternNotFound(
+                "No patterns to generate from".to_string(),
+            ));
         }
+
         let mut generated = String::new();
+
+        // Use the best match (first in sorted list)
         let best_match = &matches[0];
+
+        // Apply bindings to template
         let mut code = best_match.pattern.template.clone();
         for (var, value) in &best_match.bindings {
             code = code.replace(var, value);
         }
+
         generated.push_str(&format!("// Pattern: {}\n", best_match.pattern.name));
         generated.push_str(&format!("// Confidence: {:.2}\n", best_match.confidence));
         generated.push_str(&code);
         generated.push('\n');
+
         Ok(generated)
     }
+
     /// Enhance existing code with patterns
-    pub fn enhance_with_patterns(&self, code: &str) -> Result<FString> {
+    pub fn enhance_with_patterns(&self, code: &str) -> Result<String> {
+        // Analyse code and suggest improvements
         let mut enhanced = String::from(code);
+
+        // Add pattern-based enhancements
         enhanced.push_str("\n// Vibe-enhanced with best practices\n");
+
         Ok(enhanced)
     }
+
     /// Add a custom pattern
     pub fn add_pattern(&mut self, pattern: CodePattern) {
         self.patterns.push(pattern);
     }
+
     /// Get all patterns in a category
-    pub fn patterns_by_category(&self, category: PatternCategory) -> FVec<&CodePattern> {
-        self.patterns.iter().filter(|p| p.category == category).collect()
+    pub fn patterns_by_category(&self, category: PatternCategory) -> Vec<&CodePattern> {
+        self.patterns
+            .iter()
+            .filter(|p| p.category == category)
+            .collect()
     }
 }
+
 impl Default for VibeEngine {
     fn default() -> Self {
         Self::new()
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_vibe_engine_creation() {
         let engine = VibeEngine::new();
-        assert!(! engine.patterns.is_empty());
+        assert!(!engine.patterns.is_empty());
     }
+
     #[test]
     fn test_pattern_detection() {
         let engine = VibeEngine::new();
         let result = engine.detect_patterns("transform all items in the collection");
         assert!(result.is_ok());
     }
+
     #[test]
     fn test_code_generation() {
         let engine = VibeEngine::new();

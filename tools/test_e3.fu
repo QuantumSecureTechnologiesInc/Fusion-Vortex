@@ -1,0 +1,35 @@
+extern fn printf(fmt: string, ...) -> int;
+
+const BUF_SIZE: int = 128;
+
+struct Encoder {
+    buf: [int; BUF_SIZE],
+    pos: int,
+}
+
+fn enc_byte(e: &mut Encoder, b: int) {
+    if e.pos < BUF_SIZE {
+        e.buf[e.pos] = b & 255;
+        e.pos = e.pos + 1;
+    }
+}
+
+fn emit_header(e: &mut Encoder) {
+    enc_byte(e, 0);
+    enc_byte(e, 97);
+    enc_byte(e, 115);
+    enc_byte(e, 109);
+    enc_byte(e, 1);
+    enc_byte(e, 0);
+    enc_byte(e, 0);
+    enc_byte(e, 0);
+}
+
+pub fn main() -> int {
+    printf("=== A ===\n");
+    let mut enc: Encoder = Encoder { buf: [0; BUF_SIZE], pos: 0 };
+    printf("=== B ===\n");
+    emit_header(&mut enc);
+    printf("=== C pos=%d ===\n", enc.pos);
+    return 0;
+}

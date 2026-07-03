@@ -1,0 +1,23 @@
+﻿[package]
+name = "fusion_finance"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Foundation: High-frequency trading primitives with sub-10Î¼s latency."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "foundation", "finance", "trading", "primitives"]
+categories = ["development-tools", "no-std"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_runtime_core = { path = "../fusion_runtime_core/" }
+serde = { workspace = true }
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+tokio = { workspace = true }
+[dev-dependencies]
+criterion = { workspace = true }
+fusion_runtime_core = { workspace = true }
+
+

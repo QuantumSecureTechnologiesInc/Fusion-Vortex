@@ -1,0 +1,23 @@
+[package]
+name = "fusion_nn_attention_block"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Attention blocks (Perceiver, Linformer, Flash Attention). O(n²) to O(n) complexity."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["attention", "perceiver", "linformer", "neural-network", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_ai_core = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "attention_blocks"
+# harness = false
+

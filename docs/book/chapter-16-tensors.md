@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 16: Tensor Types and AI/ML
 
 This chapter introduces Fusion's native artificial intelligence and machine learning capabilities—the second pillar of Tri-brid computing. Unlike languages that require external libraries for numerical computing (NumPy in Python, ndarray in Rust), Fusion integrates **tensors** and **automatic differentiation** as first-class language features.

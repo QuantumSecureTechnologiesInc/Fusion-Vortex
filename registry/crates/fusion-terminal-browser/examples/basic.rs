@@ -1,0 +1,36 @@
+//! Basic browser example
+
+use fusion_terminal_browser::{Browser, BrowserConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize logging
+    tracing_subscriber::fmt::init();
+
+    // Create browser configuration
+    let config = BrowserConfig::default();
+
+    // Create browser instance
+    let mut browser = Browser::new(config)?;
+
+    // Navigate to a website
+    println!("Navigating to example.com...");
+    browser.navigate("https://example.com")?;
+
+    // Get page information
+    let title = browser.title()?;
+    let url = browser.current_url()?;
+
+    println!("Page title: {}", title);
+    println!("Current URL: {}", url);
+
+    // Render to terminal
+    println!("Rendering to terminal...");
+    browser.render()?;
+
+    // Wait for user to see the result
+    println!("\nPress Enter to continue...");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
+
+    Ok(())
+}

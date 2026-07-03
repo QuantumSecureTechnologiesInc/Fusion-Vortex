@@ -1,0 +1,23 @@
+extern fn printf(fmt: string, ...) -> int;
+extern fn access(path: string, mode: int) -> int;
+
+fn load_and_verify(target_path: string) -> int {
+    printf("[loader] Checking: %s\n", target_path);
+    let exists = access(target_path, 0);
+    if exists != 0 {
+        printf("  [error] Not found.\n");
+        return 1;
+    }
+    printf("  [success] Found.\n");
+    return 0;
+}
+
+fn main() -> int {
+    printf("=== Mini Supernova ===\n");
+    let r = load_and_verify("target/toolchain_production/test.fu");
+    if r != 0 {
+        printf("[supernova] Load failed, continuing.\n");
+    }
+    printf("Done.\n");
+    return 0;
+}

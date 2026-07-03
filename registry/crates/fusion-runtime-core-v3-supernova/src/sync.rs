@@ -1,0 +1,81 @@
+// src/sync.rs
+// Async Synchronization Primitives
+
+use std::collections::VecDeque;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll, Waker};
+
+struct MutexState {
+    locked: bool,
+    waiters: VecDeque<Waker>,
+}
+
+pub struct AsyncMutex<T> {
+    state: Arc<Mutex<MutexState>>,
+    data: Arc<Mutex<T>>,
+}
+
+impl<T> AsyncMutex<T> {
+    pub fn new(t: T) -> Self {
+        Self {
+            state: Arc::new(Mutex::new(MutexState {
+                locked: false,
+                waiters: VecDeque::new(),
+            })),
+            data: Arc::new(Mutex::new(t)),
+        }
+    }
+
+    pub fn lock(&self) -> LockFuture<'_, T> {
+        LockFuture {
+            mutex: self,
+            acquired: false,
+        }
+    }
+}
+
+pub struct LockFuture<'a, T> {
+    mutex: &'a AsyncMutex<T>,
+    acquired: bool,
+}
+
+impl<'a, T> Future for LockFuture<'a, T> {
+    type Output = MutexGuard<'a, T>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let mut state = self.mutex.state.lock().unwrap();
+        if state.locked {
+            if !self.acquired {
+                state.waiters.push_back(cx.waker().clone());
+                self.acquired = true;
+            }
+            Poll::Pending
+        } else {
+            state.locked = true;
+            Poll::Ready(MutexGuard { mutex: self.mutex })
+        }
+    }
+}
+
+pub struct MutexGuard<'a, T> {
+    mutex: &'a AsyncMutex<T>,
+}
+
+impl<'a, T> Drop for MutexGuard<'a, T> {
+    fn drop(&mut self) {
+        let mut state = self.mutex.state.lock().unwrap();
+        state.locked = false;
+        if let Some(waker) = state.waiters.pop_front() {
+            waker.wake();
+        }
+    }
+}
+
+impl<'a, T> std::ops::Deref for MutexGuard<'a, T> {
+    type Target = Mutex<T>;
+    fn deref(&self) -> &Self::Target {
+        &self.mutex.data
+    }
+}

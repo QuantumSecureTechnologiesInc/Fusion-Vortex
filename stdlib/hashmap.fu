@@ -1,170 +1,178 @@
-// stdlib/hashmap.fu - HashMap<K, V> implementation
+// stdlib/hashmap.fu - Handle-based HashMap implementations for Fusion.
+// Structs are small (handle ≤ 16 bytes); real data lives in the C runtime.
+// Three concrete map types: IntInt, IntString, StringString.
+//
+// All operations go through extern C functions (fusion_hmii_*, fusion_hmis_*,
+// fusion_hmss_*) defined in runtime/hashmap_runtime.c.
 
-// Entry in a hash bucket (for collision handling via chaining)
-class HashMapEntry<K, V> {
-    key: K;
-    value: V;
-    hash_code: int;
-    has_next: bool;
+extern fn fusion_hmii_create() -> int;
+extern fn fusion_hmii_destroy(h: int) -> void;
+extern fn fusion_hmii_size(h: int) -> int;
+extern fn fusion_hmii_insert(h: int, key: int, value: int) -> void;
+extern fn fusion_hmii_get(h: int, key: int) -> int;
+extern fn fusion_hmii_contains(h: int, key: int) -> int;
+extern fn fusion_hmii_remove(h: int, key: int) -> void;
+
+extern fn fusion_hmis_create() -> int;
+extern fn fusion_hmis_destroy(h: int) -> void;
+extern fn fusion_hmis_size(h: int) -> int;
+extern fn fusion_hmis_insert(h: int, key: int, value: string) -> void;
+extern fn fusion_hmis_get(h: int, key: int) -> string;
+extern fn fusion_hmis_contains(h: int, key: int) -> int;
+extern fn fusion_hmis_remove(h: int, key: int) -> void;
+
+extern fn fusion_hmss_create() -> int;
+extern fn fusion_hmss_destroy(h: int) -> void;
+extern fn fusion_hmss_size(h: int) -> int;
+extern fn fusion_hmss_insert(h: int, key: string, value: string) -> void;
+extern fn fusion_hmss_get(h: int, key: string) -> string;
+extern fn fusion_hmss_contains(h: int, key: string) -> int;
+extern fn fusion_hmss_remove(h: int, key: string) -> void;
+
+// ============================================================
+// HashMapIntInt - maps int keys to int values
+// ============================================================
+struct HashMapIntInt {
+    handle: int,
+    _pad: int,
 }
 
-// HashMap - hash table with separate chaining
-class HashMap<K, V> where K: Hash + Eq {
-    // Note: Using simplified structure due to Fusion limitations
-    // In production, this would use a proper bucket array
-    size: int;
-    capacity: int;
-    threshold: int;
-}
-
-impl<K: Hash + Eq, V> HashMap<K, V> {
-    // Create new empty HashMap
-    fn new() -> HashMap<K, V> {
-        let capacity = 16;
-        let load_factor = 75; // 0.75 * 100
-        let threshold = (capacity * load_factor) / 100;
-        
-        return HashMap {
-            size: 0,
-            capacity: capacity,
-            threshold: threshold
-        };
+impl HashMapIntInt {
+    fn new() -> HashMapIntInt {
+        let h: int = fusion_hmii_create();
+        return HashMapIntInt { handle: h, _pad: 0 };
     }
-    
-    // Create with specific capacity
-    fn with_capacity(capacity: int) -> HashMap<K, V> {
-        let load_factor = 75;
-        let threshold = (capacity * load_factor) / 100;
-        
-        return HashMap {
-            size: 0,
-            capacity: capacity,
-            threshold: threshold
-        };
+    fn len(m: HashMapIntInt) -> int {
+        return fusion_hmii_size(m.handle);
     }
-    
-    // Get number of entries
-    fn len(self) -> int {
-        return self.size;
+    fn is_empty(m: HashMapIntInt) -> bool {
+        return fusion_hmii_size(m.handle) == 0;
     }
-    
-    // Check if empty
-    fn is_empty(self) -> bool {
-        return self.size == 0;
+    fn insert(m: HashMapIntInt, key: int, value: int) -> HashMapIntInt {
+        fusion_hmii_insert(m.handle, key, value);
+        return m;
     }
-    
-    // Get capacity
-    fn capacity(self) -> int {
-        return self.capacity;
+    fn get(m: HashMapIntInt, key: int) -> int {
+        return fusion_hmii_get(m.handle, key);
     }
-    
-    // Compute bucket index from hash
-    fn bucket_index(self, hash: int) -> int {
-        // Use modulo to map hash to bucket index
-        let index = hash % self.capacity;
-        if index < 0 {
-            return 0 - index; // Make positive
-        } else {
-            return index;
-        }
+    fn contains_key(m: HashMapIntInt, key: int) -> bool {
+        return fusion_hmii_contains(m.handle, key) != 0;
     }
-    
-    // Insert key-value pair (stub implementation)
-    // In real implementation, would store in bucket array
-    fn insert(mut self, key: K, value: V) -> Option<V> {
-        let hash = key.hash();
-        let index = self.bucket_index(hash);
-        
-        // Stub: In real implementation, would:
-        // 1. Check if key exists, return old value
-        // 2. Insert new entry in bucket at index
-        // 3. Handle collisions with chaining
-        // 4. Resize if needed
-        
-        self.size = self.size + 1;
-        
-        // Check if resize needed
-        if self.size > self.threshold {
-            self.resize();
-        }
-        
-        return Option::None; // No old value
+    fn remove(m: HashMapIntInt, key: int) -> HashMapIntInt {
+        fusion_hmii_remove(m.handle, key);
+        return m;
     }
-    
-    // Get value by key (stub implementation)
-    fn get(self, key: K) -> Option<V> {
-        let hash = key.hash();
-        let index = self.bucket_index(hash);
-        
-        // Stub: In real implementation, would:
-        // 1. Find bucket at index
-        // 2. Search chain for matching key
-        // 3. Return value if found
-        
-        return Option::None;
-    }
-    
-    // Check if key exists
-    fn contains_key(self, key: K) -> bool {
-        return self.get(key).is_some();
-    }
-    
-    // Remove key-value pair (stub implementation)
-    fn remove(mut self, key: K) -> Option<V> {
-        let hash = key.hash();
-        let index = self.bucket_index(hash);
-        
-        // Stub: In real implementation, would:
-        // 1. Find bucket at index
-        // 2. Search chain for matching key
-        // 3. Remove entry and return value
-        
-        if self.size > 0 {
-            self.size = self.size - 1;
-        }
-        
-        return Option::None;
-    }
-    
-    // Clear all entries
-    fn clear(mut self) {
-        self.size = 0;
-        // In real implementation, would clear all buckets
-    }
-    
-    // Resize hash table (called when load factor exceeded)
-    fn resize(mut self) {
-        let new_capacity = self.capacity * 2;
-        let load_factor = 75;
-        let new_threshold = (new_capacity * load_factor) / 100;
-        
-        // Stub: In real implementation, would:
-        // 1. Allocate new bucket array with new_capacity
-        // 2. Rehash all existing entries
-        // 3. Update capacity and threshold
-        
-        self.capacity = new_capacity;
-        self.threshold = new_threshold;
+    fn destroy(m: HashMapIntInt) -> void {
+        fusion_hmii_destroy(m.handle);
     }
 }
 
-// Helper to create HashMap from pairs (conceptual)
-fn hashmap_from<K: Hash + Eq, V>(pairs: Vector<(K, V)>) -> HashMap<K, V> {
-    let mut map = HashMap::with_capacity(pairs.len());
-    
-    // In real implementation, would iterate and insert all pairs
-    // for pair in pairs {
-    //     map.insert(pair.0, pair.1);
-    // }
-    
-    return map;
+// Standalone helpers
+fn hashmap_int_int_new() -> HashMapIntInt {
+    return HashMapIntInt::new();
+}
+fn hashmap_int_int_insert(m: HashMapIntInt, key: int, value: int) -> HashMapIntInt {
+    return HashMapIntInt::insert(m, key, value);
+}
+fn hashmap_int_int_get(m: HashMapIntInt, key: int) -> int {
+    return HashMapIntInt::get(m, key);
+}
+fn hashmap_int_int_len(m: HashMapIntInt) -> int {
+    return HashMapIntInt::len(m);
 }
 
-// Example usage:
-// let mut map = HashMap::<int, string>::new();
-// map.insert(1, "one");
-// map.insert(2, "two");
-// let value = map.get(1); // Some("one")
-// let exists = map.contains_key(2); // true
-// map.remove(1);
-// let size = map.len(); // 1
+// ============================================================
+// HashMapIntString - maps int keys to string values
+// ============================================================
+struct HashMapIntString {
+    handle: int,
+    _pad: int,
+}
+
+impl HashMapIntString {
+    fn new() -> HashMapIntString {
+        let h: int = fusion_hmis_create();
+        return HashMapIntString { handle: h, _pad: 0 };
+    }
+    fn len(m: HashMapIntString) -> int {
+        return fusion_hmis_size(m.handle);
+    }
+    fn is_empty(m: HashMapIntString) -> bool {
+        return fusion_hmis_size(m.handle) == 0;
+    }
+    fn insert(m: HashMapIntString, key: int, value: string) -> HashMapIntString {
+        fusion_hmis_insert(m.handle, key, value);
+        return m;
+    }
+    fn get(m: HashMapIntString, key: int) -> string {
+        return fusion_hmis_get(m.handle, key);
+    }
+    fn contains_key(m: HashMapIntString, key: int) -> bool {
+        return fusion_hmis_contains(m.handle, key) != 0;
+    }
+    fn remove(m: HashMapIntString, key: int) -> HashMapIntString {
+        fusion_hmis_remove(m.handle, key);
+        return m;
+    }
+    fn destroy(m: HashMapIntString) -> void {
+        fusion_hmis_destroy(m.handle);
+    }
+}
+
+fn hashmap_int_string_new() -> HashMapIntString {
+    return HashMapIntString::new();
+}
+fn hashmap_int_string_insert(m: HashMapIntString, key: int, value: string) -> HashMapIntString {
+    return HashMapIntString::insert(m, key, value);
+}
+fn hashmap_int_string_get(m: HashMapIntString, key: int) -> string {
+    return HashMapIntString::get(m, key);
+}
+
+// ============================================================
+// HashMapStringString - maps string keys to string values
+// ============================================================
+struct HashMapStringString {
+    handle: int,
+    _pad: int,
+}
+
+impl HashMapStringString {
+    fn new() -> HashMapStringString {
+        let h: int = fusion_hmss_create();
+        return HashMapStringString { handle: h, _pad: 0 };
+    }
+    fn len(m: HashMapStringString) -> int {
+        return fusion_hmss_size(m.handle);
+    }
+    fn is_empty(m: HashMapStringString) -> bool {
+        return fusion_hmss_size(m.handle) == 0;
+    }
+    fn insert(m: HashMapStringString, key: string, value: string) -> HashMapStringString {
+        fusion_hmss_insert(m.handle, key, value);
+        return m;
+    }
+    fn get(m: HashMapStringString, key: string) -> string {
+        return fusion_hmss_get(m.handle, key);
+    }
+    fn contains_key(m: HashMapStringString, key: string) -> bool {
+        return fusion_hmss_contains(m.handle, key) != 0;
+    }
+    fn remove(m: HashMapStringString, key: string) -> HashMapStringString {
+        fusion_hmss_remove(m.handle, key);
+        return m;
+    }
+    fn destroy(m: HashMapStringString) -> void {
+        fusion_hmss_destroy(m.handle);
+    }
+}
+
+fn hashmap_string_string_new() -> HashMapStringString {
+    return HashMapStringString::new();
+}
+fn hashmap_string_string_insert(m: HashMapStringString, key: string, value: string) -> HashMapStringString {
+    return HashMapStringString::insert(m, key, value);
+}
+fn hashmap_string_string_get(m: HashMapStringString, key: string) -> string {
+    return HashMapStringString::get(m, key);
+}

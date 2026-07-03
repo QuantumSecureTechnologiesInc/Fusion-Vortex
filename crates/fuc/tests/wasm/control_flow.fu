@@ -1,0 +1,52 @@
+// WASM backend test: control flow (if/else, while loops)
+// Compile with: fuc --target wasm tests/wasm/control_flow.fu -o control_flow.wasm
+
+fn max(x: int, y: int) -> int {
+    if x > y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+fn abs(x: int) -> int {
+    if x < 0 {
+        return -x;
+    }
+    return x;
+}
+
+fn is_zero(x: int) -> int {
+    return !x;
+}
+
+fn factorial(n: int) -> int {
+    let mut result: int = 1;
+    let mut i: int = 1;
+    while i <= n {
+        result = result * i;
+        i = i + 1;
+    }
+    return result;
+}
+
+fn countdown(n: int) -> int {
+    let mut x: int = n;
+    while x > 0 {
+        x = x - 1;
+    }
+    return 0;
+}
+
+fn nested_control(x: int) -> int {
+    let mut result: int = 0;
+    while x > 0 {
+        if x > 10 {
+            result = 1;
+        } else {
+            result = 2;
+        }
+        x = x - 1;
+    }
+    return result;
+}

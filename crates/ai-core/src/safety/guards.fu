@@ -1,0 +1,40 @@
+// NeuralSeal Guard Modules - Security Clearance Enforcement
+// Converted from FU Parts: neuralseal_guard_modules.rs
+
+use crate::safety::error_states;
+
+/// Neural security guard with atomic compromise tracking
+struct NeuralGuard {
+    is_compromised: int, // AtomicBool replacement
+}
+
+fn guard_initialize() -> NeuralGuard {
+    NeuralGuard { is_compromised: 0 }
+}
+
+/// Check clearance level and system integrity
+fn guard_ensure_clearance(guard: NeuralGuard, level: int) -> int {
+    // Check if system is compromised
+    if guard.is_compromised != 0 {
+        return error_states::SECURITY_PROCESSING_ERROR;
+    }
+
+    // Minimum clearance check
+    if level < 2 {
+        return error_states::SECURITY_ACCESS_DENIED;
+    }
+
+    return error_states::SECURITY_OK;
+}
+
+/// Raise the system compromise flag atomically
+fn guard_raise_compromise(guard: NeuralGuard) -> NeuralGuard {
+    let mut g = guard;
+    g.is_compromised = 1;
+    return g;
+}
+
+/// Check if guard reports compromised state
+fn guard_is_compromised(guard: NeuralGuard) -> int {
+    return guard.is_compromised;
+}

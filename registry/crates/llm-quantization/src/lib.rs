@@ -1,0 +1,121 @@
+/// Production INT8 Quantization for LLM weights and KV cache
+use fusion_core::types::tensor::Matrix;
+use fusion_core::FusionResult;
+
+pub mod int8 {
+    use super::*;
+
+    /// INT8 quantized matrix with scale and zero-point
+    pub struct QuantizedMatrix {
+        /// Quantized data (INT8)
+        pub data: Vec<i8>,
+        /// Scale factor for dequantization
+        pub scale: f64,
+        /// Zero point
+        pub zero_point: i8,
+        /// Original shape
+        pub shape: Vec<usize>,
+    }
+
+    impl QuantizedMatrix {
+        /// Quantize a float matrix to INT8
+        pub fn quantize(input: &Matrix<f64>) -> FusionResult<Self> {
+            let data_flat: Vec<f64> = input.data.iter().cloned().collect();
+
+            // Find min/max for symmetric quantization
+            let min_val = data_flat.iter().cloned().fold(f64::INFINITY, f64::min);
+            let max_val = data_flat.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+
+            // Calculate scale: map [min, max] to [-127, 127]
+            let scale = (max_val - min_val) / 254.0;
+            let zero_point = 0i8; // Symmetric quantization
+
+            // Quantize each value
+            let quantized: Vec<i8> = data_flat
+                .iter()
+                .map(|&v| {
+                    let normalized = (v - min_val) / scale - 127.0;
+                    normalized.round().clamp(-127.0, 127.0) as i8
+                })
+                .collect();
+
+            Ok(Self {
+                data: quantized,
+                scale,
+                zero_point,
+                shape: input.shape().to_vec(),
+            })
+        }
+
+        /// Dequantize back to float matrix
+        pub fn dequantize(&self) -> FusionResult<Matrix<f64>> {
+            let dequantized: Vec<f64> = self
+                .data
+                .iter()
+                .map(|&q| (q as f64 + 127.0) * self.scale)
+                .collect();
+
+            let shape = [self.shape[0], self.shape[1]];
+            Matrix::new(dequantized, shape)
+        }
+    }
+}
+
+pub mod int4 {
+    use super::*;
+
+    /// INT4 quantized matrix (for even more compression)
+    pub struct QuantizedMatrix {
+        /// Packed INT4 data (2 values per byte)
+        pub data: Vec<u8>,
+        pub scale: f64,
+        pub shape: Vec<usize>,
+    }
+
+    impl QuantizedMatrix {
+        pub fn quantize(input: &Matrix<f64>) -> FusionResult<Self> {
+            // Stub implementation - pack 2 INT4 values per byte
+            let data_flat: Vec<f64> = input.data.iter().cloned().collect();
+            let min_val = data_flat.iter().cloned().fold(f64::INFINITY, f64::min);
+            let max_val = data_flat.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            let scale = (max_val - min_val) / 14.0; // INT4 range: -7 to 7
+
+            let mut packed = Vec::new();
+            for chunk in data_flat.chunks(2) {
+                let v1 = ((chunk[0] - min_val) / scale - 7.0)
+                    .round()
+                    .clamp(-7.0, 7.0) as i8;
+                let v2 = if chunk.len() > 1 {
+                    ((chunk[1] - min_val) / scale - 7.0)
+                        .round()
+                        .clamp(-7.0, 7.0) as i8
+                } else {
+                    0
+                };
+                // Pack two 4-bit values into one byte
+                packed.push(((v1 as u8 & 0x0F) << 4) | (v2 as u8 & 0x0F));
+            }
+
+            Ok(Self {
+                data: packed,
+                scale,
+                shape: input.shape().to_vec(),
+            })
+        }
+
+        pub fn dequantize(&self) -> FusionResult<Matrix<f64>> {
+            let mut dequantized = Vec::new();
+            for &byte in &self.data {
+                let v1 = ((byte >> 4) as i8 - 7) as f64 * self.scale;
+                let v2 = ((byte & 0x0F) as i8 - 7) as f64 * self.scale;
+                dequantized.push(v1);
+                dequantized.push(v2);
+            }
+            // Trim to original size
+            dequantized.truncate(self.shape.iter().product());
+
+            let shape = [self.shape[0], self.shape[1]];
+            Matrix::new(dequantized, shape)
+        }
+    }
+}

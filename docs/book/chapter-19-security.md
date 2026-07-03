@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 19: Security and Post-Quantum Cryptography
 
 In an era where quantum computers threaten to break traditional encryption (RSA, ECC), security must be proactive, not reactive. Fusion is designed with **Post-Quantum Cryptography (PQC)** at its core. It also emphasizes memory safety (eliminating buffer overflows) and type safety to prevent common vulnerabilities.

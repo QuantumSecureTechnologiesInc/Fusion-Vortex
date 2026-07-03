@@ -1,0 +1,14 @@
+[package]
+name = "llm-builder"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: LLM computation graph builder and optimizer"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["llm builder"]
+categories = ["algorithms"]
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = "1.0.0"

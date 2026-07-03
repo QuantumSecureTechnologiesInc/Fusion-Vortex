@@ -1,0 +1,39 @@
+// stdlib/weave_kem.fu - Weave-KEM Post-Quantum Key Encapsulation (FFI to C library)
+//
+// Post-quantum KEM: 50% of the 50/50 hybrid crypto model.
+// Wraps HyperCycle PQC C library's Weave-KEM (quaternion-based) implementation.
+
+extern fn hc_kem_keygen(public_key: string, secret_key: string) -> int;
+extern fn hc_kem_encapsulate(ciphertext: string, shared_secret: string, public_key: string) -> int;
+extern fn hc_kem_decapsulate(shared_secret: string, ciphertext: string, secret_key: string) -> int;
+
+/// Weave-KEM keypair
+struct WeaveKEMKeyPair {
+    public_key: string, // 96 bytes
+    secret_key: string, // 192 bytes
+}
+
+/// Generate Weave-KEM keypair
+fn weave_kem_keygen() -> WeaveKEMKeyPair {
+    let mut pk: string = "                                                                                                "; // 96 bytes
+    let mut sk: string = "                                                                                                                                                                                                "; // 192 bytes
+    let result: int = hc_kem_keygen(pk, sk);
+    
+    let kp: WeaveKEMKeyPair = WeaveKEMKeyPair { public_key: pk, secret_key: sk };
+    return kp;
+}
+
+/// Encapsulate: generate ciphertext and shared secret from public key
+fn weave_kem_encapsulate(pk: string) -> (string, string) {
+    let mut ct: string = "                                                                                                                                "; // 128 bytes
+    let mut ss: string = "                                "; // 32 bytes
+    let result: int = hc_kem_encapsulate(ct, ss, pk);
+    return (ct, ss);
+}
+
+/// Decapsulate: recover shared secret from ciphertext and secret key
+fn weave_kem_decapsulate(sk: string, ct: string) -> string {
+    let mut ss: string = "                                "; // 32 bytes
+    let result: int = hc_kem_decapsulate(ss, ct, sk);
+    return ss;
+}

@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 8: Common Collections
 
 Fusion's standard library includes a number of very useful data structures called **collections**. Unlike the built-in array and tuple types, data in these collections is stored on the heap, which means the amount of data does not need to be known at compile time and can grow or shrink as the program runs.

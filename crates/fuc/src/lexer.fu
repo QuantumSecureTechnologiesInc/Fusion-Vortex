@@ -99,10 +99,10 @@ fn unescape_string(input: &str) -> FString {
 /// Token paired with a span.
 type LexerSpan = Range<FSize>;
 type SpannedToken = (Token, LexerSpan);
-fn is_ident_start(ch: u8) -> FBool {
+fn is_ident_start(ch: int) -> FBool {
     return (ch >= b'a' && ch <= b'z') || (ch >= b'A' && ch <= b'Z') || ch == b'_';
 }
-fn is_ident_continue(ch: u8) -> FBool {
+fn is_ident_continue(ch: int) -> FBool {
     return is_ident_start(ch) || (ch >= b'0' && ch <= b'9');
 }
 fn keyword_or_ident(text: FString) -> Token {

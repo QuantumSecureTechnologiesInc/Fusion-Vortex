@@ -1,5 +1,5 @@
 [package]
-name = "tester"
+name = "fusion-tester"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -14,5 +14,4 @@ serde_json = { workspace = true }
 fusion-core = { workspace = true }
 fusion-toolchain = { path = "../../../crates/toolchain" }
 fusion_std = "1.0.0"
-
 

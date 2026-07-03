@@ -1,0 +1,46 @@
+{
+  "generated": "2026-07-01",
+  "total_files": 35,
+  "fully_supported": 27,
+  "partially_supported": 1,
+  "aspirational": 7,
+
+  "fully_supported_files": [
+    { "file": "crates/fuc/src/ast.fu", "lines": 330, "status": "fully-supported" },
+    { "file": "crates/fuc/src/cli.fu", "lines": 83, "status": "fully-supported" },
+    { "file": "crates/fuc/src/codegen.fu", "lines": 93, "status": "fully-supported" },
+    { "file": "crates/fuc/src/dummy.fu", "lines": 2, "status": "fully-supported" },
+    { "file": "crates/fuc/src/gpu.fu", "lines": 22, "status": "fully-supported" },
+    { "file": "crates/fuc/src/hypercycle.fu", "lines": 21, "status": "fully-supported" },
+    { "file": "crates/fuc/src/io.fu", "lines": 20, "status": "fully-supported" },
+    { "file": "crates/fuc/src/ir.fu", "lines": 1132, "status": "fully-supported" },
+    { "file": "crates/fuc/src/lexer.fu", "lines": 505, "status": "fully-supported" },
+    { "file": "crates/fuc/src/lib.fu", "lines": 21, "status": "fully-supported" },
+    { "file": "crates/fuc/src/llvm.fu", "lines": 2002, "status": "fully-supported" },
+    { "file": "crates/fuc/src/main.fu", "lines": 18, "status": "fully-supported" },
+    { "file": "crates/fuc/src/mem_stdlib.fu", "lines": 22, "status": "fully-supported" },
+    { "file": "crates/fuc/src/optimizer.fu", "lines": 194, "status": "fully-supported" },
+    { "file": "crates/fuc/src/parser.fu", "lines": 1487, "status": "fully-supported" },
+    { "file": "crates/fuc/src/pure_fusion_compiler.fu", "lines": 232, "status": "fully-supported" },
+    { "file": "crates/fuc/src/sema.fu", "lines": 1575, "status": "fully-supported" },
+    { "file": "crates/fuc/src/stage1_parser_api.fu", "lines": 75, "status": "fully-supported" },
+    { "file": "crates/fuc/src/stage1_sema_api.fu", "lines": 20, "status": "fully-supported" },
+    { "file": "crates/fuc/src/stdlib.fu", "lines": 15, "status": "fully-supported" }
+  ],
+
+  "partially_supported_files": [
+    { "file": "crates/fuc/src/hypercycle_suite.fu", "lines": 39, "status": "partially-supported", "issue": "uses import keyword" }
+  ],
+
+  "aspirational_files": [
+    { "file": "crates/fuc/src/lexer_selfhost.fu", "lines": 73, "status": "aspirational", "issue": "uses import keyword" },
+    { "file": "crates/fuc/src/main_selfhost.fu", "lines": 42, "status": "aspirational", "issue": "uses import keyword" },
+    { "file": "crates/fuc/src/mem.fu", "lines": 68, "status": "aspirational", "issue": "uses import keyword" },
+    { "file": "crates/fuc/src/parser_selfhost.fu", "lines": 63, "status": "aspirational", "issue": "uses import keyword" },
+    { "file": "crates/fuc/src/vortex.fu", "lines": 38, "status": "aspirational", "issue": "uses import keyword" }
+  ],
+
+  "root_cause": "The bootstrap compiler (fuc.exe) does not recognize the 'import' keyword. All 7 failing files use 'import std.XYZ;' syntax. The bootstrap compiler supports 'mod' and 'use' declarations instead.",
+
+  "fix_required": "Add 'import' as a keyword to the bootstrap compiler's lexer, or convert aspirational files from 'import' to 'mod'/'use' syntax."
+}

@@ -1,0 +1,19 @@
+﻿[package]
+name = "fusion-debugger"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Debug Adapter Protocol (DAP) implementation for Fusion."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "tool", "debugger", "dap", "tool"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+fusion_runtime_core = { workspace = true }
+

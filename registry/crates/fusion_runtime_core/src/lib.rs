@@ -2,88 +2,92 @@
 //!
 //! A custom, heterogeneous runtime engine designed specifically for Quantum/AI/Classical
 //! hybrid workloads. Components are interwoven to work together seamlessly.
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::sync::Arc;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-// __FU_COMPAT_END__
+
 use parking_lot::RwLock;
+use std::sync::Arc;
 use tracing::info;
+
 pub use fusion_runtime_hal::{GpuBackend, HardwareLayer};
 pub use fusion_runtime_mem_mgr::{DeviceMemory, MemoryManager};
-pub use fusion_runtime_scheduler::{
-    Scheduler, TaskPriority, TaskQueue, VariationalLoopController,
-};
-pub mod config;
-pub mod executor;
-pub mod task;
-pub mod collective_comms;
-pub mod device_memory;
-pub mod event_poller;
-pub mod fiber;
-pub mod qpu_sequencer;
-pub mod shared_memory;
-pub mod timer;
-pub mod llm;
+pub use fusion_runtime_scheduler::{Scheduler, TaskPriority, TaskQueue, VariationalLoopController};
+
+mod config;
+mod executor;
+mod task;
+
+// Low-level interwoven components
+mod collective_comms;
+mod device_memory;
+mod event_poller;
+mod fiber;
+mod qpu_sequencer;
+mod shared_memory;
+mod timer;
+
 pub use config::{QoSMode, RuntimeConfig};
 pub use executor::Executor;
 pub use task::{JoinError, Task, TaskHandle};
-pub use collective_comms::{
-    CollectiveComms, CollectiveOp, CommBackend, CommHandle, ReduceOp,
-};
-pub use device_memory::{
-    DeviceMemHandle, DeviceMemStats, DeviceMemoryAllocator, DeviceType,
-};
+
+// Export interwoven components
+pub use collective_comms::{CollectiveComms, CollectiveOp, CommBackend, CommHandle, ReduceOp};
+pub use device_memory::{DeviceMemHandle, DeviceMemStats, DeviceMemoryAllocator, DeviceType};
 pub use event_poller::{EventId, EventPoller, EventType, FusedIoReactor, IoEvent};
 pub use fiber::{FiberContext, FiberScheduler, FiberState, FiberStats};
-pub use qpu_sequencer::{
-    CircuitRequest, QpuJobId, QpuJobResult, QpuJobSequencer, SequencerStats,
-};
+pub use qpu_sequencer::{CircuitRequest, QpuJobId, QpuJobResult, QpuJobSequencer, SequencerStats};
 pub use shared_memory::{SharedMemoryManager, ShmId, ShmRegion};
 pub use timer::{global_timer, Deadline, LowJitterTimer};
-pub use llm::{LlmConfig, LlmRuntime};
+
 /// The main Fusion runtime with interwoven components.
 ///
 /// Components work together in an integrated fashion:
 /// - Fiber Scheduler ↔ VLC ↔ Timer
-/// - Event Poller ↔ Collective Comms ↔ QPU Sequencer
+/// - Event Poller ↔ Collective Comms ↔ QPU Sequencer  
 /// - Shared Memory ↔ Device Memory ↔ Memory Manager
 /// - All components coordinate through Scheduler and HAL
 pub struct Runtime {
+    // === INTERWOVEN CONTROL & OPTIMIZATION ===
     fiber_scheduler: Arc<FiberScheduler>,
     timer: Arc<LowJitterTimer>,
     event_poller: Arc<FusedIoReactor>,
     vlc: Arc<VariationalLoopController>,
+
+    // === INTERWOVEN RESOURCE MANAGEMENT ===
     shared_memory: Arc<SharedMemoryManager>,
     device_memory: Arc<DeviceMemoryAllocator>,
     memory_manager: Arc<MemoryManager>,
+
+    // === INTERWOVEN COMMUNICATION ===
     collective_comms: Arc<CollectiveComms>,
     qpu_sequencer: Arc<QpuJobSequencer>,
+
+    // === CORE COORDINATION ===
     scheduler: Arc<Scheduler>,
     hal: Arc<HardwareLayer>,
     config: RuntimeConfig,
     executor: Arc<Executor>,
     metrics: Arc<RwLock<RuntimeMetrics>>,
 }
+
 /// Runtime performance metrics
 #[derive(Debug, Default, Clone)]
 pub struct RuntimeMetrics {
-    pub tasks_spawned: FU64,
-    pub tasks_completed: FU64,
-    pub gpu_kernel_launches: FU64,
-    pub qpu_submissions: FU64,
-    pub zero_copy_transfers: FU64,
-    pub total_latency_us: FU64,
+    pub tasks_spawned: u64,
+    pub tasks_completed: u64,
+    pub gpu_kernel_launches: u64,
+    pub qpu_submissions: u64,
+    pub zero_copy_transfers: u64,
+    pub total_latency_us: u64,
 }
+
 impl Runtime {
     pub fn builder() -> RuntimeBuilder {
         RuntimeBuilder::default()
     }
+
     pub fn new() -> Self {
         Self::builder().build()
     }
+
     pub fn block_on<F>(&self, future: F) -> F::Output
     where
         F: std::future::Future + Send + 'static,
@@ -91,6 +95,7 @@ impl Runtime {
     {
         self.executor.block_on(future)
     }
+
     pub fn spawn<F>(&self, future: F) -> TaskHandle<F::Output>
     where
         F: std::future::Future + Send + 'static,
@@ -99,6 +104,9 @@ impl Runtime {
         self.metrics.write().tasks_spawned += 1;
         self.executor.spawn(future, TaskPriority::Normal)
     }
+
+    // === Accessor methods for all interwoven components ===
+
     pub fn fiber_scheduler(&self) -> &FiberScheduler {
         &self.fiber_scheduler
     }
@@ -111,6 +119,7 @@ impl Runtime {
     pub fn vlc(&self) -> &VariationalLoopController {
         &self.vlc
     }
+
     pub fn shared_memory(&self) -> &SharedMemoryManager {
         &self.shared_memory
     }
@@ -120,12 +129,14 @@ impl Runtime {
     pub fn memory_manager(&self) -> &MemoryManager {
         &self.memory_manager
     }
+
     pub fn collective_comms(&self) -> &CollectiveComms {
         &self.collective_comms
     }
     pub fn qpu_sequencer(&self) -> &QpuJobSequencer {
         &self.qpu_sequencer
     }
+
     pub fn scheduler(&self) -> &Scheduler {
         &self.scheduler
     }
@@ -142,48 +153,58 @@ impl Runtime {
         self.metrics.read().clone()
     }
 }
+
 impl Default for Runtime {
     fn default() -> Self {
         Self::new()
     }
 }
+
 /// Builder for configuring the Fusion runtime
 #[derive(Default)]
 pub struct RuntimeBuilder {
-    enable_gpu: FBool,
-    enable_qpu: FBool,
+    enable_gpu: bool,
+    enable_qpu: bool,
     qos_mode: Option<QoSMode>,
     gpu_backend: Option<GpuBackend>,
-    worker_threads: Option<FSize>,
-    memory_pool_size: Option<FSize>,
+    worker_threads: Option<usize>,
+    memory_pool_size: Option<usize>,
 }
+
 impl RuntimeBuilder {
     pub fn enable_gpu(mut self) -> Self {
         self.enable_gpu = true;
         self
     }
+
     pub fn enable_qpu(mut self) -> Self {
         self.enable_qpu = true;
         self
     }
+
     pub fn enable_qos(mut self, mode: QoSMode) -> Self {
         self.qos_mode = Some(mode);
         self
     }
+
     pub fn gpu_backend(mut self, backend: GpuBackend) -> Self {
         self.gpu_backend = Some(backend);
         self
     }
-    pub fn worker_threads(mut self, threads: FSize) -> Self {
+
+    pub fn worker_threads(mut self, threads: usize) -> Self {
         self.worker_threads = Some(threads);
         self
     }
-    pub fn memory_pool_size(mut self, size: FSize) -> Self {
+
+    pub fn memory_pool_size(mut self, size: usize) -> Self {
         self.memory_pool_size = Some(size);
         self
     }
+
     pub fn build(self) -> Runtime {
         info!("Building Fusion Runtime with interwoven components");
+
         let config = RuntimeConfig {
             enable_gpu: self.enable_gpu,
             enable_qpu: self.enable_qpu,
@@ -192,6 +213,8 @@ impl RuntimeBuilder {
             worker_threads: self.worker_threads.unwrap_or_else(num_cpus),
             memory_pool_size: self.memory_pool_size.unwrap_or(1024 * 1024 * 1024),
         };
+
+        // Initialize all interwoven components
         let fiber_scheduler = Arc::new(FiberScheduler::new());
         let timer = Arc::new(LowJitterTimer::new());
         let event_poller = Arc::new(FusedIoReactor::new());
@@ -199,21 +222,28 @@ impl RuntimeBuilder {
         let device_memory = Arc::new(DeviceMemoryAllocator::new());
         let collective_comms = Arc::new(CollectiveComms::new(CommBackend::Nccl));
         let qpu_sequencer = Arc::new(QpuJobSequencer::default());
+
+        // Core components
         let scheduler_config: fusion_runtime_scheduler::RuntimeConfig = (&config).into();
         let scheduler = Arc::new(Scheduler::new(&scheduler_config));
+
         let mem_config: fusion_runtime_mem_mgr::RuntimeConfig = (&config).into();
         let memory_manager = Arc::new(MemoryManager::new(&mem_config));
+
         let hal_config: fusion_runtime_hal::RuntimeConfig = (&config).into();
         let hal = Arc::new(HardwareLayer::new(&hal_config));
+
         let executor = Arc::new(Executor::new(scheduler.clone(), &config));
         let vlc = Arc::new(VariationalLoopController::new());
         let metrics = Arc::new(RwLock::new(RuntimeMetrics::default()));
+
         info!("✅ All interwoven components initialized:");
         info!("   Control: Fiber Scheduler, Timer, Event Poller");
         info!("   Optimization: VLC");
         info!("   Resources: Shared Memory, Device Memory, Memory Manager");
         info!("   Communication: Collective Comms, QPU Sequencer");
         info!("   Core: Scheduler, HAL, Executor");
+
         Runtime {
             fiber_scheduler,
             timer,
@@ -232,20 +262,28 @@ impl RuntimeBuilder {
         }
     }
 }
-pub fn num_cpus() -> FSize {
-    std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
+
+fn num_cpus() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_runtime_creation() {
         let runtime = Runtime::new();
         assert!(runtime.config().worker_threads > 0);
     }
+
     #[test]
     fn test_all_components_accessible() {
         let runtime = Runtime::builder().enable_gpu().enable_qpu().build();
+
+        // Test all interwoven components are accessible
         let _ = runtime.fiber_scheduler();
         let _ = runtime.timer();
         let _ = runtime.event_poller();

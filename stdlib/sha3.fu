@@ -1,0 +1,20 @@
+// stdlib/sha3.fu - SHA3-256 Hash Function (FFI to C library)
+//
+// Wraps the HyperCycle PQC C library's SHA3-256 implementation.
+// This is the foundation for all hash-based crypto operations.
+
+extern fn hc_sha3_256(input: string, input_len: int, output: string);
+
+/// Compute SHA3-256 hash of input data
+/// Returns 32-byte hash as string
+fn sha3_256(input: string, input_len: int) -> string {
+    let mut output: string = "                                "; // 32 bytes
+    hc_sha3_256(input, input_len, output);
+    return output;
+}
+
+/// Compute SHA3-256 hash with known-length input
+fn sha3_256_bytes(input: string) -> string {
+    let len: int = 32; // Assume 32-byte input
+    return sha3_256(input, len);
+}

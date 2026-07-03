@@ -1,0 +1,106 @@
+//! Win32 Debug API FFI bindings for Fusion.
+//!
+//! All functions are thin wrappers around the C helper library
+//! `fusion_win32_debug.dll`. Link with -lfusion_win32_debug.
+
+/// Opaque handle type (maps to C HANDLE / void*).
+/// In Fusion's FFI, handles pass through as raw pointers (u64 on x64).
+type Handle = u64;
+
+/// Process ID.
+type Pid = u32;
+
+/// Thread ID.
+type Tid = u32;
+
+/// Address in target process.
+type Address = u64;
+
+/// Debug continue status.
+/// DBG_CONTINUE = 0x00010002, DBG_EXCEPTION_NOT_HANDLED = 0x80010001
+type ContinueStatus = u32;
+
+pub const DBG_CONTINUE: ContinueStatus = 0x00010002;
+pub const DBG_EXCEPTION_NOT_HANDLED: ContinueStatus = 0x80010001;
+
+/// Debug event codes.
+pub const EXCEPTION_DEBUG_EVENT: u32 = 1;
+pub const CREATE_THREAD_DEBUG_EVENT: u32 = 2;
+pub const CREATE_PROCESS_DEBUG_EVENT: u32 = 3;
+pub const EXIT_THREAD_DEBUG_EVENT: u32 = 4;
+pub const EXIT_PROCESS_DEBUG_EVENT: u32 = 5;
+pub const LOAD_DLL_DEBUG_EVENT: u32 = 6;
+pub const UNLOAD_DLL_DEBUG_EVENT: u32 = 7;
+pub const OUTPUT_DEBUG_STRING_EVENT: u32 = 8;
+pub const RIP_EVENT: u32 = 9;
+
+/// Exception codes.
+pub const EXCEPTION_BREAKPOINT: u32 = 0x80000003;
+pub const EXCEPTION_SINGLE_STEP: u32 = 0x80000004;
+pub const EXCEPTION_ACCESS_VIOLATION: u32 = 0xC0000005;
+
+// ---- Process Management ----
+
+/// Launch a process for debugging.
+/// Returns 1 on success, 0 on failure.
+extern fn fusion_debug_create_process(cmd_line: string, out_pid: u64, out_proc: u64, out_thread: u64) -> int;
+
+/// Terminate a debugged process.
+extern fn fusion_debug_terminate_process(proc: Handle, exit_code: u32) -> int;
+
+// ---- Debug Event Loop ----
+
+/// Wait for a debug event from the target process.
+/// `out_event` points to a pre-allocated DEBUG_EVENT buffer (at least 312 bytes).
+/// Returns 1 if an event was received, 0 on timeout/error.
+extern fn fusion_debug_wait_for_event(out_event: string, timeout_ms: u32) -> int;
+
+/// Resume the target after handling an event.
+extern fn fusion_debug_continue(pid: Pid, tid: Tid, continue_status: ContinueStatus) -> int;
+
+// ---- Thread Context (x86-64) ----
+
+/// Get the thread context. `ctx` points to a pre-allocated 1232-byte buffer.
+extern fn fusion_debug_get_thread_context(thread: Handle, ctx: string) -> int;
+
+/// Set the thread context. `ctx` points to a full CONTEXT_AMD64 struct.
+extern fn fusion_debug_set_thread_context(thread: Handle, ctx: string) -> int;
+
+// ---- Memory Access ----
+
+/// Read memory from the target process.
+extern fn fusion_debug_read_memory(proc: Handle, addr: Address, buf: string, size: u64, out_read: u64) -> int;
+
+/// Write memory to the target process.
+extern fn fusion_debug_write_memory(proc: Handle, addr: Address, buf: string, size: u64, out_written: u64) -> int;
+
+// ---- Breakpoint Primitives ----
+
+/// Write a single byte at target address (for INT3 injection).
+extern fn fusion_debug_write_byte(proc: Handle, addr: Address, byte_val: u8) -> int;
+
+/// Read a single byte from target address.
+extern fn fusion_debug_read_byte(proc: Handle, addr: Address, out_byte: string) -> int;
+
+// ---- Thread/Process Handles ----
+
+/// Open a thread handle by TID.
+extern fn fusion_debug_open_thread(tid: Tid) -> Handle;
+
+/// Close any handle.
+extern fn fusion_debug_close_handle(handle: Handle) -> int;
+
+// ---- Symbol Information ----
+
+/// Get the base address of a loaded module (e.g., "target.exe").
+/// Returns 1 on success, fills *out_base with DWORD64.
+extern fn fusion_debug_get_module_base(proc: Handle, module_name: string, out_base: string) -> int;
+
+/// Dump exported symbols from a module as "addr=name;addr=name;..." into buffer.
+/// Returns 1 on success, fills *out_count.
+extern fn fusion_debug_get_exports(proc: Handle, module_base: Address, buffer: string, buffer_size: u32, out_count: string) -> int;
+
+// ---- Utility ----
+
+/// Get last Win32 error code.
+extern fn fusion_debug_get_last_error() -> u32;

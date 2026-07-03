@@ -1,0 +1,70 @@
+//! Symbol table for PE executable exports.
+use super::error::{FdbgError, FdbgResult};
+
+/// A resolved symbol entry.
+pub struct Symbol {
+    /// Virtual address of the symbol.
+    pub address: u64,
+    /// Symbol name.
+    pub name: String,
+}
+
+/// Symbol table with exports parsed from a PE executable.
+pub struct SymbolTable {
+    /// Exported symbols sorted by address.
+    symbols: Vec<Symbol>,
+}
+
+impl SymbolTable {
+    /// Create an empty symbol table.
+    pub fn new() -> Self {
+        SymbolTable { symbols: Vec::new() }
+    }
+
+    /// Load symbols from the debugee's export table via the C helper.
+    /// `proc` is the process handle, `module_base` is the image base address.
+    pub fn load_exports(proc: u64, module_base: u64) -> FdbgResult<Self> {
+        let buf_size: u32 = 65536;
+        // Allocate buffer for export string data
+        // In Fusion, we'd use a fixed buffer or call malloc via FFI
+        // For simplicity, use a stack-allocated approach
+        let mut table = SymbolTable::new();
+
+        // The C helper writes exports as "addr=name;addr=name;..." into the buffer
+        // For Fusion, we wrap this with a foreign call
+        // NOTE: Full implementation requires the C DLL to be linked
+        // This is a structural port for compilation
+
+        Ok(table)
+    }
+
+    /// Resolve a symbol by name. Returns Some(address) if found.
+    pub fn resolve(&self, name: &str) -> Option<u64> {
+        for sym in &self.symbols {
+            if sym.name == name {
+                return Some(sym.address);
+            }
+        }
+        None
+    }
+
+    /// Find the closest symbol name for an address.
+    pub fn address_to_name(&self, addr: u64) -> Option<&str> {
+        let mut best: Option<&Symbol> = None;
+        for sym in &self.symbols {
+            if sym.address <= addr {
+                match best {
+                    None => best = Some(sym),
+                    Some(ref b) if sym.address > b.address => best = Some(sym),
+                    _ => {}
+                }
+            }
+        }
+        best.map(|s| s.name.as_str())
+    }
+
+    /// Number of symbols in the table.
+    pub fn len(&self) -> usize {
+        self.symbols.len()
+    }
+}

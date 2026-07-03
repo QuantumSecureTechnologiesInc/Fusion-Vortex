@@ -1,0 +1,102 @@
+// tests/test_stdlib_collections.fu - Tests for FVecInt from collections.fu
+// Validates the original compiler-compatible collection type.
+
+// --- FVecInt (from stdlib/collections.fu) ---
+struct FVecInt { data: [int; 1024], len: int }
+
+fn fvec_new() -> FVecInt {
+    let v: FVecInt = FVecInt { data: [0; 1024], len: 0 };
+    return v;
+}
+
+fn fvec_len(v: FVecInt) -> int { return v.len; }
+
+fn fvec_is_empty(v: FVecInt) -> bool { return v.len == 0; }
+
+fn fvec_push(v: FVecInt, value: int) -> FVecInt {
+    if v.len < 1024 {
+        v.data[v.len] = value;
+        v.len = v.len + 1;
+    }
+    return v;
+}
+
+fn fvec_get(v: FVecInt, index: int) -> int {
+    if v.len == 0 { return 0; }
+    if index < 0 { return 0; }
+    if index > v.len - 1 { return 0; }
+    return v.data[index];
+}
+
+// --- Runtime externs ---
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print_int(n: int) -> void;
+extern fn fusion_exit(code: int) -> void;
+
+fn assert_eq_int(actual: int, expected: int, msg: string) -> void {
+    if actual != expected {
+        fusion_println(msg);
+        fusion_println("FAIL: expected");
+        fusion_print_int(expected);
+        fusion_println("but got");
+        fusion_print_int(actual);
+        fusion_exit(1);
+    }
+}
+
+fn assert_true(cond: bool, msg: string) -> void {
+    if cond == false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected true");
+        fusion_exit(1);
+    }
+}
+
+fn assert_false(cond: bool, msg: string) -> void {
+    if cond != false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected false");
+        fusion_exit(1);
+    }
+}
+
+fn main() -> void {
+    fusion_println("=== Test: FVecInt ===");
+
+    // Test new and empty
+    let v: FVecInt = fvec_new();
+    assert_true(fvec_is_empty(v), "new FVecInt should be empty");
+    assert_eq_int(fvec_len(v), 0, "new FVecInt len should be 0");
+
+    // Test push and get
+    let v: FVecInt = fvec_push(v, 5);
+    let v: FVecInt = fvec_push(v, 10);
+    let v: FVecInt = fvec_push(v, 15);
+    let v: FVecInt = fvec_push(v, 20);
+    assert_eq_int(fvec_len(v), 4, "len after 4 pushes");
+    assert_false(fvec_is_empty(v), "not empty after push");
+
+    // Test element access
+    assert_eq_int(fvec_get(v, 0), 5, "get(0) = 5");
+    assert_eq_int(fvec_get(v, 1), 10, "get(1) = 10");
+    assert_eq_int(fvec_get(v, 2), 15, "get(2) = 15");
+    assert_eq_int(fvec_get(v, 3), 20, "get(3) = 20");
+
+    // Test out-of-bounds
+    assert_eq_int(fvec_get(v, 4), 0, "out-of-bounds returns 0");
+    assert_eq_int(fvec_get(v, -1), 0, "negative index returns 0");
+
+    // Test many elements
+    let v2: FVecInt = fvec_new();
+    let i: int = 0;
+    while i < 100 {
+        let v2: FVecInt = fvec_push(v2, i * 2);
+        i = i + 1;
+    }
+    assert_eq_int(fvec_len(v2), 100, "100 elements pushed");
+    assert_eq_int(fvec_get(v2, 0), 0, "first element = 0");
+    assert_eq_int(fvec_get(v2, 50), 100, "element 50 = 100");
+    assert_eq_int(fvec_get(v2, 99), 198, "last element = 198");
+
+    fusion_println("All collections tests PASSED");
+}

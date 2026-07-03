@@ -1,0 +1,227 @@
+#![allow(unused_imports)]
+/// REROPE (Relative + Rotary Position Embedding) Transformer
+///
+/// Combines absolute position encoding via RoPE with learned relative position biases
+/// for enhanced positional awareness in transformer attention mechanisms.
+///
+/// This implementation provides production-ready relative position bias computation
+/// and integration with rotary embeddings.
+use fusion_core::types::tensor::Matrix;
+use fusion_core::FusionResult;
+
+pub struct ReropeTransformer {
+    /// Maximum relative distance to consider
+    max_relative_distance: usize,
+    /// Number of attention heads
+    num_heads: usize,
+    /// Learnable relative position bias table
+    /// Shape: [2 * max_relative_distance - 1, num_heads]
+    relative_position_bias: Matrix<f64>,
+}
+
+impl ReropeTransformer {
+    /// Create a new REROPE transformer
+    ///
+    /// # Arguments
+    /// * `max_relative_distance` - Maximum relative distance between positions
+    /// * `num_heads` - Number of attention heads
+    pub fn new(max_relative_distance: usize, num_heads: usize) -> FusionResult<Self> {
+        // Initialize relative position bias table
+        // Size: (2 * max_relative_distance - 1) x num_heads
+        // This covers all relative positions from -max_distance to +max_distance
+        let bias_size = 2 * max_relative_distance - 1;
+        let relative_position_bias = Matrix::zeros([bias_size, num_heads]);
+
+        Ok(Self {
+            max_relative_distance,
+            num_heads,
+            relative_position_bias,
+        })
+    }
+
+    /// Initialize relative position bias with small random values
+    /// In production, this would be learned during training
+    pub fn initialize_bias(&mut self, scale: f64) -> FusionResult<()> {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        let rows = self.relative_position_bias.shape()[0];
+        let cols = self.relative_position_bias.shape()[1];
+
+        for i in 0..rows {
+            for j in 0..cols {
+                let value = rng.gen::<f64>() * scale - (scale / 2.0);
+                self.relative_position_bias.set([i, j], value)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Compute relative position bias matrix for a given sequence length
+    ///
+    /// # Arguments
+    /// * `seq_len` - Length of the sequence
+    /// * `head_idx` - Index of the attention head
+    ///
+    /// # Returns
+    /// Bias matrix of shape [seq_len, seq_len]
+    pub fn compute_relative_bias(
+        &self,
+        seq_len: usize,
+        head_idx: usize,
+    ) -> FusionResult<Matrix<f64>> {
+        if head_idx >= self.num_heads {
+            return Err(fusion_core::FusionError::Generic(format!(
+                "Head index {} exceeds num_heads {}",
+                head_idx, self.num_heads
+            )));
+        }
+
+        // Create bias matrix [seq_len, seq_len]
+        let mut bias = Matrix::zeros([seq_len, seq_len]);
+
+        for i in 0..seq_len {
+            for j in 0..seq_len {
+                // Compute relative position
+                let relative_pos = (j as i32 - i as i32) as i32;
+
+                // Clip to max_relative_distance
+                let clipped_pos = relative_pos
+                    .max(-(self.max_relative_distance as i32))
+                    .min(self.max_relative_distance as i32);
+
+                // Convert to bias table index (shift by max_distance - 1)
+                let bias_idx = (clipped_pos + (self.max_relative_distance as i32 - 1)) as usize;
+
+                // Get bias value from the table
+                let bias_value = self
+                    .relative_position_bias
+                    .get([bias_idx, head_idx])
+                    .copied()
+                    .unwrap_or(0.0);
+
+                bias.set([i, j], bias_value)?;
+            }
+        }
+
+        Ok(bias)
+    }
+
+    /// Apply REROPE to attention scores
+    ///
+    /// This combines:
+    /// 1. Attention scores from RoPE-rotated Q and K: scores = Q @ K^T
+    /// 2. Relative position bias: final_scores = scores + relative_bias
+    ///
+    /// # Arguments
+    /// * `q_rotated` - Query matrix after RoPE rotation [seq_len, head_dim]
+    /// * `k_rotated` - Key matrix after RoPE rotation [seq_len, head_dim]
+    /// * `head_idx` - Index of the attention head
+    ///
+    /// # Returns
+    /// Attention scores with relative bias [seq_len, seq_len]
+    pub fn apply_rerope(
+        &self,
+        q_rotated: &Matrix<f64>,
+        k_rotated: &Matrix<f64>,
+        head_idx: usize,
+    ) -> FusionResult<Matrix<f64>> {
+        // 1. Compute attention scores: Q @ K^T
+        let k_transposed = k_rotated.transpose()?;
+        let scores = q_rotated.matmul(&k_transposed)?;
+
+        // 2. Get relative position bias for this head
+        let seq_len = q_rotated.shape()[0];
+        let rel_bias = self.compute_relative_bias(seq_len, head_idx)?;
+
+        // 3. Add relative bias to scores
+        let final_scores = scores.add(&rel_bias)?;
+
+        Ok(final_scores)
+    }
+
+    /// Apply REROPE for multi-head attention
+    ///
+    /// # Arguments
+    /// * `q_rotated` - Query tensor [num_heads, seq_len, head_dim]
+    /// * `k_rotated` - Key tensor [num_heads, seq_len, head_dim]
+    ///
+    /// # Returns
+    /// Attention scores for all heads [num_heads, seq_len, seq_len]
+    pub fn apply_rerope_multihead(
+        &self,
+        q_rotated: &[Matrix<f64>],
+        k_rotated: &[Matrix<f64>],
+    ) -> FusionResult<Vec<Matrix<f64>>> {
+        if q_rotated.len() != self.num_heads || k_rotated.len() != self.num_heads {
+            return Err(fusion_core::FusionError::Generic(format!(
+                "Expected {} heads, got Q:{} K:{}",
+                self.num_heads,
+                q_rotated.len(),
+                k_rotated.len()
+            )));
+        }
+
+        let mut all_scores = Vec::with_capacity(self.num_heads);
+
+        for head_idx in 0..self.num_heads {
+            let scores = self.apply_rerope(&q_rotated[head_idx], &k_rotated[head_idx], head_idx)?;
+            all_scores.push(scores);
+        }
+
+        Ok(all_scores)
+    }
+
+    /// Get the relative position bias table (for inspection or serialization)
+    pub fn get_bias_table(&self) -> &Matrix<f64> {
+        &self.relative_position_bias
+    }
+
+    /// Set the relative position bias table (for loading trained weights)
+    pub fn set_bias_table(&mut self, bias: Matrix<f64>) -> FusionResult<()> {
+        let expected_shape = [2 * self.max_relative_distance - 1, self.num_heads];
+        if bias.shape() != expected_shape {
+            return Err(fusion_core::FusionError::ShapeMismatch {
+                op: "set_bias_table".to_string(),
+                lhs: bias.shape().to_vec(),
+                rhs: expected_shape.to_vec(),
+            });
+        }
+        self.relative_position_bias = bias;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rerope_creation() {
+        let rerope = ReropeTransformer::new(32, 8).unwrap();
+        assert_eq!(rerope.max_relative_distance, 32);
+        assert_eq!(rerope.num_heads, 8);
+    }
+
+    #[test]
+    fn test_relative_bias_computation() {
+        let mut rerope = ReropeTransformer::new(16, 4).unwrap();
+        rerope.initialize_bias(0.1).unwrap();
+
+        let bias = rerope.compute_relative_bias(10, 0).unwrap();
+        assert_eq!(bias.shape(), &[10, 10]);
+    }
+
+    #[test]
+    fn test_rerope_application() {
+        let mut rerope = ReropeTransformer::new(16, 4).unwrap();
+        rerope.initialize_bias(0.1).unwrap();
+
+        let q = Matrix::ones([10, 64]);
+        let k = Matrix::ones([10, 64]);
+
+        let scores = rerope.apply_rerope(&q, &k, 0);
+        assert!(scores.is_ok());
+        assert_eq!(scores.unwrap().shape(), &[10, 10]);
+    }
+}

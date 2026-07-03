@@ -1,0 +1,22 @@
+// Fusion Standard Library: GPU Acceleration
+// Universal bindings for CUDA (NVIDIA) and ROCm (AMD) support.
+
+extern fn cuInit(flags: int) -> int;
+extern fn hipInit(flags: int) -> int;
+
+pub struct GpuContext {
+    handle: *void;
+    is_cuda: bool;
+}
+
+fn initialise_gpu(prefer_cuda: bool) -> *GpuContext {
+    let ctx: *GpuContext = mem.alloc(sizeof(GpuContext));
+    if (prefer_cuda) {
+        cuInit(0);
+        ctx.is_cuda = true;
+    } else {
+        hipInit(0);
+        ctx.is_cuda = false;
+    }
+    return ctx;
+}

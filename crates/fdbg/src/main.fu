@@ -1,0 +1,438 @@
+//! Fusion Native Debugger (fdbg) — entry point.
+//!
+//! Interactive CLI REPL for machine-level debugging of Fusion-compiled
+//! x86-64 Windows executables.
+
+use crate::engine::{DebugState, Fdbg};
+
+/// Entry point for the debugger.
+pub fn main() -> int {
+    main_with_args()
+}
+
+/// Main function with optional command-line pre-loading.
+fn main_with_args() -> int {
+    let mut fdbg = Fdbg::new();
+
+    println("fdbg — Fusion Native Debugger");
+    println("Type 'help' for available commands.\n");
+
+    // REPL loop
+    loop {
+        let prompt = match fdbg.state() {
+            DebugState::NotLoaded => "(fdbg) ",
+            DebugState::Loaded => "(fdbg) ",
+            DebugState::Running => "(fdbg:running) ",
+            DebugState::Stopped(addr) => {
+                // Format the prompt dynamically
+                let s = format!("(fdbg:0x{:x}) ", addr);
+                // We need to keep it alive — leak to static string
+                s
+            }
+            DebugState::Exited(code) => {
+                let s = format!("(fdbg:exited={}) ", code);
+                s
+            }
+        };
+
+        print(&prompt);
+
+        let line = read_line();
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+
+        let result = execute_command(&mut fdbg, line);
+        match result {
+            Ok(CommandResult::Continue) => {}
+            Ok(CommandResult::Exit) => break,
+            Err(e) => println(&format!("Error: {}", e)),
+        }
+    }
+
+    0
+}
+
+/// Result of executing a command.
+enum CommandResult {
+    /// Continue the REPL.
+    Continue,
+    /// Exit the REPL.
+    Exit,
+}
+
+/// Execute a single debugger command.
+fn execute_command(fdbg: &mut Fdbg, line: &str) -> Result<CommandResult, String> {
+    let parts = split_args(line);
+    if parts.is_empty() {
+        return Ok(CommandResult::Continue);
+    }
+
+    let cmd = parts[0].to_lowercase();
+
+    match cmd.as_str() {
+        "load" | "file" => {
+            if parts.len() < 2 {
+                println("Usage: load <path>");
+                return Ok(CommandResult::Continue);
+            }
+            let path = parts[1];
+            match fdbg.load(path) {
+                Ok(()) => {
+                    println(&format!(
+                        "Process {} loaded.",
+                        fdbg.pid().unwrap_or(0)
+                    ));
+                    match fdbg.stopped_address() {
+                        Some(addr) => println(&format!("Stopped at 0x{:x}", addr)),
+                        None => {}
+                    }
+                }
+                Err(e) => println(&format!("Error loading {}: {}", path, e)),
+            }
+        }
+
+        "run" | "r" => {
+            match fdbg.state() {
+                DebugState::NotLoaded => {
+                    println("No executable loaded. Use 'load <path>' first.");
+                    return Ok(CommandResult::Continue);
+                }
+                _ => {}
+            }
+            match fdbg.run() {
+                Ok(()) => print_stop_info(fdbg),
+                Err(e) => println(&format!("Error: {}", e)),
+            }
+        }
+
+        "break" | "b" => {
+            if parts.len() < 2 {
+                println("Usage: break <symbol|address>");
+                return Ok(CommandResult::Continue);
+            }
+            match fdbg.break_at(parts[1]) {
+                Ok(()) => println(&format!("Breakpoint set at '{}'", parts[1])),
+                Err(e) => println(&format!("Error: {}", e)),
+            }
+        }
+
+        "delete" | "d" => {
+            if parts.len() < 2 {
+                println("Usage: delete <symbol|address>");
+                return Ok(CommandResult::Continue);
+            }
+            match fdbg.break_remove(parts[1]) {
+                Ok(()) => println(&format!("Breakpoint removed at '{}'", parts[1])),
+                Err(e) => println(&format!("Error: {}", e)),
+            }
+        }
+
+        "cont" | "c" => {
+            if !is_stopped(fdbg.state()) {
+                println("Program is not stopped.");
+                return Ok(CommandResult::Continue);
+            }
+            match fdbg.cont() {
+                Ok(()) => print_stop_info(fdbg),
+                Err(e) => println(&format!("Error: {}", e)),
+            }
+        }
+
+        "step" | "s" | "next" | "n" => {
+            if !is_stopped(fdbg.state()) {
+                println("Program is not stopped.");
+                return Ok(CommandResult::Continue);
+            }
+            match fdbg.step() {
+                Ok(()) => print_stop_info(fdbg),
+                Err(e) => println(&format!("Error: {}", e)),
+            }
+        }
+
+        "regs" | "info" => {
+            match fdbg.info_registers() {
+                Ok(output) => println(&output),
+                Err(e) => println(&format!("Cannot read registers: {}", e)),
+            }
+        }
+
+        "print" | "p" => {
+            if parts.len() < 2 {
+                println("Usage: print <register_name>");
+                return Ok(CommandResult::Continue);
+            }
+            match fdbg.get_register(parts[1]) {
+                Ok(val) => println(&format!("{} = 0x{:x} ({})", parts[1], val, val)),
+                Err(e) => println(&format!("Cannot read {}: {}", parts[1], e)),
+            }
+        }
+
+        "disass" | "disassemble" | "u" => {
+            let count = if parts.len() > 1 {
+                match parse_usize(parts[1]) {
+                    Some(n) => n,
+                    None => 10,
+                }
+            } else {
+                10
+            };
+            match fdbg.disassemble_formatted(count) {
+                Ok(output) => println(&output),
+                Err(e) => println(&format!("Cannot disassemble: {}", e)),
+            }
+        }
+
+        "bt" | "backtrace" => {
+            match fdbg.backtrace_formatted() {
+                Ok(output) => println(&output),
+                Err(e) => println(&format!("Cannot produce backtrace: {}", e)),
+            }
+        }
+
+        "x" | "mem" | "examine" => {
+            if parts.len() < 2 {
+                println("Usage: x/<count>xb <addr>  or  mem <addr> [count]");
+                return Ok(CommandResult::Continue);
+            }
+
+            if cmd == "x" && parts[1].starts_with("/") {
+                // GDB-style: x/16xb 0x401000
+                let spec = &parts[1][1..]; // strip '/'
+                let count = extract_count(spec);
+                let addr = if parts.len() > 2 {
+                    match parse_address(parts[2]) {
+                        Some(a) => a,
+                        None => {
+                            println(&format!("Invalid address: {}", parts[2]));
+                            return Ok(CommandResult::Continue);
+                        }
+                    }
+                } else {
+                    fdbg.stopped_address().unwrap_or(0)
+                };
+                match fdbg.examine_memory_formatted(addr, count) {
+                    Ok(output) => println(&output),
+                    Err(e) => println(&format!("Cannot examine memory: {}", e)),
+                }
+            } else {
+                let addr = match parse_address(parts[1]) {
+                    Some(a) => a,
+                    None => {
+                        println(&format!("Invalid address: {}", parts[1]));
+                        return Ok(CommandResult::Continue);
+                    }
+                };
+                let count = if parts.len() > 2 {
+                    match parse_usize(parts[2]) {
+                        Some(n) => n,
+                        None => 16,
+                    }
+                } else {
+                    16
+                };
+                match fdbg.examine_memory_formatted(addr, count) {
+                    Ok(output) => println(&output),
+                    Err(e) => println(&format!("Cannot examine memory: {}", e)),
+                }
+            }
+        }
+
+        "symbols" | "sym" => {
+            let syms = fdbg.symbols();
+            if syms.len() == 0 {
+                println("No symbols loaded.");
+            } else {
+                println(&format!(
+                    "{} symbols loaded (image base: 0x{:x})",
+                    syms.len(),
+                    fdbg.image_base().unwrap_or(0),
+                ));
+            }
+        }
+
+        "quit" | "q" | "exit" => {
+            return Ok(CommandResult::Exit);
+        }
+
+        "help" | "h" | "?" => {
+            print_help();
+        }
+
+        _ => {
+            println(&format!(
+                "Unknown command: '{}'. Type 'help' for available commands.",
+                cmd
+            ));
+        }
+    }
+
+    Ok(CommandResult::Continue)
+}
+
+/// Print information about where the debuggee stopped.
+fn print_stop_info(fdbg: &Fdbg) {
+    match fdbg.state() {
+        DebugState::Stopped(addr) => {
+            let name = fdbg.symbols().address_to_name(*addr);
+            match name {
+                Some(n) => println(&format!("Stopped at 0x{:x} ({})", addr, n)),
+                None => println(&format!("Stopped at 0x{:x}", addr)),
+            }
+        }
+        DebugState::Exited(code) => {
+            println(&format!("Program exited with code {}", code));
+        }
+        _ => {}
+    }
+}
+
+/// Check if debug state is Stopped.
+fn is_stopped(state: &DebugState) -> bool {
+    match state {
+        DebugState::Stopped(_) => true,
+        _ => false,
+    }
+}
+
+/// Split a command line into whitespace-separated arguments.
+fn split_args(line: &str) -> Vec<&str> {
+    let mut args: Vec<&str> = Vec::new();
+    let bytes = line.as_bytes();
+    let mut i: usize = 0;
+    let len = bytes.len();
+
+    while i < len {
+        // Skip whitespace
+        while i < len && (bytes[i] == b' ' || bytes[i] == b'\t') {
+            i += 1;
+        }
+        if i >= len {
+            break;
+        }
+
+        let start = i;
+        while i < len && bytes[i] != b' ' && bytes[i] != b'\t' {
+            i += 1;
+        }
+        let end = i;
+
+        // Extract substring
+        let arg: &str = &line[start..end];
+        args.push(arg);
+    }
+
+    args
+}
+
+/// Extract count from a GDB-style format spec like "16xb".
+fn extract_count(spec: &str) -> usize {
+    let mut digits = String::new();
+    for c in spec.chars() {
+        if c >= '0' && c <= '9' {
+            digits.push(c);
+        } else {
+            break;
+        }
+    }
+    match parse_usize(&digits) {
+        Some(n) => n,
+        None => 16,
+    }
+}
+
+/// Parse an address from a string (hex with optional 0x prefix).
+fn parse_address(s: &str) -> Option<u64> {
+    let s = if s.starts_with("0x") || s.starts_with("0X") {
+        &s[2..]
+    } else {
+        s
+    };
+    parse_hex_u64(s)
+}
+
+/// Parse a hexadecimal string to u64.
+fn parse_hex_u64(s: &str) -> Option<u64> {
+    if s.is_empty() {
+        return None;
+    }
+
+    let mut result: u64 = 0;
+    for c in s.chars() {
+        let digit = match c {
+            '0'..='9' => (c as u64) - ('0' as u64),
+            'a'..='f' => (c as u64) - ('a' as u64) + 10,
+            'A'..='F' => (c as u64) - ('A' as u64) + 10,
+            _ => return None,
+        };
+        result = result.wrapping_mul(16).wrapping_add(digit);
+    }
+    Some(result)
+}
+
+/// Parse a usize from a string (decimal).
+fn parse_usize(s: &str) -> Option<usize> {
+    if s.is_empty() {
+        return None;
+    }
+
+    let mut result: usize = 0;
+    for c in s.chars() {
+        match c {
+            '0'..='9' => {
+                result = result.wrapping_mul(10).wrapping_add((c as usize) - ('0' as usize));
+            }
+            _ => return None,
+        }
+    }
+    Some(result)
+}
+
+/// Print help text.
+fn print_help() {
+    println("fdbg — Fusion Native Debugger\n");
+    println("Commands:");
+    println("  load <path>         Load an executable for debugging");
+    println("  run | r             Start or continue execution until breakpoint/exit");
+    println("  break <sym|addr> | b  Set a breakpoint at a symbol or address");
+    println("  delete <sym|addr> | d  Remove a breakpoint");
+    println("  cont | c            Continue execution from a breakpoint");
+    println("  step | s | next | n Single-step one instruction");
+    println("  regs                Display all CPU registers");
+    println("  print <reg> | p     Display a single register value");
+    println("  disass [count] | u  Disassemble instructions at current RIP");
+    println("  bt | backtrace      Show the call stack");
+    println("  x/<N>xb <addr>     Examine memory (hexdump)");
+    println("  mem <addr> [count]  Examine memory (hexdump)");
+    println("  symbols | sym       List loaded symbols");
+    println("  quit | q | exit     Exit the debugger");
+    println("  help | h | ?        Show this help");
+}
+
+// ─── I/O helpers ──────────────────────────────────────────────────────
+
+/// Print a string to stdout with a newline.
+extern fn println(s: &str);
+
+/// Print a string to stdout without newline.
+extern fn print(s: &str);
+
+/// Read a line from stdin using the Fusion runtime FFI.
+/// Returns an empty string on EOF or error.
+extern fn fusion_read_line() -> *const u8;
+
+fn read_line() -> String {
+    let raw = fusion_read_line();
+    if raw.is_null() { return String::new(); }
+    // Safety: the runtime returns a null-terminated string.
+    let s = unsafe { std::ffi::CStr::from_ptr(raw as *const i8) };
+    let line = s.to_string_lossy().into_owned();
+    // Strip trailing newline if present
+    if line.ends_with('\n') {
+        let mut trimmed = line;
+        trimmed.pop();
+        return trimmed;
+    }
+    line
+}

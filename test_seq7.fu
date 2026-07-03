@@ -1,0 +1,17 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn test7(a: int, b: int, c: int, d: int, e: int, f: int, g: int) -> int {
+    printf("call: %d\n", a);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Start\n");
+    let r1 = test7(1, 2, 3, 4, 5, 6, 7);
+    printf("After 1\n");
+    let r2 = test7(1, 2, 3, 4, 5, 6, 7);
+    printf("After 2\n");
+    let r3 = test7(1, 2, 3, 4, 5, 6, 7);
+    printf("End\n");
+    return 0;
+}

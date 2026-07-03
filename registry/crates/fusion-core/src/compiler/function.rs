@@ -1,17 +1,15 @@
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FSize = FSize;
 use crate::compiler::chunk::Chunk;
+use std::fmt;
+
 #[derive(Debug, Clone, PartialEq)]
-struct Function {
-    pub arity: FSize,
+pub struct Function {
+    pub arity: usize,
     pub chunk: Chunk,
-    pub name: FString,
+    pub name: String,
 }
+
 impl Function {
-    pub fn new(name: FString, arity: FSize) -> Self {
+    pub fn new(name: String, arity: usize) -> Self {
         Function {
             arity,
             chunk: Chunk::new(name.clone()),
@@ -19,6 +17,7 @@ impl Function {
         }
     }
 }
+
 impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "<fn {}>", self.name)

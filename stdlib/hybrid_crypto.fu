@@ -1,0 +1,86 @@
+// stdlib/hybrid_crypto.fu - 50/50 Classical + Post-Quantum Hybrid Crypto
+//
+// Combines classical (X25519 + Ed25519) and post-quantum (Weave-KEM + Weave-SIG)
+// cryptography into a unified API. This is the core of Fusion v2.0 Vortex's
+// dual-layer security model.
+
+use crate::sha3;
+use crate::x25519;
+use crate::ed25519;
+use crate::weave_kem;
+use crate::weave_sig;
+
+/// Hybrid keypair containing both classical and PQ keys
+struct HybridKeyPair {
+    classical_kem: x25519::X25519KeyPair,
+    pq_kem: weave_kem::WeaveKEMKeyPair,
+    classical_sig: ed25519::Ed25519KeyPair,
+    pq_sig: weave_sig::WeaveSigKeyPair,
+}
+
+/// Hybrid signature containing both classical and PQ signatures
+struct HybridSignature {
+    classical_sig: ed25519::Ed25519Signature,
+    pq_sig: weave_sig::WeaveSignature,
+}
+
+/// Generate complete hybrid keypair (classical + PQ)
+fn hybrid_keygen() -> HybridKeyPair {
+    let classical_kem = x25519::x25519_keygen();
+    let pq_kem = weave_kem::weave_kem_keygen();
+    let classical_sig = ed25519::ed25519_keygen();
+    let pq_sig = weave_sig::weave_sig_keygen();
+    
+    let kp: HybridKeyPair = HybridKeyPair {
+        classical_kem: classical_kem,
+        pq_kem: pq_kem,
+        classical_sig: classical_sig,
+        pq_sig: pq_sig,
+    };
+    return kp;
+}
+
+/// Hybrid Key Derivation Function: combines classical and PQ shared secrets
+fn hybrid_kdf(classical_ss: string, pq_ss: string) -> string {
+    // Concatenate context strings and shared secrets
+    let mut input: string = "fusion_classical_kem";
+    input = input + classical_ss;
+    input = input + "fusion_pqc_kem";
+    input = input + pq_ss;
+    
+    // Hash with SHA3-256 to derive final key
+    return sha3::sha3_256(input, 128);
+}
+
+/// Hybrid sign: requires BOTH classical and PQ signatures
+fn hybrid_sign(message: string, kp: HybridKeyPair) -> HybridSignature {
+    let classical_sig = ed25519::ed25519_sign(message, kp.classical_sig.private_key);
+    let pq_sig = weave_sig::weave_sig_sign(message, kp.pq_sig.secret_key);
+    
+    let sig: HybridSignature = HybridSignature {
+        classical_sig: classical_sig,
+        pq_sig: pq_sig,
+    };
+    return sig;
+}
+
+/// Hybrid verify: BOTH signatures must be valid
+fn hybrid_verify(message: string, sig: HybridSignature, kp: HybridKeyPair) -> bool {
+    let classical_valid = ed25519::ed25519_verify(message, sig.classical_sig, kp.classical_sig.public_key);
+    let pq_valid = weave_sig::weave_sig_verify(message, sig.pq_sig, kp.pq_sig.public_key);
+    
+    // Defense-in-depth: both must pass
+    return classical_valid && pq_valid;
+}
+
+/// Hybrid key exchange: combine X25519 and Weave-KEM
+fn hybrid_key_exchange(local_kp: HybridKeyPair, peer_pk_classical: string, peer_pk_pq: string) -> string {
+    // Classical shared secret
+    let classical_ss = x25519::x25519_shared_secret(local_kp.classical_kem.private_key, peer_pk_classical);
+    
+    // PQ shared secret
+    let pq_ct_ss = weave_kem::weave_kem_decapsulate(local_kp.pq_kem.secret_key, peer_pk_pq);
+    
+    // Derive combined key
+    return hybrid_kdf(classical_ss, pq_ct_ss);
+}

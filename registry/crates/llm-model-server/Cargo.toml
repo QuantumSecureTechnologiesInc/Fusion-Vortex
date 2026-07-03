@@ -1,0 +1,29 @@
+﻿[package]
+name = "fusion_llm_model_server"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Large Language Model component: llm-model-server. Optimized for performance."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["algorithm", "fusion", "llm", "generative-ai"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion-web-server = { version = "0.2.0", path = "../fusion-web-server" }
+fusion_core = { workspace = true }
+fusion_http = { path = "../http/", version = "0.2.0" }
+fusion_kv_cache = { version = "0.2.0", path = "../kv-cache" }
+fusion_llm_inference_engine = { version = "0.2.0", path = "../llm-inference" }
+fusion_llm_lora_manager = { version = "0.2.0", path = "../llm-lora-manager" }
+fusion_std = { workspace = true }
+# fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" }
+# fusion_llm_lora_manager = { path = "../llm-lora-manager/", version = "0.2.0" }
+fusion_runtime_core = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+
+
+
+[dev-dependencies]
+criterion = { workspace = true }

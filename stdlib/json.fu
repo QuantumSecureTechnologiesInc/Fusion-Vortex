@@ -1,59 +1,81 @@
-// stdlib/json.fu
-// JSON Serialization/Deserialization
+// stdlib/json.fu - JSON utilities for Fusion
 
-class JsonValue {
-    kind: int; // 0=Null, 1=Bool, 2=Int, 3=String, 4=Array, 5=Object
-    bool_val: bool;
-    int_val: int;
-    string_val: string;
-    // Arrays/Objects require complex recursive structures not fully mocked here
-    // For now, focusing on configuration parsing (flat K-V)
+extern fn fusion_json_escape(s: string) -> string;
+extern fn fusion_json_kv_string(k: string, v: string) -> string;
+extern fn fusion_json_kv_int(k: string, v: int) -> string;
+extern fn fusion_fmt_int(v: int) -> string;
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_str_concat(a: string, b: string) -> string;
+extern fn fusion_str_concat3(a: string, b: string, c: string) -> string;
+
+// JsonValue - tagged JSON value (16 bytes)
+const JSON_NULL: int = 0;
+const JSON_BOOL_FALSE: int = 1;
+const JSON_BOOL_TRUE: int = 2;
+const JSON_INT: int = 3;
+const JSON_STRING: int = 4;
+
+struct JsonValue {
+    kind: int,
+    int_val: int,
+    string_val: string,
 }
 
-fn serialize_string(s: string) -> string {
-    return "\"" + s + "\"";
-}
-
-fn serialize_int(i: int) -> string {
-    return i.to_string();
-}
-
-fn serialize_bool(b: bool) -> string {
-    if b { return "true"; } else { return "false"; }
-}
-
-// Simple parser for {"key": "value"} style configs
-class ConfigParser {
-    source: string;
-    pos: int;
-
-    fn new(src: string) -> ConfigParser {
-        return ConfigParser { source: src, pos: 0 };
+impl JsonValue {
+    fn null() -> JsonValue {
+        return JsonValue { kind: 0, int_val: 0, string_val: "" };
     }
-
-    fn parse_string(mut self) -> string {
-        // Skip opening quote
-        self.pos = self.pos + 1;
-        let start = self.pos;
-        while self.pos < self.source.len() {
-            let ch = self.source.get(self.pos); // Assume char-at logic
-            if ch == '"' { break; }
-            self.pos = self.pos + 1;
-        }
-        let res = self.source.substring(start, self.pos);
-        self.pos = self.pos + 1; // Skip closing quote
-        return res;
+    fn from_bool(v: bool) -> JsonValue {
+        if v { return JsonValue { kind: 2, int_val: 1, string_val: "" }; }
+        return JsonValue { kind: 1, int_val: 0, string_val: "" };
     }
-
-    fn get_key(mut self, key: string) -> string {
-        // Naive linear search for "key": "value"
-        let search = "\"" + key + "\"";
-        let idx = self.source.index_of(search);
-        if idx == -1 { return ""; }
-        
-        self.pos = idx + search.len();
-        // Skip whitespace/colon logic omitted for brevity
-        // Jump to value
-        return self.parse_string();
+    fn from_int(v: int) -> JsonValue {
+        return JsonValue { kind: 3, int_val: v, string_val: "" };
     }
+    fn from_string(v: string) -> JsonValue {
+        return JsonValue { kind: 4, int_val: 0, string_val: v };
+    }
+    fn is_null(jv: JsonValue) -> bool { return jv.kind == 0; }
+    fn as_bool(jv: JsonValue) -> bool { return jv.kind == 2; }
+    fn as_int(jv: JsonValue) -> int { return jv.int_val; }
+    fn as_string(jv: JsonValue) -> string { return jv.string_val; }
+}
+
+fn json_serialize(jv: JsonValue) -> string {
+    if jv.kind == 0 { return "null"; }
+    if jv.kind == 1 { return "false"; }
+    if jv.kind == 2 { return "true"; }
+    if jv.kind == 3 { return fusion_fmt_int(jv.int_val); }
+    if jv.kind == 4 {
+        return fusion_str_concat3("\"", fusion_json_escape(jv.string_val), "\"");
+    }
+    return "null";
+}
+
+fn json_kv_str(key: string, value: string) -> string {
+    return fusion_json_kv_string(key, value);
+}
+
+fn json_kv_int(key: string, value: int) -> string {
+    return fusion_json_kv_int(key, value);
+}
+
+fn json_kv_bool(key: string, value: bool) -> string {
+    let vstr: string = "false";
+    if value { vstr = "true"; }
+    return fusion_str_concat(fusion_json_kv_string(key, vstr), "");
+}
+
+fn json_object(content: string) -> string {
+    return fusion_str_concat3("{", content, "}");
+}
+
+fn json_array(content: string) -> string {
+    return fusion_str_concat3("[", content, "]");
+}
+
+fn json_join(a: string, b: string) -> string {
+    if fusion_strlen(a) == 0 { return b; }
+    if fusion_strlen(b) == 0 { return a; }
+    return fusion_str_concat3(a, ",", b);
 }

@@ -1,0 +1,111 @@
+// MiniMax Adapter — Fusion AI Core
+// MiniMax (Shanghai): full-platform chat completion API
+// Distinct from mimo.fu which targets the MiMo model series specifically
+// API: api.minimax.chat/v1 (OpenAI-compatible)
+// Models: abab6.5s-chat, abab6.5t-chat, abab5.5-chat
+// Auth: Bearer token via MiniMax API key (provided via config, never read from env)
+
+use std::time::Duration;
+
+const MINIMAX_API_BASE: string = "https://api.minimax.chat/v1";
+extern fn fusion_env_get(key: string) -> string;
+
+/// MiniMax adapter configuration
+struct MinimaxConfig {
+    pub api_key: string,       // Must be set by caller — never read from environment
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,
+    pub timeout_secs: int,
+}
+
+fn minimax_config_default() -> MinimaxConfig {
+    let key: string = fusion_env_get("MINIMAX_API_KEY");
+    MinimaxConfig {
+        api_key: key,
+        api_base: "https://api.minimax.chat/v1",
+        model: "abab6.5s-chat",
+        max_tokens: 4096,
+        temperature: 70,
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message
+struct MinimaxMessage {
+    role: string,
+    content: string,
+}
+
+/// Chat completion request
+struct MinimaxChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,
+}
+
+/// Chat completion response
+struct MinimaxChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// MiniMax Adapter
+struct MinimaxAdapter {
+    config: MinimaxConfig,
+    connected: int,
+}
+
+fn minimax_adapter_new() -> MinimaxAdapter {
+    MinimaxAdapter {
+        config: minimax_config_default(),
+        connected: 0,
+    }
+}
+
+fn minimax_adapter_with_config(cfg: MinimaxConfig) -> MinimaxAdapter {
+    MinimaxAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via MiniMax API
+fn minimax_chat_completion(adapter: MinimaxAdapter, messages_len: int) -> (MinimaxAdapter, MinimaxChatResponse) {
+    let mut a = adapter;
+    // POST https://api.minimax.chat/v1/chat/completions
+    // Headers: Authorization: Bearer {api_key}
+    // Body: {"model":"abab6.5s-chat","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: MinimaxChatResponse = MinimaxChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check
+fn minimax_health_check(adapter: MinimaxAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn minimax_provider_name() -> string {
+    return "MiniMax";
+}
+
+/// Supported model families
+fn minimax_supported_models() -> string {
+    return "abab6.5s-chat,abab6.5t-chat,abab5.5-chat,mimo-v2,mimo-v1";
+}

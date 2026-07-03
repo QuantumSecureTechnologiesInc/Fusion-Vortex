@@ -1,0 +1,96 @@
+//! INT3 software breakpoint manager.
+//!
+//! On x86-64, an INT3 instruction is encoded as the single byte `0xCC`.
+//! Setting a breakpoint means writing 0xCC at the target address,
+//! saving the original byte. When the breakpoint is hit, we restore
+//! the original byte, rewind RIP, and set the Trap Flag for single-step.
+
+use super::error::{FdbgError, FdbgResult};
+
+/// Hardware breakpoint register index.
+pub const INT3_OPCODE: u8 = 0xCC;
+
+/// A single software breakpoint.
+pub struct Breakpoint {
+    /// Address in the target process.
+    pub address: u64,
+    /// Original byte that was overwritten by INT3.
+    pub original_byte: u8,
+    /// Whether this breakpoint is active.
+    pub enabled: bool,
+}
+
+/// Manages a collection of software breakpoints.
+pub struct BreakpointManager {
+    breakpoints: Vec<Breakpoint>,
+}
+
+impl BreakpointManager {
+    /// Create a new empty breakpoint manager.
+    pub fn new() -> Self {
+        BreakpointManager { breakpoints: Vec::new() }
+    }
+
+    /// Set a breakpoint at `addr` in the target process.
+    /// `original_byte` is the byte that was at `addr` before INT3 was written.
+    /// Returns the index of the new breakpoint.
+    pub fn set(&mut self, addr: u64, original_byte: u8) -> FdbgResult<usize> {
+        // Check if already set
+        for (i, bp) in self.breakpoints.iter().enumerate() {
+            if bp.address == addr {
+                return Ok(i);
+            }
+        }
+
+        let idx = self.breakpoints.len();
+        self.breakpoints.push(Breakpoint {
+            address: addr,
+            original_byte,
+            enabled: true,
+        });
+        Ok(idx)
+    }
+
+    /// Remove a breakpoint by index.
+    /// Returns the original byte so the caller can restore it.
+    pub fn remove(&mut self, idx: usize) -> FdbgResult<u8> {
+        if idx >= self.breakpoints.len() {
+            return Err(FdbgError::BreakpointError(format!("Invalid index: {}", idx)));
+        }
+        let original_byte = self.breakpoints[idx].original_byte;
+        self.breakpoints.remove(idx);
+        Ok(original_byte)
+    }
+
+    /// Find a breakpoint at the given address.
+    pub fn find(&self, addr: u64) -> Option<usize> {
+        self.breakpoints.iter().position(|bp| bp.address == addr && bp.enabled)
+    }
+
+    /// Handle a breakpoint hit at `addr`:
+    /// 1. Restore the original byte
+    /// 2. Set Trap Flag for single-step
+    /// 3. Rewind RIP by 1 (INT3 is 1 byte)
+    pub fn handle(&self, addr: u64) -> Option<&Breakpoint> {
+        self.breakpoints.iter().find(|bp| bp.address == addr)
+    }
+
+    /// After single-stepping past the breakpoint, re-insert INT3.
+    pub fn re_insert(&mut self, idx: usize) -> FdbgResult<()> {
+        if idx >= self.breakpoints.len() {
+            return Err(FdbgError::BreakpointError(format!("Invalid index: {}", idx)));
+        }
+        self.breakpoints[idx].enabled = true;
+        Ok(())
+    }
+
+    /// Number of breakpoints.
+    pub fn len(&self) -> usize {
+        self.breakpoints.len()
+    }
+
+    /// Iterate over all breakpoints.
+    pub fn iter(&self) -> impl Iterator<Item = &Breakpoint> {
+        self.breakpoints.iter()
+    }
+}

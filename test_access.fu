@@ -1,0 +1,9 @@
+extern fn printf(fmt: string, ...) -> int;
+extern fn access(path: string, mode: int) -> int;
+
+fn main() -> int {
+    printf("Test 1: before access\n");
+    let r = access("nonexistent_file.fu", 0);
+    printf("Test 2: after access, result=%d\n", r);
+    return 0;
+}

@@ -1,5 +1,5 @@
 [package]
-name = "llm-moe-tools"
+name = "fusion_llm_moe_tools"
 version = "0.1.0"
 edition = "2021"
 description = "MoE diagnostics and load balancing tools"
@@ -9,5 +9,4 @@ license = "MIT"
 fusion-core = { workspace = true }
 tokio = { workspace = true }
 fusion_std = "1.0.0"
-
 

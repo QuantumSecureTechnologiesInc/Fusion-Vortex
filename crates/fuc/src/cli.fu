@@ -1,37 +1,83 @@
-use clap::Parser;
 /// CLI arguments for the Fusion compiler.
-#[derive(Parser, Debug)]
-#[command(name = "fuc")]
-struct Cli {
+#[derive(Clone, Debug)]
+pub struct CompilerArgs {
     /// Input .fu file.
-    #[arg(value_name = "INPUT")]
     pub input: FString,
-    /// Output object file path.
-    #[arg(short = 'o', long = "output", default_value = "a.out")]
+    /// Output path.
     pub output: FString,
     /// Optimization level (0-3).
-    #[arg(long = "opt-level", default_value_t = 0)]
-    pub opt_level: u8,
+    pub opt_level: int,
     /// Target triple override.
-    #[arg(long = "target")]
     pub target: Option<FString>,
     /// Emit textual LLVM IR.
-    #[arg(long = "emit-llvm", default_value_t = false)]
     pub emit_llvm: bool,
     /// Parse only (no semantic analysis or codegen).
-    #[arg(long = "parse-only", default_value_t = false)]
     pub parse_only: bool,
     /// Run semantic analysis only (skip codegen).
-    #[arg(long = "sema-only", default_value_t = false)]
     pub sema_only: bool,
     /// Emit a linked executable instead of an object file.
-    #[arg(long = "emit-bin", default_value_t = false)]
     pub emit_bin: bool,
     /// Compile as library (suppress entry point checks).
-    #[arg(long = "lib", default_value_t = false)]
     pub lib: bool,
+    /// Emit DWARF debug info.
+    pub debug_info: bool,
+    /// External libraries to link against (e.g., ["hypercycle_pqc"])
+    pub link_libs: FVec<FString>,
+    /// Library search paths (e.g., ["v2.0 Vortex/build/Release"])
+    pub lib_paths: FVec<FString>,
 }
-/// Parse CLI arguments.
-fn parse_args() -> Cli {
-    return Cli::parse();
+
+/// Parse CLI arguments from command line.
+pub fn parse_args() -> CompilerArgs {
+    // Simple positional and flag-based argument parsing.
+    // Usage: fuc [flags] <input.fu> [-o <output>]
+    let args = std::env::args();
+    let mut input = FString::from("");
+    let mut output = FString::from("a.out");
+    let mut opt_level: int = 0;
+    let mut target: Option<FString> = None;
+    let mut emit_llvm = false;
+    let mut parse_only = false;
+    let mut sema_only = false;
+    let mut emit_bin = false;
+    let mut lib = false;
+    let mut debug_info = true;
+    let mut link_libs: FVec<FString> = FVec::new();
+    let mut lib_paths: FVec<FString> = FVec::new();
+    let mut i: FSize = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        if arg == "-o" {
+            i = i + 1;
+            if i < args.len() { output = args[i].clone(); }
+        } else if arg == "--opt-level" {
+            i = i + 1;
+            if i < args.len() { opt_level = std::str::parse::<u8>(&args[i]); }
+        } else if arg == "--target" {
+            i = i + 1;
+            if i < args.len() { target = Some(args[i].clone()); }
+        } else if arg == "--emit-llvm" {
+            emit_llvm = true;
+        } else if arg == "--parse-only" {
+            parse_only = true;
+        } else if arg == "--sema-only" {
+            sema_only = true;
+        } else if arg == "--emit-bin" {
+            emit_bin = true;
+        } else if arg == "--lib" {
+            lib = true;
+        } else if arg == "--no-debug" {
+            debug_info = false;
+        } else if arg == "--link-lib" {
+            i = i + 1;
+            if i < args.len() { link_libs.push(args[i].clone()); }
+        } else if arg == "--lib-path" {
+            i = i + 1;
+            if i < args.len() { lib_paths.push(args[i].clone()); }
+        } else if !arg.starts_with("-") && input.is_empty() {
+            input = arg.clone();
+        }
+        i = i + 1;
+    }
+    CompilerArgs { input, output, opt_level, target, emit_llvm, parse_only, sema_only, emit_bin, lib, debug_info, link_libs, lib_paths }
 }

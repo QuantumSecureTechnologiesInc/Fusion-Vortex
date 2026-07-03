@@ -212,7 +212,7 @@ impl VibeEngine {
             PatternCategory::ErrorHandling => {
                 vec!["error", "result", "try", "catch", "handle"]
             }
-            PatternCategory::Testing => vec!["test", "assert", "double", "verify"],
+            PatternCategory::Testing => vec!["test", "assert", "mock", "verify"],
             PatternCategory::Performance => {
                 vec!["fast", "optimize", "performance", "parallel"]
             }

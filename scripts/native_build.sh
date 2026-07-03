@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Updated 2026-06-25: uses relative paths from script location.
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARTIFACTS="$ROOT/artifacts/native-bootstrap"
 mkdir -p "$ARTIFACTS"
@@ -18,7 +20,11 @@ need_cmd clang
 
 echo ">>> Fusion native bootstrap (Linux/macOS)"
 STAGE0=""
-if [[ -x "$ROOT/target/release/fuc" ]]; then
+if [[ -x "$ROOT/bin/fuc" ]]; then
+  STAGE0="$ROOT/bin/fuc"
+elif [[ -f "$ROOT/bin/fuc.exe" ]]; then
+  STAGE0="$ROOT/bin/fuc.exe"
+elif [[ -x "$ROOT/target/release/fuc" ]]; then
   STAGE0="$ROOT/target/release/fuc"
 elif [[ -x "$ROOT/target/release/fuc.exe" ]]; then
   STAGE0="$ROOT/target/release/fuc.exe"

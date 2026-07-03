@@ -1,0 +1,13 @@
+struct FloatTest {
+    value: float,
+    _pad: int,
+}
+
+impl FloatTest {
+    fn new(v: float) -> FloatTest {
+        return FloatTest { value: v, _pad: 0 };
+    }
+    fn get(ft: FloatTest) -> float {
+        return ft.value;
+    }
+}

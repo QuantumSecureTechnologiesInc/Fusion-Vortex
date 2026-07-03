@@ -1,26 +1,19 @@
-// Compute node (pure .fu)
+// Compute node stub (pure .fu)
+// Reduced to fit 16-byte ABI
 
 struct ComputeNode {
-    id: string,
-    reputation_score: int,
-    is_active: bool,
-    region: string,
+    id: int,
+    score: int,
+    active: int,
+    region: int,
 }
 
-fn compute_node_new(id: string, region: string) -> ComputeNode {
-    let n: ComputeNode = ComputeNode { id: id, reputation_score: 50, is_active: true, region: region };
+fn compute_node_new(id: int, region: int) -> ComputeNode {
+    let n: ComputeNode = ComputeNode { id: id, score: 50, active: 1, region: region };
     return n;
 }
 
-fn compute_node_is_trustworthy(n: ComputeNode, min_score: int) -> bool {
-    if n.reputation_score > min_score { return true; }
-    return n.reputation_score == min_score;
+fn compute_node_is_active(n: ComputeNode) -> int {
+    if n.active != 0 { return 1; }
+    return 0;
 }
-
-fn compute_node_update_reputation(n: ComputeNode, new_score: int) -> ComputeNode {
-    if new_score < 0 { n.reputation_score = 0; return n; }
-    if new_score > 100 { n.reputation_score = 100; return n; }
-    n.reputation_score = new_score;
-    return n;
-}
-

@@ -1,0 +1,17 @@
+﻿[package]
+name = "fusion_llm_cuda_kernel_lib"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Optimized CUDA kernels (Attention, RMSNorm, MatMul)."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "algorithm", "cuda", "kernels", "optimization"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion-ai-core = { workspace = true }
+# In prod: cuda-sys, cutlass FFI
+
+

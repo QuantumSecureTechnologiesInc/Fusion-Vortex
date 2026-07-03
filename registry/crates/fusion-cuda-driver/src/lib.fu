@@ -96,32 +96,12 @@ impl CudaDriver {
             Err(CudaError::NotAvailable)
         }
     }
-    /// Launch a GPU kernel by logical name.
-    ///
-    /// Supported built-in kernels:
-    /// - `noop`
-    /// - `health_check`
-    pub fn launch_kernel(&self, kernel_name: &str) -> Result<()> {
-        if kernel_name.trim().is_empty() {
-            return Err(CudaError::LaunchFailed("Kernel name cannot be empty".to_string()));
-        }
-
+    /// Launch a GPU kernel (stub for now)
+    pub fn launch_kernel(&self, _kernel_name: &str) -> Result<()> {
         #[cfg(target_os = "linux")]
         {
-            match kernel_name {
-                "noop" | "health_check" => {
-                    log::info!(
-                        "Executing '{}' on CUDA device {}",
-                        kernel_name,
-                        self.device_id
-                    );
-                    Ok(())
-                }
-                other => Err(CudaError::LaunchFailed(format!(
-                    "Kernel '{}' is not registered",
-                    other
-                ))),
-            }
+            log::info!("Launching kernel on device {}", self.device_id);
+            Ok(())
         }
         #[cfg(not(target_os = "linux"))] { Err(CudaError::NotAvailable) }
     }

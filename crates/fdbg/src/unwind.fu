@@ -1,0 +1,114 @@
+//! Stack unwinding for fdbg.
+//!
+//! Implements frame-pointer-based (RBP chain) stack walking for x86-64
+//! Windows executables. Resolves return addresses against a symbol table.
+
+use super::context;
+use super::error::{FdbgError, FdbgResult};
+use super::symbols::SymbolTable;
+
+/// A single frame in the call stack.
+pub struct StackFrame {
+    /// Frame index (0 = current function).
+    pub index: usize,
+    /// Return address (address of the instruction after the call).
+    pub return_address: u64,
+    /// Frame pointer (RBP value for this frame).
+    pub frame_pointer: u64,
+    /// Resolved function name, if available.
+    pub function_name: Option<String>,
+}
+
+/// Maximum number of frames to unwind (safety limit).
+const MAX_FRAMES: usize = 128;
+
+/// Walk the call stack using the RBP frame-pointer chain.
+///
+/// Algorithm:
+/// 1. Read RBP → current frame pointer
+/// 2. Read RIP → current instruction pointer (frame 0)
+/// 3. Read [RBP] → previous RBP, Read [RBP+8] → return address
+/// 4. Repeat until RBP is 0, invalid, or max depth reached
+/// 5. Resolve each return address against the symbol table
+pub fn unwind(
+    proc_handle: u64,
+    thread_handle: u64,
+    symbols: &SymbolTable,
+) -> FdbgResult<Vec<StackFrame>> {
+    let regs = context::read_registers(thread_handle)?;
+
+    let mut frames: Vec<StackFrame> = Vec::new();
+    let mut current_rbp = regs.rbp;
+    let current_rip = regs.rip;
+
+    // Frame 0: current instruction
+    let name0 = symbols.address_to_name(current_rip).map(|s| s.to_string());
+    frames.push(StackFrame {
+        index: 0,
+        return_address: current_rip,
+        frame_pointer: current_rbp,
+        function_name: name0,
+    });
+
+    let mut i: usize = 1;
+    while i < MAX_FRAMES {
+        // Stop if RBP is null or looks invalid
+        if current_rbp == 0 || current_rbp < 0x1000 {
+            break;
+        }
+
+        // Read [RBP] → previous frame pointer
+        let prev_rbp = match context::read_u64(proc_handle, current_rbp) {
+            Ok(val) => val,
+            Err(_) => break,
+        };
+
+        // Sanity check: RBP should increase (stack grows downward)
+        if prev_rbp <= current_rbp || prev_rbp == 0 {
+            break;
+        }
+
+        // Read [RBP+8] → return address
+        let ret_addr = match context::read_u64(proc_handle, current_rbp + 8) {
+            Ok(val) => val,
+            Err(_) => break,
+        };
+
+        // Sanity check: return address should be in executable range
+        if ret_addr < 0x1000 || ret_addr > 0x00007FFFFFFFFFFF {
+            break;
+        }
+
+        let name = symbols.address_to_name(ret_addr).map(|s| s.to_string());
+        frames.push(StackFrame {
+            index: i,
+            return_address: ret_addr,
+            frame_pointer: prev_rbp,
+            function_name: name,
+        });
+
+        current_rbp = prev_rbp;
+        i += 1;
+    }
+
+    Ok(frames)
+}
+
+/// Format stack frames for display.
+pub fn format_backtrace(frames: &[StackFrame]) -> String {
+    let mut output = String::new();
+    for frame in frames {
+        let name = match &frame.function_name {
+            Some(n) => n.as_str(),
+            None => "<unknown>",
+        };
+        output.push_str(&format!(
+            "#{}  0x{:016x} in {} (rbp=0x{:016x})\n",
+            frame.index,
+            frame.return_address,
+            name,
+            frame.frame_pointer,
+        ));
+    }
+    output
+}

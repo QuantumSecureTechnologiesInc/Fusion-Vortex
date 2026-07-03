@@ -1,15 +1,14 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::sync::Arc;
-// __FU_COMPAT_END__
 use fusion_vscode_runtime::ExtensionHost;
+use std::sync::Arc;
+
 /// Bridge between MCP and VS Code extensions
 pub struct ExtensionMcpBridge {
-    _host: Arc<ExtensionHost>,
+    host: Arc<ExtensionHost>,
 }
+
 impl ExtensionMcpBridge {
     /// Create a new bridge with the given extension host
     pub fn new(host: Arc<ExtensionHost>) -> Self {
-        Self { _host: host }
+        Self { host }
     }
 }

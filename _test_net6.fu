@@ -1,0 +1,17 @@
+extern fn fusion_tcp_recv_str(fd: int, max_bytes: int) -> string;
+
+struct TcpStream {
+    socket: int,
+    connected: int,
+}
+
+impl TcpStream {
+    fn recv(ts: TcpStream, max_bytes: int) -> string {
+        let empty_str: string = "";
+        if ts.connected != 0 {
+            return fusion_tcp_recv_str(ts.socket, max_bytes);
+        } else {
+            return empty_str;
+        }
+    }
+}

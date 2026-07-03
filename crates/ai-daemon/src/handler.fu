@@ -1,0 +1,27 @@
+// crates/ai-daemon/src/handler.fu - AI Daemon Request Handler
+// Handles incoming requests and returns structured responses.
+
+struct AiRequest {
+    method: string,
+    path: string,
+    body: string,
+}
+
+struct AiResponse {
+    status: int,
+    body: string,
+}
+
+fn handle_request(method: string, path: string, body: string) -> AiResponse {
+    if method == 'GET' {
+        if path == '/health' {
+            return AiResponse { status: 200, body: 'ok' };
+        }
+    }
+    if method == 'POST' {
+        if path == '/complete' {
+            return AiResponse { status: 200, body: 'completion result' };
+        }
+    }
+    return AiResponse { status: 404, body: 'not found' };
+}

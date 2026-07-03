@@ -1,0 +1,8 @@
+// SOURCE: src/wasm/mod.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+// src/wasm/mod.rs - WebAssembly Backend Module
+
+mod codegen;
+mod types;
+
+pub use codegen::WasmCodeGenerator;

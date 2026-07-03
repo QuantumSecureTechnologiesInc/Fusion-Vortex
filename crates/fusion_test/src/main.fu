@@ -1,0 +1,153 @@
+//! Fusion Test Engine — CLI entry point (.fu port).
+//!
+//! Discovers, runs, and reports on Fusion tests from the command line.
+
+use super::lib::{TestFunction, TestKind, TestResult, TestSummary};
+use super::runner::{TestRunner, TestRunnerConfig};
+use super::report;
+
+/// Entry point for the test runner.
+pub fn main() -> int {
+    // Parse arguments (simplified: positional-only)
+    let mut patterns: Vec<String> = Vec::new();
+    let mut filter: Option<String> = None;
+    let mut run_benchmarks = false;
+    let mut run_property = false;
+    let mut include_ignored = false;
+    let mut verbose = false;
+
+    // Manual argument parsing
+    let args = get_args();
+    let mut i: usize = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        if arg == "--filter" || arg == "-f" {
+            i += 1;
+            if i < args.len() {
+                filter = Some(args[i].clone());
+            }
+        } else if arg == "--bench" {
+            run_benchmarks = true;
+        } else if arg == "--property" {
+            run_property = true;
+        } else if arg == "--include-ignored" {
+            include_ignored = true;
+        } else if arg == "--verbose" || arg == "-v" {
+            verbose = true;
+        } else if arg == "--help" || arg == "-h" {
+            print_help();
+            return 0;
+        } else if !arg.starts_with("-") {
+            patterns.push(arg.clone());
+        }
+        i += 1;
+    }
+
+    if patterns.is_empty() {
+        patterns.push("tests/".to_string());
+    }
+
+    let config = TestRunnerConfig {
+        patterns: patterns,
+        compiler_path: "fuc".to_string(),
+        filter: filter,
+        include_ignored: include_ignored,
+        run_benchmarks: run_benchmarks,
+        run_property_tests: run_property,
+    };
+
+    let runner = TestRunner::new(config);
+    let tests = runner.discover();
+
+    if tests.is_empty() {
+        println("No tests found.");
+        return 0;
+    }
+
+    // Count by kind
+    let mut test_count: usize = 0;
+    let mut bench_count: usize = 0;
+    let mut prop_count: usize = 0;
+
+    for t in &tests {
+        match t.kind {
+            TestKind::Test | TestKind::Integration => test_count += 1,
+            TestKind::Bench => bench_count += 1,
+            TestKind::Property => prop_count += 1,
+        }
+    }
+
+    if test_count > 0 {
+        println(&format!("Found {} test(s)", test_count));
+    }
+    if bench_count > 0 {
+        println(&format!("Found {} benchmark(s)", bench_count));
+    }
+    if prop_count > 0 {
+        println(&format!("Found {} property test(s)", prop_count));
+    }
+
+    println(&format!("running {} tests\n", tests.len()));
+
+    // Run tests
+    let summary = runner.run_all(&tests);
+
+    // Print results
+    if verbose {
+        for result in &summary.results {
+            println(&report::format_test_result(result));
+        }
+    } else {
+        // Only print failures
+        for result in &summary.results {
+            match result {
+                TestResult::Failed { .. } => {
+                    println(&report::format_test_result(result));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Print summary
+    println(&report::format_console_summary(&summary));
+
+    if summary.all_passed() { 0 } else { 1 }
+}
+
+/// Get command-line arguments via Fusion runtime FFI.
+extern fn fusion_argc() -> int;
+extern fn fusion_argv(idx: int) -> *const u8;
+
+fn get_args() -> Vec<String> {
+    let count = fusion_argc();
+    let mut args: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < count {
+        let raw = fusion_argv(i);
+        if !raw.is_null() {
+            let s = unsafe { std::ffi::CStr::from_ptr(raw as *const i8) };
+            args.push(s.to_string_lossy().into_owned());
+        }
+        i += 1;
+    }
+    args
+}
+
+/// Print help text.
+fn print_help() {
+    println("fusion-test -- Fusion Test Engine\n");
+    println("Usage: fusion-test [OPTIONS] [PATTERNS...]\n");
+    println("Options:");
+    println("  --filter, -f <PATTERN>    Only run tests matching PATTERN");
+    println("  --bench                   Also run benchmarks");
+    println("  --property                Also run property-based properties");
+    println("  --include-ignored         Run ignored tests too");
+    println("  --verbose, -v             Show all test output");
+    println("  --help, -h                Show this help\n");
+    println("Examples:");
+    println("  fusion-test tests/");
+    println("  fusion-test --filter my_test src/");
+}
+
+extern fn println(s: &str);

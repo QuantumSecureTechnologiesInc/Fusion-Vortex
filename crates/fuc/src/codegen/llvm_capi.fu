@@ -1,0 +1,23 @@
+// Fusion LLVM-C Bridge
+// This module maps the raw LLVM C-API into Fusion space.
+
+extern fn LLVMModuleCreateWithName(Name: string) -> *LLVMModule;
+extern fn LLVMCreateBuilder() -> *LLVMBuilder;
+extern fn LLVMInt64Type() -> *LLVMType;
+extern fn LLVMFunctionType(ReturnType: *LLVMType, ParamTypes: **LLVMType, ParamCount: int, IsVarArg: bool) -> *LLVMType;
+extern fn LLVMAddFunction(M: *LLVMModule, Name: string, FunctionTy: *LLVMType) -> *LLVMValue;
+extern fn LLVMAppendBasicBlock(Fn: *LLVMValue, Name: string) -> *LLVMBasicBlock;
+extern fn LLVMPositionBuilderAtEnd(Builder: *LLVMBuilder, Block: *LLVMBasicBlock);
+extern fn LLVMBuildRet(Builder: *LLVMBuilder, V: *LLVMValue) -> *LLVMValue;
+extern fn LLVMPrintModuleToFile(M: *LLVMModule, Filename: string, ErrorMessage: **char) -> bool;
+
+struct LLVMModule {}
+struct LLVMBuilder {}
+struct LLVMType {}
+struct LLVMValue {}
+struct LLVMBasicBlock {}
+
+// High-level wrapper for code generation
+fn initialise_llvm_module(name: string) -> *LLVMModule {
+    return LLVMModuleCreateWithName(name);
+}

@@ -1,0 +1,22 @@
+// WASM backend test: string literals
+// Compile with: fuc --target wasm tests/wasm/strings.fu -o strings.wasm
+
+fn hello() -> string {
+    return "Hello, World!";
+}
+
+fn greeting() -> string {
+    return "Hello from Fusion WASM!";
+}
+
+fn empty_string() -> string {
+    return "";
+}
+
+fn get_first() -> string {
+    return "first";
+}
+
+fn get_second() -> string {
+    return "first";
+}

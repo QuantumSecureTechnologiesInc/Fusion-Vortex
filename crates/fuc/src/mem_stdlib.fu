@@ -1,0 +1,22 @@
+// Fusion Standard Library: Memory
+// Provides the low-level allocation primitives required by the compiler.
+
+extern fn fu_malloc(size: int) -> *void;
+extern fn fu_free(ptr: *void) -> void;
+
+/// Allocates a block of memory of the specified size.
+fn alloc(size: int) -> *void {
+    let ptr: *void = fu_malloc(size);
+    if (ptr == null) {
+        // Controlled panic in the event of heap exhaustion
+        return null;
+    }
+    return ptr;
+}
+
+/// Releases a previously allocated block of memory.
+fn release(ptr: *void) -> void {
+    if (ptr != null) {
+        fu_free(ptr);
+    }
+}

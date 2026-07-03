@@ -1,115 +1,77 @@
-// Doubly-linked list implementation with generic support
+// stdlib/linkedlist.fu - Handle-based LinkedList for Fusion
+// Uses C runtime pool for node storage (handle pattern).
 
-class Node<T> {
-    value: T;
-    next: int;  // Pointer to next node (0 if null)
-    prev: int;  // Pointer to previous node (0 if null)
+extern fn fusion_ll_create() -> int;
+extern fn fusion_ll_destroy(h: int) -> void;
+extern fn fusion_ll_len(h: int) -> int;
+extern fn fusion_ll_push_back(h: int, value: int) -> void;
+extern fn fusion_ll_push_front(h: int, value: int) -> void;
+extern fn fusion_ll_front(h: int) -> int;
+extern fn fusion_ll_back(h: int) -> int;
+extern fn fusion_ll_get(h: int, index: int) -> int;
+extern fn fusion_ll_pop_front(h: int) -> void;
+extern fn fusion_ll_pop_back(h: int) -> void;
+extern fn fusion_ll_clear(h: int) -> void;
+
+struct LinkedListInt {
+    handle: int,
+    _pad: int,
 }
 
-class LinkedList<T> {
-    head: int;   // Pointer to first node
-    tail: int;   // Pointer to last node
-    length: int;
-    
-    fn new() -> LinkedList<T> {
-        return LinkedList::<T> { head: 0, tail: 0, length: 0 };
+impl LinkedListInt {
+    fn new() -> LinkedListInt {
+        let h: int = fusion_ll_create();
+        return LinkedListInt { handle: h, _pad: 0 };
     }
-    
-    fn push_back(val: T) -> void {
-        // Allocate new node
-        let node_size = sizeof::<Node<T>>();
-        let node_ptr = malloc(node_size);
-        
-        // Initialize node using ptr_write
-        // node.value = val
-        ptr_write::<T>(node_ptr, 0, val);
-        // node.next = 0
-        ptr_write::<int>(ptr_add(node_ptr, sizeof::<T>()), 0, 0);
-        // node.prev = tail
-        ptr_write::<int>(ptr_add(node_ptr, sizeof::<T>() + sizeof::<int>()), 0, self.tail);
-        
-        if (self.tail != 0) {
-            // Update old tail's next pointer
-            let old_tail_next_offset = sizeof::<T>();
-            ptr_write::<int>(ptr_add(self.tail, old_tail_next_offset), 0, node_ptr);
-        }
-        
-        if (self.head == 0) {
-            self.head = node_ptr;
-        }
-        
-        self.tail = node_ptr;
-        self.length = self.length + 1;
+    fn len(ll: LinkedListInt) -> int {
+        return fusion_ll_len(ll.handle);
     }
-    
-    fn push_front(val: T) -> void {
-        // Allocate new node
-        let node_size = sizeof::<Node<T>>();
-        let node_ptr = malloc(node_size);
-        
-        // Initialize node
-        ptr_write::<T>(node_ptr, 0, val);
-        // node.next = head
-        ptr_write::<int>(ptr_add(node_ptr, sizeof::<T>()), 0, self.head);
-        // node.prev = 0
-        ptr_write::<int>(ptr_add(node_ptr, sizeof::<T>() + sizeof::<int>()), 0, 0);
-        
-        if (self.head != 0) {
-            // Update old head's prev pointer
-            let old_head_prev_offset = sizeof::<T>() + sizeof::<int>();
-            ptr_write::<int>(ptr_add(self.head, old_head_prev_offset), 0, node_ptr);
-        }
-        
-        if (self.tail == 0) {
-            self.tail = node_ptr;
-        }
-        
-        self.head = node_ptr;
-        self.length = self.length + 1;
+    fn is_empty(ll: LinkedListInt) -> bool {
+        return fusion_ll_len(ll.handle) == 0;
     }
-    
-    fn pop_front() -> T {
-        // Returns first element and removes it
-        // Note: Assumes list is not empty (no bounds checking yet)
-        let value = ptr_read::<T>(self.head, 0);
-        let next_ptr = ptr_read::<int>(ptr_add(self.head, sizeof::<T>()), 0);
-        
-        free(self.head);
-        
-        self.head = next_ptr;
-        if (self.head == 0) {
-            self.tail = 0;
-        } else {
-            // Update new head's prev pointer to 0
-            let prev_offset = sizeof::<T>() + sizeof::<int>();
-            ptr_write::<int>(ptr_add(self.head, prev_offset), 0, 0);
-        }
-        
-        self.length = self.length - 1;
-        return value;
+    fn push_back(ll: LinkedListInt, value: int) -> LinkedListInt {
+        fusion_ll_push_back(ll.handle, value);
+        return ll;
     }
-    
-    fn len() -> int {
-        return self.length;
+    fn push_front(ll: LinkedListInt, value: int) -> LinkedListInt {
+        fusion_ll_push_front(ll.handle, value);
+        return ll;
     }
-    
-    fn is_empty() -> int {
-        if (self.length == 0) {
-            return 1;
-        } else {
-            return 0;
-        }
+    fn front(ll: LinkedListInt) -> int {
+        return fusion_ll_front(ll.handle);
     }
-    
-    fn clear() -> void {
-        let mut current = self.head;
-        while (current != 0) {
-            let next = ptr_read::<int>(ptr_add(current, sizeof::<T>()), 0);
-            free(current);
-            current = next;
-        }
-        self.head = 0;
-        self.tail = 0;
-        self.length = 0;
+    fn back(ll: LinkedListInt) -> int {
+        return fusion_ll_back(ll.handle);
+    }
+    fn get(ll: LinkedListInt, index: int) -> int {
+        return fusion_ll_get(ll.handle, index);
+    }
+    fn pop_front(ll: LinkedListInt) -> LinkedListInt {
+        fusion_ll_pop_front(ll.handle);
+        return ll;
+    }
+    fn pop_back(ll: LinkedListInt) -> LinkedListInt {
+        fusion_ll_pop_back(ll.handle);
+        return ll;
+    }
+    fn clear(ll: LinkedListInt) -> LinkedListInt {
+        fusion_ll_clear(ll.handle);
+        return ll;
     }
 }
+
+fn linked_list_int_new() -> LinkedListInt {
+    return LinkedListInt { handle: fusion_ll_create(), _pad: 0 };
+}
+fn linked_list_int_push_back(ll: LinkedListInt, value: int) -> LinkedListInt {
+    fusion_ll_push_back(ll.handle, value);
+    return ll;
+}
+fn linked_list_int_len(ll: LinkedListInt) -> int {
+    return fusion_ll_len(ll.handle);
+}
+fn linked_list_int_front(ll: LinkedListInt) -> int {
+    return fusion_ll_front(ll.handle);
+}
+
+// NOTE: Generic LinkedList<T> requires generics support.

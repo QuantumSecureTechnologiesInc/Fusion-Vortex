@@ -1,0 +1,2 @@
+// Dummy module — does nothing
+fn dummy() -> int { return 0; }

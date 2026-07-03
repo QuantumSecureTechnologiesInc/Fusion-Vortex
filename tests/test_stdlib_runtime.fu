@@ -1,0 +1,127 @@
+// tests/test_stdlib_runtime.fu - Tests for runtime memory and utility functions
+// Validates malloc/free/memcpy/strlen and other C runtime bridge functions.
+
+extern fn fusion_malloc(size: int) -> int;
+extern fn fusion_free(ptr: int) -> void;
+extern fn fusion_realloc(ptr: int, size: int) -> int;
+extern fn fusion_memcpy(dest: int, src: int, n: int) -> void;
+extern fn fusion_memset(dest: int, val: int, n: int) -> void;
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_puts(s: string) -> void;
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print_int(n: int) -> void;
+extern fn fusion_exit(code: int) -> void;
+extern fn fusion_ptr_read_byte(ptr: int) -> int;
+extern fn fusion_ptr_write_byte(ptr: int, val: int) -> void;
+extern fn fusion_ptr_read_int(ptr: int) -> int;
+extern fn fusion_ptr_write_int(ptr: int, val: int) -> void;
+
+// Wrapper functions (mirrors stdlib/runtime.fu)
+fn alloc(size: int) -> int { return fusion_malloc(size); }
+fn release(ptr: int) -> void { fusion_free(ptr); }
+fn resize(ptr: int, size: int) -> int { return fusion_realloc(ptr, size); }
+fn copy(dest: int, src: int, n: int) -> void { fusion_memcpy(dest, src, n); }
+fn str_len(s: string) -> int { return fusion_strlen(s); }
+
+fn panic(msg: string) -> void {
+    fusion_puts("PANIC:");
+    fusion_puts(msg);
+    fusion_exit(1);
+}
+
+fn assert_eq_int(actual: int, expected: int, msg: string) -> void {
+    if actual != expected {
+        fusion_println(msg);
+        fusion_println("FAIL: expected");
+        fusion_print_int(expected);
+        fusion_println("but got");
+        fusion_print_int(actual);
+        fusion_exit(1);
+    }
+}
+
+fn assert_true(cond: bool, msg: string) -> void {
+    if cond == false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected true");
+        fusion_exit(1);
+    }
+}
+
+fn assert_neq_int(actual: int, not_expected: int, msg: string) -> void {
+    if actual == not_expected {
+        fusion_println(msg);
+        fusion_println("FAIL: should not equal");
+        fusion_print_int(not_expected);
+        fusion_exit(1);
+    }
+}
+
+fn main() -> void {
+    fusion_println("=== Test: Memory Allocation ===");
+
+    // Test malloc returns non-null
+    let p: int = alloc(64);
+    assert_neq_int(p, 0, "malloc(64) should return non-null");
+
+    // Test ptr_write_byte / ptr_read_byte
+    fusion_ptr_write_byte(p, 65);
+    assert_eq_int(fusion_ptr_read_byte(p), 65, "write/read byte 65");
+
+    fusion_ptr_write_byte(p + 1, 66);
+    assert_eq_int(fusion_ptr_read_byte(p + 1), 66, "write/read byte at offset 1");
+
+    // Test ptr_write_int / ptr_read_int
+    let p2: int = alloc(32);
+    fusion_ptr_write_int(p2, 12345);
+    assert_eq_int(fusion_ptr_read_int(p2), 12345, "write/read int 12345");
+
+    fusion_ptr_write_int(p2 + 8, -999);
+    assert_eq_int(fusion_ptr_read_int(p2 + 8), -999, "write/read negative int");
+
+    fusion_println("=== Test: Memory Copy ===");
+
+    // Test memcpy
+    let src: int = alloc(16);
+    let dst: int = alloc(16);
+    fusion_ptr_write_byte(src, 10);
+    fusion_ptr_write_byte(src + 1, 20);
+    fusion_ptr_write_byte(src + 2, 30);
+    copy(dst, src, 3);
+    assert_eq_int(fusion_ptr_read_byte(dst), 10, "memcpy byte 0");
+    assert_eq_int(fusion_ptr_read_byte(dst + 1), 20, "memcpy byte 1");
+    assert_eq_int(fusion_ptr_read_byte(dst + 2), 30, "memcpy byte 2");
+
+    fusion_println("=== Test: Memory Set ===");
+
+    let buf: int = alloc(8);
+    fusion_memset(buf, 0, 8);
+    assert_eq_int(fusion_ptr_read_byte(buf), 0, "memset to 0");
+    fusion_memset(buf, 42, 4);
+    assert_eq_int(fusion_ptr_read_byte(buf), 42, "memset to 42");
+    assert_eq_int(fusion_ptr_read_byte(buf + 3), 42, "memset byte 3");
+    assert_eq_int(fusion_ptr_read_byte(buf + 4), 0, "memset untouched byte 4");
+
+    fusion_println("=== Test: String Length ===");
+
+    assert_eq_int(str_len("hello"), 5, "strlen hello");
+    assert_eq_int(str_len(""), 0, "strlen empty");
+    assert_eq_int(str_len("Fusion"), 6, "strlen Fusion");
+
+    fusion_println("=== Test: Realloc ===");
+
+    let rp: int = alloc(8);
+    fusion_ptr_write_int(rp, 777);
+    let rp: int = resize(rp, 64);
+    assert_eq_int(fusion_ptr_read_int(rp), 777, "realloc preserves data");
+
+    // Cleanup
+    fusion_free(p);
+    fusion_free(p2);
+    fusion_free(src);
+    fusion_free(dst);
+    fusion_free(buf);
+    fusion_free(rp);
+
+    fusion_println("All runtime tests PASSED");
+}

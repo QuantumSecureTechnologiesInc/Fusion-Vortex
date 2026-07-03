@@ -1,0 +1,73 @@
+// Fusion Self-Hosted Lexer
+// Transforms raw source text into a stream of entropic tokens.
+
+import std.mem;
+import std.str;
+
+struct Token {
+    type: int;
+    value: string;
+    line: int;
+    col: int;
+}
+
+struct TokenStream {
+    tokens: *Token;
+    count: int;
+    capacity: int;
+}
+
+fn tokenize(source: string) -> *TokenStream {
+    let stream: *TokenStream = mem.alloc(sizeof(TokenStream));
+    stream.count = 0;
+    stream.capacity = 1024;
+    stream.tokens = mem.alloc(sizeof(Token) * stream.capacity);
+
+    let i: int = 0;
+    while (source[i] != '\0') {
+        let c: char = source[i];
+
+        if (is_whitespace(c)) {
+            i = i + 1;
+            continue;
+        }
+
+        if (is_alpha(c)) {
+            let start: int = i;
+            while (is_alnum(source[i])) {
+                i = i + 1;
+            }
+            add_token(stream, TOKEN_IDENTIFIER, substring(source, start, i));
+            continue;
+        }
+
+        if (is_digit(c)) {
+            let start: int = i;
+            while (is_digit(source[i])) {
+                i = i + 1;
+            }
+            add_token(stream, TOKEN_INT, substring(source, start, i));
+            continue;
+        }
+
+        // Handle operators and symbols
+        if (c == '&') {
+            add_token(stream, TOKEN_AMPERSAND, "&");
+        } else if (c == '*') {
+            add_token(stream, TOKEN_STAR, "*");
+        } else if (c == '{') {
+            add_token(stream, TOKEN_LBRACE, "{");
+        } else if (c == '}') {
+            add_token(stream, TOKEN_RBRACE, "}");
+        }
+
+        i = i + 1;
+    }
+
+    return stream;
+}
+
+fn is_whitespace(c: char) -> bool { return c == ' ' || c == '\n' || c == '\t' || c == '\r'; }
+fn is_alpha(c: char) -> bool { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
+fn is_digit(c: char) -> bool { return c >= '0' && c <= '9'; }
+fn is_alnum(c: char) -> bool { return is_alpha(c) || is_digit(c); }

@@ -28,6 +28,12 @@ editors/vscode-fusion/node_modules/
 ui/admin-portal/node_modules/
 
 # Build outputs
+bin/cc.exe
+bin/clang_real.exe
+runtime/hashmap_runtime.o
+runtime/vector_runtime.o
+runtime/hashset_runtime.o
+runtime/disasm_ops.fu.inc
 editors/vscode-fusion/out/
 ui/admin-portal/dist/
 ui/admin-portal/build/
@@ -52,6 +58,9 @@ test_result.fu
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+target_fuc/
+target_fuc_native/
+target_fuc2/
 target_fuc/
 target_fuc_native/
 target_fuc2/

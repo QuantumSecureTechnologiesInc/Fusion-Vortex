@@ -1,0 +1,9 @@
+extern fn fusion_tcp_recv_str(fd: int, max_bytes: int) -> string;
+
+fn test_recv(fd: int, connected: int, max_bytes: int) -> string {
+    if connected == 0 {
+        let empty_str: string = "";
+        return empty_str;
+    }
+    return fusion_tcp_recv_str(fd, max_bytes);
+}

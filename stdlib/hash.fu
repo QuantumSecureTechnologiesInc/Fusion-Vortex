@@ -1,66 +1,52 @@
-// stdlib/hash.fu - Hash trait for collections
+// stdlib/hash.fu - Hash and Eq traits for Fusion collections
+// Standalone hash/eq functions for built-in types since
+// trait impl for primitives may not be fully supported.
 
-// Hash trait - types that can be hashed
+extern fn fusion_hash32(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+
+// ============================================================
+// Traits
+// ============================================================
 trait Hash {
     fn hash(self) -> int;
 }
 
-// Implement Hash for built-in types
-impl Hash for int {
-    fn hash(self) -> int {
-        return self;
-    }
-}
-
-impl Hash for bool {
-    fn hash(self) -> int {
-        if self {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-}
-
-// FNV-1a hash for strings
-fn hash_string(s: string) -> int {
-    // FNV-1a constants
-    let hash = 2166136261;
-    let prime = 16777619;
-    
-    // Note: This is a stub - actual string hashing would require
-    // character iteration which needs runtime support
-    return hash;
-}
-
-impl Hash for string {
-    fn hash(self) -> int {
-        return hash_string(self);
-    }
-}
-
-// Eq trait - types that can be compared for equality
 trait Eq {
-    fn eq(self, other: Self) -> bool;
-    fn ne(self, other: Self) -> bool;
+    fn eq(self, other: int) -> bool;
 }
 
-impl Eq for int {
-    fn eq(self, other: int) -> bool {
-        return self == other;
-    }
-    
-    fn ne(self, other: int) -> bool {
-        return self != other;
-    }
+// ============================================================
+// Hash functions for built-in types
+// ============================================================
+fn hash_int(v: int) -> int {
+    return v * 2654435761;
 }
 
-impl Eq for bool {
-    fn eq(self, other: bool) -> bool {
-        return self == other;
-    }
-    
-    fn ne(self, other: bool) -> bool {
-        return self != other;
-    }
+fn hash_bool(v: bool) -> int {
+    if v { return 1; }
+    return 0;
+}
+
+fn hash_string(s: string) -> int {
+    return fusion_hash32(s);
+}
+
+// ============================================================
+// Equality functions for built-in types
+// ============================================================
+fn eq_int(a: int, b: int) -> bool {
+    return a == b;
+}
+
+fn ne_int(a: int, b: int) -> bool {
+    return a != b;
+}
+
+fn eq_bool(a: bool, b: bool) -> bool {
+    return a == b;
+}
+
+fn eq_string(a: string, b: string) -> bool {
+    return fusion_strcmp(a, b) == 0;
 }

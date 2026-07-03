@@ -1,0 +1,10 @@
+// converted/manifest.fsn
+// Repository-wide Rust->Fusion mirror inventory.
+
+const SOURCE_ROOT: FString = ".";
+const FSN_MIRROR: FString = "fsn/converted";
+const CONVERTED_FILES: FInt = 1356;
+
+fn note() -> FString {
+    FString::from("Converted .rs sources into FSN mirrors with security annotations and quarantine markers.")
+}

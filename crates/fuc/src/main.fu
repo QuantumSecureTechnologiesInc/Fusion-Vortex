@@ -1,7 +1,5 @@
-//! Native-first compiler entrypoint for stage chaining.
-///
-/// Rust-oriented compatibility entry remains in `main_rust_compat.fu` for
-/// source-refresh Cargo builds.
+//! Fusion compiler main entry point.
+//! Full pipeline: parse → sema → vortex → IR → optimize → codegen
 
 mod stage1_parser_api;
 mod stage1_sema_api;
@@ -9,22 +7,35 @@ mod ast;
 mod lexer;
 mod parser;
 mod sema;
+mod vortex;
+mod ir;
+mod optimizer;
+mod codegen;
+mod wasm;
+mod llvm;
+mod cli;
 
 extern fn printf(fmt: string, ...) -> int;
 
 pub fn main() -> int {
-    let parse_status = stage1_parser_api::parse_file("crates/fuc/src/main.fu");
-    if parse_status != 0 {
-        printf("[fuc-native] parser check failed: %d\\n", parse_status);
-        return parse_status;
-    }
+    let args = cli::parseargs();
+    let result = stage1_parser_api::compile_entry(args);
+    return result;
+}//! 7 mods + sema_shape_check
 
-    let sema_status = stage1_sema_api::sema_file("crates/fuc/src/main.fu");
-    if sema_status != 0 {
-        printf("[fuc-native] sema check failed: %d\\n", sema_status);
-        return sema_status;
-    }
+mod stage1_parser_api;
+mod stage1_sema_api;
+mod ast;
+mod lexer;
+mod parser;
+mod sema;
+mod dummy;
 
-    printf("[fuc-native] parser/sema checks passed\\n");
-    return 0;
+extern fn printf(fmt: string, ...) -> int;
+
+pub fn main() -> int {
+    printf("[fuc-native] before sema_shape_check\n");
+    let result = stage1_parser_api::sema_shape_check("test.fu");
+    printf("[fuc-native] sema_shape_check: %d\n", result);
+    return result;
 }

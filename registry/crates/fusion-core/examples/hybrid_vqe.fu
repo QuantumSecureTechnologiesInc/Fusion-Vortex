@@ -1,5 +1,5 @@
 use fusion_core::types::quantum::QuantumCircuit;
-fn main() {
+pub fn main() {
     println!("--- Fusion Hybrid VQE (Production Grade) ---");
     println!("Target: Minimize <ψ|Z|ψ>");
     println!("Ansatz: Ry(theta)");

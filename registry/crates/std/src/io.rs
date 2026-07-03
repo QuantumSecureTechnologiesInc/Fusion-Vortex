@@ -1,6 +1,7 @@
 use crate::error::StdResult;
 use async_trait::async_trait;
+
 #[async_trait]
 pub trait FusionRead {
-    async fn read_bytes(&mut self) -> StdResult<FVec<u8>>;
+    async fn read_bytes(&mut self) -> StdResult<Vec<u8>>;
 }

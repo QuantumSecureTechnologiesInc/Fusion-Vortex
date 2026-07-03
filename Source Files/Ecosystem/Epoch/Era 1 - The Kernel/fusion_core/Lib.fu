@@ -1,0 +1,10 @@
+// SOURCE: Source Files/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Lib.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+mod types;
+mod traits;
+mod ops;
+mod compiler;
+mod error; // Export Error module
+
+pub use error::{FusionError, FusionResult};
+// ... other exports ...

@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 18: Hybrid Quantum-Classical Algorithms
 
 In Chapter 17, we introduced Quantum Computing in isolation. However, the most powerful near-term applications of quantum computers are **hybrid**: they combine classical processing (for optimization, data handling, and control flow) with quantum processing (for evaluating complex cost functions or sampling probability distributions).

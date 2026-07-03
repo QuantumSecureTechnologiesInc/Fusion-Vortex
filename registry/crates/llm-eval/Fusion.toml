@@ -1,0 +1,14 @@
+[package]
+name = "llm-eval"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: LLM evaluation runner and benchmarking framework"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["llm eval"]
+categories = ["algorithms"]
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = "1.0.0"

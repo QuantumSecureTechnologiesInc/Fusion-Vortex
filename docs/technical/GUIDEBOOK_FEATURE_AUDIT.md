@@ -1,28 +1,31 @@
+> **Phase 0 audit (2026-06-25):** `dist/` and `Source Files/` directories no longer exist after restructure.
+> Rows referencing those paths are marked below. Treat this as a target layout, not current state.
+
 # Guidebook Feature Audit
 
 This audit checks guidebook-level features against concrete repo artifacts (paths, binaries, or sysroot installs).
 
 | Category | Feature | Status | Evidence |
 | --- | --- | --- | --- |
-| Compiler | Fusion compiler (fuc) | Implemented | crates/fuc, dist/bin/fuc |
-| Toolchain | Fusion build driver (fusion) | Implemented | cmd/fusion, dist/bin/fusion |
-| Stdlib | Fusion stdlib sources | Implemented | registry/crates/std, src/stdlib |
-| Stdlib | Stdlib installed in sysroot | Implemented | dist/lib/fusion/std |
-| Runtime | C runtime layer | Implemented | runtime/runtime.c, dist/lib/fusion/runtime.o |
-| Borrow checker | Entropic Borrow Checker (Vortex) | Implemented | Source Files/Fusion Entropic Borrow Checker |
-| Memory | ARC subsystem | Implemented | Source Files/Automatic Reference Counting (ARC) |
-| MCP | MCP server implementation | Implemented | src/mcp, registry/crates/mcp |
-| HAFT | HAFT Mesh Nodes v1.0 sources | Implemented | Source Files/HAFT Mesh Nodes v1.0 |
-| HAFT | HAFT binaries packaged | Implemented | dist/haft_nodes |
-| Runtime | Core Runtime Evolution sources | Implemented | Source Files/The Core Runtime Evolution |
-| Runtime | Core Runtime Evolution packaged | Implemented | dist/lib/fusion/core_runtime_evolution |
-| Forge | Fusion Forge build system | Implemented | Source Files/Fusion Forge (The Build System), dist/lib/fusion/forge |
-| Interop | Interop layer converted to .fu | Implemented | toolchain/interop |
-| Integrations | Integrations inventory | Implemented | Source Files/Intergrations |
-| Quantum | IBM/AWS bracket backends | Implemented | registry/crates/q-ibm-backend, registry/crates/q-aws-backend |
-| AI | LLM providers (Ollama/Qwen/DeepSeek) | Implemented | registry/crates/llm-model-server, registry/crates/interop-js, registry/crates/interop-python |
-| UI | Fusion TUI | Implemented | Source Files/Fusion TUI, registry/crates/fusion-terminal-browser |
-| Monolith | Fusion Unified Monolith | Implemented | Source Files/Fusion Unified  Monolith, registry/crates/fusion-monolith-core |
+| Compiler | Fusion compiler (fuc) | Implemented | `crates/fuc/` |
+| Toolchain | Fusion build driver (fusion) | Implemented | `cmd/fusion/` |
+| Stdlib | Fusion stdlib sources | Implemented | `stdlib/`, `src/stdlib/` |
+| Stdlib | Stdlib installed in sysroot | **Not Built** | `dist/lib/fusion/std` — *dist/ does not exist* |
+| Runtime | C runtime layer | Implemented | `runtime/native/fusionrt.c` |
+| Borrow checker | Entropic Borrow Checker (Vortex) | **Archived** | *was `Source Files/` — directory removed* |
+| Memory | ARC subsystem | **Archived** | *was `Source Files/` — directory removed* |
+| MCP | MCP server implementation | Implemented | `src/mcp/` |
+| HAFT | HAFT Mesh Nodes v1.0 sources | **Archived** | *was `Source Files/` — directory removed* |
+| HAFT | HAFT binaries packaged | **Not Built** | `dist/haft_nodes` — *dist/ does not exist* |
+| Runtime | Core Runtime Evolution sources | **Archived** | *was `Source Files/` — directory removed* |
+| Runtime | Core Runtime Evolution packaged | **Not Built** | `dist/lib/fusion/core_runtime_evolution` — *dist/ does not exist* |
+| Forge | Fusion Forge build system | **Archived** | *was `Source Files/` — directory removed* |
+| Interop | Interop layer converted to .fu | Implemented | `toolchain/interop/` |
+| Integrations | Integrations inventory | Implemented | `docs/ecosystem/Integrations_Inventory.md` |
+| Quantum | IBM/AWS bracket backends | **Aspirational** | `registry/crates/q-ibm-backend`, `registry/crates/q-aws-backend` — *most registry crates are empty stubs* |
+| AI | LLM providers (Ollama/Qwen/DeepSeek) | **Aspirational** | `registry/crates/llm-model-server` — *most registry crates are empty stubs* |
+| UI | Fusion TUI | **Archived** | *was `Source Files/Fusion TUI` — directory removed* |
+| Monolith | Fusion Unified Monolith | Partial | `crates/fusion-monolith-core/` exists |
 
 ## Notes
 

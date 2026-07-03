@@ -1,5 +1,5 @@
 [package]
-name = "ai-daemon"
+name = "fusion-ai-daemon"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -24,5 +24,4 @@ tower = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion-ai-models = { path = "../ai-models" }
 fusion_std = "1.0.0"
-
 

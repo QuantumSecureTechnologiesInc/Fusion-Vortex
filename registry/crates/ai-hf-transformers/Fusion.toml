@@ -1,0 +1,14 @@
+[package]
+name = "ai-hf-transformers"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Integration: HuggingFace Transformers model loader and bridge"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["ai hf transformers"]
+categories = ["algorithms"]
+
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = "1.0.0"

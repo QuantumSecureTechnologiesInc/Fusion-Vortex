@@ -1,0 +1,63 @@
+// Fusion Self-Hosted Parser
+// Implements recursive-descent logic to build the AST.
+import lexer;
+import std.mem;
+
+struct ASTNode {
+    type: int;
+    value: string;
+    left: *ASTNode;
+    right: *ASTNode;
+    is_mutable: bool;
+}
+
+struct Parser {
+    tokens: *TokenStream;
+    current: int;
+}
+
+fn parse(tokens: *TokenStream) -> *ASTNode {
+    let p: *Parser = mem.alloc(sizeof(Parser));
+    p.tokens = tokens;
+    p.current = 0;
+
+    return parse_expression(p);
+}
+
+fn parse_expression(p: *Parser) -> *ASTNode {
+    let node: *ASTNode = parse_primary(p);
+    
+    // Simple operator precedence for the self-hosted bootstrap
+    while (match_token(p, TOKEN_PLUS)) {
+        let op: *ASTNode = mem.alloc(sizeof(ASTNode));
+        op.type = NODE_ADD;
+        op.left = node;
+        op.right = parse_primary(p);
+        node = op;
+    }
+
+    return node;
+}
+
+fn parse_primary(p: *Parser) -> *ASTNode {
+    let token: Token = peek_token(p);
+    
+    if (token.type == TOKEN_INT) {
+        advance_token(p);
+        let node: *ASTNode = mem.alloc(sizeof(ASTNode));
+        node.type = NODE_CONSTANT;
+        node.value = token.value;
+        return node;
+    }
+
+    // Handle variables and borrows
+    if (token.type == TOKEN_IDENTIFIER) {
+        advance_token(p);
+        let node: *ASTNode = mem.alloc(sizeof(ASTNode));
+        node.type = NODE_VARIABLE;
+        node.value = token.value;
+        return node;
+    }
+
+    return null;
+}

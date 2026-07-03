@@ -1,7 +1,0 @@
-Nested loop result: 9
-Break/continue sum: 25
-Early return: 42
-Match 0: zero
-Match 1: one
-Match 5: other
-All control flow tests passed!

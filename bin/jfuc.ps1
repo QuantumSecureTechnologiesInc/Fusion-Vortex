@@ -3,8 +3,19 @@
 
 $ErrorActionPreference = "Stop"
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$WorkspaceRoot = Split-Path -Parent $ScriptDir
+
 # Auto-detect LLVM (Backend) - Prioritize 20
-if (Test-Path "C:\Program Files\LLVM") {
+$LocalLLVM = Join-Path $WorkspaceRoot "clang+llvm-20.1.0-x86_64-pc-windows-msvc"
+if (Test-Path $LocalLLVM) {
+    if (-not $env:LLVM_SYS_201_PREFIX) {
+        Write-Host "[jfuc] Auto-Config: Found local LLVM 20 at $LocalLLVM"
+        $env:LLVM_SYS_201_PREFIX = $LocalLLVM
+        $env:PATH = "$LocalLLVM\bin;" + $env:PATH
+    }
+}
+elseif (Test-Path "C:\Program Files\LLVM") {
     # Assume this is the user's intended 20.1.8 install
     if (-not $env:LLVM_SYS_201_PREFIX) {
         Write-Host "[jfuc] Auto-Config: Found LLVM 20 at C:\Program Files\LLVM"
@@ -25,7 +36,6 @@ elseif (Test-Path "C:\LLVM\18.1.8-msvc") {
 }
 
 # Bootstrap (Python Build)
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 python "$ScriptDir\..\tools\build_fuc_from_fu.py"
 if ($LASTEXITCODE -ne 0) {
     Write-Error "[jfuc] Bootstrap failed. Exit Code: $LASTEXITCODE"

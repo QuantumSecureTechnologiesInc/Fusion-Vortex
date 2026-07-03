@@ -1,0 +1,92 @@
+// Chaos Vacuum Diagnostics Engine - Rich Compiler Error Reporting
+// Converted from FU Parts: chaos_vacuum_diagnostics_engine.rs
+// Rationale: Replaces raw backtraces with descriptive conversational terminal reports
+// that explain the thermodynamic "Why" of safety errors.
+
+extern fn printf(fmt: string, ...) -> int;
+
+/// Permission state constants (replaces Rust enum)
+const PERM_DISSIPATED: int = 0;
+const PERM_EXCLUSIVE_BORROWED: int = 1;
+const PERM_SHARED_BORROWED: int = 2;
+const PERM_INTACT: int = 3;
+
+/// Event collision tracked by Vortex borrow checker
+struct EventCollision {
+    var_name: string,
+    existing_state: int,       // PermissionState constant
+    shared_borrow_count: int,  // Only valid for PERM_SHARED_BORROWED
+    collision_span_start: int,
+    collision_span_end: int,
+}
+
+/// Chaos Vacuum reporter for rich diagnostic output
+struct ChaosVacuumReporter {
+    source_filename: string,
+    source_code: string,
+}
+
+fn reporter_new(filename: string, code: string) -> ChaosVacuumReporter {
+    ChaosVacuumReporter {
+        source_filename: filename,
+        source_code: code,
+    }
+}
+
+/// Map permission state to human-readable description
+fn state_description(state: int, count: int) -> string {
+    if state == PERM_DISSIPATED {
+        return "consumed or moved into a different execution scope";
+    }
+    if state == PERM_EXCLUSIVE_BORROWED {
+        return "exclusively borrowed by a mutable writer";
+    }
+    if state == PERM_SHARED_BORROWED {
+        return "borrowed immutably by active shared readers";
+    }
+    return "residing intact inside standard local scope";
+}
+
+/// Publish a colorful conversational terminal report showing exactly where
+/// the permission flow collided and how to resolve the conflict safely.
+fn publish_collision_report(reporter: ChaosVacuumReporter, event: &EventCollision) {
+    printf("Entropic Collision Detected in %s\n", (*event).var_name);
+    printf("============================================================\n");
+    printf("Variable flow '%s' suffered a permission stream intersection.\n", (*event).var_name);
+
+    let desc: string = state_description((*event).existing_state, (*event).shared_borrow_count);
+    printf("\nAnalysis of Flow Collision:\n");
+    printf("  * The resource was already: %s.\n", desc);
+    printf("  * You attempted to access or borrow it at position %d-%d\n", (*event).collision_span_start, (*event).collision_span_end);
+
+    printf("\nRemediation Advice:\n");
+    if (*event).existing_state == PERM_DISSIPATED {
+        printf("    To repair this flow, allocate a fresh resource or structure your code to complete\n");
+        printf("    the work before passing ownership to subsequent execution scopes.\n");
+    }
+    if (*event).existing_state == PERM_EXCLUSIVE_BORROWED || (*event).existing_state == PERM_SHARED_BORROWED {
+        printf("    Fusion's Vortex Engine strictly forbids conflicting read/write access.\n");
+        printf("    Wrap the borrow blocks inside explicit scope boundaries using '{ ... }'\n");
+        printf("    to allow exclusive permission frames to exit before access.\n");
+    }
+    printf("============================================================\n\n");
+}
+
+/// Simple collision test accessible from compiler integration
+fn test_collision_report() -> int {
+    printf("=== Chaos Vacuum Diagnostics Test ===\n");
+
+    let collision: EventCollision = EventCollision {
+        var_name: "my_resource",
+        existing_state: PERM_EXCLUSIVE_BORROWED,
+        shared_borrow_count: 0,
+        collision_span_start: 42,
+        collision_span_end: 60,
+    };
+
+    let reporter: ChaosVacuumReporter = reporter_new("test.fu", "let x = my_resource;");
+    publish_collision_report(reporter, &collision);
+
+    printf("=== Diagnostics Engine Operational ===\n");
+    return 0;
+}

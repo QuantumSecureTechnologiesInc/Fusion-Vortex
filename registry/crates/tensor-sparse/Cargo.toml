@@ -1,0 +1,27 @@
+[package]
+name = "fusion_tensor_sparse"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Foundation: Panic-free sparse tensor primitives with O(nnz) complexity guarantees"
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["sparse", "tensor", "primitives", "performance"]
+categories = ["data-structures", "science"]
+readme = "README.md"
+
+[features]
+default = []
+
+[dependencies]
+fusion_core = { workspace = true, default-features = false }
+fusion_ai_core = { workspace = true, optional = true }
+num-traits = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+# [[bench]]
+# name = "sparse_ops"
+# harness = false
+

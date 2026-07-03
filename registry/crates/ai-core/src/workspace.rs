@@ -1,26 +1,25 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::path::PathBuf;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
 use anyhow::Result;
+
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
 /// Workspace context object (WCO) containing all project information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceContext {
     pub root_path: PathBuf,
-    pub files: FVec<FileContext>,
-    pub dependencies: FVec<Dependency>,
+    pub files: Vec<FileContext>,
+    pub dependencies: Vec<Dependency>,
     pub project_config: ProjectConfig,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileContext {
     pub path: PathBuf,
-    pub content: FString,
-    pub ast: Option<FString>,
+    pub content: String,
+    pub ast: Option<String>, // Serialized AST
     pub file_type: FileType,
 }
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FileType {
     Source,
@@ -28,31 +27,37 @@ pub enum FileType {
     Config,
     Documentation,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dependency {
-    pub name: FString,
-    pub version: FString,
-    pub source: FString,
+    pub name: String,
+    pub version: String,
+    pub source: String,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectConfig {
-    pub name: FString,
-    pub version: FString,
-    pub edition: FString,
+    pub name: String,
+    pub version: String,
+    pub edition: String,
 }
+
 /// Workspace loader for collecting project context
 pub struct WorkspaceLoader {
     root_path: PathBuf,
 }
+
 impl WorkspaceLoader {
     pub fn new(root_path: PathBuf) -> Self {
         Self { root_path }
     }
+
     /// Load workspace context
     pub fn load(&self) -> Result<WorkspaceContext> {
         let project_config = self.load_project_config()?;
         let files = self.collect_files()?;
         let dependencies = self.load_dependencies()?;
+
         Ok(WorkspaceContext {
             root_path: self.root_path.clone(),
             files,
@@ -60,23 +65,30 @@ impl WorkspaceLoader {
             project_config,
         })
     }
+
     fn load_project_config(&self) -> Result<ProjectConfig> {
+        // Load Fusion.toml
         Ok(ProjectConfig {
             name: "example-project".to_string(),
             version: "0.1.0".to_string(),
             edition: "2024".to_string(),
         })
     }
-    fn collect_files(&self) -> Result<FVec<FileContext>> {
+
+    fn collect_files(&self) -> Result<Vec<FileContext>> {
+        // Collect all Fusion source files
         Ok(vec![])
     }
-    fn load_dependencies(&self) -> Result<FVec<Dependency>> {
+
+    fn load_dependencies(&self) -> Result<Vec<Dependency>> {
         Ok(vec![])
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_workspace_loader() {
         let loader = WorkspaceLoader::new(PathBuf::from("."));

@@ -1,0 +1,18 @@
+[package]
+name = "fusion_finance"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "High-frequency trading primitives with sub-10μs latency"
+
+[dependencies]
+fusion_core = { path = "../../../registry/crates/fusion_core/" }
+fusion_runtime_core = { path = "../../../registry/crates/fusion_runtime_core/" }
+serde = { workspace = true }
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }

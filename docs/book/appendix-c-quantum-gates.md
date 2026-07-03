@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Appendix C: Quantum Gate Reference
 
 This appendix provides a comprehensive reference for quantum gates available in Fusion's quantum computing library.

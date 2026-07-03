@@ -1,0 +1,17 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn test5(a: int, b: int, c: int, d: int, e: int) -> int {
+    printf("5p: %d\n", a);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Start\n");
+    let mut i: int = 0;
+    while i < 2 {
+        let r = test5(i, 1, 2, 3, 4);
+        i = i + 1;
+    }
+    printf("End\n");
+    return 0;
+}

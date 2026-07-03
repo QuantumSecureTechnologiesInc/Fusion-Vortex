@@ -1,0 +1,134 @@
+/// Production Mixtral Routing.
+///
+/// Implements Top-2 MoE routing with expert load balancing loss calculation.
+use fusion_core::types::tensor::{Matrix, Vector1D};
+use fusion_core::{FusionError, FusionResult};
+
+pub struct MixtralRouter {
+    pub gate_weights: Matrix<f64>, // [Dim, NumExperts]
+    pub num_experts: usize,
+    pub top_k: usize, // Always 2 for Mixtral
+}
+
+impl MixtralRouter {
+    pub fn new(dim: usize, num_experts: usize) -> Self {
+        Self {
+            gate_weights: Matrix::zeros([dim, num_experts]),
+            num_experts,
+            top_k: 2,
+        }
+    }
+
+    /// Calculates the routing indices and associated scores using Top-K selection.
+    pub fn route(&self, input_token: &Vector1D<f64>) -> FusionResult<(Vec<usize>, Vec<f64>)> {
+        // 1. Calculate logits: scores = input_token @ gate_weights
+        let logits = self.compute_logits(input_token)?;
+
+        // 2. Apply softmax
+        let probs = self.softmax(&logits);
+
+        // 3. Top-K selection
+        let (indices, scores) = self.top_k_selection(&probs);
+
+        // 4. Normalize top-k scores to sum to 1
+        let sum: f64 = scores.iter().sum();
+        let normalized_scores: Vec<f64> = scores.iter().map(|s| s / sum).collect();
+
+        Ok((indices, normalized_scores))
+    }
+
+    fn compute_logits(&self, input: &Vector1D<f64>) -> FusionResult<Vec<f64>> {
+        let input_data = input.data.as_slice().ok_or_else(|| {
+            FusionError::ShapeError("Failed to get input data as slice".to_string())
+        })?;
+        let gate_shape = self.gate_weights.shape();
+        let gate_data = self.gate_weights.data.as_slice().ok_or_else(|| {
+            FusionError::ShapeError("Failed to get gate weights as slice".to_string())
+        })?;
+        let mut logits = vec![0.0; gate_shape[1]];
+
+        // Matrix-vector multiplication: input @ gate_weights
+        for expert_idx in 0..gate_shape[1] {
+            let mut sum = 0.0;
+            for dim_idx in 0..gate_shape[0] {
+                sum += input_data[dim_idx] * gate_data[dim_idx * gate_shape[1] + expert_idx];
+            }
+            logits[expert_idx] = sum;
+        }
+
+        Ok(logits)
+    }
+
+    fn softmax(&self, logits: &[f64]) -> Vec<f64> {
+        let max_logit = logits.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let exp_logits: Vec<f64> = logits.iter().map(|&x| (x - max_logit).exp()).collect();
+        let sum_exp: f64 = exp_logits.iter().sum();
+        exp_logits.iter().map(|&x| x / sum_exp).collect()
+    }
+
+    fn top_k_selection(&self, probs: &[f64]) -> (Vec<usize>, Vec<f64>) {
+        let mut indexed_probs: Vec<(usize, f64)> =
+            probs.iter().enumerate().map(|(i, &p)| (i, p)).collect();
+        indexed_probs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+        let top_k = indexed_probs
+            .iter()
+            .take(self.top_k)
+            .cloned()
+            .collect::<Vec<_>>();
+        let indices = top_k.iter().map(|(i, _)| *i).collect();
+        let scores = top_k.iter().map(|(_, s)| *s).collect();
+
+        (indices, scores)
+    }
+
+    /// Calculates the Load Balancing Loss (L_aux) during training.
+    pub fn calculate_load_loss(
+        &self,
+        routing_scores: &Matrix<f64>,
+        dispatch_mask: &Matrix<f64>,
+    ) -> FusionResult<f64> {
+        // L_aux = N * sum_i(f_i * P_i)
+        // where f_i = fraction of tokens routed to expert i
+        // and P_i = average routing probability to expert i
+
+        let batch_size = routing_scores.shape()[0];
+        let num_experts = routing_scores.shape()[1];
+
+        let dispatch_data = dispatch_mask.data.as_slice().ok_or_else(|| {
+            FusionError::ShapeError("Failed to get dispatch mask data as slice".to_string())
+        })?;
+        let routing_data = routing_scores.data.as_slice().ok_or_else(|| {
+            FusionError::ShapeError("Failed to get routing scores data as slice".to_string())
+        })?;
+
+        // Calculate f_i (expert load)
+        let mut expert_load = vec![0.0; num_experts];
+        for expert_idx in 0..num_experts {
+            let mut count = 0.0;
+            for batch_idx in 0..batch_size {
+                count += dispatch_data[batch_idx * num_experts + expert_idx];
+            }
+            expert_load[expert_idx] = count / batch_size as f64;
+        }
+
+        // Calculate P_i (average routing probability)
+        let mut avg_prob = vec![0.0; num_experts];
+        for expert_idx in 0..num_experts {
+            let mut sum = 0.0;
+            for batch_idx in 0..batch_size {
+                sum += routing_data[batch_idx * num_experts + expert_idx];
+            }
+            avg_prob[expert_idx] = sum / batch_size as f64;
+        }
+
+        // Compute loss
+        let mut loss = 0.0;
+        for i in 0..num_experts {
+            loss += expert_load[i] * avg_prob[i];
+        }
+        loss *= num_experts as f64;
+
+        Ok(loss)
+    }
+}

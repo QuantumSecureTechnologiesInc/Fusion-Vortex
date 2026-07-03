@@ -1,31 +1,27 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::time::Duration;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FI64 = i64;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FU32 = u32;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+// OpenAI adapter implementation for fusion-ai-core
 use anyhow::{Context, Result};
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, warn};
-pub const OPENAI_API_BASE: &str = "https://api.openai.com/v1";
-pub const MAX_RETRIES: FU32 = 3;
-pub const INITIAL_RETRY_DELAY: Duration = Duration::from_secs(1);
+
+const OPENAI_API_BASE: &str = "https://api.openai.com/v1";
+const MAX_RETRIES: u32 = 3;
+const INITIAL_RETRY_DELAY: Duration = Duration::from_secs(1);
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenAIConfig {
-    pub api_key: FString,
-    pub organization: Option<FString>,
-    pub model: FString,
-    pub max_tokens: Option<FSize>,
+    pub api_key: String,
+    pub organization: Option<String>,
+    pub model: String,
+    pub max_tokens: Option<usize>,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
     pub timeout: Duration,
 }
+
 impl Default for OpenAIConfig {
     fn default() -> Self {
         Self {
@@ -39,105 +35,114 @@ impl Default for OpenAIConfig {
         }
     }
 }
+
 #[derive(Debug, Serialize)]
-pub struct ChatCompletionRequest {
-    model: FString,
-    messages: FVec<OpenAIMessage>,
+struct ChatCompletionRequest {
+    model: String,
+    messages: Vec<OpenAIMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<FSize>,
+    max_tokens: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    stream: Option<FBool>,
+    stream: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    functions: Option<FVec<Function>>,
+    functions: Option<Vec<Function>>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenAIMessage {
-    pub role: FString,
-    pub content: FString,
+    pub role: String,
+    pub content: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<FString>,
+    pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub function_call: Option<FunctionCall>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionCall {
-    pub name: FString,
-    pub arguments: FString,
+    pub name: String,
+    pub arguments: String,
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Function {
-    pub name: FString,
-    pub description: FString,
+    pub name: String,
+    pub description: String,
     pub parameters: serde_json::Value,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct ChatCompletionResponse {
+struct ChatCompletionResponse {
     #[allow(dead_code)]
-    id: FString,
+    id: String,
     #[allow(dead_code)]
-    object: FString,
+    object: String,
     #[allow(dead_code)]
-    created: FI64,
+    created: i64,
     #[allow(dead_code)]
-    model: FString,
-    choices: FVec<Choice>,
+    model: String,
+    choices: Vec<Choice>,
     usage: Usage,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct Choice {
+struct Choice {
     #[allow(dead_code)]
-    index: FSize,
+    index: usize,
     message: OpenAIMessage,
     #[allow(dead_code)]
-    finish_reason: FString,
+    finish_reason: String,
 }
+
 #[derive(Debug, Deserialize)]
 pub struct Usage {
-    pub prompt_tokens: FSize,
-    pub completion_tokens: FSize,
-    pub total_tokens: FSize,
+    pub prompt_tokens: usize,
+    pub completion_tokens: usize,
+    pub total_tokens: usize,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct ErrorResponse {
+struct ErrorResponse {
     error: ErrorDetail,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct ErrorDetail {
-    message: FString,
+struct ErrorDetail {
+    message: String,
     #[serde(rename = "type")]
-    error_type: FString,
+    error_type: String,
     #[allow(dead_code)]
-    param: Option<FString>,
+    param: Option<String>,
     #[allow(dead_code)]
-    code: Option<FString>,
+    code: Option<String>,
 }
+
 pub struct OpenAIAdapter {
     config: OpenAIConfig,
     client: Client,
 }
+
 impl OpenAIAdapter {
     pub fn new(config: OpenAIConfig) -> Result<Self> {
         if config.api_key.is_empty() {
             anyhow::bail!("OpenAI API key is required");
         }
         let mut headers = reqwest::header::HeaderMap::new();
-        headers
-            .insert(
-                "Authorization",
-                format!("Bearer {}", config.api_key)
-                    .parse()
-                    .context("Invalid API key format")?,
-            );
+        headers.insert(
+            "Authorization",
+            format!("Bearer {}", config.api_key)
+                .parse()
+                .context("Invalid API key format")?,
+        );
         if let Some(org) = &config.organization {
-            headers
-                .insert(
-                    "OpenAI-Organization",
-                    org.parse().context("Invalid organization ID")?,
-                );
+            headers.insert(
+                "OpenAI-Organization",
+                org.parse().context("Invalid organization ID")?,
+            );
         }
         let client = Client::builder()
             .default_headers(headers)
@@ -146,10 +151,11 @@ impl OpenAIAdapter {
             .context("Failed to create HTTP client")?;
         Ok(Self { config, client })
     }
+
     pub async fn chat_completion(
         &self,
-        messages: FVec<OpenAIMessage>,
-        functions: Option<FVec<Function>>,
+        messages: Vec<OpenAIMessage>,
+        functions: Option<Vec<Function>>,
     ) -> Result<(OpenAIMessage, Usage)> {
         let request = ChatCompletionRequest {
             model: self.config.model.clone(),
@@ -169,14 +175,15 @@ impl OpenAIAdapter {
         }
         Ok((response.choices[0].message.clone(), response.usage))
     }
+
     /// Returns a single, buffered response via a channel.
     /// This method currently returns only a single, buffered response and does not implement
     /// true streaming behavior. For true streaming support, proper server-sent event parsing
     /// would be required to handle incremental deltas.
     pub async fn chat_completion_stream(
         &self,
-        messages: FVec<OpenAIMessage>,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
+        messages: Vec<OpenAIMessage>,
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
         let (tx, rx) = tokio::sync::mpsc::channel(1);
         let request = ChatCompletionRequest {
             model: self.config.model.clone(),
@@ -191,22 +198,18 @@ impl OpenAIAdapter {
         let url = format!("{}/chat/completions", OPENAI_API_BASE);
         tokio::spawn(async move {
             match client.post(&url).json(&request).send().await {
-                Ok(resp) => {
-                    match resp.json::<ChatCompletionResponse>().await {
-                        Ok(chat_resp) => {
-                            if let Some(choice) = chat_resp.choices.first() {
-                                let _ = tx.send(Ok(choice.message.content.clone())).await;
-                            }
-                        }
-                        Err(e) => {
-                            let _ = tx
-                                .send(
-                                    Err(anyhow::anyhow!("Failed to parse response: {}", e)),
-                                )
-                                .await;
+                Ok(resp) => match resp.json::<ChatCompletionResponse>().await {
+                    Ok(chat_resp) => {
+                        if let Some(choice) = chat_resp.choices.first() {
+                            let _ = tx.send(Ok(choice.message.content.clone())).await;
                         }
                     }
-                }
+                    Err(e) => {
+                        let _ = tx
+                            .send(Err(anyhow::anyhow!("Failed to parse response: {}", e)))
+                            .await;
+                    }
+                },
                 Err(e) => {
                     let _ = tx.send(Err(anyhow::anyhow!("Request failed: {}", e))).await;
                 }
@@ -214,6 +217,7 @@ impl OpenAIAdapter {
         });
         Ok(rx)
     }
+
     async fn make_request_with_retry(
         &self,
         request: &ChatCompletionRequest,
@@ -237,14 +241,17 @@ impl OpenAIAdapter {
                             .context("Failed to parse response");
                     }
                     let should_retry = matches!(
-                        status, StatusCode::TOO_MANY_REQUESTS |
-                        StatusCode::INTERNAL_SERVER_ERROR | StatusCode::BAD_GATEWAY |
-                        StatusCode::SERVICE_UNAVAILABLE | StatusCode::GATEWAY_TIMEOUT
+                        status,
+                        StatusCode::TOO_MANY_REQUESTS
+                            | StatusCode::INTERNAL_SERVER_ERROR
+                            | StatusCode::BAD_GATEWAY
+                            | StatusCode::SERVICE_UNAVAILABLE
+                            | StatusCode::GATEWAY_TIMEOUT
                     );
                     if let Ok(err_resp) = response.json::<ErrorResponse>().await {
                         let msg = format!(
-                            "OpenAI API error ({}): {}", err_resp.error.error_type,
-                            err_resp.error.message
+                            "OpenAI API error ({}): {}",
+                            err_resp.error.error_type, err_resp.error.message
                         );
                         if should_retry && attempt < MAX_RETRIES - 1 {
                             warn!("{} - retrying", msg);
@@ -269,9 +276,11 @@ impl OpenAIAdapter {
         }
         Err(last_error.unwrap_or_else(|| anyhow::anyhow!("All retries exhausted")))
     }
-    pub async fn count_tokens(&self, text: &str) -> Result<FSize> {
-        Ok((text.len() as f64 / 4.0).ceil() as FSize)
+
+    pub async fn count_tokens(&self, text: &str) -> Result<usize> {
+        Ok((text.len() as f64 / 4.0).ceil() as usize)
     }
+
     pub fn calculate_cost(&self, usage: &Usage) -> f64 {
         let (input_cost, output_cost) = match self.config.model.as_str() {
             "gpt-4-turbo-preview" | "gpt-4-1106-preview" => (0.01, 0.03),
@@ -285,22 +294,25 @@ impl OpenAIAdapter {
         input_total + output_total
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_config_default() {
         let config = OpenAIConfig::default();
         assert_eq!(config.model, "gpt-4-turbo-preview");
         assert_eq!(config.max_tokens, Some(4096));
     }
+
     #[test]
     fn test_token_counting() {
         let adapter = OpenAIAdapter::new(OpenAIConfig {
-                api_key: "test-key".to_string(),
-                ..Default::default()
-            })
-            .unwrap();
+            api_key: "test-key".to_string(),
+            ..Default::default()
+        })
+        .unwrap();
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
             let count = adapter.count_tokens("Hello, world!").await.unwrap();
@@ -308,13 +320,14 @@ pub mod tests {
             assert!(count < 10);
         });
     }
+
     #[test]
     fn test_cost_calculation() {
         let adapter = OpenAIAdapter::new(OpenAIConfig {
-                api_key: "test-key".to_string(),
-                ..Default::default()
-            })
-            .unwrap();
+            api_key: "test-key".to_string(),
+            ..Default::default()
+        })
+        .unwrap();
         let usage = Usage {
             prompt_tokens: 1000,
             completion_tokens: 500,

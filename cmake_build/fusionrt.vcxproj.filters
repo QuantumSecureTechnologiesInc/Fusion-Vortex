@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Matth\Downloads\Fusion v2.0 Vortex\runtime\native\fusionrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Matth\Downloads\Fusion v2.0 Vortex\runtime\runtime.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Matth\Downloads\Fusion v2.0 Vortex\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{7963E8E1-67F2-3972-9003-7CBE03F3639D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

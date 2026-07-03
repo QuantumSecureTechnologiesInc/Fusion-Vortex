@@ -1,15 +1,16 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FMap<K, V> = FMap<K, V>;
+use std::collections::HashMap;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
+// __FU_COMPAT_END__
 use crate::compiler::ast::Type;
 #[derive(Debug, Clone)]
-struct SymbolInfo {
+pub struct SymbolInfo {
     pub name: FString,
     pub typ: Type,
 }
-struct Scope {
+pub struct Scope {
     pub symbols: FMap<FString, SymbolInfo>,
     pub parent: Option<Box<Scope>>,
 }

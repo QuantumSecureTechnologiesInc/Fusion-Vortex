@@ -1,0 +1,3 @@
+extern fn printf(fmt: string, ...) -> int;
+extern fn fopen(path: string, mode: string) -> int;
+pub fn main() -> int { printf("=== A ===\n"); printf("=== B ===\n"); let fp: int = fopen("test.bin", "wb"); printf("=== C fp=%d ===\n", fp); return 0; }

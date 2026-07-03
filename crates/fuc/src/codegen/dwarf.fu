@@ -1,0 +1,19 @@
+//! DWARF debug-info emission for source-level debugging.
+//!
+//! STATUS: Basic DWARF infrastructure is implemented in `llvm.fu`:
+//! - DebugInfoBuilder and DICompileUnit creation in `LlvmBackend::new()`
+//! - Per-function DISubprogram creation in `compile_function()`
+//! - `debug_info: bool` flag on `CodegenConfig` to gate emission
+//! - `dibuilder.finalize()` called before object file emission
+//! - Debug metadata stripping is skipped when `debug_info=true`
+//!
+//! REMAINING for full source-level debugging:
+//! - Per-variable debug info (insert_declare_at_end for allocas)
+//! - Line-number locations (set_current_debug_location per instruction)
+//! - Lexical blocks for scopes
+//! - DWARF-facing variable names for fdbg lookup
+//!
+//! Once full DWARF is emitted, the linker embeds `.debug_info`,
+//! `.debug_line`, and `.debug_abbrev` sections in the PE executable.
+//! `fdbg` can then use a DWARF parser (e.g., `gimli` crate) to map
+//! addresses to source locations and variable names.

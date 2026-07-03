@@ -1,71 +1,84 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::collections::HashMap;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FInt = i32;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
 /// MCP protocol version
 pub const MCP_VERSION: &str = "2024-11-05";
+
 /// MCP message types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "method")]
 pub enum McpRequest {
     #[serde(rename = "initialize")]
-    Initialize { #[serde(rename = "params")] params: InitializeParams },
+    Initialize {
+        #[serde(rename = "params")]
+        params: InitializeParams,
+    },
     #[serde(rename = "resources/list")]
     ListResources,
     #[serde(rename = "resources/read")]
-    ReadResource { #[serde(rename = "params")] params: ReadResourceParams },
+    ReadResource {
+        #[serde(rename = "params")]
+        params: ReadResourceParams,
+    },
     #[serde(rename = "tools/list")]
     ListTools,
     #[serde(rename = "tools/call")]
-    CallTool { #[serde(rename = "params")] params: CallToolParams },
+    CallTool {
+        #[serde(rename = "params")]
+        params: CallToolParams,
+    },
     #[serde(rename = "prompts/list")]
     ListPrompts,
     #[serde(rename = "prompts/get")]
-    GetPrompt { #[serde(rename = "params")] params: GetPromptParams },
+    GetPrompt {
+        #[serde(rename = "params")]
+        params: GetPromptParams,
+    },
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeParams {
     #[serde(rename = "protocolVersion")]
-    pub protocol_version: FString,
+    pub protocol_version: String,
     #[serde(rename = "capabilities")]
     pub capabilities: ClientCapabilities,
     #[serde(rename = "clientInfo")]
     pub client_info: ClientInfo,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ClientCapabilities {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub experimental: Option<FMap<FString, serde_json::Value>>,
+    pub experimental: Option<HashMap<String, serde_json::Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sampling: Option<FMap<FString, serde_json::Value>>,
+    pub sampling: Option<HashMap<String, serde_json::Value>>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientInfo {
-    pub name: FString,
-    pub version: FString,
+    pub name: String,
+    pub version: String,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReadResourceParams {
-    pub uri: FString,
+    pub uri: String,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CallToolParams {
-    pub name: FString,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub arguments: Option<FMap<FString, serde_json::Value>>,
+    pub arguments: Option<HashMap<String, serde_json::Value>>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetPromptParams {
-    pub name: FString,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub arguments: Option<FMap<FString, serde_json::Value>>,
+    pub arguments: Option<HashMap<String, serde_json::Value>>,
 }
+
 /// MCP responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -79,20 +92,22 @@ pub enum McpResponse {
     GetPrompt(GetPromptResult),
     Error(McpError),
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeResult {
     #[serde(rename = "protocolVersion")]
-    pub protocol_version: FString,
+    pub protocol_version: String,
     pub capabilities: ServerCapabilities,
     #[serde(rename = "serverInfo")]
     pub server_info: ServerInfo,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServerCapabilities {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub experimental: Option<FMap<FString, serde_json::Value>>,
+    pub experimental: Option<HashMap<String, serde_json::Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub logging: Option<FMap<FString, serde_json::Value>>,
+    pub logging: Option<HashMap<String, serde_json::Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prompts: Option<PromptsCapability>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -100,140 +115,170 @@ pub struct ServerCapabilities {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<ToolsCapability>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptsCapability {
     #[serde(rename = "listChanged")]
-    pub list_changed: FBool,
+    pub list_changed: bool,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourcesCapability {
-    pub subscribe: FBool,
+    pub subscribe: bool,
     #[serde(rename = "listChanged")]
-    pub list_changed: FBool,
+    pub list_changed: bool,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolsCapability {
     #[serde(rename = "listChanged")]
-    pub list_changed: FBool,
+    pub list_changed: bool,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerInfo {
-    pub name: FString,
-    pub version: FString,
+    pub name: String,
+    pub version: String,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListResourcesResult {
-    pub resources: FVec<Resource>,
+    pub resources: Vec<Resource>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Resource {
-    pub uri: FString,
-    pub name: FString,
+    pub uri: String,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<FString>,
+    pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mime_type: Option<FString>,
+    pub mime_type: Option<String>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReadResourceResult {
-    pub contents: FVec<ResourceContent>,
+    pub contents: Vec<ResourceContent>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ResourceContent {
     #[serde(rename = "text")]
     Text {
-        uri: FString,
-        text: FString,
+        uri: String,
+        text: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        mime_type: Option<FString>,
+        mime_type: Option<String>,
     },
     #[serde(rename = "blob")]
     Blob {
-        uri: FString,
-        blob: FString,
+        uri: String,
+        blob: String, // base64 encoded
         #[serde(skip_serializing_if = "Option::is_none")]
-        mime_type: Option<FString>,
+        mime_type: Option<String>,
     },
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListToolsResult {
-    pub tools: FVec<Tool>,
+    pub tools: Vec<Tool>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tool {
-    pub name: FString,
-    pub description: FString,
+    pub name: String,
+    pub description: String,
     #[serde(rename = "inputSchema")]
     pub input_schema: serde_json::Value,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CallToolResult {
-    pub content: FVec<ToolContent>,
+    pub content: Vec<ToolContent>,
     #[serde(rename = "isError")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_error: Option<FBool>,
+    pub is_error: Option<bool>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ToolContent {
     #[serde(rename = "text")]
-    Text { text: FString },
+    Text { text: String },
     #[serde(rename = "image")]
-    Image { data: FString, #[serde(rename = "mimeType")] mime_type: FString },
+    Image {
+        data: String,
+        #[serde(rename = "mimeType")]
+        mime_type: String,
+    },
     #[serde(rename = "resource")]
     Resource { resource: Resource },
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListPromptsResult {
-    pub prompts: FVec<Prompt>,
+    pub prompts: Vec<Prompt>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Prompt {
-    pub name: FString,
-    pub description: FString,
+    pub name: String,
+    pub description: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub arguments: Option<FVec<PromptArgument>>,
+    pub arguments: Option<Vec<PromptArgument>>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptArgument {
-    pub name: FString,
-    pub description: FString,
-    pub required: FBool,
+    pub name: String,
+    pub description: String,
+    pub required: bool,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetPromptResult {
-    pub messages: FVec<PromptMessage>,
+    pub messages: Vec<PromptMessage>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptMessage {
-    pub role: FString,
+    pub role: String,
     pub content: MessageContent,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MessageContent {
-    Text(FString),
-    Structured(FVec<ContentPart>),
+    Text(String),
+    Structured(Vec<ContentPart>),
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ContentPart {
     #[serde(rename = "text")]
-    Text { text: FString },
+    Text { text: String },
     #[serde(rename = "image")]
-    Image { data: FString, #[serde(rename = "mimeType")] mime_type: FString },
+    Image {
+        data: String,
+        #[serde(rename = "mimeType")]
+        mime_type: String,
+    },
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpError {
-    pub code: FInt,
-    pub message: FString,
+    pub code: i32,
+    pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_initialize_params() {
         let params = InitializeParams {
@@ -244,9 +289,11 @@ pub mod tests {
                 version: "0.1.0".to_string(),
             },
         };
+
         let json = serde_json::to_string(&params).unwrap();
         assert!(json.contains("protocolVersion"));
     }
+
     #[test]
     fn test_resource_serialization() {
         let resource = Resource {
@@ -255,6 +302,7 @@ pub mod tests {
             description: Some("Test file".to_string()),
             mime_type: Some("text/plain".to_string()),
         };
+
         let json = serde_json::to_string(&resource).unwrap();
         let deserialized: Resource = serde_json::from_str(&json).unwrap();
         assert_eq!(resource.uri, deserialized.uri);

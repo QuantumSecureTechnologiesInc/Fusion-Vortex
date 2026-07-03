@@ -32,95 +32,100 @@
 //! │  └──────────────────────────────────┘  │
 //! └────────────────────────────────────────┘
 //! ```
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
+
+use parking_lot::{Mutex, RwLock};
 use std::collections::HashMap;
 use std::sync::Arc;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FU32 = u32;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
-// __FU_COMPAT_END__
-use parking_lot::{Mutex, RwLock};
 use tracing::{debug, trace};
+
 /// Device type for memory allocation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DeviceType {
     Cpu,
-    Gpu(FU32),
-    Qpu(FU32),
-    Shared,
+    Gpu(u32), // GPU device ID
+    Qpu(u32), // QPU device ID
+    Shared,   // Unified memory accessible from all devices
 }
+
 /// Memory manager providing zero-copy buffer pooling
 pub struct MemoryManager {
     /// Buffer pools for each device
-    pools: RwLock<FMap<DeviceType, Arc<BufferPool>>>,
+    pools: RwLock<HashMap<DeviceType, Arc<BufferPool>>>,
+
     /// Configuration
     config: MemoryConfig,
+
     /// Allocation statistics
     stats: Arc<Mutex<MemoryStats>>,
 }
+
 #[derive(Debug, Clone)]
 pub struct MemoryConfig {
-    pub pool_size: FSize,
-    pub enable_unified_memory: FBool,
-    pub qubit_pool_size: FSize,
+    pub pool_size: usize,
+    pub enable_unified_memory: bool,
+    pub qubit_pool_size: usize,
 }
+
 #[derive(Debug, Default, Clone)]
 pub struct MemoryStats {
-    pub total_allocated: FSize,
-    pub total_freed: FSize,
-    pub zero_copy_transfers: FU64,
-    pub peak_usage: FSize,
+    pub total_allocated: usize,
+    pub total_freed: usize,
+    pub zero_copy_transfers: u64,
+    pub peak_usage: usize,
 }
+
 impl MemoryManager {
     pub fn new(config: &RuntimeConfig) -> Self {
         let mem_config = MemoryConfig {
             pool_size: config.memory_pool_size,
             enable_unified_memory: true,
-            qubit_pool_size: 1024 * 1024,
+            qubit_pool_size: 1024 * 1024, // 1MB for qubit states
         };
+
         let mut pools = HashMap::new();
-        pools
-            .insert(
-                DeviceType::Cpu,
-                Arc::new(BufferPool::new(DeviceType::Cpu, mem_config.pool_size)),
-            );
+
+        // Create CPU pool
+        pools.insert(
+            DeviceType::Cpu,
+            Arc::new(BufferPool::new(DeviceType::Cpu, mem_config.pool_size)),
+        );
+
+        // Create shared pool if unified memory is enabled
         if mem_config.enable_unified_memory {
-            pools
-                .insert(
-                    DeviceType::Shared,
-                    Arc::new(BufferPool::new(DeviceType::Shared, mem_config.pool_size)),
-                );
+            pools.insert(
+                DeviceType::Shared,
+                Arc::new(BufferPool::new(DeviceType::Shared, mem_config.pool_size)),
+            );
         }
+
         debug!("Memory manager initialized with {} pool", pools.len());
+
         Self {
             pools: RwLock::new(pools),
             config: mem_config,
             stats: Arc::new(Mutex::new(MemoryStats::default())),
         }
     }
+
     /// Allocate memory for a specific device
-    pub fn allocate(
-        &self,
-        size: FSize,
-        device: DeviceType,
-    ) -> Result<DeviceMemory, FString> {
+    pub fn allocate(&self, size: usize, device: DeviceType) -> Result<DeviceMemory, String> {
         trace!("Allocating {} bytes on {:?}", size, device);
+
         let pools = self.pools.read();
         let pool = pools
             .get(&device)
             .or_else(|| pools.get(&DeviceType::Shared))
             .ok_or_else(|| format!("No suitable memory pool found for {:?}", device))?;
+
         let allocation = pool.allocate(size)?;
+
+        // Update stats
         let mut stats = self.stats.lock();
         stats.total_allocated += size;
         stats.peak_usage = stats
             .peak_usage
             .max(stats.total_allocated - stats.total_freed);
+
         Ok(DeviceMemory {
             ptr: allocation.ptr,
             size,
@@ -128,28 +133,41 @@ impl MemoryManager {
             _allocation: allocation,
         })
     }
+
     /// Register a GPU device
-    pub fn register_gpu(&self, device_id: FU32) {
+    pub fn register_gpu(&self, device_id: u32) {
         let device = DeviceType::Gpu(device_id);
         let pool = Arc::new(BufferPool::new(device, self.config.pool_size));
+
         self.pools.write().insert(device, pool);
         debug!("Registered GPU device {}", device_id);
     }
+
     /// Register a QPU device
-    pub fn register_qpu(&self, device_id: FU32) {
+    pub fn register_qpu(&self, device_id: u32) {
         let device = DeviceType::Qpu(device_id);
         let pool = Arc::new(BufferPool::new(device, self.config.qubit_pool_size));
+
         self.pools.write().insert(device, pool);
         debug!("Registered QPU device {}", device_id);
     }
+
     /// Perform zero-copy transfer between devices
     pub fn zero_copy_transfer(
         &self,
         memory: &DeviceMemory,
         target_device: DeviceType,
     ) -> DeviceMemory {
-        trace!("Zero-copy transfer from {:?} to {:?}", memory.device, target_device);
+        trace!(
+            "Zero-copy transfer from {:?} to {:?}",
+            memory.device,
+            target_device
+        );
+
         self.stats.lock().zero_copy_transfers += 1;
+
+        // In a real implementation, this would use unified memory or DMA transfer
+        // For now, we simulate by creating a reference to the same underlying buffer
         DeviceMemory {
             ptr: memory.ptr,
             size: memory.size,
@@ -160,31 +178,41 @@ impl MemoryManager {
             },
         }
     }
+
     /// Get memory statistics
     pub fn stats(&self) -> MemoryStats {
         self.stats.lock().clone()
     }
 }
+
 /// Buffer pool for a specific device
 pub struct BufferPool {
     device: DeviceType,
     #[allow(dead_code)]
-    total_size: FSize,
-    free_blocks: Mutex<FVec<MemoryBlock>>,
+    total_size: usize,
+    free_blocks: Mutex<Vec<MemoryBlock>>,
 }
+
 impl BufferPool {
-    fn new(device: DeviceType, size: FSize) -> Self {
+    fn new(device: DeviceType, size: usize) -> Self {
+        // Initialize with one large block
         let initial_block = MemoryBlock { offset: 0, size };
+
         Self {
             device,
             total_size: size,
             free_blocks: Mutex::new(vec![initial_block]),
         }
     }
-    fn allocate(&self, size: FSize) -> Result<Allocation, FString> {
+
+    fn allocate(&self, size: usize) -> Result<Allocation, String> {
         let mut blocks = self.free_blocks.lock();
+
+        // Find first-fit block
         if let Some(index) = blocks.iter().position(|block| block.size >= size) {
             let block = blocks.remove(index);
+
+            // Split block if necessary
             if block.size > size {
                 let remaining = MemoryBlock {
                     offset: block.offset + size,
@@ -192,68 +220,82 @@ impl BufferPool {
                 };
                 blocks.push(remaining);
             }
+
             Ok(Allocation {
                 ptr: block.offset,
                 size,
             })
         } else {
-            Err(
-                format!(
-                    "Out of memory in buffer pool for {:?}: requested {} bytes, largest free block: {} bytes",
-                    self.device, size, blocks.iter().map(| b | b.size).max().unwrap_or(0)
-                ),
-            )
+            Err(format!(
+                "Out of memory in buffer pool for {:?}: requested {} bytes, largest free block: {} bytes",
+                self.device,
+                size,
+                blocks.iter().map(|b| b.size).max().unwrap_or(0)
+            ))
         }
     }
 }
+
 #[derive(Debug, Clone)]
-pub struct MemoryBlock {
-    offset: FSize,
-    size: FSize,
+struct MemoryBlock {
+    offset: usize,
+    size: usize,
 }
+
 /// Allocated memory region
 pub struct Allocation {
-    ptr: FSize,
+    ptr: usize,
     #[allow(dead_code)]
-    size: FSize,
+    size: usize,
 }
+
 /// Device memory handle
 pub struct DeviceMemory {
-    pub ptr: FSize,
-    pub size: FSize,
+    pub ptr: usize,
+    pub size: usize,
     pub device: DeviceType,
     _allocation: Allocation,
 }
+
+// Stub RuntimeConfig for compilation
 pub struct RuntimeConfig {
-    pub memory_pool_size: FSize,
+    pub memory_pool_size: usize,
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_memory_allocation() {
         let config = RuntimeConfig {
             memory_pool_size: 1024 * 1024,
         };
+
         let mem_mgr = MemoryManager::new(&config);
         let allocation = mem_mgr
             .allocate(1024, DeviceType::Cpu)
             .expect("Allocation failed");
+
         assert_eq!(allocation.size, 1024);
         assert_eq!(allocation.device, DeviceType::Cpu);
     }
+
     #[test]
     fn test_zero_copy_transfer() {
         let config = RuntimeConfig {
             memory_pool_size: 1024 * 1024,
         };
+
         let mem_mgr = MemoryManager::new(&config);
         mem_mgr.register_gpu(0);
+
         let cpu_mem = mem_mgr
             .allocate(1024, DeviceType::Cpu)
             .expect("Allocation failed");
         let gpu_mem = mem_mgr.zero_copy_transfer(&cpu_mem, DeviceType::Gpu(0));
-        assert_eq!(gpu_mem.ptr, cpu_mem.ptr);
+
+        assert_eq!(gpu_mem.ptr, cpu_mem.ptr); // Same underlying memory
         assert_eq!(mem_mgr.stats().zero_copy_transfers, 1);
     }
 }

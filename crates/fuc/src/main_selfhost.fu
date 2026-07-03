@@ -1,0 +1,42 @@
+// Fusion Self-Hosted Compiler: Entry Point
+import std.io;
+import std.fs;
+import lexer;
+import parser;
+import vortex;
+
+fn main(argc: int, argv: **char) -> int {
+    if (argc < 2) {
+        print("Usage: fuc <file.fu>\n");
+        return 1;
+    }
+
+    let source_path: string = argv[1];
+    let source_code: string = fs.read_to_string(source_path);
+
+    if (source_code == "") {
+        print("Error: Could not read file or file is empty.\n");
+        return 1;
+    }
+
+    print("--- Fusion Ouroboros Compiler ---\n");
+
+    // Phase 1: Lexical Analysis
+    let tokens: *TokenStream = lexer.tokenize(source_code);
+    
+    // Phase 2: Syntactic Analysis
+    let ast: *AST = parser.parse(tokens);
+
+    // Phase 3: Entropic Safety Analysis (Vortex Engine)
+    let safety_check: bool = vortex.check_safety(ast);
+    
+    if (!safety_check) {
+        print("Vortex Engine: High entropy detected. Compilation halted.\n");
+        return 1;
+    }
+
+    // Phase 4: Backend Generation
+    print("Vortex Engine: Safety verified. Generating backend code...\n");
+    // Interface with LLVM C-API via externs
+    return 0;
+}

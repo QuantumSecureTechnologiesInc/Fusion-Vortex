@@ -1,0 +1,17 @@
+﻿[package]
+name = "nn-pooling"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: Neural Network layer/module: nn-pooling. Optimized for performance."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["algorithm", "fusion", "neural-network", "deep-learning"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+
+
+[dev-dependencies]
+criterion = { workspace = true }

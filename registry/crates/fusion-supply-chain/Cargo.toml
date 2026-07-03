@@ -1,0 +1,17 @@
+﻿[package]
+name = "fusion-supply-chain"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Fusion tool: fusion-supply-chain. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+fusion_core = { workspace = true }
+
+

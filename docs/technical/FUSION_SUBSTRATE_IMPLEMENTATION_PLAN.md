@@ -4,8 +4,8 @@
 
 **Objective**: Create Fusion Substrate by duplicating Fusion v2.0 Vortex VSC CLI and upgrading it through four comprehensive phases.
 
-**Source**: `antigravity/playground/Fusion VSC CLi`
-**Destination**: `antigravity/playground/Fusion Substrate`
+**Source**: `cmd/fusion-coder/` (formerly `antigravity/playground/Fusion VSC CLi` — directory removed)
+**Destination**: TBD (formerly `antigravity/playground/Fusion Substrate` — directory removed)
 
 ## Phase 1: Protocol Lock + Runtime Hardening
 

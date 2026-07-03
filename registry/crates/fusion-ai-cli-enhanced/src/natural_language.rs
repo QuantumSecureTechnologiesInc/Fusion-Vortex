@@ -1,0 +1,189 @@
+//! Natural language processing for CLI commands
+
+use crate::{command_parser::NLCommand, CliError, Result};
+use once_cell::sync::Lazy;
+use regex::Regex;
+
+static ACTION_PATTERNS: Lazy<Vec<(Regex, String)>> = Lazy::new(|| {
+    vec![
+        (
+            Regex::new(r"(?i)^(build|compile|make)").unwrap(),
+            "build".to_string(),
+        ),
+        (
+            Regex::new(r"(?i)^(run|execute|start)").unwrap(),
+            "run".to_string(),
+        ),
+        (
+            Regex::new(r"(?i)^(test|check|verify)").unwrap(),
+            "test".to_string(),
+        ),
+        (
+            Regex::new(r"(?i)^(install|add|get)").unwrap(),
+            "install".to_string(),
+        ),
+        (
+            Regex::new(r"(?i)^(clean|remove|delete)").unwrap(),
+            "clean".to_string(),
+        ),
+        (
+            Regex::new(r"(?i)^(help|assist|show)").unwrap(),
+            "help".to_string(),
+        ),
+    ]
+});
+
+/// Natural language processor for CLI commands
+pub struct NaturalLanguageProcessor {
+    #[allow(dead_code)]
+    confidence_threshold: f64,
+}
+
+impl NaturalLanguageProcessor {
+    pub fn new() -> Self {
+        Self {
+            confidence_threshold: 0.6,
+        }
+    }
+
+    /// Process natural language input into a structured command
+    pub fn process(&self, input: &str) -> Result<NLCommand> {
+        let normalized = input.to_lowercase().trim().to_string();
+
+        // Extract action
+        let action = self.extract_action(&normalized)?;
+
+        // Extract target
+        let target = self.extract_target(&normalized, &action);
+
+        // Extract modifiers
+        let modifiers = self.extract_modifiers(&normalized);
+
+        // Calculate confidence
+        let confidence = self.calculate_confidence(&normalized, &action);
+
+        Ok(NLCommand {
+            action,
+            target,
+            modifiers,
+            confidence,
+        })
+    }
+
+    fn extract_action(&self, input: &str) -> Result<String> {
+        for (pattern, action) in ACTION_PATTERNS.iter() {
+            if pattern.is_match(input) {
+                return Ok(action.clone());
+            }
+        }
+
+        Err(CliError::NLPError(format!(
+            "Could not extract action from: {}",
+            input
+        )))
+    }
+
+    fn extract_target(&self, input: &str, _action: &str) -> Option<String> {
+        // Remove action word from start
+        let mut remaining = input.to_string();
+        for (pattern, _) in ACTION_PATTERNS.iter() {
+            if let Some(mat) = pattern.find(&remaining) {
+                remaining = remaining[mat.end()..].trim().to_string();
+                break;
+            }
+        }
+
+        // Common prepositions to skip
+        let prepositions = ["the", "my", "a", "an", "this", "that"];
+        let words: Vec<&str> = remaining.split_whitespace().collect();
+
+        let mut target_words = Vec::new();
+        for word in words {
+            if !prepositions.contains(&word) && !word.starts_with("--") && !word.starts_with("-") {
+                target_words.push(word);
+            }
+        }
+
+        if target_words.is_empty() {
+            None
+        } else {
+            Some(target_words.join(" "))
+        }
+    }
+
+    fn extract_modifiers(&self, input: &str) -> Vec<String> {
+        let mut modifiers = Vec::new();
+
+        if input.contains("release") || input.contains("optimized") {
+            modifiers.push("release".to_string());
+        }
+
+        if input.contains("all") || input.contains("everything") {
+            modifiers.push("all".to_string());
+        }
+
+        if input.contains("debug") {
+            modifiers.push("debug".to_string());
+        }
+
+        if input.contains("verbose") || input.contains("detailed") {
+            modifiers.push("verbose".to_string());
+        }
+
+        modifiers
+    }
+
+    fn calculate_confidence(&self, input: &str, action: &str) -> f64 {
+        let mut confidence: f64 = 0.5;
+
+        // Increase confidence for clear action words
+        for (pattern, act) in ACTION_PATTERNS.iter() {
+            if act == action && pattern.is_match(input) {
+                confidence += 0.3;
+                break;
+            }
+        }
+
+        // Increase confidence for well-structured input
+        if input.split_whitespace().count() >= 2 {
+            confidence += 0.1;
+        }
+
+        // Decrease confidence for ambiguous input
+        if input.split_whitespace().count() > 10 {
+            confidence -= 0.2;
+        }
+
+        confidence.clamp(0.0f64, 1.0f64)
+    }
+}
+
+impl Default for NaturalLanguageProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_command() {
+        let nlp = NaturalLanguageProcessor::new();
+        let result = nlp.process("build the project");
+        assert!(result.is_ok());
+        let cmd = result.unwrap();
+        assert_eq!(cmd.action, "build");
+    }
+
+    #[test]
+    fn test_run_command() {
+        let nlp = NaturalLanguageProcessor::new();
+        let result = nlp.process("run my application in release mode");
+        assert!(result.is_ok());
+        let cmd = result.unwrap();
+        assert_eq!(cmd.action, "run");
+        assert!(cmd.modifiers.contains(&"release".to_string()));
+    }
+}

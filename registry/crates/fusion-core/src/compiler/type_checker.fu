@@ -1,14 +1,15 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+use std::collections::HashMap;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 use crate::compiler::ast::*;
 use crate::compiler::semantic::{Scope, SymbolInfo};
-struct TypeChecker {
+pub struct TypeChecker {
     scopes: FVec<Scope>,
     current_func_return_type: Option<Type>,
-    pub structs: FMap<FString, FMap<FString, Type>>,
+    pub structs: HashMap<FString, HashMap<FString, Type>>,
 }
 impl TypeChecker {
     pub fn new() -> Self {
@@ -172,8 +173,8 @@ impl TypeChecker {
                     BinaryOp::Add => {
                         if left_ty == Type::Int {
                             Ok(Type::Int)
-                        } else if left_ty == Type::FString {
-                            Ok(Type::FString)
+                        } else if left_ty == Type::String {
+                            Ok(Type::String)
                         } else {
                             Err("Add supports only Int and String".into())
                         }
@@ -205,7 +206,7 @@ impl TypeChecker {
             Expression::Literal(lit) => {
                 match lit {
                     Literal::Integer(_) => Ok(Type::Int),
-                    Literal::FString(_) => Ok(Type::FString),
+                    Literal::String(_) => Ok(Type::String),
                     Literal::Bool(_) => Ok(Type::Bool),
                 }
             }

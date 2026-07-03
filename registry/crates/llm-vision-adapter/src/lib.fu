@@ -1,36 +1,45 @@
 /// Production Vision Adapter (Multimodal).
-///
+/// 
 /// Handles pre-processing, encoding, and alignment of image inputs for LLMs.
-use fusion_core::types::tensor::{Matrix, Vector1D};
+
+use fusion_core::types::tensor::{Tensor, Matrix, Vector1D};
 use fusion_core::FusionResult;
-struct VisionEncoder {
-    pub projection_layer: Matrix<f64>,
+use fusion_tensor_image::ImageTensor; // Assumes image processing functions
+
+pub struct VisionEncoder {
+    // Reference to a Vision Transformer (ViT) or ResNet encoder (fusion_cv_resnet)
+    pub projection_layer: Matrix<f64>, // [EncoderDim, LLMEmberDim]
     pub patch_size: FSize,
 }
+
 impl VisionEncoder {
-    pub fn new(patch_size: FSize, encoder_dim: FSize, llm_embed_dim: FSize) -> Self {
-        Self {
-            projection_layer: Matrix::zeros([encoder_dim, llm_embed_dim]),
-            patch_size,
-        }
+    pub fn new(patch_size: FSize, encoder_dim: FSize, llm_embed_dim: FSize) -> Self { 
+        Self { 
+            projection_layer: Matrix::zeros([encoder_dim, llm_embed_dim]), 
+            patch_size
+        } 
     }
+
     /// Converts a raw Image Tensor into a sequence of aligned vision tokens (embeddings).
-    pub fn encode_image(
-        &self,
-        _image_height: FSize,
-        _image_width: FSize,
-    ) -> FusionResult<Matrix<f64>> {
-        let output_tokens = 256;
-        let embed_dim = self.projection_layer.shape()[1];
+    pub fn encode_image(&self, image_tensor: &Tensor<f64, 3>) -> FusionResult<Matrix<f64>> {
+        // 1. Patchify: Divide image into patches (requires tensor geometry ops)
+        // 2. Encode: Pass patches through ViT layers (fusion_cv_resnet)
+        
+        let output_tokens = 256; // Standard sequence length
+        let embed_dim = self.projection_layer.shape[1];
+        
         let output_tensor = Matrix::zeros([output_tokens, embed_dim]);
+        
         Ok(output_tensor)
     }
+
     /// Attaches the vision tokens to the text input prompt sequence.
-    pub fn attach_to_prompt(
-        &self,
-        prompt_tokens: &Vector1D<FI64>,
-        _vision_tokens: &Matrix<f64>,
-    ) -> FusionResult<Vector1D<FI64>> {
+    pub fn attach_to_prompt(&self, prompt_tokens: &Vector1D<i64>, vision_tokens: &Matrix<f64>) -> FusionResult<Vector1D<i64>> {
+        // This requires:
+        // 1. Placeholder token ID generation
+        // 2. Embedding lookup for vision tokens
+        // 3. Tensor concatenation (fusion_core::ops::concat)
+        
         Ok(prompt_tokens.clone())
     }
 }

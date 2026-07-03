@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 7: Packages, Crates, and Modules
 
 As your code ecosystem grows, organizing it becomes critical. You need to split code into multiple files, group related functionality, and control visibility (what is public vs. private).

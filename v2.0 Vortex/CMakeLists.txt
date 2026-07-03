@@ -31,12 +31,18 @@ elseif(MSVC)
         /guard:cf # Control flow guard
         /DYNAMICBASE # ASLR support
     )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /std:c11" CACHE STRING "" FORCE)
+    add_compile_definitions(
+        _CRT_SECURE_NO_WARNINGS
+    )
 endif()
 
 # Main library: universal loader, CPU backend and vacuum engine (C)
-add_library(hypercycle_pqc SHARED
+# Build as STATIC library for easier linking with Fusion
+add_library(hypercycle_pqc STATIC
     src/hc_gpu_universal.c
-    src/hc_vacuum_engine.c
+    # src/hc_vacuum_engine.c - excluded: requires x86intrin.h (not available on MSVC)
+    src/hc_vacuum_portable.c  # Portable fallback for MSVC
     src/vortex_integration.c # Vortex v2.0 Integration
     src/vortex_pqc_api.c # Vortex v2.0 PQC API
     src/hc_ed25519.c
@@ -44,6 +50,8 @@ add_library(hypercycle_pqc SHARED
     src/ed25519/ed25519_api.c
     src/ed25519/ed25519_core.c
     src/ed25519/ed25519_field.c
+    # SHA-3 implementation (needed by hc_vacuum_portable)
+    src/vortex/sha3.c
 )
 
 # Include directories
@@ -174,17 +182,34 @@ endif()
 #
 
 file(GLOB_RECURSE VORTEX_SOURCES CONFIGURE_DEPENDS "src/vortex/*.c")
+# Exclude files with GCC-only inline asm or MSVC-incompatible complex types
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_final\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_vacuum_avx512\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_vacuum_engine\\.c$")
+# Exclude files with MSVC-incompatible C11 atomic usage
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_core\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_cpu_features\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_introspection\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_sbox16\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*hc_telemetry\\.c$")
+list(FILTER VORTEX_SOURCES EXCLUDE REGEX ".*ns_entropy_pool\\.c$")
 if(VORTEX_SOURCES)
     add_library(hypercycle_vortex_objs OBJECT ${VORTEX_SOURCES})
+    set_target_properties(hypercycle_vortex_objs PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
     target_include_directories(hypercycle_vortex_objs PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vortex
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vortex/internal
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/vortex/public
     )
 
     # Compiler-specific flags
     if(MSVC)
-        target_compile_options(hypercycle_vortex_objs PRIVATE /arch:AVX512)
+        target_compile_options(hypercycle_vortex_objs PRIVATE /arch:AVX512 /std:c11)
+        target_compile_definitions(hypercycle_vortex_objs PRIVATE
+            _CRT_SECURE_NO_WARNINGS
+            CLOCK_MONOTONIC=1
+        )
     else()
         target_compile_options(hypercycle_vortex_objs PRIVATE
             -mavx512f -mavx512ifma -mavx512dq -mfma -O3 -pthread)
@@ -195,7 +220,6 @@ if(VORTEX_SOURCES)
         target_compile_options(hypercycle_vortex_objs PRIVATE -pthread)
     endif()
 endif()
-
 # Tests could be added here if HC_BUILD_TESTS is ON
 
 # Build test programs if requested

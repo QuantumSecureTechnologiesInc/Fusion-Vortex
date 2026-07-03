@@ -1,0 +1,38 @@
+// Fusion Self-Hosted Vortex Engine
+// Implements the Entropic Flow safety model to prevent data races and use-after-free.
+
+import std.mem;
+import std.io;
+
+struct Loan {
+    target: string;
+    is_exclusive: bool;
+    origin_line: int;
+}
+
+struct ChaosVacuum {
+    reports: **char;
+    count: int;
+}
+
+/// Analyses the entropic state of a variable borrow.
+fn verify_borrow(state: *LoanStream, target: string, exclusive: bool, line: int) -> bool {
+    let i: int = 0;
+    while (i < state.loan_count) {
+        let existing: *Loan = &state.loans[i];
+        if (existing.target == target) {
+            // Collision Logic: Stream B (Mutable) repels everything.
+            // Stream A (Immutable) only repels Stream B.
+            if (existing.is_exclusive || exclusive) {
+                io.print("Entropic Collision: Variable '");
+                io.print(target);
+                io.print("' has conflicting streams at line ");
+                io.print_int(line);
+                io.print("\n");
+                return false;
+            }
+        }
+        i = i + 1;
+    }
+    return true;
+}

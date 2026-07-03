@@ -15,7 +15,7 @@ Thank you for your interest in contributing to the Fusion v2.0 Vortex Programmin
 
 ### Prerequisites
 
-- Fusion toolchain (use `./install.sh` to provision `dist/`)
+- Fusion toolchain (use `./install.sh` to build the toolchain; `dist/` is the target output directory)
 - LLVM 14+ (for native compilation)
 - Node.js 18+ (for VS Code extension development)
 - Git

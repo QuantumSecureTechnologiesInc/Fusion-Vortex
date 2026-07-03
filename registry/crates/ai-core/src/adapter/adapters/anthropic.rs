@@ -1,31 +1,27 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::time::Duration;
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FU32 = u32;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
 use anyhow::{Context, Result};
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, warn};
-pub const ANTHROPIC_API_BASE: &str = "https://api.anthropic.com/v1";
-pub const ANTHROPIC_VERSION: &str = "2023-06-01";
-pub const MAX_RETRIES: FU32 = 3;
-pub const INITIAL_RETRY_DELAY: Duration = Duration::from_secs(1);
+
+const ANTHROPIC_API_BASE: &str = "https://api.anthropic.com/v1";
+const ANTHROPIC_VERSION: &str = "2023-06-01";
+const MAX_RETRIES: u32 = 3;
+const INITIAL_RETRY_DELAY: Duration = Duration::from_secs(1);
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicConfig {
-    pub api_key: FString,
-    pub model: FString,
-    pub max_tokens: FSize,
+    pub api_key: String,
+    pub model: String,
+    pub max_tokens: usize,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
-    pub top_k: Option<FSize>,
+    pub top_k: Option<usize>,
     pub timeout: Duration,
 }
+
 impl Default for AnthropicConfig {
     fn default() -> Self {
         Self {
@@ -39,128 +35,151 @@ impl Default for AnthropicConfig {
         }
     }
 }
+
 #[derive(Debug, Serialize)]
-pub struct MessagesRequest {
-    model: FString,
-    max_tokens: FSize,
-    messages: FVec<AnthropicMessage>,
+struct MessagesRequest {
+    model: String,
+    max_tokens: usize,
+    messages: Vec<AnthropicMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    system: Option<FString>,
+    system: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    top_k: Option<FSize>,
+    top_k: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    stream: Option<FBool>,
+    stream: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<FVec<Tool>>,
+    tools: Option<Vec<Tool>>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicMessage {
-    pub role: FString,
-    pub content: FVec<ContentBlock>,
+    pub role: String,
+    pub content: Vec<ContentBlock>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ContentBlock {
     #[serde(rename = "text")]
-    Text { text: FString },
+    Text { text: String },
     #[serde(rename = "image")]
     Image { source: ImageSource },
     #[serde(rename = "tool_use")]
-    ToolUse { id: FString, name: FString, input: serde_json::Value },
+    ToolUse {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
     #[serde(rename = "tool_result")]
-    ToolResult { tool_use_id: FString, content: FString },
+    ToolResult {
+        tool_use_id: String,
+        content: String,
+    },
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageSource {
     #[serde(rename = "type")]
-    pub source_type: FString,
-    pub media_type: FString,
-    pub data: FString,
+    pub source_type: String,
+    pub media_type: String,
+    pub data: String,
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tool {
-    pub name: FString,
-    pub description: FString,
+    pub name: String,
+    pub description: String,
     pub input_schema: serde_json::Value,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct MessagesResponse {
+struct MessagesResponse {
     #[allow(dead_code)]
-    id: FString,
+    id: String,
     #[allow(dead_code)]
     #[serde(rename = "type")]
-    response_type: FString,
+    response_type: String,
     #[allow(dead_code)]
-    role: FString,
-    content: FVec<ContentBlock>,
+    role: String,
+    content: Vec<ContentBlock>,
     #[allow(dead_code)]
-    model: FString,
+    model: String,
     #[allow(dead_code)]
-    stop_reason: Option<FString>,
+    stop_reason: Option<String>,
     usage: AnthropicUsage,
 }
+
 #[derive(Debug, Deserialize)]
 pub struct AnthropicUsage {
-    pub input_tokens: FSize,
-    pub output_tokens: FSize,
+    pub input_tokens: usize,
+    pub output_tokens: usize,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct StreamEvent {
+struct StreamEvent {
     #[serde(rename = "type")]
-    event_type: FString,
+    event_type: String,
     #[serde(flatten)]
     data: serde_json::Value,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct ErrorResponse {
+struct ErrorResponse {
     #[allow(dead_code)]
     #[serde(rename = "type")]
-    error_type: FString,
+    error_type: String,
     error: ErrorDetail,
 }
+
 #[derive(Debug, Deserialize)]
-pub struct ErrorDetail {
+struct ErrorDetail {
     #[serde(rename = "type")]
-    detail_type: FString,
-    message: FString,
+    detail_type: String,
+    message: String,
 }
+
 pub struct AnthropicAdapter {
     config: AnthropicConfig,
     client: Client,
 }
+
 impl AnthropicAdapter {
     pub fn new(config: AnthropicConfig) -> Result<Self> {
         if config.api_key.is_empty() {
             anyhow::bail!("Anthropic API key is required");
         }
+
         let mut headers = reqwest::header::HeaderMap::new();
-        headers
-            .insert(
-                "x-api-key",
-                config.api_key.parse().context("Invalid API key format")?,
-            );
-        headers
-            .insert(
-                "anthropic-version",
-                ANTHROPIC_VERSION.parse().context("Invalid version header")?,
-            );
+        headers.insert(
+            "x-api-key",
+            config.api_key.parse().context("Invalid API key format")?,
+        );
+        headers.insert(
+            "anthropic-version",
+            ANTHROPIC_VERSION
+                .parse()
+                .context("Invalid version header")?,
+        );
+
         let client = Client::builder()
             .default_headers(headers)
             .timeout(config.timeout)
             .build()
             .context("Failed to create HTTP client")?;
+
         Ok(Self { config, client })
     }
+
     pub async fn messages(
         &self,
-        messages: FVec<AnthropicMessage>,
-        system: Option<FString>,
-        tools: Option<FVec<Tool>>,
-    ) -> Result<(FVec<ContentBlock>, AnthropicUsage)> {
+        messages: Vec<AnthropicMessage>,
+        system: Option<String>,
+        tools: Option<Vec<Tool>>,
+    ) -> Result<(Vec<ContentBlock>, AnthropicUsage)> {
         let request = MessagesRequest {
             model: self.config.model.clone(),
             max_tokens: self.config.max_tokens,
@@ -172,18 +191,22 @@ impl AnthropicAdapter {
             stream: Some(false),
             tools,
         };
+
         let response = self
             .make_request_with_retry(&request)
             .await
             .context("Messages request failed")?;
+
         Ok((response.content, response.usage))
     }
+
     pub async fn messages_stream(
         &self,
-        messages: FVec<AnthropicMessage>,
-        system: Option<FString>,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
+        messages: Vec<AnthropicMessage>,
+        system: Option<String>,
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
         let (tx, rx) = tokio::sync::mpsc::channel(100);
+
         let request = MessagesRequest {
             model: self.config.model.clone(),
             max_tokens: self.config.max_tokens,
@@ -195,13 +218,16 @@ impl AnthropicAdapter {
             stream: Some(true),
             tools: None,
         };
+
         let client = self.client.clone();
         let url = format!("{}/messages", ANTHROPIC_API_BASE);
+
         tokio::spawn(async move {
             match client.post(&url).json(&request).send().await {
                 Ok(response) => {
                     let mut stream = response.bytes_stream();
                     use futures::StreamExt;
+
                     while let Some(chunk_result) = stream.next().await {
                         match chunk_result {
                             Ok(bytes) => {
@@ -209,14 +235,18 @@ impl AnthropicAdapter {
                                 for line in text.lines() {
                                     if line.starts_with("data: ") {
                                         let data = &line[6..];
-                                        if let Ok(event) = serde_json::from_str::<
-                                            StreamEvent,
-                                        >(data) {
+
+                                        if let Ok(event) = serde_json::from_str::<StreamEvent>(data)
+                                        {
                                             if event.event_type == "content_block_delta" {
                                                 if let Some(delta) = event.data.get("delta") {
                                                     if let Some(text) = delta.get("text") {
                                                         if let Some(text_str) = text.as_str() {
-                                                            if tx.send(Ok(text_str.to_string())).await.is_err() {
+                                                            if tx
+                                                                .send(Ok(text_str.to_string()))
+                                                                .await
+                                                                .is_err()
+                                                            {
                                                                 break;
                                                             }
                                                         }
@@ -228,9 +258,7 @@ impl AnthropicAdapter {
                                 }
                             }
                             Err(e) => {
-                                let _ = tx
-                                    .send(Err(anyhow::anyhow!("Stream error: {}", e)))
-                                    .await;
+                                let _ = tx.send(Err(anyhow::anyhow!("Stream error: {}", e))).await;
                                 break;
                             }
                         }
@@ -241,40 +269,49 @@ impl AnthropicAdapter {
                 }
             }
         });
+
         Ok(rx)
     }
-    async fn make_request_with_retry(
-        &self,
-        request: &MessagesRequest,
-    ) -> Result<MessagesResponse> {
+
+    async fn make_request_with_retry(&self, request: &MessagesRequest) -> Result<MessagesResponse> {
         let mut last_error = None;
         let mut delay = INITIAL_RETRY_DELAY;
+
         for attempt in 0..MAX_RETRIES {
             if attempt > 0 {
                 debug!("Retry attempt {} after {:?}", attempt, delay);
                 sleep(delay).await;
                 delay *= 2;
             }
+
             let url = format!("{}/messages", ANTHROPIC_API_BASE);
+
             match self.client.post(&url).json(request).send().await {
                 Ok(response) => {
                     let status = response.status();
+
                     if status.is_success() {
                         return response
                             .json::<MessagesResponse>()
                             .await
                             .context("Failed to parse response");
                     }
+
                     let should_retry = matches!(
-                        status, StatusCode::TOO_MANY_REQUESTS |
-                        StatusCode::INTERNAL_SERVER_ERROR | StatusCode::BAD_GATEWAY |
-                        StatusCode::SERVICE_UNAVAILABLE | StatusCode::GATEWAY_TIMEOUT
+                        status,
+                        StatusCode::TOO_MANY_REQUESTS
+                            | StatusCode::INTERNAL_SERVER_ERROR
+                            | StatusCode::BAD_GATEWAY
+                            | StatusCode::SERVICE_UNAVAILABLE
+                            | StatusCode::GATEWAY_TIMEOUT
                     );
+
                     if let Ok(error_response) = response.json::<ErrorResponse>().await {
                         let error_msg = format!(
-                            "Anthropic API error ({}): {}", error_response.error
-                            .detail_type, error_response.error.message
+                            "Anthropic API error ({}): {}",
+                            error_response.error.detail_type, error_response.error.message
                         );
+
                         if should_retry && attempt < MAX_RETRIES - 1 {
                             warn!("{} - retrying", error_msg);
                             last_error = Some(anyhow::anyhow!(error_msg));
@@ -294,40 +331,50 @@ impl AnthropicAdapter {
                 }
             }
         }
+
         Err(last_error.unwrap_or_else(|| anyhow::anyhow!("All retries exhausted")))
     }
+
     pub fn calculate_cost(&self, usage: &AnthropicUsage) -> f64 {
+        // Pricing as of 2024
         let (input_cost, output_cost) = match self.config.model.as_str() {
             "claude-3-opus-20240229" => (0.015, 0.075),
             "claude-3-sonnet-20240229" => (0.003, 0.015),
             "claude-3-haiku-20240307" => (0.00025, 0.00125),
-            _ => (0.015, 0.075),
+            _ => (0.015, 0.075), // Default to Opus pricing
         };
+
         let input_cost_total = (usage.input_tokens as f64 / 1000.0) * input_cost;
         let output_cost_total = (usage.output_tokens as f64 / 1000.0) * output_cost;
+
         input_cost_total + output_cost_total
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_config_default() {
         let config = AnthropicConfig::default();
         assert_eq!(config.model, "claude-3-opus-20240229");
         assert_eq!(config.max_tokens, 4096);
     }
+
     #[test]
     fn test_cost_calculation() {
         let adapter = AnthropicAdapter::new(AnthropicConfig {
-                api_key: "test-key".to_string(),
-                ..Default::default()
-            })
-            .unwrap();
+            api_key: "test-key".to_string(),
+            ..Default::default()
+        })
+        .unwrap();
+
         let usage = AnthropicUsage {
             input_tokens: 1000,
             output_tokens: 500,
         };
+
         let cost = adapter.calculate_cost(&usage);
         assert!(cost > 0.0);
     }

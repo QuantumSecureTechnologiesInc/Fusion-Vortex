@@ -1,5 +1,6 @@
 use fusion_core::compiler::{Compiler, Lexer, Parser};
 use fusion_core::vm::VM;
+
 #[test]
 fn test_function_definition_and_call() {
     let source = r#"
@@ -12,15 +13,24 @@ fn test_function_definition_and_call() {
         print(result);
     }
     "#;
+
     let lexer = Lexer::new(source);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().expect("Failed to parse");
+
     let compiler = Compiler::new();
     let function = compiler.compile(program).expect("Compilation failed");
+
     let mut vm = VM::new();
+    // Capture stdout? VM currently prints to stdout.
+    // We can't easily capture native print unless we mock it or redirect output.
+    // For now, let's trust "InterpretResult::Ok" means it ran without crashing.
+    // Using `add` result in `print` ensures logic flow correct.
     let result = vm.interpret(function);
+
     assert!(matches!(result, fusion_core::vm::InterpretResult::Ok));
 }
+
 #[test]
 fn test_recursive_function() {
     let source = r#"
@@ -37,12 +47,16 @@ fn test_recursive_function() {
         // assert(x == 8); // We don't have assert yet
     }
     "#;
+
     let lexer = Lexer::new(source);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().expect("Failed to parse");
+
     let compiler = Compiler::new();
     let function = compiler.compile(program).expect("Compilation failed");
+
     let mut vm = VM::new();
     let result = vm.interpret(function);
+
     assert!(matches!(result, fusion_core::vm::InterpretResult::Ok));
 }

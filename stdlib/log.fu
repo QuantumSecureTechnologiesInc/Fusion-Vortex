@@ -1,69 +1,33 @@
-// stdlib/log.fu
-// Structured Logging Module
+// stdlib/log.fu - Structured logging for Fusion
 
-use std::fs;
-use std::process;
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_fs_append_str(path: string, contents: string) -> bool;
+extern fn fusion_str_concat(a: string, b: string) -> string;
 
-enum Level {
-    Debug,
-    Info,
-    Warn,
-    Error
+const LOG_DEBUG: int = 0;
+const LOG_INFO: int = 1;
+const LOG_WARN: int = 2;
+const LOG_ERROR: int = 3;
+
+// Logger uses a handle (int) to reference logger state in C runtime.
+// For simplicity, log functions take level + path directly.
+
+fn logger_log(level: int, file_path: string, use_file: int, lvl: int, msg: string) -> void {
+    if lvl < level { return; }
+    let prefix: string = "";
+    if lvl == 0 { prefix = "[DEBUG] "; }
+    if lvl == 1 { prefix = "[INFO]  "; }
+    if lvl == 2 { prefix = "[WARN]  "; }
+    if lvl == 3 { prefix = "[ERROR] "; }
+    let final_msg: string = fusion_str_concat(prefix, msg);
+    fusion_println(final_msg);
+    if use_file != 0 {
+        let line: string = fusion_str_concat(final_msg, "\n");
+        fusion_fs_append_str(file_path, line);
+    }
 }
 
-class Logger {
-    level: Level;
-    file_path: string;
-    use_file: bool;
-    file: fs::File;
-
-    fn new(level: Level) -> Logger {
-        return Logger { 
-            level: level, 
-            file_path: "", 
-            use_file: false,
-            file: fs::File::open("", "") // Dummy
-        };
-    }
-
-    fn with_file(mut self, path: string) -> Logger {
-        self.file_path = path;
-        self.use_file = true;
-        // Append mode for logs
-        self.file = fs::File::open(path, "a");
-        return self;
-    }
-
-    fn log(mut self, lvl: Level, msg: string) {
-        if (lvl < self.level) { return; }
-        
-        let prefix = match lvl {
-            Level::Debug => "[DEBUG] ",
-            Level::Info => "[INFO]  ",
-            Level::Warn => "[WARN]  ",
-            Level::Error => "[ERROR] "
-        };
-
-        // Timestamp would go here if std::time existed
-        let final_msg = prefix + msg + "\n";
-
-        // Console output
-        print(final_msg);
-
-        // File output
-        if (self.use_file) {
-            self.file.write(final_msg);
-        }
-    }
-
-    fn info(mut self, msg: string) { self.log(Level::Info, msg); }
-    fn warn(mut self, msg: string) { self.log(Level::Warn, msg); }
-    fn error(mut self, msg: string) { self.log(Level::Error, msg); }
-    fn debug(mut self, msg: string) { self.log(Level::Debug, msg); }
-}
-
-// Global default logger (simulated via function)
-fn info(msg: string) {
-    let l = Logger::new(Level::Info);
-    l.info(msg);
-}
+fn log_info(msg: string) -> void { fusion_println(fusion_str_concat("[INFO]  ", msg)); }
+fn log_warn(msg: string) -> void { fusion_println(fusion_str_concat("[WARN]  ", msg)); }
+fn log_error(msg: string) -> void { fusion_println(fusion_str_concat("[ERROR] ", msg)); }
+fn log_debug(msg: string) -> void { fusion_println(fusion_str_concat("[DEBUG] ", msg)); }

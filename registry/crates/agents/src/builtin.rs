@@ -1,102 +1,43 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-// __FU_COMPAT_END__
 use anyhow::Result;
 use async_trait::async_trait;
 use fusion_ai_core::{
-    AdapterConfig, AnthropicConfig, GoogleConfig, ModelSession, OpenAIConfig,
-    UnifiedAdapter,
+    AdapterConfig, AnthropicConfig, GoogleConfig, ModelSession, OpenAIConfig, UnifiedAdapter,
 };
 use uuid::Uuid;
+
 use crate::agent::{Agent, AgentMetadata, AgentResult, AgentTask, Capability};
-pub fn get_adapter() -> Result<Box<dyn ModelSession>> {
+
+// Helper to get adapter (duplicated from ai-cli for now, ideally moved to common lib)
+fn get_adapter() -> Result<Box<dyn ModelSession>> {
     if let Ok(key) = std::env::var("OPENAI_API_KEY") {
         let config = OpenAIConfig {
             api_key: key,
             ..Default::default()
         };
-        return Ok(
-            UnifiedAdapter::from_config(AdapterConfig::OpenAI(config))?.create_session(),
-        );
+        return Ok(UnifiedAdapter::from_config(AdapterConfig::OpenAI(config))?.create_session());
     }
     if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
         let config = AnthropicConfig {
             api_key: key,
             ..Default::default()
         };
-        return Ok(
-            UnifiedAdapter::from_config(AdapterConfig::Anthropic(config))?
-                .create_session(),
-        );
+        return Ok(UnifiedAdapter::from_config(AdapterConfig::Anthropic(config))?.create_session());
     }
     if let Ok(key) = std::env::var("GOOGLE_API_KEY") {
         let config = GoogleConfig {
             api_key: key,
             ..Default::default()
         };
-        return Ok(
-            UnifiedAdapter::from_config(AdapterConfig::Google(config))?.create_session(),
-        );
+        return Ok(UnifiedAdapter::from_config(AdapterConfig::Google(config))?.create_session());
     }
     anyhow::bail!("No API keys configured for Agents.")
 }
 
-fn local_review_issues(code: &str) -> FString {
-    let mut issues = Vec::new();
-    if !code.contains("Result<") && !code.contains("anyhow") {
-        issues.push("No explicit error propagation found; consider returning Result.");
-    }
-    if code.contains("unwrap(") {
-        issues.push("Found unwrap() usage; prefer graceful error handling.");
-    }
-    if !code.contains("///") && !code.contains("//") {
-        issues.push("No explanatory comments detected; add concise docs for public APIs.");
-    }
-    if issues.is_empty() {
-        issues.push("No immediate high-risk issues detected by local static heuristics.");
-    }
-    serde_json::to_string(&issues).unwrap_or_else(|_| "[]".to_string())
-}
-
-fn local_test_template(code: &str) -> FString {
-    let has_async = code.contains("async fn");
-    if has_async {
-        "#[tokio::test]\nasync fn generated_async_smoke_test() {\n    assert!(true);\n}\n"
-            .to_string()
-    } else {
-        "#[test]\nfn generated_smoke_test() {\n    assert!(true);\n}\n".to_string()
-    }
-}
-
-fn local_documentation(code: &str) -> FString {
-    let line_count = code.lines().count();
-    format!(
-        "Local documentation summary:\n- lines: {}\n- recommendation: add module-level overview and API examples.",
-        line_count
-    )
-}
-
-fn local_bug_fix(code: &str, error: &str) -> FString {
-    let mut output = String::new();
-    output.push_str("// Local fix guidance generated without remote model\n");
-    output.push_str(&format!("// Observed error: {}\n", error));
-    output.push_str(code);
-    output
-}
-
-fn local_refactor(code: &str, goal: &str) -> FString {
-    format!(
-        "// Local refactor guidance: {}\n{}\n",
-        goal,
-        code
-    )
-}
 /// Code reviewer agent
 pub struct CodeReviewerAgent {
     meta: AgentMetadata,
 }
+
 impl CodeReviewerAgent {
     pub fn new() -> Self {
         Self {
@@ -110,43 +51,60 @@ impl CodeReviewerAgent {
         }
     }
 }
+
 #[async_trait]
 impl Agent for CodeReviewerAgent {
     fn metadata(&self) -> &AgentMetadata {
         &self.meta
     }
-    fn can_handle(&self, task: &AgentTask) -> FBool {
+    fn can_handle(&self, task: &AgentTask) -> bool {
         task.task_type == "code_review" || task.task_type == "security_scan"
     }
+
     async fn execute(&self, task: AgentTask) -> Result<AgentResult> {
         let start = std::time::Instant::now();
-        let code = task.input.get("code").and_then(|v| v.as_str()).unwrap_or("");
+        let code = task
+            .input
+            .get("code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
+        // Handle mock vs real
         let response_content = match get_adapter() {
             Ok(adapter) => {
-                let prompt = format!(
-                    "Review the following code for quality and security issues:\n```\n{}\n```\nReturn JSON output with 'issues' list.",
-                    code
-                );
+                let prompt = format!("Review the following code for quality and security issues:\n```\n{}\n```\nReturn JSON output with 'issues' list.", code);
                 let (response, _) = adapter.predict(&prompt).await?;
                 response
             }
-            Err(_) => local_review_issues(code),
+            Err(_) => {
+                // Fallback to mock if no key, ensuring agents still work for tests
+                let issues = vec![
+                    "Consider adding error handling (mock)",
+                    "Variable naming could be improved (mock)",
+                    "Add documentation comments (mock)",
+                ];
+                serde_json::to_string(&issues).unwrap()
+            }
         };
+
         Ok(AgentResult {
             task_id: task.id,
             success: true,
-            output: serde_json::json!(
-                { "review_output" : response_content, "model_used" : "auto-detected" }
-            ),
+            output: serde_json::json!({
+                "review_output": response_content,
+                "model_used": "auto-detected"
+            }),
             error: None,
-            duration_ms: start.elapsed().as_millis() as FU64,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 }
+
 /// Test generator agent
 pub struct TestGeneratorAgent {
     meta: AgentMetadata,
 }
+
 impl TestGeneratorAgent {
     pub fn new() -> Self {
         Self {
@@ -160,40 +118,50 @@ impl TestGeneratorAgent {
         }
     }
 }
+
 #[async_trait]
 impl Agent for TestGeneratorAgent {
     fn metadata(&self) -> &AgentMetadata {
         &self.meta
     }
-    fn can_handle(&self, task: &AgentTask) -> FBool {
+    fn can_handle(&self, task: &AgentTask) -> bool {
         task.task_type == "generate_tests"
     }
+
     async fn execute(&self, task: AgentTask) -> Result<AgentResult> {
         let start = std::time::Instant::now();
-        let code = task.input.get("code").and_then(|v| v.as_str()).unwrap_or("");
+        let code = task
+            .input
+            .get("code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
         let response_content = match get_adapter() {
             Ok(adapter) => {
-                let prompt = format!(
-                    "Generate unit tests for this code:\n```\n{}\n```", code
-                );
+                let prompt = format!("Generate unit tests for this code:\n```\n{}\n```", code);
                 let (response, _) = adapter.predict(&prompt).await?;
                 response
             }
-            Err(_) => local_test_template(code),
+            Err(_) => "// Mock test output\nfn test_mock() { assert!(true); }".to_string(),
         };
+
         Ok(AgentResult {
             task_id: task.id,
             success: true,
-            output: serde_json::json!({ "generated_tests" : response_content }),
+            output: serde_json::json!({
+                "generated_tests": response_content
+            }),
             error: None,
-            duration_ms: start.elapsed().as_millis() as FU64,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 }
+
 /// Documentation writer agent
 pub struct DocWriterAgent {
     meta: AgentMetadata,
 }
+
 impl DocWriterAgent {
     pub fn new() -> Self {
         Self {
@@ -207,40 +175,50 @@ impl DocWriterAgent {
         }
     }
 }
+
 #[async_trait]
 impl Agent for DocWriterAgent {
     fn metadata(&self) -> &AgentMetadata {
         &self.meta
     }
-    fn can_handle(&self, task: &AgentTask) -> FBool {
+    fn can_handle(&self, task: &AgentTask) -> bool {
         task.task_type == "generate_docs"
     }
+
     async fn execute(&self, task: AgentTask) -> Result<AgentResult> {
         let start = std::time::Instant::now();
-        let code = task.input.get("code").and_then(|v| v.as_str()).unwrap_or("");
+        let code = task
+            .input
+            .get("code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
         let response_content = match get_adapter() {
             Ok(adapter) => {
-                let prompt = format!(
-                    "Write documentation for this code:\n```\n{}\n```", code
-                );
+                let prompt = format!("Write documentation for this code:\n```\n{}\n```", code);
                 let (response, _) = adapter.predict(&prompt).await?;
                 response
             }
-            Err(_) => local_documentation(code),
+            Err(_) => "// Mock documentation\nThis is a mock description.".to_string(),
         };
+
         Ok(AgentResult {
             task_id: task.id,
             success: true,
-            output: serde_json::json!({ "documentation" : response_content }),
+            output: serde_json::json!({
+                "documentation": response_content
+            }),
             error: None,
-            duration_ms: start.elapsed().as_millis() as FU64,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 }
+
 /// Bug fixer agent
 pub struct BugFixerAgent {
     meta: AgentMetadata,
 }
+
 impl BugFixerAgent {
     pub fn new() -> Self {
         Self {
@@ -254,22 +232,29 @@ impl BugFixerAgent {
         }
     }
 }
+
 #[async_trait]
 impl Agent for BugFixerAgent {
     fn metadata(&self) -> &AgentMetadata {
         &self.meta
     }
-    fn can_handle(&self, task: &AgentTask) -> FBool {
+    fn can_handle(&self, task: &AgentTask) -> bool {
         task.task_type == "fix_bug"
     }
+
     async fn execute(&self, task: AgentTask) -> Result<AgentResult> {
         let start = std::time::Instant::now();
-        let code = task.input.get("code").and_then(|v| v.as_str()).unwrap_or("");
+        let code = task
+            .input
+            .get("code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         let error = task
             .input
             .get("error")
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown error");
+
         let response_content = match get_adapter() {
             Ok(adapter) => {
                 let prompt = format!(
@@ -279,21 +264,26 @@ impl Agent for BugFixerAgent {
                 let (response, _) = adapter.predict(&prompt).await?;
                 response
             }
-            Err(_) => local_bug_fix(code, error),
+            Err(_) => "// Mock fix applied".to_string(),
         };
+
         Ok(AgentResult {
             task_id: task.id,
             success: true,
-            output: serde_json::json!({ "fix" : response_content }),
+            output: serde_json::json!({
+                "fix": response_content
+            }),
             error: None,
-            duration_ms: start.elapsed().as_millis() as FU64,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 }
+
 /// Refactoring assistant agent
 pub struct RefactoringAgent {
     meta: AgentMetadata,
 }
+
 impl RefactoringAgent {
     pub fn new() -> Self {
         Self {
@@ -307,38 +297,46 @@ impl RefactoringAgent {
         }
     }
 }
+
 #[async_trait]
 impl Agent for RefactoringAgent {
     fn metadata(&self) -> &AgentMetadata {
         &self.meta
     }
-    fn can_handle(&self, task: &AgentTask) -> FBool {
+    fn can_handle(&self, task: &AgentTask) -> bool {
         task.task_type == "refactor"
     }
+
     async fn execute(&self, task: AgentTask) -> Result<AgentResult> {
         let start = std::time::Instant::now();
-        let code = task.input.get("code").and_then(|v| v.as_str()).unwrap_or("");
+        let code = task
+            .input
+            .get("code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         let goal = task
             .input
             .get("goal")
             .and_then(|v| v.as_str())
             .unwrap_or("Improve code quality");
+
         let response_content = match get_adapter() {
             Ok(adapter) => {
-                let prompt = format!(
-                    "Refactor this code to {}:\n```\n{}\n```", goal, code
-                );
+                let prompt = format!("Refactor this code to {}:\n```\n{}\n```", goal, code);
                 let (response, _) = adapter.predict(&prompt).await?;
                 response
             }
-            Err(_) => local_refactor(code, goal),
+            Err(_) => "// Mock refactoring".to_string(),
         };
+
         Ok(AgentResult {
             task_id: task.id,
             success: true,
-            output: serde_json::json!({ "refactored_code" : response_content }),
+            output: serde_json::json!({
+                "refactored_code": response_content
+            }),
             error: None,
-            duration_ms: start.elapsed().as_millis() as FU64,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 }

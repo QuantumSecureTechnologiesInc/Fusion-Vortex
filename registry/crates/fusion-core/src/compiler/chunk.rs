@@ -1,53 +1,69 @@
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
 use crate::compiler::value::Value;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum OpCode {
-    Constant(u16),
+pub enum OpCode {
+    Constant(u16), // Index into constant pool
+
+    // Arithmetic
     Add,
     Sub,
     Mul,
     Div,
+
+    // Comparison
     Equal,
     NotEqual,
     GreaterThan,
     LessThan,
+
+    // Logic
     Not,
+
+    // Stack / Variables
     Pop,
-    GetLocal(u16),
+    GetLocal(u16), // Stack slot index
     SetLocal(u16),
-    Jump(u16),
-    JumpIfFalse(u16),
-    Loop(u16),
+
+    // Control Flow
+    Jump(u16),        // Unconditional jump forward
+    JumpIfFalse(u16), // Jump forward if stack top is false
+    Loop(u16),        // Unconditional jump backward
+
+    // Functions
     Return,
-    Call(u8),
-    MakeStruct(u8),
-    GetProp(u8),
-    SetProp(u8),
-    GetGlobal(u16),
-    SetGlobal(u16),
-    DefineGlobal(u16),
+    Call(u8), // Arg count
+
+    // Structs
+    MakeStruct(u8), // Pops N * 2 items (Key, Value pairs)
+    GetProp(u8),    // Operand is Constant Index (Name). Pops Struct.
+    SetProp(u8),    // Operand is Constant Index (Name). Bottom-Up: [Struct, Value].
+
+    // Globals
+    GetGlobal(u16),    // Operand is Constant Index (Name)
+    SetGlobal(u16),    // Operand is Constant Index (Name)
+    DefineGlobal(u16), // Operand is Constant Index (Name)
 }
+
 #[derive(Debug, Clone, PartialEq)]
-struct Chunk {
-    pub code: FVec<OpCode>,
-    pub constants: FVec<Value>,
-    pub name: FString,
+pub struct Chunk {
+    pub code: Vec<OpCode>,
+    pub constants: Vec<Value>,
+    pub name: String,
 }
+
 impl Chunk {
-    pub fn new(name: FString) -> Self {
+    pub fn new(name: String) -> Self {
         Chunk {
             code: Vec::new(),
             constants: Vec::new(),
             name,
         }
     }
+
     pub fn write(&mut self, op: OpCode) {
         self.code.push(op);
     }
+
     pub fn add_constant(&mut self, value: Value) -> u16 {
         self.constants.push(value);
         (self.constants.len() - 1) as u16

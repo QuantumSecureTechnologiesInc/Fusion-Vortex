@@ -1,24 +1,11 @@
 pub mod anthropic;
 pub mod google;
 pub mod local;
-pub mod ollama;
 pub mod openai;
-pub mod gpt_oss;
-pub mod mistral;
-pub mod phi;
-pub mod gemma;
-pub mod qwen;
-pub mod deepseek;
+
 pub use anthropic::{
     AnthropicAdapter, AnthropicConfig, AnthropicMessage, ContentBlock, ImageSource, Tool,
 };
 pub use google::{GoogleAdapter, GoogleConfig, GoogleContent, GooglePart};
 pub use local::{LocalAdapter, LocalConfig};
-pub use ollama::{OllamaAdapter, OllamaConfig};
 pub use openai::{OpenAIAdapter, OpenAIConfig, OpenAIMessage};
-pub use gpt_oss::{GptOssAdapter, GptOssConfig};
-pub use mistral::{MistralAdapter, MistralConfig};
-pub use phi::{PhiAdapter, PhiConfig};
-pub use gemma::{GemmaAdapter, GemmaConfig};
-pub use qwen::{QwenAdapter, QwenConfig};
-pub use deepseek::{DeepSeekAdapter, DeepSeekConfig};

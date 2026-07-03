@@ -1,0 +1,15 @@
+//! Fusion Native Debugger (fdbg) — machine-level debugger for
+//! Fusion-compiled x86-64 Windows PE executables.
+//!
+//! Uses the Windows Debug API for process control, INT3 software
+//! breakpoints, register/memory access, and disassembly.
+
+pub mod breakpoint;
+pub mod context;
+pub mod disasm;
+pub mod engine;
+pub mod error;
+pub mod ffi;
+pub mod process;
+pub mod symbols;
+pub mod unwind;

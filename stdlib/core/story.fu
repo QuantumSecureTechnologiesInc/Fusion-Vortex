@@ -1,38 +1,10 @@
-// Fusion Narrative Engine (pure .fu)
+// Fusion Narrative Engine stub (pure .fu)
+// Full implementation requires handle-based runtime for embedded arrays
 
-struct Verse {
-    message: string,
+fn narrative_version() -> string {
+    return "0.1.0";
 }
 
-struct Narrative {
-    id: string,
-    chapter: string,
-    author: string,
-    verse_count: int,
-    verses: [Verse; 128],
-    outcome: string,
+fn narrative_create(chapter: string, author: string) -> int {
+    return 0;
 }
-
-fn narrative_start(chapter: string, author: string) -> Narrative {
-    let n: Narrative = Narrative { id: "narrative", chapter: chapter, author: author, verse_count: 0, verses: [Verse { message: "" }; 128], outcome: "" };
-    return n;
-}
-
-fn narrative_record(n: Narrative, message: string) -> Narrative {
-    if n.verse_count < 128 {
-        n.verses[n.verse_count] = Verse { message: message };
-        n.verse_count = n.verse_count + 1;
-    }
-    return n;
-}
-
-fn narrative_conclude_success(n: Narrative, summary: string) -> string {
-    let final_msg: string = "SUCCESS: ";
-    return final_msg;
-}
-
-fn narrative_conclude_failure(n: Narrative, reason: string) -> string {
-    let final_msg: string = "FAILURE: ";
-    return final_msg;
-}
-

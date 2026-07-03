@@ -200,7 +200,7 @@ fn add(a: int, b: int) -> int {
 
 Instead of traditional borrow checking, Fusion uses **entropy analysis** to prevent data races by treating them as **"entropic collisions"**.
 
-**Location**: `Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu`
+**Location**: ~~`Source Files/Fusion Entropic Borrow Checker/entropy_borrow_checker.fu`~~ *(directory removed during restructure)*
 
 ### Core Components
 

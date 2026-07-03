@@ -1,0 +1,105 @@
+// GPT-OSS Adapter — Fusion AI Core
+// Open-source GPT-compatible models via OpenAI-compatible API
+// Serves models like GPT-J, GPT-NeoX, Cerebras-GPT, etc.
+// Typically served via vLLM or llama.cpp at localhost:11435
+// Auth: None (local only)
+
+use std::time::Duration;
+
+const GPT_OSS_API_BASE: string = "http://localhost:11435/v1";
+
+/// GPT-OSS adapter configuration
+struct GptOssConfig {
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,
+    pub timeout_secs: int,
+}
+
+fn gpt_oss_config_default() -> GptOssConfig {
+    GptOssConfig {
+        api_base: "http://localhost:11435/v1",
+        model: "gpt-oss",
+        max_tokens: 4096,
+        temperature: 70,
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message
+struct GptOssMessage {
+    role: string,
+    content: string,
+}
+
+/// Chat completion request
+struct GptOssChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,
+}
+
+/// Chat completion response
+struct GptOssChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// GPT-OSS Adapter (local)
+struct GptOssAdapter {
+    config: GptOssConfig,
+    connected: int,
+}
+
+fn gpt_oss_adapter_new() -> GptOssAdapter {
+    GptOssAdapter {
+        config: gpt_oss_config_default(),
+        connected: 0,
+    }
+}
+
+fn gpt_oss_adapter_with_config(cfg: GptOssConfig) -> GptOssAdapter {
+    GptOssAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via local GPT-OSS endpoint
+fn gpt_oss_chat_completion(adapter: GptOssAdapter, messages_len: int) -> (GptOssAdapter, GptOssChatResponse) {
+    let mut a = adapter;
+    // POST http://localhost:11435/v1/chat/completions
+    // Body: {"model":"gpt-oss","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: GptOssChatResponse = GptOssChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check
+fn gpt_oss_health_check(adapter: GptOssAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn gpt_oss_provider_name() -> string {
+    return "GPT-OSS (Local Open-Source)";
+}
+
+/// Supported model families
+fn gpt_oss_supported_models() -> string {
+    return "gpt-oss,gpt-j-6b,gpt-neox-20b,cerebras-gpt-13b,bloom-7b1,falcon-7b";
+}

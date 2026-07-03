@@ -1,28 +1,16 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FBool = bool;
-#[allow(missing_docs, dead_code)] type FString = String;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
 use anyhow::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+
 pub mod adapters;
 pub use adapters::{
     anthropic::{AnthropicAdapter, AnthropicConfig, AnthropicMessage, ContentBlock},
-    deepseek::{DeepSeekAdapter, DeepSeekConfig},
-    gemma::{GemmaAdapter, GemmaConfig},
     google::{GoogleAdapter, GoogleConfig},
-    gpt_oss::{GptOssAdapter, GptOssConfig},
     local::{LocalAdapter, LocalConfig},
-    mistral::{MistralAdapter, MistralConfig},
-    ollama::{OllamaAdapter, OllamaConfig},
     openai::{OpenAIAdapter, OpenAIConfig},
-    phi::{PhiAdapter, PhiConfig},
-    qwen::{QwenAdapter, QwenConfig},
     GoogleContent, GooglePart, OpenAIMessage,
 };
+
 /// Unified adapter configuration supporting all providers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "provider")]
@@ -31,43 +19,41 @@ pub enum AdapterConfig {
     Anthropic(AnthropicConfig),
     Google(GoogleConfig),
     Local(LocalConfig),
-    Ollama(OllamaConfig),
-    GptOss(GptOssConfig),
-    Mistral(MistralConfig),
-    Phi(PhiConfig),
-    Gemma(GemmaConfig),
-    Qwen(QwenConfig),
-    DeepSeek(DeepSeekConfig),
 }
+
 /// Response chunk for streaming
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseChunk {
-    pub text: FString,
-    pub finish_reason: Option<FString>,
+    pub text: String,
+    pub finish_reason: Option<String>,
     pub metadata: serde_json::Value,
 }
+
 /// Explanation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Explanation {
-    pub summary: FString,
-    pub details: FVec<FString>,
-    pub examples: FVec<FString>,
+    pub summary: String,
+    pub details: Vec<String>,
+    pub examples: Vec<String>,
 }
+
 /// Options for prediction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PredictOptions {
-    pub max_tokens: Option<FSize>,
+    pub max_tokens: Option<usize>,
     pub temperature: Option<f32>,
-    pub stop_sequences: FVec<FString>,
+    pub stop_sequences: Vec<String>,
 }
+
 /// Usage information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Usage {
-    pub input_tokens: FSize,
-    pub output_tokens: FSize,
-    pub total_tokens: FSize,
+    pub input_tokens: usize,
+    pub output_tokens: usize,
+    pub total_tokens: usize,
     pub cost_usd: f64,
 }
+
 /// Unified model session trait
 #[async_trait]
 pub trait ModelSession: Send + Sync {
@@ -75,30 +61,29 @@ pub trait ModelSession: Send + Sync {
     async fn predict_stream(
         &self,
         prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>>;
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>>;
+
     /// Get a complete prediction (non-streaming)
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)>;
+    async fn predict(&self, prompt: &str) -> Result<(String, Usage)>;
+
     /// Generate an explanation
     async fn explain(&self, code: &str, depth: &str) -> Result<Explanation>;
+
     /// Check health
-    async fn health(&self) -> Result<FBool>;
+    async fn health(&self) -> Result<bool>;
+
     /// Get provider name
     fn provider_name(&self) -> &str;
 }
+
 /// Unified model adapter
 pub enum UnifiedAdapter {
     OpenAI(OpenAIAdapter),
     Anthropic(AnthropicAdapter),
     Google(GoogleAdapter),
     Local(LocalAdapter),
-    Ollama(OllamaAdapter),
-    GptOss(GptOssAdapter),
-    Mistral(MistralAdapter),
-    Phi(PhiAdapter),
-    Gemma(GemmaAdapter),
-    Qwen(QwenAdapter),
-    DeepSeek(DeepSeekAdapter),
 }
+
 impl UnifiedAdapter {
     /// Create adapter from configuration
     pub fn from_config(config: AdapterConfig) -> Result<Self> {
@@ -112,32 +97,10 @@ impl UnifiedAdapter {
             AdapterConfig::Google(config) => {
                 Ok(UnifiedAdapter::Google(GoogleAdapter::new(config)?))
             }
-            AdapterConfig::Local(config) => {
-                Ok(UnifiedAdapter::Local(LocalAdapter::new(config)?))
-            }
-            AdapterConfig::Ollama(config) => {
-                Ok(UnifiedAdapter::Ollama(OllamaAdapter::new(config)?))
-            }
-            AdapterConfig::GptOss(config) => {
-                Ok(UnifiedAdapter::GptOss(GptOssAdapter::new(config)?))
-            }
-            AdapterConfig::Mistral(config) => {
-                Ok(UnifiedAdapter::Mistral(MistralAdapter::new(config)?))
-            }
-            AdapterConfig::Phi(config) => {
-                Ok(UnifiedAdapter::Phi(PhiAdapter::new(config)?))
-            }
-            AdapterConfig::Gemma(config) => {
-                Ok(UnifiedAdapter::Gemma(GemmaAdapter::new(config)?))
-            }
-            AdapterConfig::Qwen(config) => {
-                Ok(UnifiedAdapter::Qwen(QwenAdapter::new(config)?))
-            }
-            AdapterConfig::DeepSeek(config) => {
-                Ok(UnifiedAdapter::DeepSeek(DeepSeekAdapter::new(config)?))
-            }
+            AdapterConfig::Local(config) => Ok(UnifiedAdapter::Local(LocalAdapter::new(config)?)),
         }
     }
+
     /// Create a session
     pub fn create_session(self) -> Box<dyn ModelSession> {
         match self {
@@ -145,39 +108,43 @@ impl UnifiedAdapter {
             UnifiedAdapter::Anthropic(adapter) => Box::new(AnthropicSession { adapter }),
             UnifiedAdapter::Google(adapter) => Box::new(GoogleSession { adapter }),
             UnifiedAdapter::Local(adapter) => Box::new(LocalSession { adapter }),
-            UnifiedAdapter::Ollama(adapter) => Box::new(OllamaSession { adapter }),
-            UnifiedAdapter::GptOss(adapter) => Box::new(GptOssSession { adapter }),
-            UnifiedAdapter::Mistral(adapter) => Box::new(MistralSession { adapter }),
-            UnifiedAdapter::Phi(adapter) => Box::new(PhiSession { adapter }),
-            UnifiedAdapter::Gemma(adapter) => Box::new(GemmaSession { adapter }),
-            UnifiedAdapter::Qwen(adapter) => Box::new(QwenSession { adapter }),
-            UnifiedAdapter::DeepSeek(adapter) => Box::new(DeepSeekSession { adapter }),
         }
     }
 }
+
 /// OpenAI session implementation
-pub struct OpenAISession {
+struct OpenAISession {
     adapter: OpenAIAdapter,
 }
+
 #[async_trait]
 impl ModelSession for OpenAISession {
     async fn predict_stream(
         &self,
         prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
+        let messages = vec![OpenAIMessage {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+            name: None,
+            function_call: None,
+        }];
+
         self.adapter.chat_completion_stream(messages).await
     }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
+
+    async fn predict(&self, prompt: &str) -> Result<(String, Usage)> {
+        let messages = vec![OpenAIMessage {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+            name: None,
+            function_call: None,
+        }];
+
         let (message, usage) = self.adapter.chat_completion(messages, None).await?;
+
         let cost = self.adapter.calculate_cost(&usage);
+
         Ok((
             message.content,
             Usage {
@@ -188,52 +155,69 @@ impl ModelSession for OpenAISession {
             },
         ))
     }
+
     async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
         let prompt = format!("Explain this code in detail:\n\n{}", code);
         let (response, _) = self.predict(&prompt).await?;
+
         Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
+            summary: response.lines().take(3).collect::<Vec<_>>().join(" "),
             details: response.lines().map(|s| s.to_string()).collect(),
             examples: vec![],
         })
     }
-    async fn health(&self) -> Result<FBool> {
+
+    async fn health(&self) -> Result<bool> {
+        // Simple health check - try a minimal request
         let result = self.predict("test").await;
         Ok(result.is_ok())
     }
+
     fn provider_name(&self) -> &str {
         "OpenAI"
     }
 }
+
 /// Anthropic session implementation
-pub struct AnthropicSession {
+struct AnthropicSession {
     adapter: AnthropicAdapter,
 }
+
 #[async_trait]
 impl ModelSession for AnthropicSession {
     async fn predict_stream(
         &self,
         prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let messages = vec![
-            AnthropicMessage { role : "user".to_string(), content :
-            vec![ContentBlock::Text { text : prompt.to_string(), }], }
-        ];
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
+        let messages = vec![AnthropicMessage {
+            role: "user".to_string(),
+            content: vec![ContentBlock::Text {
+                text: prompt.to_string(),
+            }],
+        }];
+
         self.adapter.messages_stream(messages, None).await
     }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            AnthropicMessage { role : "user".to_string(), content :
-            vec![ContentBlock::Text { text : prompt.to_string(), }], }
-        ];
+
+    async fn predict(&self, prompt: &str) -> Result<(String, Usage)> {
+        let messages = vec![AnthropicMessage {
+            role: "user".to_string(),
+            content: vec![ContentBlock::Text {
+                text: prompt.to_string(),
+            }],
+        }];
+
         let (content_blocks, usage) = self.adapter.messages(messages, None, None).await?;
+
         let mut text = String::new();
         for block in content_blocks {
             if let ContentBlock::Text { text: t } = block {
                 text.push_str(&t);
             }
         }
+
         let cost = self.adapter.calculate_cost(&usage);
+
         Ok((
             text,
             Usage {
@@ -244,51 +228,66 @@ impl ModelSession for AnthropicSession {
             },
         ))
     }
+
     async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
         let prompt = format!("Explain this code in detail:\n\n{}", code);
         let (response, _) = self.predict(&prompt).await?;
+
         Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
+            summary: response.lines().take(3).collect::<Vec<_>>().join(" "),
             details: response.lines().map(|s| s.to_string()).collect(),
             examples: vec![],
         })
     }
-    async fn health(&self) -> Result<FBool> {
+
+    async fn health(&self) -> Result<bool> {
         let result = self.predict("test").await;
         Ok(result.is_ok())
     }
+
     fn provider_name(&self) -> &str {
         "Anthropic"
     }
 }
+
 /// Google session implementation
-pub struct GoogleSession {
+struct GoogleSession {
     adapter: GoogleAdapter,
 }
+
 #[async_trait]
 impl ModelSession for GoogleSession {
     async fn predict_stream(
         &self,
         prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let contents = vec![
-            GoogleContent { role : "user".to_string(), parts : vec![GooglePart::Text {
-            text : prompt.to_string(), }], }
-        ];
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
+        let contents = vec![GoogleContent {
+            role: "user".to_string(),
+            parts: vec![GooglePart::Text {
+                text: prompt.to_string(),
+            }],
+        }];
+
         self.adapter.generate_content_stream(contents).await
     }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let contents = vec![
-            GoogleContent { role : "user".to_string(), parts : vec![GooglePart::Text {
-            text : prompt.to_string(), }], }
-        ];
+
+    async fn predict(&self, prompt: &str) -> Result<(String, Usage)> {
+        let contents = vec![GoogleContent {
+            role: "user".to_string(),
+            parts: vec![GooglePart::Text {
+                text: prompt.to_string(),
+            }],
+        }];
+
         let (content, usage_opt) = self.adapter.generate_content(contents).await?;
+
         let mut text = String::new();
         for part in content.parts {
             if let GooglePart::Text { text: t } = part {
                 text.push_str(&t);
             }
         }
+
         let usage = if let Some(u) = usage_opt {
             Usage {
                 input_tokens: u.prompt_token_count,
@@ -304,48 +303,64 @@ impl ModelSession for GoogleSession {
                 cost_usd: 0.0,
             }
         };
+
         Ok((text, usage))
     }
+
     async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
         let prompt = format!("Explain this code in detail:\n\n{}", code);
         let (response, _) = self.predict(&prompt).await?;
+
         Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
+            summary: response.lines().take(3).collect::<Vec<_>>().join(" "),
             details: response.lines().map(|s| s.to_string()).collect(),
             examples: vec![],
         })
     }
-    async fn health(&self) -> Result<FBool> {
+
+    async fn health(&self) -> Result<bool> {
         let result = self.predict("test").await;
         Ok(result.is_ok())
     }
+
     fn provider_name(&self) -> &str {
         "Google"
     }
 }
+
 /// Local session implementation
-pub struct LocalSession {
+struct LocalSession {
     adapter: LocalAdapter,
 }
+
 #[async_trait]
 impl ModelSession for LocalSession {
     async fn predict_stream(
         &self,
         prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
+    ) -> Result<tokio::sync::mpsc::Receiver<Result<String>>> {
+        let messages = vec![OpenAIMessage {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+            name: None,
+            function_call: None,
+        }];
+
         self.adapter.chat_completion_stream(messages).await
     }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
+
+    async fn predict(&self, prompt: &str) -> Result<(String, Usage)> {
+        let messages = vec![OpenAIMessage {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+            name: None,
+            function_call: None,
+        }];
+
         let (message, usage) = self.adapter.chat_completion(messages).await?;
+
         let cost = self.adapter.calculate_cost(&usage);
+
         Ok((
             message.content,
             Usage {
@@ -356,417 +371,40 @@ impl ModelSession for LocalSession {
             },
         ))
     }
+
     async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
         let prompt = format!("Explain this code in detail:\n\n{}", code);
         let (response, _) = self.predict(&prompt).await?;
+
         Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
+            summary: response.lines().take(3).collect::<Vec<_>>().join(" "),
             details: response.lines().map(|s| s.to_string()).collect(),
             examples: vec![],
         })
     }
-    async fn health(&self) -> Result<FBool> {
+
+    async fn health(&self) -> Result<bool> {
+        // Simple health check - try a minimal request
         let result = self.predict("test").await;
         Ok(result.is_ok())
     }
+
     fn provider_name(&self) -> &str {
         "Local"
     }
 }
 
-/// Ollama session implementation
-pub struct OllamaSession {
-    adapter: OllamaAdapter,
-}
-#[async_trait]
-impl ModelSession for OllamaSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let adapter = self.adapter.clone();
-        let prompt = prompt.to_string();
-        tokio::spawn(async move {
-            let res = adapter.generate(&prompt).await;
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let text = self.adapter.generate(prompt).await?;
-        Ok((
-            text,
-            Usage {
-                input_tokens: 0,
-                output_tokens: 0,
-                total_tokens: 0,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "Ollama"
-    }
-}
-
-/// Qwen session implementation
-pub struct QwenSession {
-    adapter: QwenAdapter,
-}
-#[async_trait]
-impl ModelSession for QwenSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "Qwen"
-    }
-}
-
-/// DeepSeek session implementation
-pub struct DeepSeekSession {
-    adapter: DeepSeekAdapter,
-}
-#[async_trait]
-impl ModelSession for DeepSeekSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "DeepSeek"
-    }
-}
-
-/// GPT-OSS session implementation
-pub struct GptOssSession {
-    adapter: GptOssAdapter,
-}
-#[async_trait]
-impl ModelSession for GptOssSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "GPT-OSS"
-    }
-}
-
-/// Mistral session implementation
-pub struct MistralSession {
-    adapter: MistralAdapter,
-}
-#[async_trait]
-impl ModelSession for MistralSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "Mistral"
-    }
-}
-
-/// Phi session implementation
-pub struct PhiSession {
-    adapter: PhiAdapter,
-}
-#[async_trait]
-impl ModelSession for PhiSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "Phi"
-    }
-}
-
-/// Gemma session implementation
-pub struct GemmaSession {
-    adapter: GemmaAdapter,
-}
-#[async_trait]
-impl ModelSession for GemmaSession {
-    async fn predict_stream(
-        &self,
-        prompt: &str,
-    ) -> Result<tokio::sync::mpsc::Receiver<Result<FString>>> {
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let adapter = self.adapter.clone();
-        tokio::spawn(async move {
-            let res = adapter.chat_completion(messages).await.map(|(m, _)| m.content);
-            let _ = tx.send(res).await;
-        });
-        Ok(rx)
-    }
-    async fn predict(&self, prompt: &str) -> Result<(FString, Usage)> {
-        let messages = vec![
-            OpenAIMessage { role : "user".to_string(), content : prompt.to_string(), name
-            : None, function_call : None, }
-        ];
-        let (message, usage) = self.adapter.chat_completion(messages).await?;
-        Ok((
-            message.content,
-            Usage {
-                input_tokens: usage.prompt_tokens,
-                output_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-                cost_usd: 0.0,
-            },
-        ))
-    }
-    async fn explain(&self, code: &str, _depth: &str) -> Result<Explanation> {
-        let prompt = format!("Explain this code in detail:\n\n{}", code);
-        let (response, _) = self.predict(&prompt).await?;
-        Ok(Explanation {
-            summary: response.lines().take(3).collect::<FVec<_>>().join(" "),
-            details: response.lines().map(|s| s.to_string()).collect(),
-            examples: vec![],
-        })
-    }
-    async fn health(&self) -> Result<FBool> {
-        let result = self.predict("test").await;
-        Ok(result.is_ok())
-    }
-    fn provider_name(&self) -> &str {
-        "Gemma"
-    }
-}
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_unified_adapter_creation() {
         let config = AdapterConfig::OpenAI(OpenAIConfig {
             api_key: "test-key".to_string(),
             ..Default::default()
         });
+
         let adapter = UnifiedAdapter::from_config(config);
         assert!(adapter.is_ok());
     }

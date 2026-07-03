@@ -1,11 +1,11 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 use crate::compiler::value::Value;
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum OpCode {
+pub enum OpCode {
     Constant(u16),
     Add,
     Sub,
@@ -32,7 +32,7 @@ enum OpCode {
     DefineGlobal(u16),
 }
 #[derive(Debug, Clone, PartialEq)]
-struct Chunk {
+pub struct Chunk {
     pub code: FVec<OpCode>,
     pub constants: FVec<Value>,
     pub name: FString,

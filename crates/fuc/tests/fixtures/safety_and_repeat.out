@@ -2,3 +2,5 @@ arr[0] (should be 77): 77
 arr[9] (should be 77): 77
 arr[5] (should be 100): 100
 About to crash...
+PANIC:
+Array index out of bounds!

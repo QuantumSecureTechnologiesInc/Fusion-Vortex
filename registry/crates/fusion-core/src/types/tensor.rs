@@ -1,119 +1,318 @@
-use crate::{FusionError, FusionResult};
+use crate::FusionError;
+use crate::FusionResult;
+use ndarray::{Array, ArrayD, IxDyn};
+use num_complex::Complex64;
+use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Tensor<T, const RANK: usize> {
-    pub data: Vec<T>,
-    shape: [usize; RANK],
+    pub data: ArrayD<T>,
 }
 
 pub type Matrix<T> = Tensor<T, 2>;
-
-impl<T: Clone + Default, const RANK: usize> Tensor<T, RANK> {
-    pub fn zeros(shape: [usize; RANK]) -> Self {
-        let len = shape.iter().copied().product::<usize>();
-        Self {
-            data: vec![T::default(); len],
-            shape,
-        }
-    }
-}
+pub type Vector1D<T> = Tensor<T, 1>;
+pub type Tensor3D<T> = Tensor<T, 3>;
 
 impl<T, const RANK: usize> Tensor<T, RANK> {
-    pub fn new(data: Vec<T>, shape: [usize; RANK]) -> FusionResult<Self> {
-        let expected = shape.iter().copied().product::<usize>();
-        if data.len() != expected {
-            return Err(FusionError::ShapeError(format!(
-                "invalid tensor length: got {}, expected {}",
-                data.len(),
-                expected
-            )));
-        }
-        Ok(Self { data, shape })
+    pub fn from_array(data: ArrayD<T>) -> Self {
+        Self { data }
     }
 
-    pub fn shape(&self) -> &[usize; RANK] {
-        &self.shape
+    pub fn shape(&self) -> &[usize] {
+        self.data.shape()
+    }
+
+    pub fn get<I>(&self, index: I) -> Option<&T>
+    where
+        I: ndarray::NdIndex<ndarray::Dim<ndarray::IxDynImpl>>,
+    {
+        self.data.get(index)
+    }
+
+    pub fn get_mut<I>(&mut self, index: I) -> Option<&mut T>
+    where
+        I: ndarray::NdIndex<ndarray::Dim<ndarray::IxDynImpl>>,
+    {
+        self.data.get_mut(index)
+    }
+
+    pub fn set<I>(&mut self, index: I, value: T) -> FusionResult<()>
+    where
+        I: ndarray::NdIndex<ndarray::Dim<ndarray::IxDynImpl>> + Clone + std::fmt::Debug,
+    {
+        if let Some(elem) = self.data.get_mut(index.clone()) {
+            *elem = value;
+            Ok(())
+        } else {
+            Err(FusionError::ShapeError(format!(
+                "Index {:?} out of bounds",
+                index
+            )))
+        }
+    }
+
+    pub fn mapv<F>(&self, f: F) -> Self
+    where
+        T: Clone,
+        F: FnMut(T) -> T,
+    {
+        Self {
+            data: self.data.mapv(f),
+        }
     }
 }
 
-impl Matrix<f64> {
-    pub fn matmul(&self, rhs: &Self) -> FusionResult<Self> {
-        let [m, k_lhs] = self.shape;
-        let [k_rhs, n] = rhs.shape;
-        if k_lhs != k_rhs {
-            return Err(FusionError::ShapeMismatch {
-                op: "matmul".to_string(),
-                lhs: self.shape.to_vec(),
-                rhs: rhs.shape.to_vec(),
-            });
-        }
-
-        let mut out = vec![0.0; m * n];
-        for i in 0..m {
-            for j in 0..n {
-                let mut acc = 0.0;
-                for k in 0..k_lhs {
-                    acc += self.data[i * k_lhs + k] * rhs.data[k * n + j];
-                }
-                out[i * n + j] = acc;
-            }
-        }
-
-        Ok(Self {
-            data: out,
-            shape: [m, n],
-        })
+// Constructor for Matrix (Rank 2)
+impl<T: Clone> Tensor<T, 2> {
+    pub fn new(data: Vec<T>, shape: [usize; 2]) -> FusionResult<Self> {
+        let arr = Array::from_shape_vec(IxDyn(&shape), data)
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        Ok(Self { data: arr })
     }
 
-    pub fn add(&self, rhs: &Self) -> FusionResult<Self> {
-        if self.shape != rhs.shape {
+    pub fn from_vec(data: Vec<T>, shape: [usize; 2]) -> FusionResult<Self> {
+        Self::new(data, shape)
+    }
+}
+
+// Constructor for Vector (Rank 1)
+impl<T: Clone> Tensor<T, 1> {
+    pub fn new(data: Vec<T>, shape: [usize; 1]) -> FusionResult<Self> {
+        let arr = Array::from_shape_vec(IxDyn(&shape), data)
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        Ok(Self { data: arr })
+    }
+
+    pub fn from_vec(data: Vec<T>, shape: [usize; 1]) -> FusionResult<Self> {
+        Self::new(data, shape)
+    }
+}
+
+// Constructor for Tensor 3D
+impl<T: Clone> Tensor<T, 3> {
+    pub fn new(data: Vec<T>, shape: [usize; 3]) -> FusionResult<Self> {
+        let arr = Array::from_shape_vec(IxDyn(&shape), data)
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        Ok(Self { data: arr })
+    }
+
+    pub fn from_vec(data: Vec<T>, shape: [usize; 3]) -> FusionResult<Self> {
+        Self::new(data, shape)
+    }
+}
+
+// Generic zeros and ones
+impl<T: Clone + num_traits::Zero, const RANK: usize> Tensor<T, RANK> {
+    pub fn zeros(shape: [usize; RANK]) -> Self {
+        let arr = Array::zeros(IxDyn(&shape));
+        Self { data: arr }
+    }
+}
+
+impl<T: Clone + num_traits::One, const RANK: usize> Tensor<T, RANK> {
+    pub fn ones(shape: [usize; RANK]) -> Self {
+        let arr = Array::ones(IxDyn(&shape));
+        Self { data: arr }
+    }
+}
+
+// Dot / Matmul / Transpose for Matrix f64
+impl Tensor<f64, 2> {
+    pub fn dot(&self, other: &Self) -> FusionResult<Self> {
+        let s_shape = self.shape();
+        let o_shape = other.shape();
+        if s_shape[1] != o_shape[0] {
+            return Err(FusionError::ShapeError(format!(
+                "Incompatible shapes for dot product: {:?} vs {:?}",
+                s_shape, o_shape
+            )));
+        }
+
+        let a = self
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        let b = other
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        let res = a.dot(&b);
+        Ok(Self::from_array(res.into_dyn()))
+    }
+
+    pub fn matmul(&self, other: &Self) -> FusionResult<Self> {
+        self.dot(other)
+    }
+
+    pub fn transpose(&self) -> FusionResult<Self> {
+        let transposed = self
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?
+            .t()
+            .to_owned();
+        Ok(Self::from_array(transposed.into_dyn()))
+    }
+
+    pub fn add(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
             return Err(FusionError::ShapeMismatch {
                 op: "add".to_string(),
-                lhs: self.shape.to_vec(),
-                rhs: rhs.shape.to_vec(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
             });
         }
-
-        let data = self
-            .data
-            .iter()
-            .zip(rhs.data.iter())
-            .map(|(l, r)| l + r)
-            .collect::<Vec<_>>();
-
-        Ok(Self {
-            data,
-            shape: self.shape,
-        })
+        Ok(Self::from_array(&self.data + &other.data))
     }
 
-    pub fn sub(&self, rhs: &Self) -> FusionResult<Self> {
-        if self.shape != rhs.shape {
+    pub fn sub(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
             return Err(FusionError::ShapeMismatch {
                 op: "sub".to_string(),
-                lhs: self.shape.to_vec(),
-                rhs: rhs.shape.to_vec(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
             });
         }
-
-        let data = self
-            .data
-            .iter()
-            .zip(rhs.data.iter())
-            .map(|(l, r)| l - r)
-            .collect::<Vec<_>>();
-
-        Ok(Self {
-            data,
-            shape: self.shape,
-        })
+        Ok(Self::from_array(&self.data - &other.data))
     }
 
-    pub fn scale(&self, factor: f64) -> Self {
-        let data = self.data.iter().map(|v| v * factor).collect::<Vec<_>>();
-        Self {
-            data,
-            shape: self.shape,
+    pub fn mul(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
+            return Err(FusionError::ShapeMismatch {
+                op: "mul".to_string(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
+            });
         }
+        Ok(Self::from_array(&self.data * &other.data))
+    }
+
+    pub fn div(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
+            return Err(FusionError::ShapeMismatch {
+                op: "div".to_string(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
+            });
+        }
+        Ok(Self::from_array(&self.data / &other.data))
+    }
+
+    pub fn scale(&self, scalar: f64) -> Self {
+        Self::from_array(&self.data.clone() * scalar)
+    }
+}
+
+// Dot / Matmul / Transpose for Matrix Complex64
+impl Tensor<Complex64, 2> {
+    pub fn dot(&self, other: &Self) -> FusionResult<Self> {
+        let s_shape = self.shape();
+        let o_shape = other.shape();
+        if s_shape[1] != o_shape[0] {
+            return Err(FusionError::ShapeError(format!(
+                "Incompatible shapes for dot product: {:?} vs {:?}",
+                s_shape, o_shape
+            )));
+        }
+
+        let a = self
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        let b = other
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?;
+        let res = a.dot(&b);
+        Ok(Self::from_array(res.into_dyn()))
+    }
+
+    pub fn matmul(&self, other: &Self) -> FusionResult<Self> {
+        self.dot(other)
+    }
+
+    pub fn transpose(&self) -> FusionResult<Self> {
+        let transposed = self
+            .data
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FusionError::ShapeError(e.to_string()))?
+            .t()
+            .to_owned();
+        Ok(Self::from_array(transposed.into_dyn()))
+    }
+
+    pub fn add(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
+            return Err(FusionError::ShapeMismatch {
+                op: "add".to_string(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
+            });
+        }
+        Ok(Self::from_array(&self.data + &other.data))
+    }
+
+    pub fn sub(&self, other: &Self) -> FusionResult<Self> {
+        if self.shape() != other.shape() {
+            return Err(FusionError::ShapeMismatch {
+                op: "sub".to_string(),
+                lhs: self.shape().to_vec(),
+                rhs: other.shape().to_vec(),
+            });
+        }
+        Ok(Self::from_array(&self.data - &other.data))
+    }
+
+    pub fn scale(&self, scalar: Complex64) -> Self {
+        Self::from_array(&self.data.clone() * scalar)
+    }
+}
+
+// Implement std::ops traits for ergonomic usage
+impl Add for &Tensor<f64, 2> {
+    type Output = FusionResult<Tensor<f64, 2>>;
+    fn add(self, other: Self) -> Self::Output {
+        self.add(other)
+    }
+}
+
+impl Sub for &Tensor<f64, 2> {
+    type Output = FusionResult<Tensor<f64, 2>>;
+    fn sub(self, other: Self) -> Self::Output {
+        self.sub(other)
+    }
+}
+
+impl Mul for &Tensor<f64, 2> {
+    type Output = FusionResult<Tensor<f64, 2>>;
+    fn mul(self, other: Self) -> Self::Output {
+        self.mul(other)
+    }
+}
+
+impl Div for &Tensor<f64, 2> {
+    type Output = FusionResult<Tensor<f64, 2>>;
+    fn div(self, other: Self) -> Self::Output {
+        self.div(other)
+    }
+}
+
+impl Add for &Tensor<Complex64, 2> {
+    type Output = FusionResult<Tensor<Complex64, 2>>;
+    fn add(self, other: Self) -> Self::Output {
+        self.add(other)
+    }
+}
+
+impl Sub for &Tensor<Complex64, 2> {
+    type Output = FusionResult<Tensor<Complex64, 2>>;
+    fn sub(self, other: Self) -> Self::Output {
+        self.sub(other)
     }
 }

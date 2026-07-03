@@ -1,0 +1,4 @@
+extern fn printf(fmt: string, ...) -> int;
+struct E { pos: int }
+fn test_fn(e: &E) { printf("pos=%d\n", e.pos); }
+pub fn main() -> int { printf("=== A ===\n"); let mut e: E = E { pos: 42 }; printf("=== B ===\n"); test_fn(&e); printf("=== C ===\n"); return 0; }

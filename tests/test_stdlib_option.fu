@@ -1,0 +1,126 @@
+// tests/test_stdlib_option.fu - Tests for OptionInt, OptionBool, OptionString
+// Validates that option types parse and basic operations work correctly.
+
+// --- OptionInt ---
+struct OptionInt { has_value: int, value: int }
+
+fn option_int_some(val: int) -> OptionInt {
+    return OptionInt { has_value: 1, value: val };
+}
+fn option_int_none() -> OptionInt {
+    return OptionInt { has_value: 0, value: 0 };
+}
+fn option_int_is_some(opt: OptionInt) -> bool {
+    return opt.has_value != 0;
+}
+fn option_int_is_none(opt: OptionInt) -> bool {
+    return opt.has_value == 0;
+}
+fn option_int_unwrap(opt: OptionInt) -> int {
+    return opt.value;
+}
+fn option_int_unwrap_or(opt: OptionInt, default: int) -> int {
+    if opt.has_value != 0 { return opt.value; } else { return default; }
+}
+
+// --- OptionBool ---
+struct OptionBool { has_value: int, value: bool }
+
+fn option_bool_some(val: bool) -> OptionBool {
+    return OptionBool { has_value: 1, value: val };
+}
+fn option_bool_none() -> OptionBool {
+    return OptionBool { has_value: 0, value: false };
+}
+fn option_bool_is_some(opt: OptionBool) -> bool {
+    return opt.has_value != 0;
+}
+fn option_bool_unwrap(opt: OptionBool) -> bool {
+    return opt.value;
+}
+
+// --- OptionString ---
+struct OptionString { has_value: int, value: string }
+
+fn option_string_some(val: string) -> OptionString {
+    return OptionString { has_value: 1, value: val };
+}
+fn option_string_none() -> OptionString {
+    return OptionString { has_value: 0, value: "" };
+}
+fn option_string_is_some(opt: OptionString) -> bool {
+    return opt.has_value != 0;
+}
+fn option_string_unwrap(opt: OptionString) -> string {
+    return opt.value;
+}
+
+// --- Runtime externs for test output ---
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print_int(n: int) -> void;
+extern fn fusion_exit(code: int) -> void;
+
+fn assert_eq_int(actual: int, expected: int, msg: string) -> void {
+    if actual != expected {
+        fusion_println(msg);
+        fusion_println("FAIL: expected");
+        fusion_print_int(expected);
+        fusion_println("but got");
+        fusion_print_int(actual);
+        fusion_exit(1);
+    }
+}
+
+fn assert_true(cond: bool, msg: string) -> void {
+    if cond == false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected true");
+        fusion_exit(1);
+    }
+}
+
+fn assert_false(cond: bool, msg: string) -> void {
+    if cond != false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected false");
+        fusion_exit(1);
+    }
+}
+
+fn main() -> void {
+    fusion_println("=== Test: OptionInt ===");
+
+    // Test some
+    let a: OptionInt = option_int_some(42);
+    assert_true(option_int_is_some(a), "some(42) should be some");
+    assert_false(option_int_is_none(a), "some(42) should not be none");
+    assert_eq_int(option_int_unwrap(a), 42, "unwrap some(42)");
+
+    // Test none
+    let b: OptionInt = option_int_none();
+    assert_false(option_int_is_some(b), "none should not be some");
+    assert_true(option_int_is_none(b), "none should be none");
+
+    // Test unwrap_or
+    assert_eq_int(option_int_unwrap_or(a, 99), 42, "unwrap_or on some returns value");
+    assert_eq_int(option_int_unwrap_or(b, 99), 99, "unwrap_or on none returns default");
+
+    fusion_println("=== Test: OptionBool ===");
+
+    let c: OptionBool = option_bool_some(true);
+    assert_true(option_bool_is_some(c), "some(true) should be some");
+    assert_true(option_bool_unwrap(c), "unwrap some(true)");
+
+    let d: OptionBool = option_bool_none();
+    assert_false(option_bool_is_some(d), "none bool should not be some");
+
+    fusion_println("=== Test: OptionString ===");
+
+    let e: OptionString = option_string_some("hello");
+    assert_true(option_string_is_some(e), "some(hello) should be some");
+
+    let f: OptionString = option_string_none();
+    assert_false(option_string_is_some(f), "none string should not be some");
+
+    fusion_println("All option tests PASSED");
+}

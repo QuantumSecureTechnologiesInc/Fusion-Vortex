@@ -1,34 +1,48 @@
-#![allow(dead_code)]
-/// Standard Input/Output Stream Abstraction
-struct StdIO;
-impl StdIO {
-    /// Print string to stdout with newline
-    pub fn println(s: &str) {
-        println!("{}", s);
-    }
-    /// Print string to stdout without newline
-    pub fn print(s: &str) {
-        print!("{}", s);
-        let _ = io::stdout().flush();
-    }
-    /// Read a line from stdin
-    pub fn read_line() -> FString {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap_or_default();
-        input.trim().to_string()
-    }
-    /// Explicit flush of stdout
-    pub fn flush() {
-        let _ = io::stdout().flush();
+// stdlib/io.fu - Standard I/O for Fusion
+// Thin wrappers around the C runtime I/O functions.
+
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print(s: string) -> void;
+extern fn fusion_print_int(v: int) -> void;
+extern fn fusion_puts(s: string) -> void;
+extern fn fusion_read_line() -> string;
+extern fn fusion_string_to_int(s: string) -> int;
+
+// ============================================================
+// Console output
+// ============================================================
+fn println(s: string) -> void {
+    fusion_println(s);
+}
+
+fn print_str(s: string) -> void {
+    fusion_print(s);
+}
+
+fn print_int(v: int) -> void {
+    fusion_print_int(v);
+}
+
+fn println_int(v: int) -> void {
+    fusion_print_int(v);
+}
+
+fn println_bool(v: bool) -> void {
+    if v {
+        fusion_println("true");
+    } else {
+        fusion_println("false");
     }
 }
-/// Abstract Reader Trait
-trait FusionRead {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<FSize>;
-    fn read_to_string(&mut self) -> std::io::Result<FString>;
+
+// ============================================================
+// Console input
+// ============================================================
+fn read_line() -> string {
+    return fusion_read_line();
 }
-/// Abstract Writer Trait
-trait FusionWrite {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<FSize>;
-    fn flush(&mut self) -> std::io::Result<()>;
+
+fn read_int() -> int {
+    let line: string = fusion_read_line();
+    return fusion_string_to_int(line);
 }

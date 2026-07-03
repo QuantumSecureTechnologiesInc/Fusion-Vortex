@@ -188,7 +188,15 @@ function Update-CrateMetadata {
         return
     }
     
+    $ArchetypeDef = $Archetypes[$Archetype]
+    if (-not $ArchetypeDef) {
+        Write-Warning "Unknown archetype: $Archetype"
+        return
+    }
+
     Write-Host "Polishing $CratePath as $Archetype..." -ForegroundColor Green
+    Write-Host "  Keywords: $($ArchetypeDef.Keywords -join ', ')"
+    Write-Host "  Categories: $($ArchetypeDef.Categories -join ', ')"
     
     # This would require a TOML parser in PowerShell
     # For now, we've demonstrated the manual approach

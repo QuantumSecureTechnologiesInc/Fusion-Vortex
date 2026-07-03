@@ -41,7 +41,8 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/native
 )
 
-# Find all C source files in runtime
+# Find all C source files in runtime.
+# runtime.c and runtime/native/fusionrt.c both support POSIX and Win32.
 file(GLOB_RECURSE RUNTIME_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/native/*.c

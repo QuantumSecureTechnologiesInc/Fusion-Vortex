@@ -93,10 +93,57 @@ void fusion_mutex_unlock(int64_t handle);
 void fusion_mutex_free(int64_t handle);
 
 // ========================================
+// Memory Management
+// ========================================
+int64_t fusion_malloc(int64_t size);
+void fusion_free(int64_t ptr);
+int64_t fusion_realloc(int64_t ptr, int64_t size);
+void fusion_memcpy(int64_t dest, int64_t src, int64_t n);
+void fusion_memset(int64_t dest, int64_t val, int64_t n);
+
+// ========================================
+// String Operations
+// ========================================
+int64_t fusion_strlen(const char* s);
+int64_t fusion_strcmp(const char* a, const char* b);
+int64_t fusion_strcpy(const char* src);
+const char* fusion_strdup(const char* s);
+
+// ========================================
+// Console I/O
+// ========================================
+void fusion_puts(const char* s);
+void fusion_print(const char* s);
+void fusion_println(const char* s);
+void fusion_print_int(int64_t v);
+void fusion_exit(int64_t code);
+
+// ========================================
+// Pointer Helpers
+// ========================================
+int64_t fusion_ptr_read_byte(int64_t ptr, int64_t offset);
+void fusion_ptr_write_byte(int64_t ptr, int64_t offset, int64_t val);
+int64_t fusion_ptr_read_int(int64_t ptr, int64_t index);
+void fusion_ptr_write_int(int64_t ptr, int64_t index, int64_t val);
+
+// ========================================
+// String Utilities
+// ========================================
+const char* fusion_str_repeat(int64_t ch, int64_t count);
+const char* fusion_str_trim(const char* s);
+const char* fusion_str_substring(const char* s, int64_t start, int64_t end_pos);
+const char* fusion_int_to_string(int64_t n);
+int64_t fusion_string_to_int(const char* s);
+bool fusion_str_starts_with(const char* s, const char* prefix);
+bool fusion_str_ends_with(const char* s, const char* suffix);
+const char* fusion_str_replace(const char* s, const char* from, const char* to_str);
+
+// ========================================
 // Runtime Lifecycle
 // ========================================
 void fusion_rt_init(void);
 void fusion_rt_shutdown(void);
+void fusion_rt_set_args(int argc, char** argv);
 
 #ifdef __cplusplus
 }

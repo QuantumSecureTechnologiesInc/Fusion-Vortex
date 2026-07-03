@@ -1,0 +1,30 @@
+[package]
+name = "fusion-redis"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Tool: Fusion tool: fusion-redis. Excellent error reporting."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["tool", "cli", "fusion"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
+[features]
+default = ["server", "persistence"]
+server = []
+client = []
+persistence = ["dashmap"]
+
+[dependencies]
+clap = { workspace = true }
+fusion_core = { workspace = true }
+fusion_net = { path = "../fusion_net" }
+fusion_runtime_core = { workspace = true }
+fusion_std = { workspace = true }
+bytes = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true, optional = true }

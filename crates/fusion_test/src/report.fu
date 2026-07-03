@@ -1,0 +1,140 @@
+//! Output reporters for the Fusion test engine (.fu port).
+//!
+//! Provides console reporter and JUnit XML export.
+
+use super::lib::{TestResult, TestSummary};
+
+/// Generate a colored console summary string.
+pub fn format_console_summary(summary: &TestSummary) -> String {
+    let mut out = String::new();
+
+    out.push_str("\n");
+    out.push_str(&format!(
+        "test result: {}. {} passed; {} failed; {} skipped\n",
+        if summary.all_passed() { "ok" } else { "FAILED" },
+        summary.passed,
+        summary.failed,
+        summary.skipped,
+    ));
+
+    if summary.failed > 0 {
+        out.push_str("\nfailures:\n");
+        for result in &summary.results {
+            match result {
+                TestResult::Failed { name, message, file, line, diff: _ } => {
+                    out.push_str(&format!("    {}: {}\n", name, message));
+                    match (file, line) {
+                        (Some(f), Some(l)) => {
+                            out.push_str(&format!("      at {}:{}\n", f, l));
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    out
+}
+
+/// Format a single test result for verbose console output.
+pub fn format_test_result(result: &TestResult) -> String {
+    match result {
+        TestResult::Passed { name, duration_ms } => {
+            format!("test {} ... ok ({}ms)", name, duration_ms)
+        }
+        TestResult::Failed { name, message, .. } => {
+            format!("test {} ... FAILED\n  {}", name, message)
+        }
+        TestResult::Skipped { name, reason } => {
+            match reason {
+                Some(r) => format!("test {} ... skipped ({})", name, r),
+                None => format!("test {} ... skipped", name),
+            }
+        }
+        TestResult::Bench { name, iterations, total_ns } => {
+            let avg_us = if *iterations > 0 {
+                total_ns / (iterations * 1000)
+            } else {
+                0
+            };
+            format!("bench {} ... {} iters, {} us avg", name, iterations, avg_us)
+        }
+    }
+}
+
+/// Generate a JUnit XML report string.
+pub fn generate_junit_xml(summary: &TestSummary) -> String {
+    let mut xml = String::new();
+
+    xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    xml.push_str(&format!(
+        "<testsuite name=\"fusion-test\" tests=\"{}\" failures=\"{}\" errors=\"0\" skipped=\"{}\">\n",
+        summary.total, summary.failed, summary.skipped,
+    ));
+
+    for result in &summary.results {
+        match result {
+            TestResult::Passed { name, duration_ms } => {
+                xml.push_str(&format!(
+                    "  <testcase name=\"{}\" classname=\"fusion\" time=\"{:.3}\" />\n",
+                    escape_xml(name),
+                    (*duration_ms as f64) / 1000.0,
+                ));
+            }
+            TestResult::Failed { name, duration_ms, message, .. } => {
+                xml.push_str(&format!(
+                    "  <testcase name=\"{}\" classname=\"fusion\" time=\"{:.3}\">\n",
+                    escape_xml(name),
+                    (*duration_ms as f64) / 1000.0,
+                ));
+                xml.push_str(&format!(
+                    "    <failure message=\"{}\">{}</failure>\n",
+                    escape_xml(message),
+                    escape_xml(message),
+                ));
+                xml.push_str("  </testcase>\n");
+            }
+            TestResult::Skipped { name, reason } => {
+                let reason_attr = match reason {
+                    Some(r) => format!(" message=\"{}\"", escape_xml(r)),
+                    None => String::new(),
+                };
+                xml.push_str(&format!(
+                    "  <testcase name=\"{}\" classname=\"fusion\" time=\"0.000\">\n    <skipped{} />\n  </testcase>\n",
+                    escape_xml(name),
+                    reason_attr,
+                ));
+            }
+            TestResult::Bench { name, iterations, total_ns } => {
+                xml.push_str(&format!(
+                    "  <testcase name=\"{}\" classname=\"fusion.bench\" time=\"{:.6}\">\n    <system-out>BENCH: {} {}</system-out>\n  </testcase>\n",
+                    escape_xml(name),
+                    (*total_ns as f64) / 1_000_000_000.0,
+                    iterations,
+                    total_ns,
+                ));
+            }
+        }
+    }
+
+    xml.push_str("</testsuite>\n");
+    xml
+}
+
+/// Escape special XML characters.
+pub fn escape_xml(s: &str) -> String {
+    let mut result = String::new();
+    for c in s.chars() {
+        match c {
+            '&' => result.push_str("&amp;"),
+            '<' => result.push_str("&lt;"),
+            '>' => result.push_str("&gt;"),
+            '"' => result.push_str("&quot;"),
+            '\'' => result.push_str("&apos;"),
+            _ => result.push(c),
+        }
+    }
+    result
+}

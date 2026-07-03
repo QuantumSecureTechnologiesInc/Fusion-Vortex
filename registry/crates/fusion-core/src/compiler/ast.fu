@@ -1,14 +1,12 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FBool = FBool;
-#[allow(missing_docs, dead_code)]
-type FI64 = FI64;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)] type FBool = bool;
+#[allow(missing_docs, dead_code)] type FI64 = i64;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 #[derive(Debug, PartialEq, Clone)]
-enum Type {
+pub enum Type {
     Int,
     Bool,
     String,
@@ -16,35 +14,35 @@ enum Type {
     Custom(FString),
 }
 #[derive(Debug, PartialEq, Clone)]
-struct Program {
+pub struct Program {
     pub declarations: FVec<Declaration>,
 }
 #[derive(Debug, PartialEq, Clone)]
-enum Declaration {
+pub enum Declaration {
     Function(FunctionDecl),
     Extern(ExternDecl),
     Struct(StructDecl),
 }
 #[derive(Debug, PartialEq, Clone)]
-struct FunctionDecl {
+pub struct FunctionDecl {
     pub name: FString,
     pub params: FVec<(FString, Type)>,
     pub return_type: Type,
     pub body: FVec<Statement>,
 }
 #[derive(Debug, PartialEq, Clone)]
-struct ExternDecl {
+pub struct ExternDecl {
     pub name: FString,
     pub params: FVec<(FString, Type)>,
     pub return_type: Type,
 }
 #[derive(Debug, PartialEq, Clone)]
-struct StructDecl {
+pub struct StructDecl {
     pub name: FString,
     pub fields: FVec<(FString, Type)>,
 }
 #[derive(Debug, PartialEq, Clone)]
-enum Statement {
+pub enum Statement {
     Let(FString, Option<Type>, Expression),
     Return(Option<Expression>),
     If(Expression, FVec<Statement>, Option<FVec<Statement>>),
@@ -53,7 +51,7 @@ enum Statement {
     Block(FVec<Statement>),
 }
 #[derive(Debug, PartialEq, Clone)]
-enum Expression {
+pub enum Expression {
     Binary(Box<Expression>, BinaryOp, Box<Expression>),
     Call(FString, FVec<Expression>),
     Literal(Literal),
@@ -64,7 +62,7 @@ enum Expression {
     Set(Box<Expression>, FString, Box<Expression>),
 }
 #[derive(Debug, PartialEq, Clone)]
-enum BinaryOp {
+pub enum BinaryOp {
     Add,
     Sub,
     Mul,
@@ -75,7 +73,7 @@ enum BinaryOp {
     GreaterThan,
 }
 #[derive(Debug, PartialEq, Clone)]
-enum Literal {
+pub enum Literal {
     Integer(FI64),
     String(FString),
     Bool(FBool),

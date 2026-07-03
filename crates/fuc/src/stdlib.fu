@@ -1,0 +1,15 @@
+// Fusion Standard Library: Prelude
+// This provides the fundamental safe wrappers for system interactions.
+
+extern fn printf(fmt: string, val: int) -> int;
+extern fn puts(s: string) -> int;
+
+/// Safe console output.
+fn print(msg: string) -> void {
+    puts(msg);
+}
+
+/// Formatted integer output.
+fn print_int(n: int) -> void {
+    printf("%d\n", n);
+}

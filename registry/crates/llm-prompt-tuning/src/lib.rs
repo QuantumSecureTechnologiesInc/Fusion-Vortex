@@ -1,0 +1,3 @@
+pub fn init() {
+    println!("Initializing llm-prompt-tuning...");
+}

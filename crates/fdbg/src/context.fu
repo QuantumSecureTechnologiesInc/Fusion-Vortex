@@ -1,0 +1,189 @@
+//! x86-64 register set and memory access for the debugged process.
+
+use super::error::{FdbgError, FdbgResult};
+use super::ffi;
+
+/// x86-64 general-purpose register set.
+pub struct RegisterSet {
+    pub rax: u64, pub rbx: u64, pub rcx: u64, pub rdx: u64,
+    pub rsi: u64, pub rdi: u64, pub rbp: u64, pub rsp: u64,
+    pub r8:  u64, pub r9:  u64, pub r10: u64, pub r11: u64,
+    pub r12: u64, pub r13: u64, pub r14: u64, pub r15: u64,
+    pub rip: u64, pub eflags: u32,
+}
+
+/// x86-64 CONTEXT struct layout (simplified — actual is 1232 bytes).
+/// Layout: P1Home..P6Home(48) + ContextFlags(4) + MxCsr(4) +
+/// SegCs..SegGs(12) + EFlags(4) + SegPad(4) + Dr0..Dr5(48) +
+/// Dr6(8) + Dr7(8) + Rax..R15(120) + Rbp(8) + Rsp(8) + Rip(8) +
+/// Xmm0..Xmm15(256) + VectorRegister..VectorControl(528) +
+/// DebugControl..LastBranchToRip(40) + LastBranchFromRip..LastExceptionToRip(40)
+/// packed = 1232
+///
+/// Register offsets within the CONTEXT buffer:
+///   Rax:  120  Rcx:  128  Rdx:  136  Rbx:  144
+///   Rsp:  152  Rbp:  160  Rsi:  168  Rdi:  176
+///   R8:   184  R9:   192  R10:  200  R11:  208
+///   R12:  216  R13:  224  R14:  232  R15:  240
+///   Rip:  248  EFlags: 68 (u32)
+
+/// Read a u64 from a byte buffer at a given offset (little-endian).
+fn read_u64_at(buf: &[u8], offset: usize) -> u64 {
+    if offset + 8 > buf.len() { return 0; }
+    u64::from_le_bytes([
+        buf[offset],     buf[offset + 1], buf[offset + 2], buf[offset + 3],
+        buf[offset + 4], buf[offset + 5], buf[offset + 6], buf[offset + 7],
+    ])
+}
+
+/// Read a u32 from a byte buffer at a given offset (little-endian).
+fn read_u32_at(buf: &[u8], offset: usize) -> u32 {
+    if offset + 4 > buf.len() { return 0; }
+    u32::from_le_bytes([buf[offset], buf[offset + 1], buf[offset + 2], buf[offset + 3]])
+}
+
+/// Read registers from a thread in the debugged process.
+/// `thread_handle` is an open HANDLE to the target thread.
+pub fn read_registers(thread_handle: u64) -> FdbgResult<RegisterSet> {
+    // Allocate a 1232-byte buffer for CONTEXT_AMD64
+    let mut ctx_buf: [u8; 1232] = [0; 1232];
+    // Set ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS = 0x10007
+    // (little-endian: flags at offset 48)
+    ctx_buf[48] = 0x07;
+    ctx_buf[49] = 0x00;
+    ctx_buf[50] = 0x01;
+    ctx_buf[51] = 0x00;
+
+    // Call the FFI to retrieve thread context
+    let ret = ffi::fusion_debug_get_thread_context(thread_handle, &mut ctx_buf[0] as *mut u8);
+    if ret == 0 {
+        return Err(FdbgError::DebugApiError(
+            format!("GetThreadContext failed (error {})", ffi::fusion_debug_get_last_error()),
+        ));
+    }
+
+    // Parse registers from the CONTEXT buffer
+    Ok(RegisterSet {
+        rax: read_u64_at(&ctx_buf, 120),
+        rcx: read_u64_at(&ctx_buf, 128),
+        rdx: read_u64_at(&ctx_buf, 136),
+        rbx: read_u64_at(&ctx_buf, 144),
+        rsp: read_u64_at(&ctx_buf, 152),
+        rbp: read_u64_at(&ctx_buf, 160),
+        rsi: read_u64_at(&ctx_buf, 168),
+        rdi: read_u64_at(&ctx_buf, 176),
+        r8:  read_u64_at(&ctx_buf, 184),
+        r9:  read_u64_at(&ctx_buf, 192),
+        r10: read_u64_at(&ctx_buf, 200),
+        r11: read_u64_at(&ctx_buf, 208),
+        r12: read_u64_at(&ctx_buf, 216),
+        r13: read_u64_at(&ctx_buf, 224),
+        r14: read_u64_at(&ctx_buf, 232),
+        r15: read_u64_at(&ctx_buf, 240),
+        rip: read_u64_at(&ctx_buf, 248),
+        eflags: read_u32_at(&ctx_buf, 68),
+    })
+}
+
+/// Set the trap flag (TF, bit 8 of RFLAGS) for single-stepping.
+pub fn set_trap_flag(regs: &mut RegisterSet) {
+    regs.eflags |= 0x100;
+}
+
+/// Clear the trap flag.
+pub fn clear_trap_flag(regs: &mut RegisterSet) {
+    regs.eflags &= !0x100;
+}
+
+/// Read a u64 value from the target process memory at `addr`.
+pub fn read_u64(proc_handle: u64, addr: u64) -> FdbgResult<u64> {
+    let mut buf: [u8; 8] = [0; 8];
+    let mut bytes_read: u64 = 0;
+    let ret = ffi::fusion_debug_read_memory(
+        proc_handle, addr, &mut buf[0] as *mut u8, 8, &mut bytes_read as *mut u64,
+    );
+    if ret == 0 || bytes_read < 8 {
+        return Err(FdbgError::DebugApiError(
+            format!("ReadMemory at 0x{:x} failed", addr),
+        ));
+    }
+    Ok(u64::from_le_bytes(buf))
+}
+
+/// Read a byte from the target process memory.
+pub fn read_byte(proc_handle: u64, addr: u64) -> FdbgResult<u8> {
+    let mut byte_val: u8 = 0;
+    let ret = ffi::fusion_debug_read_byte(proc_handle, addr, &mut byte_val as *mut u8);
+    if ret == 0 {
+        return Err(FdbgError::DebugApiError(
+            format!("ReadByte at 0x{:x} failed", addr),
+        ));
+    }
+    Ok(byte_val)
+}
+
+/// Write a byte to the target process memory.
+pub fn write_byte(proc_handle: u64, addr: u64, byte_val: u8) -> FdbgResult<()> {
+    let ret = ffi::fusion_debug_write_byte(proc_handle, addr, byte_val);
+    if ret == 0 {
+        return Err(FdbgError::DebugApiError(
+            format!("WriteByte at 0x{:x} failed", addr),
+        ));
+    }
+    Ok(())
+}
+
+/// Read a buffer from target process memory.
+pub fn read_memory(proc_handle: u64, addr: u64, size: usize) -> FdbgResult<Vec<u8>> {
+    let mut buf: Vec<u8> = vec![0u8; size];
+    let mut bytes_read: u64 = 0;
+    let ret = ffi::fusion_debug_read_memory(
+        proc_handle, addr, buf.as_mut_ptr(), size as u64, &mut bytes_read as *mut u64,
+    );
+    if ret == 0 {
+        return Err(FdbgError::DebugApiError(
+            format!("ReadMemory at 0x{:x} size {} failed", addr, size),
+        ));
+    }
+    buf.truncate(bytes_read as usize);
+    Ok(buf)
+}
+
+/// Format registers as a human-readable string.
+pub fn format_registers(regs: &RegisterSet) -> String {
+    format!(
+        "rax=0x{:016x} rbx=0x{:016x} rcx=0x{:016x} rdx=0x{:016x}\n\
+         rsi=0x{:016x} rdi=0x{:016x} rbp=0x{:016x} rsp=0x{:016x}\n\
+         r8 =0x{:016x} r9 =0x{:016x} r10=0x{:016x} r11=0x{:016x}\n\
+         r12=0x{:016x} r13=0x{:016x} r14=0x{:016x} r15=0x{:016x}\n\
+         rip=0x{:016x} eflags=0x{:08x}",
+        regs.rax, regs.rbx, regs.rcx, regs.rdx,
+        regs.rsi, regs.rdi, regs.rbp, regs.rsp,
+        regs.r8, regs.r9, regs.r10, regs.r11,
+        regs.r12, regs.r13, regs.r14, regs.r15,
+        regs.rip, regs.eflags,
+    )
+}
+
+/// Format a hexdump of memory.
+pub fn format_hexdump(data: &[u8], base_addr: u64) -> String {
+    let mut out = String::new();
+    for (i, chunk) in data.chunks(16).enumerate() {
+        let addr = base_addr + (i * 16) as u64;
+        out.push_str(&format!("0x{:016x}  ", addr));
+        for byte in chunk {
+            out.push_str(&format!("{:02x} ", byte));
+        }
+        // Pad short lines
+        for _ in chunk.len()..16 {
+            out.push_str("   ");
+        }
+        out.push_str(" |");
+        for byte in chunk {
+            let c = if *byte >= 0x20 && *byte < 0x7f { *byte as char } else { '.' };
+            out.push(c);
+        }
+        out.push_str("|\n");
+    }
+    out
+}

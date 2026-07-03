@@ -10,25 +10,24 @@ pub mod preview;
 pub mod prompt;
 pub mod safety;
 pub mod workspace;
+
 pub use autograd::{Variable, SGD};
 pub use layers::{Layer, Linear};
+
+// Re-export production adapters
 pub use adapter::{
-    AdapterConfig, Explanation, ModelSession, PredictOptions, ResponseChunk,
-    UnifiedAdapter, Usage,
+    AdapterConfig, Explanation, ModelSession, PredictOptions, ResponseChunk, UnifiedAdapter, Usage,
 };
+
+// Re-export adapter-specific types
 pub use adapter::adapters::{
     anthropic::{AnthropicAdapter, AnthropicConfig, AnthropicMessage, ContentBlock},
-    deepseek::{DeepSeekAdapter, DeepSeekConfig},
-    gemma::{GemmaAdapter, GemmaConfig},
-    gpt_oss::{GptOssAdapter, GptOssConfig},
     google::{GoogleAdapter, GoogleConfig, GoogleContent, GooglePart},
     local::{LocalAdapter, LocalConfig},
-    mistral::{MistralAdapter, MistralConfig},
-    ollama::{OllamaAdapter, OllamaConfig},
     openai::{OpenAIAdapter, OpenAIConfig, OpenAIMessage},
-    phi::{PhiAdapter, PhiConfig},
-    qwen::{QwenAdapter, QwenConfig},
 };
+
+// Re-export other core components
 pub use cache::Cache;
 pub use ops::RotaryEmbedding;
 pub use policy::PolicyManager;
@@ -38,21 +37,26 @@ pub use safety::{SafetyEngine, SafetyIssue, SafetyIssueKind, SafetyLevel, Safety
 pub use workspace::{
     Dependency, FileContext, FileType, ProjectConfig, WorkspaceContext, WorkspaceLoader,
 };
+
 /// AI Core version
 pub const AI_CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_version() {
-        assert!(! AI_CORE_VERSION.is_empty());
+        assert!(!AI_CORE_VERSION.is_empty());
     }
+
     #[test]
     fn test_adapter_creation() {
         let config = AdapterConfig::OpenAI(OpenAIConfig {
             api_key: "test".to_string(),
             ..Default::default()
         });
+
         let adapter = UnifiedAdapter::from_config(config);
         assert!(adapter.is_ok());
     }

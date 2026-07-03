@@ -1,15 +1,15 @@
 // primitives (pure .fu)
+// Wrapper structs for Fusion built-in types
 
-struct FInt { value: int }
-struct FBool { value: bool }
-struct FString { value: string }
+struct FIntBox { value: int }
+struct FBoolBox { value: int }
+struct FStringBox { value: string }
 
-fn f_int_new(v: int) -> FInt { let x: FInt = FInt { value: v }; return x; }
-fn f_int_val(v: FInt) -> int { return v.value; }
+fn f_int_new(v: int) -> FIntBox { let x: FIntBox = FIntBox { value: v }; return x; }
+fn f_int_val(v: FIntBox) -> int { return v.value; }
 
-fn f_bool_new(v: bool) -> FBool { let x: FBool = FBool { value: v }; return x; }
-fn f_bool_val(v: FBool) -> bool { return v.value; }
+fn f_bool_new(v: int) -> FBoolBox { let x: FBoolBox = FBoolBox { value: v }; return x; }
+fn f_bool_val(v: FBoolBox) -> int { return v.value; }
 
-fn f_string_new(v: string) -> FString { let x: FString = FString { value: v }; return x; }
-fn f_string_val(v: FString) -> string { return v.value; }
-
+fn f_string_new(v: string) -> FStringBox { let x: FStringBox = FStringBox { value: v }; return x; }
+fn f_string_val(v: FStringBox) -> string { return v.value; }

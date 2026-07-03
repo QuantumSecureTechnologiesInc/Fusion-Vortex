@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Matth\Downloads\Fusion v2.0 Vortex\cmake_build\CMakeFiles\c0326c1a7662b1c1a9d1562dda0df29e\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{86A8446B-4B5F-327B-8AF0-6C80846D6B4A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

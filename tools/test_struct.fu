@@ -1,0 +1,13 @@
+extern fn printf(fmt: string, ...) -> int;
+
+struct Test {
+    buf: [u8; 256],
+    pos: int,
+}
+
+pub fn main() -> int {
+    printf("=== Struct Array Test ===\n");
+    let t: Test = Test { buf: [0; 256], pos: 0 };
+    printf("Created struct, pos=%d\n", t.pos);
+    return 0;
+}

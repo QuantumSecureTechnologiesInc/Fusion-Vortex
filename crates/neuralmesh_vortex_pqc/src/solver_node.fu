@@ -1,0 +1,68 @@
+// HAFT Solver Compute Node - Autonomous Work Unit
+// Converted from FU Parts: the_solver_compute_node.rs
+// Connects to Nexus router, requests work, computes SHA-256, monitors thermals
+
+extern fn printf(fmt: string, ...) -> int;
+extern fn hc_sha3_256(input: string, input_len: int, output: string);
+
+/// HAFT Autonomous Solver - compute node for the mesh
+struct AutonomousSolver {
+    nexus_addr: string,
+    thermal_threshold: int,   // Celsius, integer
+    cycle_count: int,
+}
+
+fn solver_new(nexus: string, max_temp: int) -> AutonomousSolver {
+    AutonomousSolver {
+        nexus_addr: nexus,
+        thermal_threshold: max_temp,
+        cycle_count: 0,
+    }
+}
+
+/// Read simulated silicon thermal state (placeholder for hardware sensor)
+fn read_thermal_state() -> int {
+    // In production: reads from sysfs or hardware thermal zone
+    // Returns 42 as mock temperature
+    return 42;
+}
+
+/// Execute one compute cycle: check thermals, request payload, compute hash
+fn solver_process_cycle(solver: AutonomousSolver) -> AutonomousSolver {
+    let mut s = solver;
+
+    // Step 1: Check thermal state
+    let core_temp: int = read_thermal_state();
+    if core_temp > s.thermal_threshold {
+        printf("Thermal Warning: Core at %d C (threshold: %d C). Cooling...\n", core_temp, s.thermal_threshold);
+        return s;
+    }
+
+    // Step 2: Connect to Nexus and request payload
+    printf("Solver: Requesting payload from Nexus at %s\n", s.nexus_addr);
+
+    // Step 3: Compute SHA3-256 on simulated payload
+    let payload: string = "FUSION_HAFT_COMPUTE_CYCLE_PAYLOAD_DATA_32B";
+    let mut hash_result: string = "                                "; // 32 bytes
+    hc_sha3_256(payload, 32, hash_result);
+
+    printf("Solver: Hash computation complete for cycle %d\n", s.cycle_count);
+    s.cycle_count = s.cycle_count + 1;
+
+    return s;
+}
+
+/// Run the solver compute loop
+fn solver_execute_loop(solver: AutonomousSolver) -> AutonomousSolver {
+    let mut s = solver;
+    printf("Solver Node ignition sequence completed. Entering mesh pipeline.\n");
+
+    let mut iteration: int = 0;
+    while iteration < 5 {
+        s = solver_process_cycle(s);
+        iteration = iteration + 1;
+    }
+
+    printf("Solver: Completed %d compute cycles.\n", s.cycle_count);
+    return s;
+}

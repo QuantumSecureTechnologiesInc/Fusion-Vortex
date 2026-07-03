@@ -1,0 +1,45 @@
+// SOURCE: Source Files/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Fusion Core Errors.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Centralized Error Handling for the Fusion Core Runtime.
+/// 
+/// This module defines a unified `FusionError` type that covers all failure modes
+/// across Classical, Tensor, and Quantum paradigms, ensuring no panics occur in production.
+
+use thiserror::Error; // Assuming 'thiserror' crate is added to Cargo.toml
+
+#[derive(Error, Debug, Clone, PartialEq)]
+enum FusionError {
+    // --- Classical Errors ---
+    #[error("Type Mismatch: expected {expected}, found {found}")]
+    TypeMismatch { expected: FString, found: FString },
+    
+    #[error("Variable not found: {0}")]
+    UnknownVariable(FString),
+
+    // --- Tensor Errors ---
+    #[error("Shape Mismatch in operation '{op}': LHS {lhs:?} vs RHS {rhs:?}")]
+    ShapeMismatch { op: FString, lhs: FVec<usize>, rhs: FVec<usize> },
+    
+    #[error("Index out of bounds: indices {indices:?} are invalid for shape {shape:?}")]
+    IndexOutOfBounds { indices: FVec<usize>, shape: FVec<usize> },
+    
+    #[error("Invalid Dimension: {0}")]
+    InvalidDimension(FString),
+
+    // --- Quantum Errors ---
+    #[error("Quantum Cloning Violation: Qubit {0} cannot be copied")]
+    QuantumCloningAttempt(usize),
+    
+    #[error("Gate Arity Mismatch: Gate '{gate}' requires {required} qubits, provided {provided}")]
+    GateArityMismatch { gate: FString, required: usize, provided: usize },
+    
+    #[error("Invalid Qubit Access: Qubit {0} does not exist or has been measured")]
+    InvalidQubitAccess(usize),
+
+    // --- Compiler/System Errors ---
+    #[error("Compilation Error: {0}")]
+    CompilationError(FString),
+}
+
+/// Helper result type for Fusion operations
+pub type FusionResult<T> = Result<T, FusionError>;

@@ -1,4 +1,21 @@
-/// Production Wasm Runner.
+// SOURCE: registry/crates/wasm-server/src/lib.rs
+// NOTE: Converted from FSN mirror.
+// Production Wasm Runner — executes stateless Wasm modules (FaaS model).
+// NOTE: Original .fsn uses wasmtime which requires full Rust runtime.
+// This .fu stub mirrors the interface for Fusion-native compat.
+
+use fusion_std::error::{StdError, StdResult};
+
+struct WasmRunner {
+    engine: Engine,
+    module: Module,
+}
+
+// SKIP: WasmRunner::new requires wasmtime Engine/Module (Rust-only)
+// fn wasm_runner_new(wasm_bytes: &[u8]) -> StdResult<WasmRunner> { ... }
+
+// SKIP: execute_function requires wasmtime Store/Linker (Rust-only)
+// fn wasm_runner_execute(self: &WasmRunner, function_name: &str, input: &[u8]) -> StdResult<FVec<u8>> { ... }/// Production Wasm Runner.
 /// Executes stateless Wasm modules (FaaS model) for fast edge compute.
 use fusion_std::error::{StdError, StdResult};
 use wasmtime::{Engine, Linker, Module, Store};

@@ -1,0 +1,22 @@
+//! Error types for the Fusion debugger.
+
+/// Error variants for debugger operations.
+pub enum FdbgError {
+    /// Failed to launch or attach to process.
+    ProcessError(String),
+    /// Memory read/write failure.
+    MemoryError(String),
+    /// Breakpoint set/remove/handle failure.
+    BreakpointError(String),
+    /// Symbol resolution failure.
+    SymbolError(String),
+    /// Disassembly error.
+    DisasmError(String),
+    /// Stack unwinding error.
+    UnwindError(String),
+    /// Generic internal error.
+    InternalError(String),
+}
+
+/// Result type alias for debugger operations.
+pub type FdbgResult<T> = Result<T, FdbgError>;

@@ -192,10 +192,10 @@
 - cmd/fusion/fusion → `../../../registry/crates/core/`
 - cmd/fusion/fusion/fusion → `../../../../registry/crates/core/`
 
-#### Antigravity Playground (testing/old):
+#### Antigravity Playground (removed — directory no longer exists):
 
-- antigravity/playground/nodal-whirlpool/cmd/fusion
-- antigravity/playground/Fusion VSC CLi/* (multiple)
+- ~~antigravity/playground/nodal-whirlpool/cmd/fusion~~
+- ~~antigravity/playground/Fusion VSC CLi/* (multiple)~~
 
 ---
 
@@ -293,8 +293,8 @@ use fusion_core::compiler::parser::Parser;
 
 ### Safe to Ignore:
 
-- 🔶 antigravity/playground/* (test/development sandboxes)
-- 🔶 Source Files/Ecosystem/Epoch (external/reference)
+- ~~🔶 antigravity/playground/*~~ (removed — was test/development sandboxes)
+- ~~🔶 Source Files/Ecosystem/Epoch~~ (removed — was external/reference)
 
 ---
 

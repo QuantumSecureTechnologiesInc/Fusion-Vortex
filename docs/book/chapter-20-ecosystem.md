@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 20: The Fusion Ecosystem
 
 A language is only as good as the tools and libraries surrounding it. Fusion provides a rich, integrated ecosystem designed to make development a joy.

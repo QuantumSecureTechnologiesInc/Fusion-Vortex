@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 9: Error Handling
 
 Fusion distinguishes between *recoverable* and *unrecoverable* errors. Recoverable errors (file not found) should be reported so the caller can decide what to do. Unrecoverable errors (index out of bounds) are bugs and should stop the program.

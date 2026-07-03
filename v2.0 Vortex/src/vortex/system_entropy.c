@@ -21,11 +21,6 @@
 #else
 #include <fcntl.h>
 #include <unistd.h>
-
-// Fallback for systems without O_CLOEXEC (e.g., older Linux, some embedded)
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
 #endif
 
 /**

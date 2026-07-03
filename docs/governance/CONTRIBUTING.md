@@ -46,7 +46,7 @@ By participating in this project, you agree to maintain a respectful, inclusive,
 
 ### Prerequisites
 
-- **Fusion toolchain** (use `./install.sh` to provision `dist/`)
+- **Fusion toolchain** (use `./install.sh` to build the toolchain; `dist/` is the target output directory)
 - **Git**
 - **LLVM 15+** (optional, for full compiler features)
 

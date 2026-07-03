@@ -1,4 +1,4 @@
-//! Fusion Runtime Core - Updated with missing imports and baseline runtime components
+//! Fusion Runtime Core - Updated with missing imports and placeholder components
 use parking_lot::RwLock;
 use tracing::{debug, info};
 pub mod llm;

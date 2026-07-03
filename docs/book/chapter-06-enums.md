@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 6: Enums and Pattern Matching
 
 Structs let you group related fields and data together. Usage of **enums** (enumerations) allows you to define a type by enumerating its possible *variants*.

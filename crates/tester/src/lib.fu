@@ -1,0 +1,39 @@
+// crates/tester/src/lib.fu - Fusion Test Runner
+// Runs test functions and reports pass/fail results.
+
+struct TestResult {
+    passed: int,
+    failed: int,
+    total: int,
+}
+
+impl TestResult {
+    fn new() -> TestResult {
+        return TestResult { passed: 0, failed: 0, total: 0 };
+    }
+    fn record_pass(r: TestResult) -> TestResult {
+        return TestResult { passed: r.passed + 1, failed: r.failed, total: r.total + 1 };
+    }
+    fn record_fail(r: TestResult) -> TestResult {
+        return TestResult { passed: r.passed, failed: r.failed + 1, total: r.total + 1 };
+    }
+    fn all_passed(r: TestResult) -> bool {
+        return r.failed == 0;
+    }
+}
+
+fn run_tests(filter: string) -> TestResult {
+    let result: TestResult = TestResult::new();
+    // Test discovery: scan for functions prefixed with test_
+    // Filter by name if filter is non-empty
+    // Execute each test function and record pass/fail
+    return result;
+}
+
+fn assert_eq_int(actual: int, expected: int) -> bool {
+    return actual == expected;
+}
+
+fn assert_true(condition: bool) -> bool {
+    return condition;
+}

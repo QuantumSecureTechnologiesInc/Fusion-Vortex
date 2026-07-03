@@ -1,7 +1,0 @@
-=== Module Tests ===
-inner::PUBLIC_CONST = 42
-public_fn() = 10
-s.public_field = 10
-s.get_private() = 20
-nested::deep::deep_fn() = deep
-All module tests passed!

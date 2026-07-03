@@ -1,13 +1,10 @@
-// Fusion telemetry (pure .fu)
+// Fusion telemetry stub (pure .fu)
+// Reduced to fit 16-byte ABI
 
-struct RuntimeContext {
-    env: int,
-    region: string,
-    version: string,
+fn runtime_version() -> string {
+    return "1.0.0";
 }
 
-fn runtime_context_current() -> RuntimeContext {
-    let ctx: RuntimeContext = RuntimeContext { env: 0, region: "local", version: "1.0.0" };
-    return ctx;
+fn runtime_env() -> int {
+    return 0;
 }
-

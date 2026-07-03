@@ -1,52 +1,222 @@
-class Vector<T> {
-    data: int;
-    size: int;
-    capacity: int;
+// stdlib/vector.fu - Handle-based Vector implementations for Fusion.
+// Structs are small (handle ≤ 16 bytes); real data lives in the C runtime.
+// Three vector types: VectorInt, VectorBool, VectorString.
+// Dynamic capacity (starts at 16, doubles on overflow).
 
-    fn new() -> Vector<T> {
-        return Vector::<T> { data: 0, size: 0, capacity: 0 };
+extern fn fusion_vi_create() -> int;
+extern fn fusion_vi_destroy(h: int) -> void;
+extern fn fusion_vi_len(h: int) -> int;
+extern fn fusion_vi_is_empty(h: int) -> int;
+extern fn fusion_vi_push(h: int, value: int) -> void;
+extern fn fusion_vi_get(h: int, index: int) -> int;
+extern fn fusion_vi_set(h: int, index: int, value: int) -> void;
+extern fn fusion_vi_pop(h: int) -> int;
+extern fn fusion_vi_clear(h: int) -> void;
+extern fn fusion_vi_contains(h: int, value: int) -> int;
+extern fn fusion_vi_first(h: int) -> int;
+extern fn fusion_vi_last(h: int) -> int;
+extern fn fusion_vi_sum(h: int) -> int;
+extern fn fusion_vi_min(h: int) -> int;
+extern fn fusion_vi_max(h: int) -> int;
+
+extern fn fusion_vb_create() -> int;
+extern fn fusion_vb_destroy(h: int) -> void;
+extern fn fusion_vb_len(h: int) -> int;
+extern fn fusion_vb_is_empty(h: int) -> int;
+extern fn fusion_vb_push(h: int, value: int) -> void;
+extern fn fusion_vb_get(h: int, index: int) -> int;
+extern fn fusion_vb_pop(h: int) -> void;
+extern fn fusion_vb_clear(h: int) -> void;
+
+extern fn fusion_vs_create() -> int;
+extern fn fusion_vs_destroy(h: int) -> void;
+extern fn fusion_vs_len(h: int) -> int;
+extern fn fusion_vs_is_empty(h: int) -> int;
+extern fn fusion_vs_push(h: int, value: string) -> void;
+extern fn fusion_vs_get(h: int, index: int) -> string;
+extern fn fusion_vs_contains(h: int, value: string) -> int;
+extern fn fusion_vs_pop(h: int) -> void;
+extern fn fusion_vs_clear(h: int) -> void;
+
+// ============================================================
+// VectorInt
+// ============================================================
+struct VectorInt {
+    handle: int,
+    _pad: int,
+}
+
+impl VectorInt {
+    fn new() -> VectorInt {
+        let h: int = fusion_vi_create();
+        return VectorInt { handle: h, _pad: 0 };
     }
+    fn len(v: VectorInt) -> int {
+        return fusion_vi_len(v.handle);
+    }
+    fn is_empty(v: VectorInt) -> bool {
+        return fusion_vi_len(v.handle) == 0;
+    }
+    fn push(v: VectorInt, value: int) -> VectorInt {
+        fusion_vi_push(v.handle, value);
+        return v;
+    }
+    fn get(v: VectorInt, index: int) -> int {
+        return fusion_vi_get(v.handle, index);
+    }
+    fn set(v: VectorInt, index: int, value: int) -> VectorInt {
+        fusion_vi_set(v.handle, index, value);
+        return v;
+    }
+    fn pop(v: VectorInt) -> VectorInt {
+        fusion_vi_pop(v.handle);
+        return v;
+    }
+    fn clear(v: VectorInt) -> VectorInt {
+        fusion_vi_clear(v.handle);
+        return v;
+    }
+    fn contains(v: VectorInt, value: int) -> bool {
+        return fusion_vi_contains(v.handle, value) != 0;
+    }
+    fn first(v: VectorInt) -> int {
+        return fusion_vi_first(v.handle);
+    }
+    fn last(v: VectorInt) -> int {
+        return fusion_vi_last(v.handle);
+    }
+    fn sum(v: VectorInt) -> int {
+        return fusion_vi_sum(v.handle);
+    }
+    fn min(v: VectorInt) -> int {
+        return fusion_vi_min(v.handle);
+    }
+    fn max(v: VectorInt) -> int {
+        return fusion_vi_max(v.handle);
+    }
+    fn destroy(v: VectorInt) -> void {
+        fusion_vi_destroy(v.handle);
+    }
+}
 
-    fn push(val: T) -> void {
-        if (self.size == self.capacity) {
-            let mut new_cap = 0;
-            if (self.capacity == 0) {
-                new_cap = 4;
-            } else {
-                new_cap = self.capacity * 2;
-            }
-            
-            let elem_size = sizeof::<T>(); 
-            let total_size = new_cap * elem_size;
-            
-            if (self.capacity == 0) {
-                 self.data = malloc(total_size);
-            } else {
-                 let res = realloc(self.data, total_size);
-                 self.data = res;
-            }
-            self.capacity = new_cap;
+// Standalone helpers
+fn vec_int_new() -> VectorInt {
+    return VectorInt::new();
+}
+fn vec_int_push(v: VectorInt, value: int) -> VectorInt {
+    return VectorInt::push(v, value);
+}
+fn vec_int_get(v: VectorInt, index: int) -> int {
+    return VectorInt::get(v, index);
+}
+fn vec_int_len(v: VectorInt) -> int {
+    return VectorInt::len(v);
+}
+fn vec_int_is_empty(v: VectorInt) -> bool {
+    return VectorInt::is_empty(v);
+}
+
+// ============================================================
+// VectorBool
+// ============================================================
+struct VectorBool {
+    handle: int,
+    _pad: int,
+}
+
+impl VectorBool {
+    fn new() -> VectorBool {
+        let h: int = fusion_vb_create();
+        return VectorBool { handle: h, _pad: 0 };
+    }
+    fn len(v: VectorBool) -> int {
+        return fusion_vb_len(v.handle);
+    }
+    fn is_empty(v: VectorBool) -> bool {
+        return fusion_vb_len(v.handle) == 0;
+    }
+    fn push(v: VectorBool, value: bool) -> VectorBool {
+        if value {
+            fusion_vb_push(v.handle, 1);
+        } else {
+            fusion_vb_push(v.handle, 0);
         }
-        
-        ptr_write::<T>(self.data, self.size, val);
-        self.size = self.size + 1;
+        return v;
     }
+    fn get(v: VectorBool, index: int) -> bool {
+        return fusion_vb_get(v.handle, index) != 0;
+    }
+    fn pop(v: VectorBool) -> VectorBool {
+        fusion_vb_pop(v.handle);
+        return v;
+    }
+    fn clear(v: VectorBool) -> VectorBool {
+        fusion_vb_clear(v.handle);
+        return v;
+    }
+    fn destroy(v: VectorBool) -> void {
+        fusion_vb_destroy(v.handle);
+    }
+}
 
-    fn get(i: int) -> T {
-        // Bounds check omitted for now
-        return ptr_read::<T>(self.data, i);
+fn vec_bool_new() -> VectorBool {
+    return VectorBool::new();
+}
+fn vec_bool_push(v: VectorBool, value: bool) -> VectorBool {
+    return VectorBool::push(v, value);
+}
+fn vec_bool_get(v: VectorBool, index: int) -> bool {
+    return VectorBool::get(v, index);
+}
+
+// ============================================================
+// VectorString
+// ============================================================
+struct VectorString {
+    handle: int,
+    _pad: int,
+}
+
+impl VectorString {
+    fn new() -> VectorString {
+        let h: int = fusion_vs_create();
+        return VectorString { handle: h, _pad: 0 };
     }
-    
-    fn len() -> int {
-        return self.size;
+    fn len(v: VectorString) -> int {
+        return fusion_vs_len(v.handle);
     }
-    
-    fn free() -> void {
-        if (self.data != 0) {
-            free(self.data);
-            self.data = 0;
-            self.size = 0;
-            self.capacity = 0;
-        }
+    fn is_empty(v: VectorString) -> bool {
+        return fusion_vs_len(v.handle) == 0;
     }
+    fn push(v: VectorString, value: string) -> VectorString {
+        fusion_vs_push(v.handle, value);
+        return v;
+    }
+    fn get(v: VectorString, index: int) -> string {
+        return fusion_vs_get(v.handle, index);
+    }
+    fn contains(v: VectorString, value: string) -> bool {
+        return fusion_vs_contains(v.handle, value) != 0;
+    }
+    fn pop(v: VectorString) -> VectorString {
+        fusion_vs_pop(v.handle);
+        return v;
+    }
+    fn clear(v: VectorString) -> VectorString {
+        fusion_vs_clear(v.handle);
+        return v;
+    }
+    fn destroy(v: VectorString) -> void {
+        fusion_vs_destroy(v.handle);
+    }
+}
+
+fn vec_string_new() -> VectorString {
+    return VectorString::new();
+}
+fn vec_string_push(v: VectorString, value: string) -> VectorString {
+    return VectorString::push(v, value);
+}
+fn vec_string_get(v: VectorString, index: int) -> string {
+    return VectorString::get(v, index);
 }

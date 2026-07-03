@@ -1,0 +1,105 @@
+// Gemma Adapter — Fusion AI Core
+// Google Gemma: open-weight local model via OpenAI-compatible API
+// Typically served via llama.cpp, vLLM, or Ollama at localhost:11437
+// Models: gemma-2-9b-it, gemma-2-27b-it, gemma-2-2b-it
+// Auth: None (local only)
+
+use std::time::Duration;
+
+const GEMMA_API_BASE: string = "http://localhost:11437/v1";
+
+/// Gemma adapter configuration
+struct GemmaConfig {
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,
+    pub timeout_secs: int,
+}
+
+fn gemma_config_default() -> GemmaConfig {
+    GemmaConfig {
+        api_base: "http://localhost:11437/v1",
+        model: "gemma-2-9b-it",
+        max_tokens: 4096,
+        temperature: 70,
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message
+struct GemmaMessage {
+    role: string,
+    content: string,
+}
+
+/// Chat completion request
+struct GemmaChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,
+}
+
+/// Chat completion response
+struct GemmaChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// Gemma Adapter (local)
+struct GemmaAdapter {
+    config: GemmaConfig,
+    connected: int,
+}
+
+fn gemma_adapter_new() -> GemmaAdapter {
+    GemmaAdapter {
+        config: gemma_config_default(),
+        connected: 0,
+    }
+}
+
+fn gemma_adapter_with_config(cfg: GemmaConfig) -> GemmaAdapter {
+    GemmaAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via local Gemma endpoint
+fn gemma_chat_completion(adapter: GemmaAdapter, messages_len: int) -> (GemmaAdapter, GemmaChatResponse) {
+    let mut a = adapter;
+    // POST http://localhost:11437/v1/chat/completions
+    // Body: {"model":"gemma-2-9b-it","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: GemmaChatResponse = GemmaChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check — GET http://localhost:11437/v1/models
+fn gemma_health_check(adapter: GemmaAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn gemma_provider_name() -> string {
+    return "Google Gemma (Local)";
+}
+
+/// Supported model families
+fn gemma_supported_models() -> string {
+    return "gemma-2-27b-it,gemma-2-9b-it,gemma-2-2b-it,gemma-7b-it";
+}

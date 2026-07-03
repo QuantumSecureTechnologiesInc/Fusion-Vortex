@@ -7,15 +7,11 @@
 //!
 //! Fibers are lightweight, stack-managed execution units that can be suspended
 //! and resumed with minimal overhead (~50ns vs ~2μs for OS threads).
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::sync::Arc;
-use std::collections::VecDeque;
-#[allow(missing_docs, dead_code)] type FU64 = u64;
-#[allow(missing_docs, dead_code)] type FSize = usize;
-#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
-// __FU_COMPAT_END__
+
 use parking_lot::Mutex;
+use std::collections::VecDeque;
+use std::sync::Arc;
+
 /// Fiber state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FiberState {
@@ -28,24 +24,30 @@ pub enum FiberState {
     /// Fiber has completed
     Completed,
 }
+
 /// Fiber context containing execution state
 pub struct FiberContext {
     /// Fiber ID
-    pub id: FU64,
+    pub id: u64,
+
     /// Current state
     pub state: FiberState,
+
     /// Stack pointer (saved when suspended)
     #[allow(dead_code)]
-    stack_ptr: FSize,
+    stack_ptr: usize,
+
     /// Stack size in bytes
     #[allow(dead_code)]
-    stack_size: FSize,
+    stack_size: usize,
+
     /// Priority level
     pub priority: u8,
 }
+
 impl FiberContext {
     /// Create a new fiber context
-    pub fn new(id: FU64, stack_size: FSize, priority: u8) -> Self {
+    pub fn new(id: u64, stack_size: usize, priority: u8) -> Self {
         Self {
             id,
             state: FiberState::Ready,
@@ -54,24 +56,32 @@ impl FiberContext {
             priority,
         }
     }
+
     /// Suspend the fiber (save context)
     pub fn suspend(&mut self) {
         self.state = FiberState::Suspended;
+        // In real implementation, would save register state
     }
+
     /// Resume the fiber (restore context)
     pub fn resume(&mut self) {
         self.state = FiberState::Running;
+        // In real implementation, would restore register state
     }
 }
+
 /// Fiber scheduler managing lightweight task switching
 pub struct FiberScheduler {
     /// Ready queue
     ready_queue: Arc<Mutex<VecDeque<FiberContext>>>,
+
     /// Suspended fibers waiting for events
-    suspended: Arc<Mutex<FVec<FiberContext>>>,
+    suspended: Arc<Mutex<Vec<FiberContext>>>,
+
     /// Next fiber ID
-    next_id: Arc<Mutex<FU64>>,
+    next_id: Arc<Mutex<u64>>,
 }
+
 impl FiberScheduler {
     /// Create a new fiber scheduler
     pub fn new() -> Self {
@@ -81,6 +91,7 @@ impl FiberScheduler {
             next_id: Arc::new(Mutex::new(1)),
         }
     }
+
     /// Spawn a new fiber
     ///
     /// # Arguments
@@ -91,40 +102,52 @@ impl FiberScheduler {
     /// # Returns
     ///
     /// Fiber ID
-    pub fn spawn_fiber(&self, stack_size: FSize, priority: u8) -> FU64 {
+    pub fn spawn_fiber(&self, stack_size: usize, priority: u8) -> u64 {
         let mut next_id = self.next_id.lock();
         let id = *next_id;
         *next_id += 1;
         drop(next_id);
+
         let context = FiberContext::new(id, stack_size, priority);
         self.ready_queue.lock().push_back(context);
+
         id
     }
+
     /// Yield current fiber (cooperative multitasking)
-    pub fn yield_fiber(&self, fiber_id: FU64) {
+    pub fn yield_fiber(&self, fiber_id: u64) {
+        // In real implementation, would context switch to next fiber
         tracing::trace!("Fiber {} yielding", fiber_id);
     }
+
     /// Suspend fiber until event
-    pub fn suspend_fiber(&self, fiber_id: FU64) {
-        if let Some(idx) = self.ready_queue.lock().iter().position(|f| f.id == fiber_id)
+    pub fn suspend_fiber(&self, fiber_id: u64) {
+        if let Some(idx) = self
+            .ready_queue
+            .lock()
+            .iter()
+            .position(|f| f.id == fiber_id)
         {
             let mut fiber = self.ready_queue.lock().remove(idx).unwrap();
             fiber.suspend();
             self.suspended.lock().push(fiber);
         }
     }
+
     /// Resume fiber after event
-    pub fn resume_fiber(&self, fiber_id: FU64) {
+    pub fn resume_fiber(&self, fiber_id: u64) {
         if let Some(idx) = self.suspended.lock().iter().position(|f| f.id == fiber_id) {
             let mut fiber = self.suspended.lock().remove(idx);
             fiber.resume();
             self.ready_queue.lock().push_back(fiber);
         }
     }
+
     /// Get next ready fiber
     pub fn next_fiber(&self) -> Option<FiberContext> {
         self.ready_queue.lock().pop_front()
     }
+
     /// Get scheduler statistics
     pub fn stats(&self) -> FiberStats {
         FiberStats {
@@ -133,36 +156,44 @@ impl FiberScheduler {
         }
     }
 }
+
 impl Default for FiberScheduler {
     fn default() -> Self {
         Self::new()
     }
 }
+
 /// Fiber statistics
 #[derive(Debug, Clone)]
 pub struct FiberStats {
-    pub ready_count: FSize,
-    pub suspended_count: FSize,
+    pub ready_count: usize,
+    pub suspended_count: usize,
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_fiber_spawn() {
         let scheduler = FiberScheduler::new();
         let id = scheduler.spawn_fiber(65536, 128);
         assert_eq!(id, 1);
+
         let stats = scheduler.stats();
         assert_eq!(stats.ready_count, 1);
     }
+
     #[test]
     fn test_fiber_suspend_resume() {
         let scheduler = FiberScheduler::new();
         let id = scheduler.spawn_fiber(65536, 128);
+
         scheduler.suspend_fiber(id);
         let stats = scheduler.stats();
         assert_eq!(stats.suspended_count, 1);
         assert_eq!(stats.ready_count, 0);
+
         scheduler.resume_fiber(id);
         let stats = scheduler.stats();
         assert_eq!(stats.ready_count, 1);

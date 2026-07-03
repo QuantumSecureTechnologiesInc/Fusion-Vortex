@@ -1,5 +1,5 @@
 [package]
-name = "llm-rag"
+name = "fusion_llm_rag"
 version = "0.1.0"
 edition = "2021"
 description = "RAG vector store with thread-safe operations"
@@ -9,5 +9,4 @@ license = "MIT"
 fusion-core = { workspace = true }
 thiserror = { workspace = true }
 fusion_std = "1.0.0"
-
 

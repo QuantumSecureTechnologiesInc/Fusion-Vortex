@@ -1,14 +1,12 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FI64 = FI64;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FSize = FSize;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)] type FI64 = i64;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FSize = usize;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 use crate::compiler::token::{Span, SpannedToken, Token};
-struct Lexer {
+pub struct Lexer {
     input: FVec<char>,
     position: FSize,
     line: FSize,

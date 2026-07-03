@@ -1,6 +1,4 @@
 // __FU_COMPAT_START__
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FString = String;
 // __FU_COMPAT_END__
 use clap::Parser;
 use colored::*;

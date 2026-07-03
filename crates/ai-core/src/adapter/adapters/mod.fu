@@ -1,10 +1,49 @@
 mod anthropic;
+mod deepseek;
+mod gemini;
+mod gemma;
+mod glm;
 mod google;
+mod gpt;
+mod gpt_oss;
+mod huggingface;
+mod kimi;
+mod llama;
+mod local;
+mod minimax;
+mod mimo;
+mod mistral;
+mod ollama;
 mod openai;
+mod phi;
+mod qwen;
 pub use anthropic::{
     AnthropicAdapter, AnthropicConfig, AnthropicMessage, ContentBlock, ImageSource, Tool,
 };
+pub use deepseek::{
+    DeepSeekAdapter, DeepSeekConfig, DeepSeekChatResponse,
+};
+pub use gemini::{
+    GeminiAdapter, GeminiConfig, GeminiGenerateResponse,
+};
+pub use gemma::{GemmaAdapter, GemmaConfig};
+pub use glm::{GlmAdapter, GlmConfig};
 pub use google::{
     Content as GoogleContent, GoogleAdapter, GoogleConfig, Part as GooglePart,
 };
+pub use gpt::{GptAdapter, GptConfig};
+pub use gpt_oss::{GptOssAdapter, GptOssConfig};
+pub use huggingface::{HuggingfaceAdapter, HuggingfaceConfig};
+pub use kimi::{KimiAdapter, KimiConfig};
+pub use llama::{LlamaAdapter, LlamaConfig};
+pub use local::{LocalAdapter, LocalConfig};
+pub use minimax::{MinimaxAdapter, MinimaxConfig};
+pub use mimo::{MimoAdapter, MimoConfig};
+pub use mistral::{MistralAdapter, MistralConfig};
+pub use ollama::{
+    OllamaAdapter, OllamaConfig, OllamaMessage, OllamaChatRequest, OllamaChatResponse,
+    OllamaModel,
+};
 pub use openai::{Message as OpenAIMessage, OpenAIAdapter, OpenAIConfig};
+pub use phi::{PhiAdapter, PhiConfig};
+pub use qwen::{QwenAdapter, QwenConfig};

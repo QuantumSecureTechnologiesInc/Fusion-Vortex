@@ -1,0 +1,36 @@
+extern fn fusion_tcp_connect(host: string, port: int) -> int;
+extern fn fusion_tcp_send_str(fd: int, data: string) -> int;
+extern fn fusion_tcp_recv_str(fd: int, max_bytes: int) -> string;
+
+struct TcpStream {
+    socket: int,
+    connected: int,
+}
+
+impl TcpStream {
+    fn connect(addr: string, port: int) -> TcpStream {
+        let s: int = fusion_tcp_connect(addr, port);
+        if s > 0 {
+            return TcpStream { socket: s, connected: 1 };
+        } else {
+            return TcpStream { socket: -1, connected: 0 };
+        }
+    }
+    fn is_connected(ts: TcpStream) -> bool {
+        return ts.connected != 0;
+    }
+    fn send(ts: TcpStream, data: string) -> int {
+        if ts.connected != 0 {
+            return fusion_tcp_send_str(ts.socket, data);
+        } else {
+            return -1;
+        }
+    }
+    fn recv(ts: TcpStream, max_bytes: int) -> string {
+        if ts.connected != 0 {
+            return fusion_tcp_recv_str(ts.socket, max_bytes);
+        } else {
+            return "";
+        }
+    }
+}

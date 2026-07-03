@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 3: Common Programming Concepts
 
 This chapter covers the fundamental concepts that appear in almost every programming language and how they work in Fusion. While many of these concepts will be familiar if you've programmed before, Fusion's implementation often adds safety and expressiveness guarantees that are worth understanding deeply.

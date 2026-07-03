@@ -1,0 +1,13 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn test7(a: int, b: int, c: int, d: int, e: int, f: int, g: int) -> int {
+    printf("7 params: %d %d %d %d %d %d %d\n", a, b, c, d, e, f, g);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Before 7-param\n");
+    let r7 = test7(1, 2, 3, 4, 5, 6, 7);
+    printf("After 7-param\n");
+    return 0;
+}

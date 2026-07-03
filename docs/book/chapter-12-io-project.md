@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 12: An I/O Project: Building a Command Line Program
 
 This chapter is a recap of the many skills you’ve learned so far. We will build a command line tool that interacts with file input/output (I/O). We'll re-implement the classic unix tool `grep` (globally search a regular expression and print). We'll call it `minigrep`.

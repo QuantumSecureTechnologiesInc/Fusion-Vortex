@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # PHASE 3 - Fusion Core Integration (v0.2.0) - COMPLETE
 
 **Status**: ✅ **COMPLETED**

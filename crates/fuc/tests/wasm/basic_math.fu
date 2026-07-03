@@ -1,0 +1,54 @@
+// WASM backend test: basic arithmetic and comparisons
+// Compile with: fuc --target wasm tests/wasm/basic_math.fu -o basic_math.wasm
+
+fn add(x: int, y: int) -> int {
+    return x + y;
+}
+
+fn subtract(x: int, y: int) -> int {
+    return x - y;
+}
+
+fn multiply(x: int, y: int) -> int {
+    return x * y;
+}
+
+fn divide(x: int, y: int) -> int {
+    return x / y;
+}
+
+fn modulus(x: int, y: int) -> int {
+    return x % y;
+}
+
+fn is_equal(x: int, y: int) -> int {
+    return x == y;
+}
+
+fn is_not_equal(x: int, y: int) -> int {
+    return x != y;
+}
+
+fn is_less(x: int, y: int) -> int {
+    return x < y;
+}
+
+fn is_greater(x: int, y: int) -> int {
+    return x > y;
+}
+
+fn is_less_eq(x: int, y: int) -> int {
+    return x <= y;
+}
+
+fn is_greater_eq(x: int, y: int) -> int {
+    return x >= y;
+}
+
+fn logical_and(x: int, y: int) -> int {
+    return x & y;
+}
+
+fn logical_or(x: int, y: int) -> int {
+    return x | y;
+}

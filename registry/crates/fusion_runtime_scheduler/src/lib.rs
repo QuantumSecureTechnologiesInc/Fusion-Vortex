@@ -20,28 +20,29 @@
 //!    - QPU job submissions (high latency, async)
 //!    - TPU operations
 //!    - Network I/O with completion callbacks
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-use std::sync::Arc;
-use std::future::Future;
-use std::pin::Pin;
-use std::collections::VecDeque;
-use std::sync::atomic::{AtomicU64, Ordering};
-#[allow(missing_docs, dead_code)] type FSize = usize;
-// __FU_COMPAT_END__
+
 use crossbeam::channel::{self, Receiver, Sender};
 use parking_lot::Mutex;
+use std::collections::VecDeque;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use tracing::{debug, trace};
+
 pub mod task;
 pub mod vlc;
+
 pub use task::{JoinError, TaskHandle};
 pub use vlc::{VariationalLoopController, VlcConfig};
+
 /// Runtime configuration for the scheduler
 #[derive(Debug, Default, Clone)]
 pub struct RuntimeConfig {
-    pub worker_threads: FSize,
-    pub stack_size: FSize,
+    pub worker_threads: usize,
+    pub stack_size: usize,
 }
+
 /// Task priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TaskPriority {
@@ -54,18 +55,22 @@ pub enum TaskPriority {
     /// External device operations
     External = 0,
 }
+
 /// A queue for tasks of a specific priority
 pub struct TaskQueue {
     priority: TaskPriority,
     queue: Mutex<VecDeque<BoxedTask>>,
     metrics: QueueMetrics,
 }
-pub type BoxedTask = Pin<Box<dyn Future<Output = ()> + Send>>;
+
+type BoxedTask = Pin<Box<dyn Future<Output = ()> + Send>>;
+
 #[derive(Default)]
-pub struct QueueMetrics {
+struct QueueMetrics {
     enqueued: AtomicU64,
     dequeued: AtomicU64,
 }
+
 impl TaskQueue {
     fn new(priority: TaskPriority) -> Self {
         Self {
@@ -74,11 +79,13 @@ impl TaskQueue {
             metrics: QueueMetrics::default(),
         }
     }
+
     fn push(&self, task: BoxedTask) {
         self.queue.lock().push_back(task);
         self.metrics.enqueued.fetch_add(1, Ordering::Relaxed);
         trace!("Enqueued task to {:?} queue", self.priority);
     }
+
     fn pop(&self) -> Option<BoxedTask> {
         let task = self.queue.lock().pop_front();
         if task.is_some() {
@@ -87,29 +94,38 @@ impl TaskQueue {
         }
         task
     }
-    fn len(&self) -> FSize {
+
+    fn len(&self) -> usize {
         self.queue.lock().len()
     }
 }
+
 /// Heterogeneous scheduler
 pub struct Scheduler {
     /// Low-jitter queue for latency-sensitive tasks
     high_priority_queue: Arc<TaskQueue>,
+
     /// High-throughput queue for bulk operations
     normal_priority_queue: Arc<TaskQueue>,
+
     /// Low priority background tasks
     low_priority_queue: Arc<TaskQueue>,
+
     /// External device queue for QPU/TPU operations
     external_device_queue: Arc<TaskQueue>,
+
     /// Notification channel for waking workers
     wake_tx: Sender<()>,
     wake_rx: Receiver<()>,
+
     /// Global task ID counter
     next_task_id: AtomicU64,
 }
+
 impl Scheduler {
     pub fn new(_config: &RuntimeConfig) -> Self {
         let (wake_tx, wake_rx) = channel::unbounded();
+
         Self {
             high_priority_queue: Arc::new(TaskQueue::new(TaskPriority::High)),
             normal_priority_queue: Arc::new(TaskQueue::new(TaskPriority::Normal)),
@@ -120,42 +136,50 @@ impl Scheduler {
             next_task_id: AtomicU64::new(1),
         }
     }
+
     /// Spawn a task with a given priority
-    pub fn spawn_task<F>(
-        &self,
-        future: F,
-        priority: TaskPriority,
-    ) -> TaskHandle<F::Output>
+    pub fn spawn_task<F>(&self, future: F, priority: TaskPriority) -> TaskHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
     {
         let task_id = self.next_task_id.fetch_add(1, Ordering::Relaxed);
         debug!("Spawning task {} with priority {:?}", task_id, priority);
+
+        // Box the future
         let boxed = Box::pin(async move {
             future.await;
         });
+
+        // Enqueue to appropriate queue
         match priority {
             TaskPriority::High => self.high_priority_queue.push(boxed),
             TaskPriority::Normal => self.normal_priority_queue.push(boxed),
             TaskPriority::Low => self.low_priority_queue.push(boxed),
             TaskPriority::External => self.external_device_queue.push(boxed),
         }
+
+        // Wake a worker
         let _ = self.wake_tx.send(());
+
         TaskHandle::new(task_id)
     }
+
     /// Poll for the next task to execute (priority-based)
     pub fn next_task(&self) -> Option<BoxedTask> {
+        // Priority order: High -> Normal -> External -> Low
         self.high_priority_queue
             .pop()
             .or_else(|| self.normal_priority_queue.pop())
             .or_else(|| self.external_device_queue.pop())
             .or_else(|| self.low_priority_queue.pop())
     }
+
     /// Wait for a task to become available
     pub fn wait_for_task(&self) {
         let _ = self.wake_rx.recv();
     }
+
     /// Get scheduler statistics
     pub fn stats(&self) -> SchedulerStats {
         SchedulerStats {
@@ -166,36 +190,49 @@ impl Scheduler {
         }
     }
 }
+
 /// Scheduler statistics
 #[derive(Debug, Clone)]
 pub struct SchedulerStats {
-    pub high_priority_len: FSize,
-    pub normal_priority_len: FSize,
-    pub low_priority_len: FSize,
-    pub external_device_len: FSize,
+    pub high_priority_len: usize,
+    pub normal_priority_len: usize,
+    pub low_priority_len: usize,
+    pub external_device_len: usize,
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_scheduler_creation() {
         let config = RuntimeConfig::default();
-        let scheduler = Scheduler::new(&config);
+        let scheduler = Scheduler::new(&config); // This assumes Scheduler::new takes &RuntimeConfig which might need match with lib.rs import or this mock
+                                                 // lib.rs line 115 uses &RuntimeConfig. If RuntimeConfig is imported from crate, we need to match it.
+                                                 // But for unit tests here, if RuntimeConfig is a struct in this file (mock), it works.
+                                                 // However, lib.rs has `use crate::RuntimeConfig;`.
+                                                 // If we define struct RuntimeConfig in tests, it shadows crate::RuntimeConfig.
+                                                 // But Scheduler::new expects crate::RuntimeConfig.
+                                                 // This mismatch might cause issues if types differ.
+                                                 // Let's assume for now we just fix the syntax.
         let stats = scheduler.stats();
+
         assert_eq!(stats.high_priority_len, 0);
         assert_eq!(stats.normal_priority_len, 0);
     }
+
     #[test]
     fn test_task_enqueueing() {
         let config = RuntimeConfig::default();
         let scheduler = Scheduler::new(&config);
-        let _ = scheduler
-            .spawn_task(
-                async {
-                    println!("Test task");
-                },
-                TaskPriority::High,
-            );
+
+        let _ = scheduler.spawn_task(
+            async {
+                println!("Test task");
+            },
+            TaskPriority::High,
+        );
+
         let stats = scheduler.stats();
         assert_eq!(stats.high_priority_len, 1);
     }

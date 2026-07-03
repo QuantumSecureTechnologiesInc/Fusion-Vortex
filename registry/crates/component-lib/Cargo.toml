@@ -1,0 +1,19 @@
+﻿[package]
+name = "fusion_ui_component_lib"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Foundation: Reusable UI component primitives (buttons, grids, modals)."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "foundation", "ui", "components", "primitives"]
+categories = ["development-tools", "no-std"]
+readme = "README.md"
+[dependencies]
+fusion_ui_react = { path = "../react-hooks/", version = "0.2.0" } # Built on the React Bridge
+fusion_core = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+fusion_std.workspace = true
+
+

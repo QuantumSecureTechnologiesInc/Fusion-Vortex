@@ -1,58 +1,59 @@
-// Option<T> - Rust-style optional value type
-// Represents either Some(value) or None
+// stdlib/option.fu - Option types for Fusion
 
-class Option<T> {
-    has_value: int;  // 1 = has value, 0 = none
-    value: T;
-    
-    fn some(val: T) -> Option<T> {
-        return Option::<T> { has_value: 1, value: val };
+struct OptionInt {
+    has_value: int,
+    value: int,
+}
+
+impl OptionInt {
+    fn some(val: int) -> OptionInt {
+        return OptionInt { has_value: 1, value: val };
     }
-    
-    fn none() -> Option<T> {
-        // Note: value will be uninitialized, but has_value=0 means it won't be accessed
-        // In a more complete implementation, we'd use a union or tagged pointer
-        let dummy: T;
-        return Option::<T> { has_value: 0, value: dummy };
+    fn none() -> OptionInt {
+        return OptionInt { has_value: 0, value: 0 };
     }
-    
-    fn is_some() -> int {
-        return self.has_value;
-    }
-    
-    fn is_none() -> int {
-        if (self.has_value == 0) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    
-    fn unwrap() -> T {
-        // Returns the value if Some, panics if None
-        // Note: Without proper panic support, this just returns the value unconditionally
-        // TODO: Add proper error handling when panic/abort is implemented
-        return self.value;
-    }
-    
-    fn unwrap_or(default: T) -> T {
-        if (self.has_value) {
-            return self.value;
-        } else {
-            return default;
-        }
-    }
-    
-    fn map<U>(f: fn(T) -> U) -> Option<U> {
-        // Maps Option<T> to Option<U> by applying a function
-        // Note: This requires first-class function support
-        // Placeholder for now
-        if (self.has_value) {
-            // Would be: Option::<U>::some(f(self.value))
-            // But we need higher-order functions implemented first
-            return Option::<U>::none();
-        } else {
-            return Option::<U>::none();
-        }
+    fn is_some(opt: OptionInt) -> bool { return opt.has_value != 0; }
+    fn is_none(opt: OptionInt) -> bool { return opt.has_value == 0; }
+    fn unwrap(opt: OptionInt) -> int { return opt.value; }
+    fn unwrap_or(opt: OptionInt, default: int) -> int {
+        if opt.has_value != 0 { return opt.value; }
+        return default;
     }
 }
+
+fn option_int_some(val: int) -> OptionInt {
+    return OptionInt { has_value: 1, value: val };
+}
+fn option_int_none() -> OptionInt {
+    return OptionInt { has_value: 0, value: 0 };
+}
+fn option_int_unwrap(opt: OptionInt) -> int { return opt.value; }
+
+struct OptionBool {
+    has_value: int,
+    value: int,
+}
+
+impl OptionBool {
+    fn some(val: bool) -> OptionBool {
+        if val { return OptionBool { has_value: 1, value: 1 }; }
+        return OptionBool { has_value: 1, value: 0 };
+    }
+    fn none() -> OptionBool {
+        return OptionBool { has_value: 0, value: 0 };
+    }
+    fn is_some(opt: OptionBool) -> bool { return opt.has_value != 0; }
+    fn is_none(opt: OptionBool) -> bool { return opt.has_value == 0; }
+    fn unwrap(opt: OptionBool) -> bool { return opt.value != 0; }
+}
+
+fn option_bool_some(val: bool) -> OptionBool {
+    if val { return OptionBool { has_value: 1, value: 1 }; }
+    return OptionBool { has_value: 1, value: 0 };
+}
+fn option_bool_none() -> OptionBool {
+    return OptionBool { has_value: 0, value: 0 };
+}
+fn option_bool_unwrap(opt: OptionBool) -> bool { return opt.value != 0; }
+
+// NOTE: Generic Option<T> requires generics support.

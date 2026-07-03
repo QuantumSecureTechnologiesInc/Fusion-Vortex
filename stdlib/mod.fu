@@ -1,0 +1,19 @@
+// stdlib/mod.fu - Fusion Standard Library Module Index
+//
+// This is the entry point for the Fusion standard library.
+// All modules use compiler-compatible syntax (struct/impl/fn/extern).
+//
+// Core types: option, result, vector, string
+// Collections: hash, hashmap, hashset, linkedlist, collections, primitives
+// Iterators: iterator
+// System I/O: io, fs, net, process
+// Higher-level: json, http, log
+// Runtime & security: runtime, security
+// String utilities: stringutils
+// Domain: core/mod, cycle/mod, flow/mod, seal/mod, core/telemetry, core/story
+//       cycle/contract, cycle/error, cycle/node, cycle/market
+//       ai/mod, flux_resolve
+
+fn stdlib_mod_index() -> int {
+    return 42;
+}

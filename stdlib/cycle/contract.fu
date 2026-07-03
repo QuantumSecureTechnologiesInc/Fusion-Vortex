@@ -1,30 +1,39 @@
-// Service agreement (pure .fu)
+// Service agreement stub (pure .fu)
+// Reduced to fit 16-byte ABI
 
 struct ServiceAgreement {
-    id: string,
-    provider: ComputeNode,
-    payload_hash: string,
+    id: int,
     state: int,
+    hash: int,
+    provider_id: int,
 }
 
-fn agreement_draft(provider: ComputeNode, payload_hash: string) -> ServiceAgreement {
-    let a: ServiceAgreement = ServiceAgreement { id: "agreement", provider: provider, payload_hash: payload_hash, state: 0 };
+fn agreement_new(provider_id: int) -> ServiceAgreement {
+    let a: ServiceAgreement = ServiceAgreement { id: 0, state: 0, hash: 0, provider_id: provider_id };
     return a;
 }
 
-fn agreement_sign_terms(a: ServiceAgreement, bid: MarketBid) -> ServiceAgreement {
+fn agreement_sign(a: ServiceAgreement) -> ServiceAgreement {
     if a.state != 0 { return a; }
-    if market_bid_negotiate(bid, a.provider) { a.state = 1; }
+    a.state = 1;
+    return a;
+}// Service agreement stub (pure .fu)
+// Reduced to fit 16-byte ABI
+
+struct ServiceAgreement {
+    id: int,
+    state: int,
+    hash: int,
+    provider_id: int,
+}
+
+fn agreement_new(provider_id: int) -> ServiceAgreement {
+    let a: ServiceAgreement = ServiceAgreement { id: 0, state: 0, hash: 0, provider_id: provider_id };
     return a;
 }
 
-fn agreement_execute_workload(a: ServiceAgreement) -> string {
-    if a.state != 1 { return "CONTRACT_NOT_SIGNED"; }
-    return "EXECUTING";
-}
-
-fn agreement_settle(a: ServiceAgreement) -> ServiceAgreement {
-    a.state = 3;
+fn agreement_sign(a: ServiceAgreement) -> ServiceAgreement {
+    if a.state != 0 { return a; }
+    a.state = 1;
     return a;
 }
-

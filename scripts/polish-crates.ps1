@@ -178,7 +178,8 @@ $CrateCategories = @{
 function Update-CrateMetadata {
     param(
         [string]$CratePath,
-        [string]$Archetype
+        [string]$Archetype,
+        [hashtable]$ArchetypeMap = $Archetypes
     )
     
     $CargoToml = Join-Path $CratePath "Cargo.toml"
@@ -188,7 +189,15 @@ function Update-CrateMetadata {
         return
     }
     
+    $ArchetypeDef = $ArchetypeMap[$Archetype]
+    if (-not $ArchetypeDef) {
+        Write-Warning "Unknown archetype: $Archetype"
+        return
+    }
+
     Write-Host "Polishing $CratePath as $Archetype..." -ForegroundColor Green
+    Write-Host "  Keywords: $($ArchetypeDef.Keywords -join ', ')"
+    Write-Host "  Categories: $($ArchetypeDef.Categories -join ', ')"
     
     # This would require a TOML parser in PowerShell
     # For now, we've demonstrated the manual approach

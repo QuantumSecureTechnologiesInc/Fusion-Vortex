@@ -1,19 +1,19 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FI64 = FI64;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
-#[allow(missing_docs, dead_code)]
-type FMap<K, V> = FMap<K, V>;
+use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+#[allow(missing_docs, dead_code)] type FI64 = i64;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+#[allow(missing_docs, dead_code)] type FMap<K, V> = HashMap<K, V>;
+// __FU_COMPAT_END__
 use crate::compiler::ast::*;
 use crate::compiler::chunk::OpCode;
 use crate::compiler::function::Function;
 use crate::compiler::value::Value;
 use thiserror::Error;
 #[derive(Error, Debug)]
-enum CompilerError {
+pub enum CompilerError {
     #[error("Undefined variable: {0}")]
     UndefinedVariable(FString),
     #[error("Undefined function: {0}")]
@@ -23,8 +23,8 @@ enum CompilerError {
     #[error("Main is not a function")]
     MainNotFunction,
 }
-type CompilerResult<T> = Result<T, CompilerError>;
-struct Compiler {
+pub type CompilerResult<T> = Result<T, CompilerError>;
+pub struct Compiler {
     function: Option<Function>,
     #[allow(dead_code)]
     functions: FVec<Function>,
@@ -63,6 +63,7 @@ impl Compiler {
                 Value::Native(crate::compiler::value::NativeFunction {
                     name: "clock".to_string(),
                     func: |_| {
+
                         let start = SystemTime::now();
                         let since_the_epoch = start
                             .duration_since(UNIX_EPOCH)
@@ -203,7 +204,7 @@ impl Compiler {
                         .as_mut()
                         .unwrap()
                         .chunk
-                        .add_constant(Value::FString(field_name.clone()));
+                        .add_constant(Value::String(field_name.clone()));
                     self.function
                         .as_mut()
                         .unwrap()
@@ -224,7 +225,7 @@ impl Compiler {
                     .as_mut()
                     .unwrap()
                     .chunk
-                    .add_constant(Value::FString(field.clone()));
+                    .add_constant(Value::String(field.clone()));
                 self.function
                     .as_mut()
                     .unwrap()
@@ -239,7 +240,7 @@ impl Compiler {
                     .as_mut()
                     .unwrap()
                     .chunk
-                    .add_constant(Value::FString(field.clone()));
+                    .add_constant(Value::String(field.clone()));
                 self.function
                     .as_mut()
                     .unwrap()
@@ -274,13 +275,13 @@ impl Compiler {
                             .chunk
                             .write(OpCode::Constant(idx));
                     }
-                    Literal::FString(s) => {
+                    Literal::String(s) => {
                         let idx = self
                             .function
                             .as_mut()
                             .unwrap()
                             .chunk
-                            .add_constant(Value::FString(s));
+                            .add_constant(Value::String(s));
                         self.function
                             .as_mut()
                             .unwrap()

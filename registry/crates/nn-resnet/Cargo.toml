@@ -1,0 +1,13 @@
+[package]
+name = "nn-resnet"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Algorithm: ResNet (Residual Network) implementation optimized for Fusion. O(L) depth complexity."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["resnet", "neural-network", "deep-learning", "algorithm"]
+categories = ["algorithms", "science"]
+readme = "README.md"
+
+[dependencies]

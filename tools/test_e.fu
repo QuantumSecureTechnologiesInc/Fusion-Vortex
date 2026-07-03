@@ -1,0 +1,4 @@
+extern fn printf(fmt: string, ...) -> int;
+struct E { buf: [u8; 256], pos: int }
+fn e_new() -> E { E { buf: [0; 256], pos: 0 } }
+pub fn main() -> int { printf("=== Test ===\n"); let e: E = e_new(); printf("pos=%d\n", e.pos); return 0; }

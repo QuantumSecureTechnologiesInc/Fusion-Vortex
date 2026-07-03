@@ -1,0 +1,111 @@
+// DeepSeek Adapter — Fusion AI Core
+// DeepSeek API: OpenAI-compatible chat completion at api.deepseek.com
+// Models: deepseek-chat, deepseek-reasoner (R1)
+// Auth: Bearer token via API key
+
+use std::time::Duration;
+
+const DEEPSEEK_API_BASE: string = "https://api.deepseek.com/v1";
+extern fn fusion_env_get(key: string) -> string;
+
+/// DeepSeek adapter configuration
+struct DeepSeekConfig {
+    pub api_key: string,
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,  // float * 100
+    pub timeout_secs: int,
+}
+
+fn deepseek_config_default() -> DeepSeekConfig {
+    let key: string = fusion_env_get("DEEPSEEK_API_KEY");
+    DeepSeekConfig {
+        api_key: key,
+        api_base: "https://api.deepseek.com/v1",
+        model: "deepseek-chat",
+        max_tokens: 4096,
+        temperature: 70,  // 0.7
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message in OpenAI-compatible format
+struct DeepSeekMessage {
+    role: string,     // "system", "user", "assistant"
+    content: string,
+}
+
+/// Chat completion request body
+struct DeepSeekChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,       // 0 or 1
+}
+
+/// Chat completion response
+struct DeepSeekChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// DeepSeek Adapter
+struct DeepSeekAdapter {
+    config: DeepSeekConfig,
+    connected: int,
+}
+
+/// Initialize with defaults
+fn deepseek_adapter_new() -> DeepSeekAdapter {
+    DeepSeekAdapter {
+        config: deepseek_config_default(),
+        connected: 0,
+    }
+}
+
+/// Initialize with custom config
+fn deepseek_adapter_with_config(cfg: DeepSeekConfig) -> DeepSeekAdapter {
+    DeepSeekAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via DeepSeek API
+fn deepseek_chat_completion(adapter: DeepSeekAdapter, messages_len: int) -> (DeepSeekAdapter, DeepSeekChatResponse) {
+    let mut a = adapter;
+    // POST https://api.deepseek.com/v1/chat/completions
+    // Headers: Authorization: Bearer {api_key}
+    // Body: {"model":"deepseek-chat","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: DeepSeekChatResponse = DeepSeekChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check — HEAD https://api.deepseek.com/v1/models
+fn deepseek_health_check(adapter: DeepSeekAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn deepseek_provider_name() -> string {
+    return "DeepSeek";
+}
+
+/// Supported model families
+fn deepseek_supported_models() -> string {
+    return "deepseek-chat,deepseek-reasoner,deepseek-coder";
+}

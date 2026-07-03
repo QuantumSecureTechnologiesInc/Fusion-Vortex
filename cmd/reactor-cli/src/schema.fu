@@ -1,5 +1,4 @@
 // __FU_COMPAT_START__
-#![allow(missing_docs)]
 #[allow(missing_docs, dead_code)] type FBool = bool;
 #[allow(missing_docs, dead_code)] type FString = String;
 #[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;

@@ -1,17 +1,22 @@
 //! LLVM code generation backend.
 use super::{Backend, CodegenError};
 use crate::ast;
-use crate::ir::{self, Instruction, IrFunction, Module, Terminator, TypedValue, Value};
+use crate::ir::{self, Function, Instruction, Module, Terminator, TypedValue, Value};
 use crate::sema;
 use generational_arena::Index;
 use inkwell::builder::Builder;
 use inkwell::builder::BuilderError;
 use inkwell::context::Context;
+use inkwell::debug_info::{DICompileUnit, DWARFEmissionKind, DWARFSourceLanguage};
 use inkwell::module::{Linkage, Module as InkwellModule};
+use inkwell::targets::{
+    CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
+};
 use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
-use inkwell::values::{BasicValueEnum, FunctionValue, IntValue, PointerValue};
-use inkwell::{AddressSpace, IntPredicate};
+use inkwell::values::{BasicValueEnum, FunctionValue, PointerValue};
+use inkwell::{AddressSpace, IntPredicate, OptimizationLevel};
 /// Configuration options for LLVM code generation.
+#[derive(Debug)]
 struct CodegenConfig<'a> {
     /// Optimization level (0-3).
     pub opt_level: u8,
@@ -30,6 +35,9 @@ struct LlvmBackend<'ctx> {
     module: InkwellModule<'ctx>,
     builder: Builder<'ctx>,
     config: CodegenConfig<'ctx>,
+    dibuilder: inkwell::debug_info::DebugInfoBuilder<'ctx>,
+    #[allow(dead_code)]
+    compile_unit: DICompileUnit<'ctx>,
     value_map: FMap<FString, PointerValue<'ctx>>,
     block_map: FMap<Index, inkwell::basic_block::BasicBlock<'ctx>>,
     string_globals: FVec<PointerValue<'ctx>>,
@@ -42,11 +50,31 @@ impl<'ctx> LlvmBackend<'ctx> {
         if let Some(triple) = &config.target_triple {
             module.set_triple(&inkwell::targets::TargetTriple::create(triple));
         }
+        let (dibuilder, compile_unit) = module
+            .create_debug_info_builder(
+                true,
+                DWARFSourceLanguage::C,
+                config.source_file_path,
+                ".",
+                "fuc compiler",
+                config.opt_level > 0,
+                "",
+                0,
+                "",
+                DWARFEmissionKind::Full,
+                0,
+                false,
+                false,
+                "",
+                "",
+            );
         Self {
             context,
             module,
             builder: context.create_builder(),
             config,
+            dibuilder,
+            compile_unit,
             value_map: HashMap::new(),
             block_map: HashMap::new(),
             string_globals: Vec::new(),
@@ -76,10 +104,14 @@ impl<'ctx> LlvmBackend<'ctx> {
             ast::Type::Struct(name) => {
                 self.struct_types
                     .get(name)
-                    .map(|s| s.as_basic_type_enum())
-                    .unwrap_or_else(|| self.context.i32_type().into())
+                    .unwrap_or_else(|| {
+                        panic!("Internal ICE: unknown struct type '{}'", name)
+                    })
+                    .as_basic_type_enum()
             }
-            ast::Type::Void => self.context.i32_type().into(),
+            ast::Type::Void => {
+                panic!("Internal ICE: Cannot convert Void type to BasicTypeEnum")
+            }
             ast::Type::Unknown => self.context.i32_type().into(),
         }
     }
@@ -101,30 +133,8 @@ impl<'ctx> LlvmBackend<'ctx> {
         if let Some(ptr) = self.value_map.get(name) {
             return Ok(*ptr);
         }
-        let insert_block = self
-            .builder
-            .get_insert_block()
-            .ok_or_else(|| CodegenError::InternalError(
-                "No current insert block for allocation".to_string(),
-            ))?;
-        let current_fn = insert_block
-            .get_parent()
-            .ok_or_else(|| CodegenError::InternalError(
-                "No current function for allocation".to_string(),
-            ))?;
-        let entry_block = current_fn
-            .get_first_basic_block()
-            .ok_or_else(|| CodegenError::InternalError(
-                "Current function has no entry block".to_string(),
-            ))?;
-        let entry_builder = self.context.create_builder();
-        if let Some(first_instr) = entry_block.get_first_instruction() {
-            entry_builder.position_before(&first_instr);
-        } else {
-            entry_builder.position_at_end(entry_block);
-        }
         let alloca = self
-            .map_builder(entry_builder.build_alloca(self.as_llvm_type(ty), name))?;
+            .map_builder(self.builder.build_alloca(self.as_llvm_type(ty), name))?;
         self.value_map.insert(name.to_string(), alloca);
         Ok(alloca)
     }
@@ -171,7 +181,7 @@ impl<'ctx> LlvmBackend<'ctx> {
         addr: &ir::Address,
     ) -> Result<PointerValue<'ctx>, CodegenError> {
         match addr {
-            ir::Address::Variable { name, ty } => self.get_or_alloc_ptr(name, ty),
+            ir::Address::Variable { name, .. } => self.get_var_ptr(name),
             ir::Address::Pointer { val, .. } => {
                 Ok(self.get_llvm_value(val)?.into_pointer_value())
             }
@@ -229,11 +239,12 @@ impl<'ctx> LlvmBackend<'ctx> {
         field_index: FSize,
         _field_ty: &ast::Type,
     ) -> Result<PointerValue<'ctx>, CodegenError> {
-        let struct_ty_opt = self.struct_types.get(struct_name);
-        if struct_ty_opt.is_none() {
-            return Ok(base_ptr);
-        }
-        let struct_ty = struct_ty_opt.unwrap();
+        let struct_ty = self
+            .struct_types
+            .get(struct_name)
+            .ok_or_else(|| CodegenError::InternalError(
+                format!("Unknown struct type '{}'", struct_name),
+            ))?;
         let struct_ptr_ty = self.context.ptr_type(AddressSpace::default());
         let casted = self
             .map_builder(
@@ -282,526 +293,21 @@ impl<'ctx> LlvmBackend<'ctx> {
             ast::Type::Pointer(inner) => {
                 match &**inner {
                     ast::Type::Array(_, size) => *size as FU64,
-                    _ => 1,
-                }
-            }
-            _ => 1,
-        }
-    }
-    fn looks_like_enum_payload_ctor(
-        &self,
-        func_name: &str,
-        args: &[TypedValue],
-        dest: &Option<TypedValue>,
-    ) -> FBool {
-        if dest.is_none() || args.is_empty() || !func_name.contains("::") {
-            return false;
-        }
-        let mut last = "";
-        for part in func_name.split("::") {
-            last = part;
-        }
-        if last.is_empty() {
-            return false;
-        }
-        if let Some(first) = last.chars().next() {
-            return first.is_ascii_uppercase();
-        }
-        return false;
-    }
-    fn enum_variant_tag(&self, func_name: &str) -> FU64 {
-        let mut acc: FU64 = 1469598103934665603;
-        for byte in func_name.as_bytes() {
-            acc ^= *byte as FU64;
-            acc = acc.wrapping_mul(1099511628211);
-        }
-        // Keep tags in signed i32 range to simplify downstream casts.
-        return acc % 2147483647;
-    }
-    fn build_enum_ctor_value(
-        &mut self,
-        dest_ty: &ast::Type,
-        func_name: &str,
-    ) -> Result<BasicValueEnum<'ctx>, CodegenError> {
-        let tag = self.enum_variant_tag(func_name);
-        Ok(match dest_ty {
-            ast::Type::Bool => {
-                self.context.bool_type().const_int(tag & 1, false).into()
-            }
-            ast::Type::String | ast::Type::Pointer(_) => {
-                self.context.ptr_type(AddressSpace::default()).const_null().into()
-            }
-            ast::Type::Array(_, _) | ast::Type::Struct(_) => {
-                self.as_llvm_type(dest_ty).const_zero()
-            }
-            ast::Type::Int | ast::Type::Unknown | ast::Type::Void => {
-                self.context.i32_type().const_int(tag, false).into()
-            }
-        })
-    }
-    fn lower_unresolved_call(
-        &mut self,
-        func_name: &str,
-        dest: &Option<TypedValue>,
-        args: &[TypedValue],
-    ) -> Result<FBool, CodegenError> {
-        let dest_val_opt = dest.as_ref();
-        if Self::call_name_is(func_name, "len") {
-            let mut size_val: FU64 = 0;
-            if let Some(first_arg) = args.first() {
-                if let ast::Type::Array(_, size) = &first_arg.ty {
-                    size_val = *size as FU64;
-                }
-            }
-            let lowered_val: BasicValueEnum<'ctx> = self
-                .context
-                .i32_type()
-                .const_int(size_val, false)
-                .into();
-            if let Some(dest_val) = dest_val_opt {
-                let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                self.map_builder(self.builder.build_store(dest_ptr, lowered_val))?;
-            }
-            return Ok(true);
-        }
-        if Self::call_name_is(func_name, "new") && func_name.contains("::") {
-            let segments: FVec<&str> = func_name.split("::").collect();
-            if segments.len() > 1 {
-                let owner = segments[segments.len() - 2];
-                let compat_owner = owner == "HashMap"
-                    || owner == "HashSet"
-                    || owner == "BTreeMap"
-                    || owner == "BTreeSet"
-                    || owner == "VecDeque"
-                    || owner == "Vec"
-                    || owner == "String"
-                    || owner == "PathBuf"
-                    || owner == "OsString"
-                    || owner == "Command";
-                if compat_owner {
-                    if let Some(dest_val) = dest_val_opt {
-                        if let Some(default_val) = self.default_return_value(&dest_val.ty) {
-                            let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                            self.map_builder(self.builder.build_store(dest_ptr, default_val))?;
-                        }
-                    }
-                    return Ok(true);
-                }
-            }
-        }
-
-        if Self::call_name_is(func_name, "is_none")
-            || Self::call_name_is(func_name, "is_err")
-            || Self::call_name_is(func_name, "contains")
-            || Self::call_name_is(func_name, "ends_with")
-            || Self::call_name_is(func_name, "is_empty")
-        {
-            if let Some(dest_val) = dest_val_opt {
-                let lowered_val = self.bool_literal_for_unresolved_dest(&dest_val.ty, false);
-                let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                self.map_builder(self.builder.build_store(dest_ptr, lowered_val))?;
-            }
-            return Ok(true);
-        }
-
-        if Self::call_name_is(func_name, "is_some")
-            || Self::call_name_is(func_name, "is_ok")
-        {
-            if let Some(dest_val) = dest_val_opt {
-                let lowered_val = self.bool_literal_for_unresolved_dest(&dest_val.ty, true);
-                let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                self.map_builder(self.builder.build_store(dest_ptr, lowered_val))?;
-            }
-            return Ok(true);
-        }
-
-        if Self::call_name_is(func_name, "unwrap")
-            || Self::call_name_is(func_name, "expect")
-            || Self::call_name_is(func_name, "clone")
-            || Self::call_name_is(func_name, "to_owned")
-        {
-            let lowered = if let Some(first_arg) = args.first() {
-                Some(self.get_llvm_value(first_arg)?)
-            } else if let Some(dest_val) = dest_val_opt {
-                self.default_return_value(&dest_val.ty)
-            } else {
-                None
-            };
-            if let Some(lowered_val) = lowered {
-                if let Some(dest_val) = dest_val_opt {
-                    let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                    self.map_builder(self.builder.build_store(dest_ptr, lowered_val))?;
-                }
-            }
-            return Ok(true);
-        }
-
-        if Self::call_name_is(func_name, "to_string")
-            || Self::call_name_is(func_name, "format")
-            || Self::call_name_is(func_name, "write")
-            || Self::call_name_is(func_name, "write_str")
-            || Self::call_name_is(func_name, "write_fmt")
-        {
-            if let Some(dest_val) = dest_val_opt {
-                if let Some(default_val) = self.default_return_value(&dest_val.ty) {
-                    let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                    self.map_builder(self.builder.build_store(dest_ptr, default_val))?;
-                    return Ok(true);
-                }
-            } else {
-                return Ok(true);
-            }
-        }
-
-        if Self::call_name_is(func_name, "push")
-            || Self::call_name_is(func_name, "pop")
-            || Self::call_name_is(func_name, "insert")
-            || Self::call_name_is(func_name, "remove")
-            || Self::call_name_is(func_name, "clear")
-        {
-            if let Some(dest_val) = dest_val_opt {
-                if let Some(default_val) = self.default_return_value(&dest_val.ty) {
-                    let dest_ptr = self.get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                    self.map_builder(self.builder.build_store(dest_ptr, default_val))?;
-                }
-            }
-            return Ok(true);
-        }
-
-        // No generic catch-all fallback: unresolved calls must be explicitly
-        // lowered above or resolved by direct function linkage.
-        return Ok(false);
-    }
-    fn unresolved_call_fail_mode_enabled(&self) -> FBool {
-        // Hard release-mode policy: unresolved calls are always fatal.
-        // No runtime escape hatch is supported.
-        return true;
-    }
-    fn push_candidate_unique(candidates: &mut FVec<FString>, name: FString) {
-        if name.is_empty() {
-            return;
-        }
-        if candidates.iter().any(|existing| existing == &name) {
-            return;
-        }
-        candidates.push(name);
-    }
-    fn push_owner_call_candidates(
-        candidates: &mut FVec<FString>,
-        owner_name: &str,
-        func_name: &str,
-    ) {
-        if owner_name.is_empty() || func_name.contains("::") {
-            return;
-        }
-        let owner_variants = Self::owner_name_variants(owner_name);
-        for owner in owner_variants {
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}::{}", owner, func_name),
-            );
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}__{}", owner, func_name),
-            );
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}__{}", owner.replace("::", "__"), func_name),
-            );
-        }
-    }
-    fn normalize_owner_name(raw_owner: &str) -> FString {
-        let mut owner = raw_owner.trim().to_string();
-        while owner.starts_with("&") {
-            owner = owner[1..].trim_start().to_string();
-        }
-        if owner.starts_with("mut ") {
-            owner = owner[4..].trim_start().to_string();
-        }
-        if let Some(generic_idx) = owner.find('<') {
-            owner = owner[..generic_idx].to_string();
-        }
-        return owner;
-    }
-    fn owner_name_variants(owner_name: &str) -> FVec<FString> {
-        let mut variants: FVec<FString> = Vec::new();
-        let normalized = Self::normalize_owner_name(owner_name);
-        if normalized.is_empty() {
-            return variants;
-        }
-        Self::push_candidate_unique(&mut variants, normalized.clone());
-        if let Some(stripped) = normalized.strip_prefix("crate::") {
-            Self::push_candidate_unique(&mut variants, stripped.to_string());
-        }
-        let segments: FVec<&str> = normalized.split("::").collect();
-        if !segments.is_empty() {
-            let leaf = segments[segments.len() - 1];
-            Self::push_candidate_unique(&mut variants, leaf.to_string());
-        }
-        if segments.len() > 1 {
-            let mut idx = 1;
-            while idx < segments.len() {
-                let mut suffix = String::new();
-                let mut inner = idx;
-                while inner < segments.len() {
-                    if inner > idx {
-                        suffix.push_str("::");
-                    }
-                    suffix.push_str(segments[inner]);
-                    inner += 1;
-                }
-                Self::push_candidate_unique(&mut variants, suffix);
-                idx += 1;
-            }
-        }
-        return variants;
-    }
-    fn owner_name_from_type(ty: &ast::Type) -> Option<FString> {
-        match ty {
-            ast::Type::Struct(name) => Some(name.clone()),
-            ast::Type::Pointer(inner) => Self::owner_name_from_type(inner),
-            _ => None,
-        }
-    }
-    fn call_resolution_candidates(
-        func_name: &str,
-        args: &[TypedValue],
-        dest: &Option<TypedValue>,
-    ) -> FVec<FString> {
-        let mut candidates: FVec<FString> = Vec::new();
-        Self::push_candidate_unique(&mut candidates, func_name.to_string());
-        if !func_name.contains("::") {
-            for arg in args {
-                if let Some(owner_name) = Self::owner_name_from_type(&arg.ty) {
-                    Self::push_owner_call_candidates(
-                        &mut candidates,
-                        &owner_name,
-                        func_name,
-                    );
-                }
-            }
-            if let Some(dest_val) = dest.as_ref() {
-                if let Some(owner_name) = Self::owner_name_from_type(&dest_val.ty) {
-                    Self::push_owner_call_candidates(
-                        &mut candidates,
-                        &owner_name,
-                        func_name,
-                    );
-                }
-            }
-            let owners = [
-                "Analyzer",
-                "SymbolTable",
-                "Parser",
-                "Lexer",
-                "Lowerer",
-            ];
-            for owner in owners {
-                Self::push_candidate_unique(
-                    &mut candidates,
-                    format!("{}::{}", owner, func_name),
-                );
-                Self::push_candidate_unique(
-                    &mut candidates,
-                    format!("{}__{}", owner, func_name),
-                );
-            }
-            return candidates;
-        }
-        if let Some(stripped) = func_name.strip_prefix("crate::") {
-            Self::push_candidate_unique(&mut candidates, stripped.to_string());
-            Self::push_candidate_unique(
-                &mut candidates,
-                stripped.replace("::", "__"),
-            );
-        }
-        let segments: FVec<&str> = func_name.split("::").collect();
-        if segments.len() > 1 {
-            let mut idx = 1;
-            while idx < segments.len() {
-                let mut suffix = String::new();
-                let mut inner = idx;
-                while inner < segments.len() {
-                    if inner > idx {
-                        suffix.push_str("::");
-                    }
-                    suffix.push_str(segments[inner]);
-                    inner += 1;
-                }
-                Self::push_candidate_unique(&mut candidates, suffix.clone());
-                Self::push_candidate_unique(
-                    &mut candidates,
-                    suffix.replace("::", "__"),
-                );
-                idx += 1;
-            }
-            let leaf = segments[segments.len() - 1];
-            Self::push_candidate_unique(&mut candidates, leaf.to_string());
-        }
-        Self::push_candidate_unique(
-            &mut candidates,
-            func_name.replace("::", "__"),
-        );
-        return candidates;
-    }
-    fn resolve_existing_call_name(
-        &self,
-        func_name: &str,
-        args: &[TypedValue],
-        dest: &Option<TypedValue>,
-    ) -> Option<FString> {
-        let candidates = Self::call_resolution_candidates(func_name, args, dest);
-        for candidate in &candidates {
-            if self.module.get_function(&candidate).is_some() {
-                return Some(candidate.clone());
-            }
-        }
-        let mut suffix_candidates: FVec<FString> = Vec::new();
-        for candidate in &candidates {
-            if candidate.contains("::") || candidate.contains("__") {
-                Self::push_candidate_unique(
-                    &mut suffix_candidates,
-                    candidate.clone(),
-                );
-            }
-        }
-        if !suffix_candidates.is_empty() {
-            let mut suffix_match: Option<FString> = None;
-            for function in self.module.get_functions() {
-                let name_result = function.get_name().to_str();
-                if name_result.is_err() {
-                    continue;
-                }
-                let function_name = name_result.unwrap();
-                for candidate in &suffix_candidates {
-                    let qualified = format!("::{}", candidate);
-                    let mangled = format!("__{}", candidate.replace("::", "__"));
-                    if function_name.ends_with(&qualified)
-                        || function_name.ends_with(&mangled)
-                    {
-                        if suffix_match.is_some() {
-                            return None;
-                        }
-                        suffix_match = Some(function_name.to_string());
-                        break;
+                    _ => {
+                        panic!(
+                            "Internal Compiler Error: GEP base is not a pointer to an array. Type is: {:?}",
+                            ptr_ty
+                        )
                     }
                 }
             }
-            if suffix_match.is_some() {
-                return suffix_match;
+            _ => {
+                panic!(
+                    "Internal Compiler Error: GEP base is not a pointer. Type is: {:?}",
+                    ptr_ty
+                )
             }
         }
-        if !func_name.contains("::") {
-            let mut owner_suffixes: FVec<FString> = Vec::new();
-            for arg in args {
-                if let Some(owner_name) = Self::owner_name_from_type(&arg.ty) {
-                    let owner_variants = Self::owner_name_variants(&owner_name);
-                    for owner in owner_variants {
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}::{}", owner, func_name),
-                        );
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}__{}", owner, func_name),
-                        );
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}__{}", owner.replace("::", "__"), func_name),
-                        );
-                    }
-                }
-            }
-            if let Some(dest_val) = dest.as_ref() {
-                if let Some(owner_name) = Self::owner_name_from_type(&dest_val.ty) {
-                    let owner_variants = Self::owner_name_variants(&owner_name);
-                    for owner in owner_variants {
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}::{}", owner, func_name),
-                        );
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}__{}", owner, func_name),
-                        );
-                        Self::push_candidate_unique(
-                            &mut owner_suffixes,
-                            format!("{}__{}", owner.replace("::", "__"), func_name),
-                        );
-                    }
-                }
-            }
-            if !owner_suffixes.is_empty() {
-                let mut owner_match: Option<FString> = None;
-                for function in self.module.get_functions() {
-                    let name_result = function.get_name().to_str();
-                    if name_result.is_err() {
-                        continue;
-                    }
-                    let function_name = name_result.unwrap();
-                    for suffix in &owner_suffixes {
-                        if function_name.ends_with(suffix) {
-                            if owner_match.is_some() {
-                                return None;
-                            }
-                            owner_match = Some(function_name.to_string());
-                            break;
-                        }
-                    }
-                }
-                if owner_match.is_some() {
-                    return owner_match;
-                }
-            }
-            let qualified = format!("::{}", func_name);
-            let mangled = format!("__{}", func_name);
-            let mut unique_match: Option<FString> = None;
-            for function in self.module.get_functions() {
-                let name_result = function.get_name().to_str();
-                if name_result.is_err() {
-                    continue;
-                }
-                let function_name = name_result.unwrap();
-                if function_name.ends_with(&qualified)
-                    || function_name.ends_with(&mangled)
-                {
-                    if unique_match.is_some() {
-                        return None;
-                    }
-                    unique_match = Some(function_name.to_string());
-                }
-            }
-            if unique_match.is_some() {
-                return unique_match;
-            }
-        }
-        return None;
-    }
-    fn bool_literal_for_unresolved_dest(
-        &self,
-        ty: &ast::Type,
-        bit: FBool,
-    ) -> BasicValueEnum<'ctx> {
-        match ty {
-            ast::Type::Bool => self.context.bool_type().const_int(bit as FU64, false).into(),
-            ast::Type::Int | ast::Type::Unknown => {
-                self.context.i32_type().const_int(bit as FU64, false).into()
-            }
-            ast::Type::String | ast::Type::Pointer(_) => {
-                let _ = bit;
-                self.context.ptr_type(AddressSpace::default()).const_null().into()
-            }
-            ast::Type::Array(_, _) | ast::Type::Struct(_) | ast::Type::Void => {
-                self.context.i32_type().const_int(bit as FU64, false).into()
-            }
-        }
-    }
-    fn call_name_is(name: &str, leaf: &str) -> FBool {
-        if name == leaf {
-            return true;
-        }
-        let qualified = format!("::{}", leaf);
-        return name.ends_with(&qualified);
     }
     fn default_return_value(&self, ty: &ast::Type) -> Option<BasicValueEnum<'ctx>> {
         match ty {
@@ -817,233 +323,24 @@ impl<'ctx> LlvmBackend<'ctx> {
             ast::Type::Unknown => Some(self.context.i32_type().const_zero().into()),
         }
     }
-    fn type_name_is(name: &str, simple: &str) -> FBool {
-        if name == simple {
-            return true;
-        }
-        let qualified = format!("::{}", simple);
-        return name.ends_with(&qualified);
-    }
-    fn is_string_like_type(&self, ty: &ast::Type) -> FBool {
-        match ty {
-            ast::Type::String => true,
-            ast::Type::Struct(name) => {
-                Self::type_name_is(name, "FString")
-                    || Self::type_name_is(name, "String")
-                    || Self::type_name_is(name, "str")
-                    || Self::type_name_is(name, "string")
-            }
-            _ => false,
-        }
-    }
-    fn coerce_to_i64(
-        &mut self,
-        value: BasicValueEnum<'ctx>,
-        name: &str,
-    ) -> Result<IntValue<'ctx>, CodegenError> {
-        match value {
-            BasicValueEnum::IntValue(int_val) => {
-                let width = int_val.get_type().get_bit_width();
-                if width == 64 {
-                    Ok(int_val)
-                } else if width < 64 {
-                    Ok(self.map_builder(
-                        self
-                            .builder
-                            .build_int_s_extend(int_val, self.context.i64_type(), name),
-                    )?)
-                } else {
-                    Ok(self.map_builder(
-                        self
-                            .builder
-                            .build_int_truncate(int_val, self.context.i64_type(), name),
-                    )?)
-                }
-            }
-            BasicValueEnum::PointerValue(ptr_val) => Ok(self.map_builder(
-                self
-                    .builder
-                    .build_ptr_to_int(ptr_val, self.context.i64_type(), name),
-            )?),
-            _ => Ok(self.context.i64_type().const_zero()),
-        }
-    }
-    fn coerce_to_bool(
-        &mut self,
-        value: BasicValueEnum<'ctx>,
-        name: &str,
-    ) -> Result<IntValue<'ctx>, CodegenError> {
-        match value {
-            BasicValueEnum::IntValue(int_val) => {
-                if int_val.get_type().get_bit_width() == 1 {
-                    Ok(int_val)
-                } else {
-                    Ok(self.map_builder(
-                        self
-                            .builder
-                            .build_int_compare(
-                                IntPredicate::NE,
-                                int_val,
-                                int_val.get_type().const_zero(),
-                                name,
-                            ),
-                    )?)
-                }
-            }
-            BasicValueEnum::PointerValue(ptr_val) => {
-                let as_i64 = self.map_builder(
-                    self
-                        .builder
-                        .build_ptr_to_int(ptr_val, self.context.i64_type(), "bool_ptr_i64"),
-                )?;
-                Ok(self.map_builder(
-                    self
-                        .builder
-                        .build_int_compare(
-                            IntPredicate::NE,
-                            as_i64,
-                            self.context.i64_type().const_zero(),
-                            name,
-                        ),
-                )?)
-            }
-            _ => Ok(self.context.bool_type().const_zero()),
-        }
-    }
-    fn normalise_return_value(
-        &mut self,
-        value: BasicValueEnum<'ctx>,
-        expected: &ast::Type,
-    ) -> Result<BasicValueEnum<'ctx>, CodegenError> {
-        match expected {
-            ast::Type::Int | ast::Type::Unknown => {
-                match value {
-                    BasicValueEnum::IntValue(int_val) => {
-                        let width = int_val.get_type().get_bit_width();
-                        if width == 32 {
-                            Ok(int_val.into())
-                        } else if width < 32 {
-                            Ok(self.map_builder(
-                                self
-                                    .builder
-                                    .build_int_z_extend(
-                                        int_val,
-                                        self.context.i32_type(),
-                                        "ret_i32",
-                                    ),
-                            )?.into())
-                        } else {
-                            Ok(self.map_builder(
-                                self
-                                    .builder
-                                    .build_int_truncate(
-                                        int_val,
-                                        self.context.i32_type(),
-                                        "ret_i32",
-                                    ),
-                            )?.into())
-                        }
-                    }
-                    BasicValueEnum::PointerValue(ptr_val) => Ok(self.map_builder(
-                        self
-                            .builder
-                            .build_ptr_to_int(ptr_val, self.context.i32_type(), "ret_ptr_i32"),
-                    )?.into()),
-                    _ => Ok(self.context.i32_type().const_zero().into()),
-                }
-            }
-            ast::Type::Bool => {
-                match value {
-                    BasicValueEnum::IntValue(int_val) => {
-                        let one_bit = if int_val.get_type().get_bit_width() == 1 {
-                            int_val
-                        } else {
-                            self.map_builder(
-                                self
-                                    .builder
-                                    .build_int_compare(
-                                        IntPredicate::NE,
-                                        int_val,
-                                        int_val.get_type().const_zero(),
-                                        "ret_bool",
-                                    ),
-                            )?
-                        };
-                        Ok(one_bit.into())
-                    }
-                    BasicValueEnum::PointerValue(ptr_val) => {
-                        let as_i64 = self.map_builder(
-                            self
-                                .builder
-                                .build_ptr_to_int(ptr_val, self.context.i64_type(), "ret_ptr_i64"),
-                        )?;
-                        Ok(self.map_builder(
-                            self
-                                .builder
-                                .build_int_compare(
-                                    IntPredicate::NE,
-                                    as_i64,
-                                    self.context.i64_type().const_zero(),
-                                    "ret_bool",
-                                ),
-                        )?.into())
-                    }
-                    _ => Ok(self.context.bool_type().const_zero().into()),
-                }
-            }
-            _ => {
-                let expected_ty = self.as_llvm_type(expected);
-                match (expected_ty, value) {
-                    (BasicTypeEnum::IntType(int_ty), BasicValueEnum::IntValue(int_val)) => {
-                        let target_width = int_ty.get_bit_width();
-                        let source_width = int_val.get_type().get_bit_width();
-                        if source_width == target_width {
-                            Ok(int_val.into())
-                        } else if source_width < target_width {
-                            Ok(self.map_builder(
-                                self
-                                    .builder
-                                    .build_int_z_extend(int_val, int_ty, "ret_int_widen"),
-                            )?.into())
-                        } else {
-                            Ok(self.map_builder(
-                                self
-                                    .builder
-                                    .build_int_truncate(int_val, int_ty, "ret_int_trunc"),
-                            )?.into())
-                        }
-                    }
-                    (BasicTypeEnum::IntType(int_ty), BasicValueEnum::PointerValue(ptr_val)) => {
-                        Ok(self.map_builder(
-                            self
-                                .builder
-                                .build_ptr_to_int(ptr_val, int_ty, "ret_ptr_int"),
-                        )?.into())
-                    }
-                    (BasicTypeEnum::PointerType(ptr_ty), BasicValueEnum::PointerValue(ptr_val)) => {
-                        Ok(self.map_builder(
-                            self
-                                .builder
-                                .build_bit_cast(ptr_val, ptr_ty, "ret_ptr_cast"),
-                        )?)
-                    }
-                    (BasicTypeEnum::PointerType(ptr_ty), BasicValueEnum::IntValue(int_val)) => {
-                        Ok(self.map_builder(
-                            self
-                                .builder
-                                .build_int_to_ptr(int_val, ptr_ty, "ret_int_ptr"),
-                        )?.into())
-                    }
-                    _ => Ok(value),
-                }
-            }
-        }
-    }
     fn compile_function(
         &mut self,
-        func: &IrFunction,
+        func: &Function,
     ) -> Result<FunctionValue<'ctx>, CodegenError> {
-        let llvm_func = self.declare_function_signature(func);
+        let param_types: FVec<BasicMetadataTypeEnum> = func
+            .params
+            .iter()
+            .map(|(_, ty)| self.as_llvm_type(ty).into())
+            .collect();
+        let func_type = if func.return_type == ast::Type::Void {
+            self.context.void_type().fn_type(&param_types, false)
+        } else {
+            self.as_llvm_type(&func.return_type).fn_type(&param_types, false)
+        };
+        let llvm_func = self
+            .module
+            .get_function(&func.name)
+            .unwrap_or_else(|| self.module.add_function(&func.name, func_type, None));
         self.value_map.clear();
         self.block_map.clear();
         for (index, block) in func.blocks.iter() {
@@ -1163,12 +460,7 @@ impl<'ctx> LlvmBackend<'ctx> {
                                     .into()
                             }
                             ast::BinaryOp::Eq => {
-                                let string_like = self.is_string_like_type(&op1.ty)
-                                    || self.is_string_like_type(&op2.ty);
-                                if string_like
-                                    && matches!(&val1, BasicValueEnum::PointerValue(_))
-                                    && matches!(&val2, BasicValueEnum::PointerValue(_))
-                                {
+                                if op1.ty == ast::Type::String && op2.ty == ast::Type::String {
                                     let strcmp_fn = self.get_or_declare_strcmp();
                                     let lhs = val1.into_pointer_value();
                                     let rhs = val2.into_pointer_value();
@@ -1198,15 +490,13 @@ impl<'ctx> LlvmBackend<'ctx> {
                                         )?
                                         .into()
                                 } else {
-                                    let lhs_i64 = self.coerce_to_i64(val1, "eq_lhs_i64")?;
-                                    let rhs_i64 = self.coerce_to_i64(val2, "eq_rhs_i64")?;
                                     self.map_builder(
                                             self
                                                 .builder
                                                 .build_int_compare(
                                                     IntPredicate::EQ,
-                                                    lhs_i64,
-                                                    rhs_i64,
+                                                    val1.into_int_value(),
+                                                    val2.into_int_value(),
                                                     "eq",
                                                 ),
                                         )?
@@ -1214,12 +504,7 @@ impl<'ctx> LlvmBackend<'ctx> {
                                 }
                             }
                             ast::BinaryOp::Neq => {
-                                let string_like = self.is_string_like_type(&op1.ty)
-                                    || self.is_string_like_type(&op2.ty);
-                                if string_like
-                                    && matches!(&val1, BasicValueEnum::PointerValue(_))
-                                    && matches!(&val2, BasicValueEnum::PointerValue(_))
-                                {
+                                if op1.ty == ast::Type::String && op2.ty == ast::Type::String {
                                     let strcmp_fn = self.get_or_declare_strcmp();
                                     let lhs = val1.into_pointer_value();
                                     let rhs = val2.into_pointer_value();
@@ -1249,15 +534,13 @@ impl<'ctx> LlvmBackend<'ctx> {
                                         )?
                                         .into()
                                 } else {
-                                    let lhs_i64 = self.coerce_to_i64(val1, "neq_lhs_i64")?;
-                                    let rhs_i64 = self.coerce_to_i64(val2, "neq_rhs_i64")?;
                                     self.map_builder(
                                             self
                                                 .builder
                                                 .build_int_compare(
                                                     IntPredicate::NE,
-                                                    lhs_i64,
-                                                    rhs_i64,
+                                                    val1.into_int_value(),
+                                                    val2.into_int_value(),
                                                     "neq",
                                                 ),
                                         )?
@@ -1291,28 +574,24 @@ impl<'ctx> LlvmBackend<'ctx> {
                                     .into()
                             }
                             ast::BinaryOp::Or => {
-                                let lhs_bool = self.coerce_to_bool(val1, "or_lhs_bool")?;
-                                let rhs_bool = self.coerce_to_bool(val2, "or_rhs_bool")?;
                                 self.map_builder(
                                         self
                                             .builder
                                             .build_or(
-                                                lhs_bool,
-                                                rhs_bool,
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
                                                 "or",
                                             ),
                                     )?
                                     .into()
                             }
                             ast::BinaryOp::And => {
-                                let lhs_bool = self.coerce_to_bool(val1, "and_lhs_bool")?;
-                                let rhs_bool = self.coerce_to_bool(val2, "and_rhs_bool")?;
                                 self.map_builder(
                                         self
                                             .builder
                                             .build_and(
-                                                lhs_bool,
-                                                rhs_bool,
+                                                val1.into_int_value(),
+                                                val2.into_int_value(),
                                                 "and",
                                             ),
                                     )?
@@ -1322,62 +601,12 @@ impl<'ctx> LlvmBackend<'ctx> {
                         self.map_builder(self.builder.build_store(dest_ptr, result))?;
                     }
                     Instruction::Call { dest, func_name, args } => {
-                        if self.looks_like_enum_payload_ctor(func_name, args, &dest) {
-                            if let Some(dest_val) = dest {
-                                let ctor_val = self.build_enum_ctor_value(
-                                    &dest_val.ty,
-                                    func_name,
-                                )?;
-                                let dest_ptr = self
-                                    .get_var_ptr(&self.get_value_name(&dest_val.val))?;
-                                self.map_builder(
-                                    self.builder.build_store(dest_ptr, ctor_val),
-                                )?;
-                            }
-                            continue;
-                        }
-                        let resolved_func_name = self
-                            .resolve_existing_call_name(func_name, args, &dest)
-                            .unwrap_or_else(|| func_name.to_string());
-                        if self.module.get_function(&resolved_func_name).is_none()
-                            && self.lower_unresolved_call(func_name, &dest, args)?
-                        {
-                            continue;
-                        }
-                        let callee = if let Some(existing) = self
+                        let callee = self
                             .module
-                            .get_function(&resolved_func_name)
-                        {
-                            existing
-                        } else {
-                            if self.unresolved_call_fail_mode_enabled() {
-                                let candidates = Self::call_resolution_candidates(
-                                    func_name,
-                                    args,
-                                    &dest,
-                                );
-                                return Err(CodegenError::InternalError(
-                                    format!(
-                                        "Unresolved call '{}' in '{}' (candidates: {})",
-                                        func_name,
-                                        func.name,
-                                        candidates.join(", "),
-                                    ),
-                                ));
-                            }
-                            let mut param_tys: FVec<inkwell::types::BasicMetadataTypeEnum<'ctx>> = Vec::new();
-                            for arg in args {
-                                param_tys.push(self.as_llvm_type(&arg.ty).into());
-                            }
-                            let fn_ty = if let Some(dest_val) = dest.as_ref() {
-                                self
-                                    .as_llvm_type(&dest_val.ty)
-                                    .fn_type(&param_tys, false)
-                            } else {
-                                self.context.void_type().fn_type(&param_tys, false)
-                            };
-                            self.module.add_function(&resolved_func_name, fn_ty, None)
-                        };
+                            .get_function(func_name)
+                            .ok_or_else(|| CodegenError::InternalError(
+                                format!("Function '{}' not found", func_name),
+                            ))?;
                         let mut llvm_args: FVec<
                             inkwell::values::BasicMetadataValueEnum<'ctx>,
                         > = Vec::new();
@@ -1582,11 +811,7 @@ impl<'ctx> LlvmBackend<'ctx> {
             match &block.terminator {
                 Terminator::Return(val_opt) => {
                     if let Some(val) = val_opt {
-                        let ret_raw = self.get_llvm_value(val)?;
-                        let ret_val = self.normalise_return_value(
-                            ret_raw,
-                            &func.return_type,
-                        )?;
+                        let ret_val = self.get_llvm_value(val)?;
                         self.map_builder(self.builder.build_return(Some(&ret_val)))?;
                     } else if let Some(default_val) = self
                         .default_return_value(&func.return_type)
@@ -1597,40 +822,17 @@ impl<'ctx> LlvmBackend<'ctx> {
                     }
                 }
                 Terminator::Jump(target_idx) => {
-                    if *target_idx == block_idx {
-                        if let Some(default_val) = self
-                            .default_return_value(&func.return_type)
-                        {
-                            self
-                                .map_builder(self.builder.build_return(Some(&default_val)))?;
-                        } else {
-                            self.map_builder(self.builder.build_return(None))?;
-                        }
-                    } else {
-                        self.map_builder(
-                            self
-                                .builder
-                                .build_unconditional_branch(self.block_map[target_idx]),
-                        )?;
-                    }
-                    if *target_idx != block_idx && visited.insert(*target_idx) {
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_unconditional_branch(self.block_map[target_idx]),
+                    )?;
+                    if visited.insert(*target_idx) {
                         stack.push(*target_idx);
                     }
                 }
                 Terminator::ConditionalJump { cond, then_block, else_block } => {
-                    let raw_cond = self.get_llvm_value(cond)?.into_int_value();
-                    let cond_val = if cond.ty == ast::Type::Bool {
-                        raw_cond
-                    } else {
-                        self.map_builder(
-                            self.builder.build_int_compare(
-                                IntPredicate::NE,
-                                raw_cond,
-                                raw_cond.get_type().const_zero(),
-                                "cond_nonzero",
-                            ),
-                        )?
-                    };
+                    let cond_val = self.get_llvm_value(cond)?.into_int_value();
                     self.map_builder(
                         self
                             .builder
@@ -1657,11 +859,7 @@ impl<'ctx> LlvmBackend<'ctx> {
             match &block.terminator {
                 Terminator::Return(val_opt) => {
                     if let Some(val) = val_opt {
-                        let ret_raw = self.get_llvm_value(val)?;
-                        let ret_val = self.normalise_return_value(
-                            ret_raw,
-                            &func.return_type,
-                        )?;
+                        let ret_val = self.get_llvm_value(val)?;
                         self.map_builder(self.builder.build_return(Some(&ret_val)))?;
                     } else if let Some(default_val) = self
                         .default_return_value(&func.return_type)
@@ -1672,37 +870,14 @@ impl<'ctx> LlvmBackend<'ctx> {
                     }
                 }
                 Terminator::Jump(target_idx) => {
-                    if *target_idx == block_idx {
-                        if let Some(default_val) = self
-                            .default_return_value(&func.return_type)
-                        {
-                            self
-                                .map_builder(self.builder.build_return(Some(&default_val)))?;
-                        } else {
-                            self.map_builder(self.builder.build_return(None))?;
-                        }
-                    } else {
-                        self.map_builder(
-                            self
-                                .builder
-                                .build_unconditional_branch(self.block_map[target_idx]),
-                        )?;
-                    }
+                    self.map_builder(
+                        self
+                            .builder
+                            .build_unconditional_branch(self.block_map[target_idx]),
+                    )?;
                 }
                 Terminator::ConditionalJump { cond, then_block, else_block } => {
-                    let raw_cond = self.get_llvm_value(cond)?.into_int_value();
-                    let cond_val = if cond.ty == ast::Type::Bool {
-                        raw_cond
-                    } else {
-                        self.map_builder(
-                            self.builder.build_int_compare(
-                                IntPredicate::NE,
-                                raw_cond,
-                                raw_cond.get_type().const_zero(),
-                                "cond_nonzero",
-                            ),
-                        )?
-                    };
+                    let cond_val = self.get_llvm_value(cond)?.into_int_value();
                     self.map_builder(
                         self
                             .builder
@@ -1716,25 +891,6 @@ impl<'ctx> LlvmBackend<'ctx> {
             }
         }
         Ok(llvm_func)
-    }
-    fn declare_function_signature(
-        &mut self,
-        func: &IrFunction,
-    ) -> FunctionValue<'ctx> {
-        if let Some(existing) = self.module.get_function(&func.name) {
-            return existing;
-        }
-        let param_types: FVec<BasicMetadataTypeEnum> = func
-            .params
-            .iter()
-            .map(|(_, ty)| self.as_llvm_type(ty).into())
-            .collect();
-        let func_type = if func.return_type == ast::Type::Void {
-            self.context.void_type().fn_type(&param_types, false)
-        } else {
-            self.as_llvm_type(&func.return_type).fn_type(&param_types, false)
-        };
-        self.module.add_function(&func.name, func_type, None)
     }
 }
 impl<'ctx> Backend for LlvmBackend<'ctx> {
@@ -1773,9 +929,6 @@ impl<'ctx> Backend for LlvmBackend<'ctx> {
             self.module.add_function(&ext.name, func_type, Some(Linkage::External));
         }
         for func in &ir.functions {
-            self.declare_function_signature(func);
-        }
-        for func in &ir.functions {
             self.compile_function(func)?;
         }
         if !self.config.is_lib {
@@ -1785,51 +938,65 @@ impl<'ctx> Backend for LlvmBackend<'ctx> {
                 ));
             }
         }
-        let output_obj = Path::new(output_path);
-        let ll_path = if self.config.emit_llvm {
-            output_obj.with_extension("ll")
-        } else {
-            std::env::temp_dir().join(format!("fuc_{}_tmp.ll", std::process::id()))
+        self.dibuilder.finalize();
+        let opt_level = match self.config.opt_level {
+            0 => OptimizationLevel::None,
+            1 => OptimizationLevel::Less,
+            2 => OptimizationLevel::Default,
+            _ => OptimizationLevel::Aggressive,
         };
-        self.module
-            .print_to_file(&ll_path)
-            .map_err(|e| CodegenError::LlvmError(
-                format!("Failed to write LLVM IR: {}", e.to_string()),
-            ))?;
-        // Strip debug metadata to avoid llc warnings from invalid debug info versions.
-        if let Ok(contents) = std::fs::read_to_string(&ll_path) {
-            let mut filtered = String::new();
-            for line in contents.lines() {
-                let trimmed = line.trim_start();
-                if trimmed.starts_with("!llvm.dbg.")
-                    || (trimmed.starts_with("!") && trimmed.contains("!DI"))
-                    || trimmed.contains("Debug Info Version")
-                {
-                    continue;
-                }
-                filtered.push_str(line);
-                filtered.push('\n');
-            }
-            let _ = std::fs::write(&ll_path, filtered);
+        if self.config.emit_llvm {
+            let ll_path = Path::new(output_path).with_extension("ll");
+            self.module
+                .print_to_file(&ll_path)
+                .map_err(|e| CodegenError::LlvmError(e.to_string()))?;
         }
-        let mut llc = std::process::Command::new("llc");
-        llc.arg(format!("-O{}", self.config.opt_level.min(3)));
-        if let Some(triple_str) = self.config.target_triple.clone() {
-            llc.arg("-mtriple").arg(triple_str);
-        }
-        llc.arg("-filetype=obj").arg(&ll_path).arg("-o").arg(output_obj);
-        let status = llc.status()
+        Target::initialize_x86(&InitializationConfig::default());
+        let triple = if let Some(triple_str) = self.config.target_triple.clone() {
+            inkwell::targets::TargetTriple::create(&triple_str)
+        } else {
+            TargetMachine::get_default_triple()
+        };
+        let target = Target::from_triple(&triple)
             .map_err(|e| CodegenError::TargetError(
-                format!("Failed to launch llc: {}", e),
+                format!("Target '{}' not supported: {}", triple, e.to_string()),
             ))?;
-        if !status.success() {
-            return Err(CodegenError::TargetError(
-                format!("llc failed for {}", output_obj.display()),
-            ));
+        let target_machine = target
+            .create_target_machine(
+                &triple,
+                "generic",
+                "",
+                opt_level,
+                RelocMode::Static,
+                CodeModel::Default,
+            )
+            .ok_or_else(|| CodegenError::TargetError(
+                format!("Could not create target machine for {}", triple),
+            ))?;
+        self.module.set_data_layout(&target_machine.get_target_data().get_data_layout());
+        // Reduce PIE-related relocations in .text by aligning module flags with static/exec model.
+        self.module.add_basic_value_flag(
+            "PIE Level",
+            inkwell::module::FlagBehavior::Warning,
+            self.context.i32_type().const_int(0, false),
+        );
+        self.module.add_basic_value_flag(
+            "PIC Level",
+            inkwell::module::FlagBehavior::Warning,
+            self.context.i32_type().const_int(0, false),
+        );
+        if let Err(e) = self.module.verify() {
+            return Err(
+                CodegenError::LlvmError(
+                    format!("Module verification failed: {}", e.to_string()),
+                ),
+            );
         }
-        if !self.config.emit_llvm {
-            let _ = std::fs::remove_file(&ll_path);
-        }
+        target_machine
+            .write_to_file(&self.module, FileType::Object, Path::new(output_path))
+            .map_err(|e| CodegenError::LlvmError(
+                format!("Failed to write object file: {}", e.to_string()),
+            ))?;
         Ok(())
     }
 }

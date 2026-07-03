@@ -13,12 +13,9 @@ extern "C" {
 
 // Keypair and Signature structure
 // WEAVE_SIG_N = 16 quaternions
-// Public key: 32 bytes hash + 64 bytes seed = 96 bytes
-// Secret key: 256 bytes quaternion vector = 256 bytes (padded to 192 for alignment)
-// Signature: 32 bytes R + 256 bytes response = 288 bytes
 #define WEAVE_SIG_PUBLIC_KEY_SIZE 96
 #define WEAVE_SIG_SECRET_KEY_SIZE 192
-#define WEAVE_SIG_SIGNATURE_SIZE 288
+#define WEAVE_SIG_SIGNATURE_SIZE 96
 
 typedef struct {
   unsigned char public_key[WEAVE_SIG_PUBLIC_KEY_SIZE];

@@ -1,59 +1,67 @@
-// stdlib/http.fu
-// HTTP Server & Client
+// stdlib/http.fu - HTTP server and client for Fusion
 
-use std::net;
-use std::log;
+extern fn fusion_int_to_string(n: int) -> string;
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_str_starts_with(s: string, prefix: string) -> bool;
+extern fn fusion_str_substring(s: string, start: int, end_pos: int) -> string;
+extern fn fusion_str_concat(a: string, b: string) -> string;
+extern fn fusion_str_concat3(a: string, b: string, c: string) -> string;
+extern fn fusion_str_concat4(a: string, b: string, c: string, d: string) -> string;
 
-class Request {
-    method: string;
-    path: string;
-    body: string;
+struct HttpRequest {
+    method: string,
+    path: string,
 }
 
-class Response {
-    status: int;
-    body: string;
-
-    fn new(status: int, body: string) -> Response {
-        return Response { status: status, body: body };
+impl HttpRequest {
+    fn new(method: string, path: string) -> HttpRequest {
+        return HttpRequest { method: method, path: path };
     }
-
-    fn to_string(self) -> string {
-        let header = "HTTP/1.1 " + self.status.to_string() + " OK\r\n";
-        let len = "Content-Length: " + self.body.len().to_string() + "\r\n";
-        let end = "\r\n";
-        return header + len + end + self.body;
+    fn get(path: string) -> HttpRequest {
+        return HttpRequest { method: "GET", path: path };
     }
-}
-
-class SimpleServer {
-    port: int;
-    socket: net::UdpSocket; // Should be TcpListener, mocking with what we have
-    
-    fn new(port: int) -> SimpleServer {
-        return SimpleServer { port: port, socket: net::UdpSocket::bind("0.0.0.0:" + port.to_string()) };
-    }
-
-    fn handle_request(req_str: string) -> Response {
-        // Parse GET /path HTTP/1.1
-        if req_str.starts_with("GET / ") {
-            return Response::new(200, "Welcome to Fusion Server");
-        }
-        return Response::new(404, "Not Found");
-    }
-
-    fn serve(mut self) {
-        log::info("Starting HTTP server on port " + self.port.to_string());
-        loop {
-            // let (socket, addr) = self.listener.accept();
-            // let req = socket.read();
-            // let res = self.handle_request(req);
-            // socket.write(res.to_string());
-        }
+    fn post(path: string) -> HttpRequest {
+        return HttpRequest { method: "POST", path: path };
     }
 }
 
-fn get(url: string) -> string {
-    // Utility wrapper around net::TcpStream
-    return "";
+struct HttpResponse {
+    status: int,
+    body: string,
+}
+
+impl HttpResponse {
+    fn new(status: int, body: string) -> HttpResponse {
+        return HttpResponse { status: status, body: body };
+    }
+    fn ok(body: string) -> HttpResponse {
+        return HttpResponse { status: 200, body: body };
+    }
+    fn not_found() -> HttpResponse {
+        return HttpResponse { status: 404, body: "Not Found" };
+    }
+    fn to_string(resp: HttpResponse) -> string {
+        let status_str: string = fusion_int_to_string(resp.status);
+        let len_str: string = fusion_int_to_string(fusion_strlen(resp.body));
+        let line1: string = fusion_str_concat3("HTTP/1.1 ", status_str, " OK\r\n");
+        let line2: string = fusion_str_concat3("Content-Length: ", len_str, "\r\n");
+        let headers: string = fusion_str_concat(line1, line2);
+        let hdr_end: string = fusion_str_concat(headers, "\r\n");
+        return fusion_str_concat(hdr_end, resp.body);
+    }
+}
+
+fn http_parse_method(raw: string) -> string {
+    if fusion_str_starts_with(raw, "GET ") { return "GET"; }
+    if fusion_str_starts_with(raw, "POST ") { return "POST"; }
+    if fusion_str_starts_with(raw, "PUT ") { return "PUT"; }
+    if fusion_str_starts_with(raw, "DELETE ") { return "DELETE"; }
+    return "UNKNOWN";
+}
+
+fn http_parse_path(raw: string) -> string {
+    let method: string = http_parse_method(raw);
+    let skip: int = fusion_strlen(method) + 1;
+    let rest: string = fusion_str_substring(raw, skip, fusion_strlen(raw));
+    return fusion_str_substring(rest, 0, fusion_strlen(rest));
 }

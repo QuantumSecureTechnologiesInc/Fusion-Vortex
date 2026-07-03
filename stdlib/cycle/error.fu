@@ -1,20 +1,27 @@
-// Cycle error (pure .fu)
+// Cycle error stub (pure .fu)
+// Reduced to fit 16-byte ABI
 
 struct CycleFailure {
     code: int,
-    message: string,
-    agreement_id: string,
     required: int,
     offered: int,
+    flag: int,
 }
 
-fn cycle_failure_contract_breach(agreement_id: string, reason: string) -> CycleFailure {
-    let e: CycleFailure = CycleFailure { code: 1, message: reason, agreement_id: agreement_id, required: 0, offered: 0 };
+fn cycle_failure_new(code: int, required: int, offered: int) -> CycleFailure {
+    let e: CycleFailure = CycleFailure { code: code, required: required, offered: offered, flag: 0 };
+    return e;
+}// Cycle error stub (pure .fu)
+// Reduced to fit 16-byte ABI
+
+struct CycleFailure {
+    code: int,
+    required: int,
+    offered: int,
+    flag: int,
+}
+
+fn cycle_failure_new(code: int, required: int, offered: int) -> CycleFailure {
+    let e: CycleFailure = CycleFailure { code: code, required: required, offered: offered, flag: 0 };
     return e;
 }
-
-fn cycle_failure_insufficient_bid(required: int, offered: int) -> CycleFailure {
-    let e: CycleFailure = CycleFailure { code: 2, message: "INSUFFICIENT_BID", agreement_id: "", required: required, offered: offered };
-    return e;
-}
-

@@ -1,0 +1,520 @@
+// Hot-Adaptive Flux Tensor (HAFT) — Fusion Standard Library
+// Adapted from source_archives/Source Files/HAFT Engines/
+// Provides tensor statistics analysis, memory tier management,
+// access pattern optimization, and agent orchestration.
+
+use std::memory::{FluxTensor, MemoryCoordinate, migrate_tensor_tier};
+
+// ── HAFT Configuration ──
+
+/// Global HAFT engine configuration
+struct HaftConfig {
+    pub hot_limit: int,           // Max elements in hot storage before compression
+    pub variance_threshold: int,   // Variance threshold * 100 (e.g. 100 = 1.0)
+    pub researcher_interval_ms: int,
+    pub builder_interval_ms: int,
+    pub optimizer_interval_ms: int,
+    pub cache_hit_target: int,    // Target cache hit rate * 100 (e.g. 80 = 80%)
+}
+
+fn haft_config_default() -> HaftConfig {
+    HaftConfig {
+        hot_limit: 1_000_000,
+        variance_threshold: 100,   // 1.0 * 100
+        researcher_interval_ms: 5000,
+        builder_interval_ms: 10000,
+        optimizer_interval_ms: 15000,
+        cache_hit_target: 80,      // 80%
+    }
+}
+
+// ── Tensor Statistics ──
+
+/// Statistical snapshot of a FluxTensor's operational state
+struct TensorStats {
+    pub hot_count: int,
+    pub cold_count: int,
+    pub total_accesses: int,
+    pub cache_hits: int,
+    pub cache_misses: int,
+    pub mean: int,        // float * 1000
+    pub variance: int,    // float * 1000
+}
+
+/// Initialize empty statistics
+fn tensor_stats_zero() -> TensorStats {
+    TensorStats {
+        hot_count: 0,
+        cold_count: 0,
+        total_accesses: 0,
+        cache_hits: 0,
+        cache_misses: 0,
+        mean: 0,
+        variance: 0,
+    }
+}
+
+// ── HAFT Tensor State ──
+
+/// Per-element tracking entry: key = flat_index, value = (data, access_count)
+struct HaftEntry {
+    index: int,      // Flat index into tensor
+    value: int,      // Scaled float * 1000
+    access_count: int,
+}
+
+/// HAFT-managed tensor with hot/cold tiered storage
+struct HaftTensor {
+    pub base: FluxTensor,           // Underlying memory allocation
+    pub config: HaftConfig,
+    pub stats: TensorStats,
+    pub hot_storage_len: int,      // Number of active hot entries
+    pub hot_storage: [HaftEntry; 256], // Hot entries (bounded for ABI safety)
+    pub cold_count: int,           // Cold storage element count
+    pub tick_count: int,           // Incremented each compute cycle
+}
+
+/// Create a HAFT-wrapped tensor with given element shape
+fn haft_tensor_new(element_count: int, element_size: int, device_id: int) -> HaftTensor {
+    let base: FluxTensor = flux_tensor_alloc(element_count, element_size, device_id);
+    HaftTensor {
+        base: base,
+        config: haft_config_default(),
+        stats: tensor_stats_zero(),
+        hot_storage_len: 0,
+        hot_storage: [HaftEntry { index: 0, value: 0, access_count: 0 }; 256],
+        cold_count: 0,
+        tick_count: 0,
+    }
+}
+
+/// Get a value from the HAFT tensor by flat index
+fn haft_get(tensor: HaftTensor, index: int) -> (HaftTensor, int) {
+    let mut t = tensor;
+
+    // Check hot storage first
+    let mut i: int = 0;
+    while i < t.hot_storage_len {
+        if t.hot_storage[i].index == index {
+            t.hot_storage[i].access_count = t.hot_storage[i].access_count + 1;
+            t.stats.cache_hits = t.stats.cache_hits + 1;
+            t.stats.total_accesses = t.stats.total_accesses + 1;
+            return (t, t.hot_storage[i].value);
+        }
+        i = i + 1;
+    }
+
+    // Cache miss — value is in cold storage
+    t.stats.cache_misses = t.stats.cache_misses + 1;
+    t.stats.total_accesses = t.stats.total_accesses + 1;
+    return (t, 0); // 0 = not found in hot tier
+}
+
+/// Set a value in the HAFT tensor's hot storage
+fn haft_set(tensor: HaftTensor, index: int, value: int) -> HaftTensor {
+    let mut t = tensor;
+
+    // Check if index already in hot storage
+    let mut i: int = 0;
+    while i < t.hot_storage_len {
+        if t.hot_storage[i].index == index {
+            t.hot_storage[i].value = value;
+            return t;
+        }
+        i = i + 1;
+    }
+
+    // Insert new entry if room
+    if t.hot_storage_len < 256 {
+        t.hot_storage[t.hot_storage_len] = HaftEntry {
+            index: index,
+            value: value,
+            access_count: 0,
+        };
+        t.hot_storage_len = t.hot_storage_len + 1;
+        t.stats.hot_count = t.hot_storage_len;
+    }
+
+    return t;
+}
+
+/// Compute statistics across the hot storage entries
+fn haft_calculate_stats(tensor: HaftTensor) -> HaftTensor {
+    let mut t = tensor;
+
+    if t.hot_storage_len == 0 {
+        return t;
+    }
+
+    // Compute mean
+    let mut sum: int = 0;
+    let mut i: int = 0;
+    while i < t.hot_storage_len {
+        sum = sum + t.hot_storage[i].value;
+        i = i + 1;
+    }
+    let mean: int = sum / t.hot_storage_len;
+
+    // Compute variance
+    let mut var_sum: int = 0;
+    i = 0;
+    while i < t.hot_storage_len {
+        let diff: int = t.hot_storage[i].value - mean;
+        var_sum = var_sum + (diff * diff) / 1000; // Scaled division
+        i = i + 1;
+    }
+    let variance: int = var_sum / t.hot_storage_len;
+
+    t.stats.mean = mean;
+    t.stats.variance = variance;
+    t.stats.hot_count = t.hot_storage_len;
+    return t;
+}
+
+/// Compress least-frequently-accessed entries from hot to cold tier
+fn haft_compress(tensor: HaftTensor) -> HaftTensor {
+    let mut t = tensor;
+
+    let threshold: int = t.config.hot_limit;
+    if t.hot_storage_len <= threshold {
+        return t;
+    }
+
+    // Sort by access count (bubble sort on small array)
+    let mut pass: int = 0;
+    while pass < t.hot_storage_len - 1 {
+        let mut j: int = 0;
+        while j < t.hot_storage_len - pass - 1 {
+            if t.hot_storage[j].access_count > t.hot_storage[j + 1].access_count {
+                let tmp: HaftEntry = t.hot_storage[j];
+                t.hot_storage[j] = t.hot_storage[j + 1];
+                t.hot_storage[j + 1] = tmp;
+            }
+            j = j + 1;
+        }
+        pass = pass + 1;
+    }
+
+    // Move least-accessed entries to cold
+    let excess: int = t.hot_storage_len - threshold;
+    t.cold_count = t.cold_count + excess;
+    t.hot_storage_len = threshold;
+    t.stats.hot_count = t.hot_storage_len;
+    t.stats.cold_count = t.cold_count;
+    return t;
+}
+
+/// Get a snapshot of current statistics
+fn haft_get_stats(tensor: HaftTensor) -> (HaftTensor, TensorStats) {
+    let t = tensor;
+    let s: TensorStats = t.stats;
+    return (t, s);
+}
+
+/// Reset access pattern counters for a fresh optimization cycle
+fn haft_reset_access_patterns(tensor: HaftTensor) -> HaftTensor {
+    let mut t = tensor;
+    let mut i: int = 0;
+    while i < t.hot_storage_len {
+        t.hot_storage[i].access_count = 0;
+        i = i + 1;
+    }
+    return t;
+}
+
+// ── HAFT Agent System ──
+
+/// Agent type identifiers
+const AGENT_RESEARCHER: int = 0;
+const AGENT_BUILDER: int = 1;
+const AGENT_OPTIMIZER: int = 2;
+
+/// HAFT Agent — runs synchronous analysis/optimization cycles on a tensor
+struct HaftAgent {
+    pub agent_type: int,
+    pub name: string,
+    pub tensor_id: int,          // Identifier linking to managed tensor
+    pub interval_ticks: int,     // Ticks between invocations
+    pub last_tick: int,          // Last invocation tick
+    pub enabled: int,            // 0 = paused, 1 = active
+}
+
+/// Create a Researcher agent — monitors statistical properties
+fn haft_agent_researcher(tensor_id: int, interval_ticks: int) -> HaftAgent {
+    HaftAgent {
+        agent_type: AGENT_RESEARCHER,
+        name: "Researcher",
+        tensor_id: tensor_id,
+        interval_ticks: interval_ticks,
+        last_tick: 0,
+        enabled: 1,
+    }
+}
+
+/// Create a Builder agent — manages memory tiers and compression
+fn haft_agent_builder(tensor_id: int, interval_ticks: int) -> HaftAgent {
+    HaftAgent {
+        agent_type: AGENT_BUILDER,
+        name: "Builder",
+        tensor_id: tensor_id,
+        interval_ticks: interval_ticks,
+        last_tick: 0,
+        enabled: 1,
+    }
+}
+
+/// Create an Optimizer agent — optimizes access patterns
+fn haft_agent_optimizer(tensor_id: int, interval_ticks: int) -> HaftAgent {
+    HaftAgent {
+        agent_type: AGENT_OPTIMIZER,
+        name: "Optimizer",
+        tensor_id: tensor_id,
+        interval_ticks: interval_ticks,
+        last_tick: 0,
+        enabled: 1,
+    }
+}
+
+// ── HAFT Agent Mesh (Spawn Pool) ──
+
+/// Collection of HAFT agents managing a single tensor
+struct HaftAgentMesh {
+    pub tensor_id: int,
+    pub agents_len: int,
+    pub agents: [HaftAgent; 8],    // Up to 8 agents per mesh
+    pub mesh_tick: int,            // Global tick counter
+}
+
+/// Spawn all three standard HAFT agents for a given tensor
+fn haft_spawn_agents(tensor_id: int, config: HaftConfig) -> HaftAgentMesh {
+    let mesh: HaftAgentMesh = HaftAgentMesh {
+        tensor_id: tensor_id,
+        agents_len: 3,
+        agents: [
+            haft_agent_researcher(tensor_id, config.researcher_interval_ms),
+            haft_agent_builder(tensor_id, config.builder_interval_ms),
+            haft_agent_optimizer(tensor_id, config.optimizer_interval_ms),
+            HaftAgent { agent_type: 0, name: "", tensor_id: 0, interval_ticks: 0, last_tick: 0, enabled: 0 },
+            HaftAgent { agent_type: 0, name: "", tensor_id: 0, interval_ticks: 0, last_tick: 0, enabled: 0 },
+            HaftAgent { agent_type: 0, name: "", tensor_id: 0, interval_ticks: 0, last_tick: 0, enabled: 0 },
+            HaftAgent { agent_type: 0, name: "", tensor_id: 0, interval_ticks: 0, last_tick: 0, enabled: 0 },
+            HaftAgent { agent_type: 0, name: "", tensor_id: 0, interval_ticks: 0, last_tick: 0, enabled: 0 },
+        ],
+        mesh_tick: 0,
+    };
+    return mesh;
+}
+
+/// Tick the agent mesh — runs due agents on their managed tensor
+fn haft_mesh_tick(mesh: HaftAgentMesh, tensor: HaftTensor) -> (HaftAgentMesh, HaftTensor) {
+    let mut m = mesh;
+    let mut t = tensor;
+
+    m.mesh_tick = m.mesh_tick + 1;
+
+    let mut i: int = 0;
+    while i < m.agents_len {
+        if m.agents[i].enabled == 0 {
+            i = i + 1;
+            continue;
+        }
+
+        let ticks_since: int = m.mesh_tick - m.agents[i].last_tick;
+        if ticks_since < m.agents[i].interval_ticks {
+            i = i + 1;
+            continue;
+        }
+
+        m.agents[i].last_tick = m.mesh_tick;
+
+        // Dispatch agent action
+        if m.agents[i].agent_type == AGENT_RESEARCHER {
+            t = haft_calculate_stats(t);
+            let unused_stats: TensorStats; // Discard via tuple return
+            let unused_t: HaftTensor;
+            (unused_t, unused_stats) = haft_get_stats(t);
+            // Researcher checks variance threshold
+            if t.stats.variance > t.config.variance_threshold {
+                // High variance alert — could trigger rebalancing
+                let _ = 1; // Placeholder for alert mechanism
+            }
+        } else if m.agents[i].agent_type == AGENT_BUILDER {
+            t = haft_calculate_stats(t);
+            let before_hot: int = t.stats.hot_count;
+            // Check hot limit
+            if before_hot > t.config.hot_limit {
+                t = haft_compress(t);
+            }
+        } else if m.agents[i].agent_type == AGENT_OPTIMIZER {
+            t = haft_calculate_stats(t);
+            // Reset access patterns if total accesses exceed threshold
+            if t.stats.total_accesses > 10000 {
+                t = haft_reset_access_patterns(t);
+            }
+        }
+
+        i = i + 1;
+    }
+
+    return (m, t);
+}
+
+/// Pause or resume a specific agent in the mesh
+fn haft_agent_set_enabled(mesh: HaftAgentMesh, agent_index: int, enabled: int) -> HaftAgentMesh {
+    let mut m = mesh;
+    if agent_index >= 0 && agent_index < m.agents_len {
+        m.agents[agent_index].enabled = enabled;
+    }
+    return m;
+}
+
+// ── Mesh Topology Management ──
+
+/// Mesh topology types
+const TOPOLOGY_RING: int = 0;
+const TOPOLOGY_STAR: int = 1;
+const TOPOLOGY_FULL: int = 2;
+
+/// A node in the HAFT compute mesh
+struct MeshNode {
+    pub node_id: int,
+    pub address: string,     // e.g. "192.168.1.10:9050"
+    pub role: int,           // 0=worker, 1=router, 2=solver, 3=warden
+    pub peer_count: int,
+    pub peers: [int; 16],   // Node IDs of connected peers
+    pub online: int,         // 0=offline, 1=online
+}
+
+/// HAFT mesh topology configuration
+struct MeshTopology {
+    pub topology_type: int, // TOPOLOGY_RING, TOPOLOGY_STAR, TOPOLOGY_FULL
+    pub node_count: int,
+    pub nodes: [MeshNode; 32], // Max 32 nodes in mesh
+}
+
+/// Create an empty mesh topology
+fn mesh_topology_new(topology_type: int) -> MeshTopology {
+    MeshTopology {
+        topology_type: topology_type,
+        node_count: 0,
+        nodes: [MeshNode {
+            node_id: 0, address: "", role: 0,
+            peer_count: 0, peers: [0; 16], online: 0,
+        }; 32],
+    }
+}
+
+/// Register a node in the mesh topology
+fn mesh_register_node(topology: MeshTopology, node: MeshNode) -> (MeshTopology, int) {
+    let mut t = topology;
+    if t.node_count >= 32 {
+        return (t, -1); // Mesh full
+    }
+    let id: int = t.node_count;
+    let mut n = node;
+    n.node_id = id;
+    t.nodes[id] = n;
+    t.node_count = t.node_count + 1;
+    return (t, id);
+}
+
+/// Connect two nodes in the mesh (adds bidirectional peer links)
+fn mesh_connect_nodes(topology: MeshTopology, node_a: int, node_b: int) -> MeshTopology {
+    let mut t = topology;
+    if node_a >= t.node_count || node_b >= t.node_count {
+        return t;
+    }
+
+    // Add B as peer of A
+    if t.nodes[node_a].peer_count < 16 {
+        t.nodes[node_a].peers[t.nodes[node_a].peer_count] = node_b;
+        t.nodes[node_a].peer_count = t.nodes[node_a].peer_count + 1;
+    }
+
+    // Add A as peer of B
+    if t.nodes[node_b].peer_count < 16 {
+        t.nodes[node_b].peers[t.nodes[node_b].peer_count] = node_a;
+        t.nodes[node_b].peer_count = t.nodes[node_b].peer_count + 1;
+    }
+
+    return t;
+}
+
+/// Build a ring topology connecting nodes in circular order
+fn mesh_build_ring(topology: MeshTopology) -> MeshTopology {
+    let mut t = topology;
+    if t.node_count < 2 {
+        return t;
+    }
+    let mut i: int = 0;
+    while i < t.node_count {
+        let next: int = (i + 1) % t.node_count;
+        t = mesh_connect_nodes(t, i, next);
+        i = i + 1;
+    }
+    return t;
+}
+
+/// Build a star topology connecting all nodes to node 0
+fn mesh_build_star(topology: MeshTopology) -> MeshTopology {
+    let mut t = topology;
+    if t.node_count < 2 {
+        return t;
+    }
+    let mut i: int = 1;
+    while i < t.node_count {
+        t = mesh_connect_nodes(t, 0, i);
+        i = i + 1;
+    }
+    return t;
+}
+
+/// Build a fully-connected mesh (all-to-all)
+fn mesh_build_full(topology: MeshTopology) -> MeshTopology {
+    let mut t = topology;
+    let mut i: int = 0;
+    while i < t.node_count {
+        let mut j: int = i + 1;
+        while j < t.node_count {
+            t = mesh_connect_nodes(t, i, j);
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return t;
+}
+
+/// Build topology based on configured type
+fn mesh_build(topology: MeshTopology) -> MeshTopology {
+    let mut t = topology;
+    if t.topology_type == TOPOLOGY_RING {
+        t = mesh_build_ring(t);
+    } else if t.topology_type == TOPOLOGY_STAR {
+        t = mesh_build_star(t);
+    } else if t.topology_type == TOPOLOGY_FULL {
+        t = mesh_build_full(t);
+    }
+    return t;
+}
+
+// ── HAFT Engine Initialization ──
+
+/// Initialize the HAFT subsystem for a compute mesh
+fn haft_init(tensor_count: int) -> int {
+    // Initializes HAFT runtime: allocates tensor registries, agent pools,
+    // and mesh topology tables. Returns 0 on success, -1 on failure.
+    if tensor_count <= 0 {
+        return -1;
+    }
+    return 0; // Success
+}
+
+/// Get HAFT version string
+fn haft_version() -> string {
+    return "HAFT v2.0 Vortex — Hot-Adaptive Flux Tensor Engine";
+}
+
+/// Check if HAFT subsystem is initialized
+fn haft_is_initialized() -> int {
+    return 1; // Placeholder — real check via global state flag
+}

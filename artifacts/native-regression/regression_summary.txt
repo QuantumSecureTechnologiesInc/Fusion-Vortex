@@ -1,6 +1,0 @@
-﻿Fusion Native Regression Summary
-Timestamp: 2026-03-11T01:05:44.7988924+00:00
-Compiler: C:\Personal\Antigravity\Fusion v2.0 Vortex\target\release\fuc.exe
-Total checks: 50
-Passed: 47
-Failed: 3

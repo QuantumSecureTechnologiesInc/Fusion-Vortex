@@ -1,8 +1,12 @@
+> **Phase 0 audit (2026-06-25):** This index predates the repo restructure.
+> Many referenced paths (e.g. `dist/`, `Source Files/`, `antigravity/`) no longer exist.
+> Feature status claims have not been re-validated.
+
 # Fusion v2.0 Vortex Documentation Index
 
 **Version**: v0.2.0-beta.1 (Bridge Connected)
-**Last Updated**: January 28, 2026
-**Status**: Production Ready – Vortex Engine Active
+**Last Updated**: June 25, 2026 (audit revision)
+**Status**: Pre-build — not yet production-validated
 
 ---
 
@@ -120,4 +124,4 @@ Security architecture, threat models, and cryptographic implementation details.
 
 **Maintained by**: Fusion v2.0 Vortex Team
 **Documentation Version**: 2.0.0
-**Last Review**: January 28, 2026
+**Last Review**: June 25, 2026 (Phase 0 audit revision)

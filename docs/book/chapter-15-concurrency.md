@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 15: Fearless Concurrency
 
 Concurrency is the ability for different parts of a program to execute out-of-order or in partial order, without affecting the final outcome. Parallelism is the ability to execute these parts at the same time (e.g., on multi-core processors).

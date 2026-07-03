@@ -5,13 +5,13 @@ A release is approved only if all gates pass:
 ## Build Gates
 
 1. `./install.sh` completes successfully.
-2. `dist/lib/fusion/std/src` contains only `lib.fu` and `main.fu`.
+2. `dist/lib/fusion/std/src` contains only `lib.fu` and `main.fu`. *(dist/ not yet built)*
 3. `fusion build` uses sysroot only (no Fusion.toml).
 
 ## Security Gates
 
 1. No `unsafe` blocks in `.fu` sources.
-2. No `.rs` or `.fu` shipped in `dist/` (stdlib + core runtime + HAFT nodes).
+2. No `.rs` or `.fu` shipped in `dist/` (stdlib + core runtime + HAFT nodes). *(dist/ not yet built)*
 3. Interop assets are only in `toolchain/interop` and are not linked unless wrapped.
 
 ## Compiler Correctness Gates

@@ -1,13 +1,12 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FSize = FSize;
-#[allow(missing_docs, dead_code)]
-type FVec<T> = FVec<T>;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FSize = usize;
+#[allow(missing_docs, dead_code)] type FVec<T> = Vec<T>;
+// __FU_COMPAT_END__
 use thiserror::Error;
 #[derive(Error, Debug)]
-enum FusionError {
+pub enum FusionError {
     #[error("Fusion error: {0}")]
     Generic(FString),
     #[error("Shape error: {0}")]
@@ -29,4 +28,4 @@ enum FusionError {
     #[error("Unknown variable: {0}")]
     UnknownVariable(FString),
 }
-type FusionResult<T> = Result<T, FusionError>;
+pub type FusionResult<T> = Result<T, FusionError>;

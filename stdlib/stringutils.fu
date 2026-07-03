@@ -1,149 +1,166 @@
-// StringUtils - Common string manipulation utilities
+// stdlib/stringutils.fu - String manipulation utilities for Fusion
+// All functions work on the built-in string type using runtime helpers.
 
-class StringUtils {
-    // Compare two strings for equality (returns 1 if equal, 0 if not)
-    fn equals(s1: int, s2: int) -> int {
-        let len1 = strlen(s1);
-        let len2 = strlen(s2);
-        
-        if (len1 != len2) {
-            return 0;
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+extern fn fusion_strcpy(src: string) -> int;
+extern fn fusion_ptr_read_byte(ptr: int, offset: int) -> int;
+extern fn fusion_ptr_write_byte(ptr: int, offset: int, val: int) -> void;
+extern fn fusion_malloc(size: int) -> int;
+extern fn fusion_free(ptr: int) -> void;
+extern fn fusion_str_starts_with(s: string, prefix: string) -> bool;
+extern fn fusion_str_ends_with(s: string, suffix: string) -> bool;
+extern fn fusion_str_replace(s: string, from: string, to_str: string) -> string;
+extern fn fusion_str_substring(s: string, start: int, end_pos: int) -> string;
+extern fn fusion_str_trim(s: string) -> string;
+extern fn fusion_str_repeat(ch: int, count: int) -> string;
+extern fn fusion_strdup(s: string) -> string;
+
+// ============================================================
+// Comparison
+// ============================================================
+fn str_equals(s1: string, s2: string) -> bool {
+    return fusion_strcmp(s1, s2) == 0;
+}
+
+fn str_starts_with(s: string, prefix: string) -> bool {
+    return fusion_str_starts_with(s, prefix);
+}
+
+fn str_ends_with(s: string, suffix: string) -> bool {
+    return fusion_str_ends_with(s, suffix);
+}
+
+// ============================================================
+// Search
+// ============================================================
+fn str_index_of(s: string, ch: int) -> int {
+    let p: int = fusion_strcpy(s);
+    if p == 0 { return -1; }
+    let n: int = fusion_strlen(s);
+    let i: int = 0;
+    let result: int = -1;
+    while i < n {
+        let c: int = fusion_ptr_read_byte(p, i);
+        if c == ch {
+            result = i;
+            i = n;
         }
-        
-        let mut i = 0;
-        while (i < len1) {
-            let c1 = ptr_read::<int>(s1, i);
-            let c2 = ptr_read::<int>(s2, i);
-            if (c1 != c2) {
-                return 0;
-            }
-            i = i + 1;
-        }
-        
-        return 1;
+        i = i + 1;
     }
-    
-    // Concatenate two strings and return new allocation
-    fn concat(s1: int, s2: int) -> int {
-        let len1 = strlen(s1);
-        let len2 = strlen(s2);
-        let total_len = len1 + len2;
-        
-        let result = malloc(total_len + 1);
-        memcpy(result, s1, len1);
-        memcpy(ptr_add(result, len1), s2, len2 + 1);  // +1 for null terminator
-        
-        return result;
-    }
-    
-    // Check if string starts with prefix (returns 1 if yes, 0 if no)
-    fn starts_with(s: int, prefix: int) -> int {
-        let s_len = strlen(s);
-        let prefix_len = strlen(prefix);
-        
-        if (prefix_len > s_len) {
-            return 0;
+    fusion_free(p);
+    return result;
+}
+
+fn str_last_index_of(s: string, ch: int) -> int {
+    let p: int = fusion_strcpy(s);
+    if p == 0 { return -1; }
+    let n: int = fusion_strlen(s);
+    let i: int = n - 1;
+    let result: int = -1;
+    while i >= 0 {
+        let c: int = fusion_ptr_read_byte(p, i);
+        if c == ch {
+            result = i;
+            i = -1;
         }
-        
-        let mut i = 0;
-        while (i < prefix_len) {
-            let c1 = ptr_read::<int>(s, i);
-            let c2 = ptr_read::<int>(prefix, i);
-            if (c1 != c2) {
-                return 0;
-            }
-            i = i + 1;
-        }
-        
-        return 1;
+        i = i - 1;
     }
-    
-    // Check if string ends with suffix (returns 1 if yes, 0 if no)
-    fn ends_with(s: int, suffix: int) -> int {
-        let s_len = strlen(s);
-        let suffix_len = strlen(suffix);
-        
-        if (suffix_len > s_len) {
-            return 0;
-        }
-        
-        let offset = s_len - suffix_len;
-        let mut i = 0;
-        while (i < suffix_len) {
-            let c1 = ptr_read::<int>(ptr_add(s, offset + i), 0);
-            let c2 = ptr_read::<int>(ptr_add(suffix, i), 0);
-            if (c1 != c2) {
-                return 0;
-            }
-            i = i + 1;
-        }
-        
-        return 1;
-    }
-    
-    // Find first occurrence of character in string
-    fn index_of_char(s: int, ch: int) -> int {
-        let len = strlen(s);
-        let mut i = 0;
-        while (i < len) {
-            let c = ptr_read::<int>(s, i);
-            if (c == ch) {
-                return i;
-            }
-            i = i + 1;
-        }
-        return -1;  // Not found
-    }
-    
-    // Duplicate a string
-    fn duplicate(s: int) -> int {
-        let len = strlen(s);
-        let result = malloc(len + 1);
-        memcpy(result, s, len + 1);
-        return result;
-    }
-    
-    // Convert string to uppercase (ASCII only)
-    fn to_uppercase(s: int) -> int {
-        let len = strlen(s);
-        let result = malloc(len + 1);
-        
-        let mut i = 0;
-        while (i < len) {
-            let c = ptr_read::<int>(s, i);
-            // If lowercase letter (97-122 = 'a'-'z'), convert to uppercase
-            if (c >= 97 && c <= 122) {
-                ptr_write::<int>(result, i, c - 32);
+    fusion_free(p);
+    return result;
+}
+
+// ============================================================
+// Case conversion (ASCII only)
+// ============================================================
+fn str_to_uppercase(s: string) -> string {
+    let p: int = fusion_strcpy(s);
+    if p == 0 { return ""; }
+    let n: int = fusion_strlen(s);
+    let result: int = fusion_malloc(n + 1);
+    let i: int = 0;
+    while i < n {
+        let c: int = fusion_ptr_read_byte(p, i);
+        if c >= 97 {
+            if c <= 122 {
+                fusion_ptr_write_byte(result, i, c - 32);
             } else {
-                ptr_write::<int>(result, i, c);
+                fusion_ptr_write_byte(result, i, c);
             }
-            i = i + 1;
+        } else {
+            fusion_ptr_write_byte(result, i, c);
         }
-        
-        // Null terminate
-        ptr_write::<int>(result, len, 0);
-        return result;
+        i = i + 1;
     }
-    
-    // Convert string to lowercase (ASCII only)
-    fn to_lowercase(s: int) -> int {
-        let len = strlen(s);
-        let result = malloc(len + 1);
-        
-        let mut i = 0;
-        while (i < len) {
-            let c = ptr_read::<int>(s, i);
-            // If uppercase letter (65-90 = 'A'-'Z'), convert to lowercase
-            if (c >= 65 && c <= 90) {
-                ptr_write::<int>(result, i, c + 32);
+    fusion_ptr_write_byte(result, n, 0);
+    let out: string = fusion_strdup(result);
+    fusion_free(result);
+    fusion_free(p);
+    return out;
+}
+
+fn str_to_lowercase(s: string) -> string {
+    let p: int = fusion_strcpy(s);
+    if p == 0 { return ""; }
+    let n: int = fusion_strlen(s);
+    let result: int = fusion_malloc(n + 1);
+    let i: int = 0;
+    while i < n {
+        let c: int = fusion_ptr_read_byte(p, i);
+        if c >= 65 {
+            if c <= 90 {
+                fusion_ptr_write_byte(result, i, c + 32);
             } else {
-                ptr_write::<int>(result, i, c);
+                fusion_ptr_write_byte(result, i, c);
             }
-            i = i + 1;
+        } else {
+            fusion_ptr_write_byte(result, i, c);
         }
-        
-        // Null terminate
-        ptr_write::<int>(result, len, 0);
-        return result;
+        i = i + 1;
     }
+    fusion_ptr_write_byte(result, n, 0);
+    let out: string = fusion_strdup(result);
+    fusion_free(result);
+    fusion_free(p);
+    return out;
+}
+
+// ============================================================
+// Transform
+// ============================================================
+fn str_trim(s: string) -> string {
+    return fusion_str_trim(s);
+}
+
+fn str_substring(s: string, start: int, end_pos: int) -> string {
+    return fusion_str_substring(s, start, end_pos);
+}
+
+fn str_replace(s: string, from: string, to_str: string) -> string {
+    return fusion_str_replace(s, from, to_str);
+}
+
+fn str_repeat(ch: int, count: int) -> string {
+    return fusion_str_repeat(ch, count);
+}
+
+// ============================================================
+// Character classification
+// ============================================================
+fn str_is_digit(ch: int) -> bool {
+    return ch >= 48 && ch <= 57;
+}
+
+fn str_is_alpha(ch: int) -> bool {
+    if ch >= 65 {
+        if ch <= 90 { return true; }
+    }
+    if ch >= 97 {
+        if ch <= 122 { return true; }
+    }
+    return false;
+}
+
+fn str_is_whitespace(ch: int) -> bool {
+    return ch == 32 || ch == 9 || ch == 10 || ch == 13;
 }

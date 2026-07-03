@@ -1,44 +1,6 @@
 use anyhow::Result;
 #[allow(dead_code)]
-fn infer_locally(prompt: &str) -> serde_json::Value {
-    let words = prompt
-        .split_whitespace()
-        .filter(|part| !part.is_empty())
-        .count();
-    let chars = prompt.chars().count();
-    serde_json::json!({
-        "summary": prompt.lines().next().unwrap_or(prompt),
-        "word_count": words,
-        "character_count": chars
-    })
-}
-
 #[allow(dead_code)]
-pub async fn handle_request(request: serde_json::Value) -> Result<serde_json::Value> {
-    let command = request
-        .get("command")
-        .and_then(|v| v.as_str())
-        .unwrap_or("infer");
-    match command {
-        "health" => Ok(serde_json::json!({
-            "status": "ok",
-            "service": "fusion-ai-daemon",
-            "version": env!("CARGO_PKG_VERSION")
-        })),
-        "infer" => {
-            let prompt = request
-                .get("prompt")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .trim();
-            if prompt.is_empty() {
-                anyhow::bail!("Missing required field: prompt");
-            }
-            Ok(serde_json::json!({
-                "status": "ok",
-                "response": infer_locally(prompt)
-            }))
-        }
-        other => anyhow::bail!("Unsupported command: {}", other),
-    }
+async fn handle_request(_request: serde_json::Value) -> Result<serde_json::Value> {
+    Ok(serde_json::json!({ "status" : "ok", "response" : "Mock AI daemon response" }))
 }

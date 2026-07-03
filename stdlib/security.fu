@@ -1,5 +1,7 @@
 // security context (pure .fu)
 
+extern fn strlen(s: string) -> int;
+
 struct FusionContext { classical_sig: string, pq_sig: string }
 
 fn fusion_ctx_new(classical: string, pq: string) -> FusionContext {
@@ -14,4 +16,3 @@ fn fusion_ctx_verify(ctx: FusionContext) -> bool {
     }
     return false;
 }
-

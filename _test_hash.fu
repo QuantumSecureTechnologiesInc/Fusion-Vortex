@@ -1,0 +1,23 @@
+extern fn fusion_hash32(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+
+fn hash_int(v: int) -> int {
+    return v * 2654435761;
+}
+
+fn hash_bool(v: bool) -> int {
+    if v { return 1; }
+    return 0;
+}
+
+fn hash_string(s: string) -> int {
+    return fusion_hash32(s);
+}
+
+fn eq_int(a: int, b: int) -> bool {
+    return a == b;
+}
+
+fn eq_string(a: string, b: string) -> bool {
+    return fusion_strcmp(a, b) == 0;
+}

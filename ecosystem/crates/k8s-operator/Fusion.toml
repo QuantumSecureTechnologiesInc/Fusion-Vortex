@@ -1,5 +1,5 @@
 [package]
-name = "k8s-operator"
+name = "fusion-k8s-operator"
 version = "0.1.0"
 edition = "2021"
 
@@ -19,4 +19,3 @@ fusion_std = "1.0.0"
 
 [dev-dependencies]
 anyhow = { workspace = true }
-

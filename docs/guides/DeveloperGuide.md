@@ -6,7 +6,7 @@ Welcome to the Fusion v2.0 Vortex Programming Language development guide. This d
 
 **Prerequisites:**
 
-- Fusion toolchain (use `./install.sh` to provision `dist/`)
+- Fusion toolchain (use `./install.sh` to build the toolchain; `dist/` is the target output directory)
 - Python 3.10+ (optional, for interop and tooling)
 - CUDA Toolkit 12.0+ (optional, for GPU acceleration)
 - Git

@@ -1,0 +1,53 @@
+/// Production Concurrent Evaluator.
+/// 
+/// Runs benchmarks in parallel using Tokio tasks to maximize throughput.
+
+use crate::{EvaluatableModel, BenchmarkCase}; // Assumed
+use fusion_std::error::{StdResult, StdError};
+use std::sync::Arc;
+use futures::stream::{self, StreamExt};
+
+pub struct ParallelEvaluator {
+    concurrency: usize,
+}
+
+impl ParallelEvaluator {
+    pub fn new(concurrency: usize) -> Self {
+        Self { concurrency }
+    }
+
+    pub async fn run<M>(
+        &self, 
+        model: Arc<M>, 
+        dataset: Vec<BenchmarkCase>
+    ) -> f64 
+    where M: EvaluatableModel + Send + Sync + 'static 
+    {
+        let total = dataset.len();
+        
+        let results: Vec<bool> = stream::iter(dataset)
+            .map(|case| {
+                let m = model.clone();
+                async move {
+                    let mut best_score = f64::NEG_INFINITY;
+                    let mut selected = 0;
+                    
+                    for (i, choice) in case.choices.iter().enumerate() {
+                        let score = m.score_choice(&case.question, choice); // Async in real impl
+                        if score > best_score {
+                            best_score = score;
+                            selected = i;
+                        }
+                    }
+                    selected == case.correct_index
+                }
+            })
+            .buffer_unordered(self.concurrency)
+            .collect()
+            .await;
+
+        let correct = results.into_iter().filter(|&x| x).count();
+        (correct as f64) / (total as f64)
+    }
+}
+

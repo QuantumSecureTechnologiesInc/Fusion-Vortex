@@ -1,0 +1,150 @@
+// NeuralMESH Vortex PQC Library
+// HyperCycle Vortex v2.0 Post-Quantum Cryptography + HAFT Mesh Compute bindings for Fusion.
+//
+// Weave-SIG: Quaternion-based digital signatures
+//   Public Key: 96 bytes, Secret Key: 192 bytes, Signature: 288 bytes
+//
+// Weave-KEM: Quaternion-based Key Encapsulation Mechanism
+//   Public Key: 96 bytes, Secret Key: 192 bytes, Ciphertext: 128 bytes, Shared Secret: 32 bytes
+//
+// HAFT Mesh: Hot-Adaptive Flux Tensor compute nodes (Nexus, Solver, Warden, Sentinel)
+
+// ── HAFT Mesh Compute Node modules ──
+mod cluster_registry;
+mod hybrid_pqc_stream;
+mod io_uring_driver;
+mod metal_driver;
+mod nexus_router;
+mod solver_node;
+mod warden_daemon;
+mod warden_supervisor;
+
+pub use cluster_registry::{ClusterMember, ClusterRegistry, cluster_registry_new, cluster_heartbeat};
+pub use hybrid_pqc_stream::{HybridPqcStream, PqcHandshakeResult, hybrid_pqc_connect, hybrid_pqc_accept};
+pub use nexus_router::{NexusRouter, TaskPriority, HaftTask, nexus_router_new, nexus_enqueue_task, nexus_dispatch};
+pub use solver_node::{SolverNode, SolverResult, solver_node_new, solver_compute_hash, solver_thermal_check};
+pub use warden_daemon::{WardenDaemon, WardenProcess, warden_daemon_new, warden_spawn_process, warden_restart_policy};
+pub use warden_supervisor::{WardenSentinel, SentinelTarget, warden_sentinel_new, warden_probe_liveness, warden_atomic_upgrade};
+
+// ── Size constants ──
+
+pub const SIG_PUBLIC_KEY_SIZE: int = 96;
+pub const SIG_SECRET_KEY_SIZE: int = 192;
+pub const SIG_SIGNATURE_SIZE: int = 288;
+
+pub const KEM_PUBLIC_KEY_SIZE: int = 96;
+pub const KEM_SECRET_KEY_SIZE: int = 192;
+pub const KEM_CIPHERTEXT_SIZE: int = 128;
+pub const KEM_SHARED_SECRET_SIZE: int = 32;
+
+// ── Error enum ──
+
+pub enum VortexError {
+    KeyGenFailed,
+    SignFailed,
+    VerifyFailed,
+    EncapsulateFailed,
+    DecapsulateFailed,
+    InvalidKeySize,
+    InvalidSignatureSize,
+    InvalidCiphertextSize,
+    EntropyFailed,
+}
+
+// ── Fixed-size key buffers ──
+
+pub struct SigPublicKey {
+    pub data: [int; 96],
+}
+
+pub struct SigSecretKey {
+    pub data: [int; 192],
+}
+
+pub struct SigSignature {
+    pub data: [int; 288],
+}
+
+pub struct KemPublicKey {
+    pub data: [int; 96],
+}
+
+pub struct KemSecretKey {
+    pub data: [int; 192],
+}
+
+pub struct KemCiphertext {
+    pub data: [int; 128],
+}
+
+pub struct KemSharedSecret {
+    pub data: [int; 32],
+}
+
+// ── Weave-SIG keypair ──
+
+pub struct WeaveSigKeypair {
+    pub public_key: SigPublicKey,
+    pub secret_key: SigSecretKey,
+}
+
+// ── Weave-KEM keypair ──
+
+pub struct WeaveKemKeypair {
+    pub public_key: KemPublicKey,
+    pub secret_key: KemSecretKey,
+}
+
+// ── Extern FFI declarations (HyperCycle Vortex C library) ──
+
+extern fn hc_sig_keygen(kp: int) -> int;
+extern fn hc_sig_sign(kp: int, msg: int, msg_len: int, sig: int) -> int;
+extern fn hc_sig_verify(kp: int, msg: int, msg_len: int, sig: int) -> int;
+extern fn hc_kem_keygen(kp: int) -> int;
+extern fn hc_kem_encaps(kp: int, ct: int, ss: int) -> int;
+extern fn hc_kem_decaps(kp: int, ct: int, ss: int) -> int;
+
+// ── Weave-SIG implementation ──
+
+impl WeaveSigKeypair {
+    pub fn generate() -> VortexError {
+        // Calls hc_sig_keygen via FFI — fills public_key and secret_key buffers.
+        // Returns VortexError::KeyGenFailed on failure.
+        // Actual implementation links to the HyperCycle Vortex C library.
+        return VortexError::KeyGenFailed;
+    }
+
+    pub fn sign(msg_len: int) -> VortexError {
+        // Calls hc_sig_sign via FFI — produces 288-byte signature.
+        // Returns VortexError::SignFailed on failure.
+        return VortexError::SignFailed;
+    }
+
+    pub fn verify(msg_len: int) -> VortexError {
+        // Calls hc_sig_verify via FFI — returns 0 on valid signature.
+        // Returns VortexError::VerifyFailed on failure.
+        return VortexError::VerifyFailed;
+    }
+}
+
+// ── Weave-KEM implementation ──
+
+impl WeaveKemKeypair {
+    pub fn generate() -> VortexError {
+        // Calls hc_kem_keygen via FFI — fills public_key and secret_key buffers.
+        // Returns VortexError::KeyGenFailed on failure.
+        return VortexError::KeyGenFailed;
+    }
+
+    pub fn encapsulate() -> VortexError {
+        // Calls hc_kem_encaps via FFI — produces 128-byte ciphertext and 32-byte shared secret.
+        // Returns VortexError::EncapsulateFailed on failure.
+        return VortexError::EncapsulateFailed;
+    }
+
+    pub fn decapsulate() -> VortexError {
+        // Calls hc_kem_decaps via FFI — recovers 32-byte shared secret from ciphertext.
+        // Returns VortexError::DecapsulateFailed on failure.
+        return VortexError::DecapsulateFailed;
+    }
+}

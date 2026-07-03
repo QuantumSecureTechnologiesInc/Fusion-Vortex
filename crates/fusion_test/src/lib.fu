@@ -1,0 +1,84 @@
+//! Fusion Test Engine — core types for test results and discovery.
+//!
+//! Port of the Rust `lib.rs` module. Provides TestResult, TestSummary,
+//! TestFunction, and supporting types for the Fusion-native test framework.
+
+/// Result of a single test execution.
+pub enum TestResult {
+    /// Test passed.
+    Passed {
+        name: String,
+        duration_ms: u64,
+    },
+    /// Test failed with an error message.
+    Failed {
+        name: String,
+        duration_ms: u64,
+        message: String,
+        file: Option<String>,
+        line: Option<u32>,
+        diff: Option<String>,
+    },
+    /// Test was skipped.
+    Skipped {
+        name: String,
+        reason: Option<String>,
+    },
+    /// Benchmark result.
+    Bench {
+        name: String,
+        iterations: u64,
+        total_ns: u64,
+    },
+}
+
+/// Summary of a test run.
+pub struct TestSummary {
+    pub total: usize,
+    pub passed: usize,
+    pub failed: usize,
+    pub skipped: usize,
+    pub benchmarks: usize,
+    pub results: Vec<TestResult>,
+}
+
+impl TestSummary {
+    pub fn new() -> Self {
+        TestSummary {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+            benchmarks: 0,
+            results: Vec::new(),
+        }
+    }
+
+    pub fn all_passed(&self) -> bool {
+        self.failed == 0
+    }
+}
+
+/// A discovered test function.
+pub struct TestFunction {
+    /// Fully qualified test name (module::function).
+    pub name: String,
+    /// Source file path.
+    pub file: String,
+    /// Line number of the function definition.
+    pub line: usize,
+    /// Test kind.
+    pub kind: TestKind,
+    /// Whether this test should be ignored.
+    pub ignored: bool,
+    /// Optional ignore reason.
+    pub ignore_reason: Option<String>,
+}
+
+/// The kind of test.
+pub enum TestKind {
+    Test,
+    Bench,
+    Property,
+    Integration,
+}

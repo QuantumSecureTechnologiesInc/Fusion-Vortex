@@ -1,52 +1,68 @@
 //! LLVM code generation backend.
-use super::{Backend, CodegenError};
+use crate::codegen::{Backend, CodegenError, CodegenConfig};
 use crate::ast;
-use crate::ir::{self, Instruction, IrFunction, Module, Terminator, TypedValue, Value};
+use crate::ir::{self, BlockId, Instruction, IrFunction, Module, Terminator, TypedValue, Value};
 use crate::sema;
-use generational_arena::Index;
 use inkwell::builder::Builder;
 use inkwell::builder::BuilderError;
 use inkwell::context::Context;
+use inkwell::debug_info::{DebugInfoBuilder, DICompileUnit, DIFile, DISubprogram, DIScope, DIType, DWARFEmissionKind, DWARFSourceLanguage, DebugEmissionKind};
 use inkwell::module::{Linkage, Module as InkwellModule};
 use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
 use inkwell::values::{BasicValueEnum, FunctionValue, IntValue, PointerValue};
 use inkwell::{AddressSpace, IntPredicate};
-/// Configuration options for LLVM code generation.
-struct CodegenConfig<'a> {
-    /// Optimization level (0-3).
-    pub opt_level: u8,
-    /// Target triple override.
-    pub target_triple: Option<FString>,
-    /// Whether to emit textual LLVM IR (.ll).
-    pub emit_llvm: FBool,
-    /// Source file path (for debug info).
-    pub source_file_path: &'a str,
-    /// Compile as library (skip entry point checks).
-    pub is_lib: FBool,
-}
 /// LLVM backend implementation.
 struct LlvmBackend<'ctx> {
     context: &'ctx Context,
     module: InkwellModule<'ctx>,
     builder: Builder<'ctx>,
-    config: CodegenConfig<'ctx>,
+    config: CodegenConfig,
+    dibuilder: Option<DebugInfoBuilder<'ctx>>,
+    compile_unit: Option<DICompileUnit<'ctx>>,
+    debug_file: Option<DIFile<'ctx>>,
     value_map: FMap<FString, PointerValue<'ctx>>,
-    block_map: FMap<Index, inkwell::basic_block::BasicBlock<'ctx>>,
+    block_map: FMap<BlockId, inkwell::basic_block::BasicBlock<'ctx>>,
     string_globals: FVec<PointerValue<'ctx>>,
     struct_types: FMap<FString, inkwell::types::StructType<'ctx>>,
 }
 impl<'ctx> LlvmBackend<'ctx> {
     /// Creates a new LLVM backend.
-    pub fn new(context: &'ctx Context, config: CodegenConfig<'ctx>) -> Self {
+    pub fn new(context: &'ctx Context, config: CodegenConfig) -> Self {
         let module = context.create_module("fuc_module");
         if let Some(triple) = &config.target_triple {
             module.set_triple(&inkwell::targets::TargetTriple::create(triple));
         }
+        let (dibuilder, compile_unit, debug_file) = if config.debug_info {
+            let (dib, cu) = module.create_debug_info_builder(
+                true,
+                DWARFSourceLanguage::C,
+                &config.source_file_path,
+                ".",
+                "fuc compiler",
+                config.opt_level > 0,
+                "",
+                0,
+                "",
+                DWARFEmissionKind::Full,
+                0,
+                false,
+                false,
+                "",
+                "",
+            );
+            let file = dib.create_file(&config.source_file_path, ".");
+            (Some(dib), Some(cu), Some(file))
+        } else {
+            (None, None, None)
+        };
         Self {
             context,
             module,
             builder: context.create_builder(),
             config,
+            dibuilder,
+            compile_unit,
+            debug_file,
             value_map: HashMap::new(),
             block_map: HashMap::new(),
             string_globals: Vec::new(),
@@ -78,6 +94,15 @@ impl<'ctx> LlvmBackend<'ctx> {
                     .get(name)
                     .map(|s| s.as_basic_type_enum())
                     .unwrap_or_else(|| self.context.i32_type().into())
+            }
+            ast::Type::GenericParam(_) => {
+                self.context.i32_type().into()
+            }
+            ast::Type::Slice(_) => {
+                self.context.ptr_type(AddressSpace::default()).into()
+            }
+            ast::Type::Closure(_, _) => {
+                self.context.ptr_type(AddressSpace::default()).into()
             }
             ast::Type::Void => self.context.i32_type().into(),
             ast::Type::Unknown => self.context.i32_type().into(),
@@ -334,7 +359,7 @@ impl<'ctx> LlvmBackend<'ctx> {
             ast::Type::Array(_, _) | ast::Type::Struct(_) => {
                 self.as_llvm_type(dest_ty).const_zero()
             }
-            ast::Type::Int | ast::Type::Unknown | ast::Type::Void => {
+            ast::Type::Int | ast::Type::Unknown | ast::Type::Void | ast::Type::GenericParam(_) => {
                 self.context.i32_type().const_int(tag, false).into()
             }
         })
@@ -478,36 +503,31 @@ impl<'ctx> LlvmBackend<'ctx> {
         return true;
     }
     fn push_candidate_unique(candidates: &mut FVec<FString>, name: FString) {
-        if name.is_empty() {
-            return;
+        if !name.is_empty() && !candidates.iter().any(|existing| existing == &name) {
+            candidates.push(name);
         }
-        if candidates.iter().any(|existing| existing == &name) {
-            return;
-        }
-        candidates.push(name);
     }
     fn push_owner_call_candidates(
         candidates: &mut FVec<FString>,
         owner_name: &str,
         func_name: &str,
     ) {
-        if owner_name.is_empty() || func_name.contains("::") {
-            return;
-        }
-        let owner_variants = Self::owner_name_variants(owner_name);
-        for owner in owner_variants {
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}::{}", owner, func_name),
-            );
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}__{}", owner, func_name),
-            );
-            Self::push_candidate_unique(
-                candidates,
-                format!("{}__{}", owner.replace("::", "__"), func_name),
-            );
+        if !owner_name.is_empty() && !func_name.contains("::") {
+            let owner_variants = Self::owner_name_variants(owner_name);
+            for owner in owner_variants {
+                Self::push_candidate_unique(
+                    candidates,
+                    format!("{}::{}", owner, func_name),
+                );
+                Self::push_candidate_unique(
+                    candidates,
+                    format!("{}__{}", owner, func_name),
+                );
+                Self::push_candidate_unique(
+                    candidates,
+                    format!("{}__{}", owner.replace("::", "__"), func_name),
+                );
+            }
         }
     }
     fn normalize_owner_name(raw_owner: &str) -> FString {
@@ -791,7 +811,7 @@ impl<'ctx> LlvmBackend<'ctx> {
                 let _ = bit;
                 self.context.ptr_type(AddressSpace::default()).const_null().into()
             }
-            ast::Type::Array(_, _) | ast::Type::Struct(_) | ast::Type::Void => {
+            ast::Type::Array(_, _) | ast::Type::Struct(_) | ast::Type::Void | ast::Type::GenericParam(_) | ast::Type::Slice(_) | ast::Type::Closure(_, _) => {
                 self.context.i32_type().const_int(bit as FU64, false).into()
             }
         }
@@ -808,9 +828,10 @@ impl<'ctx> LlvmBackend<'ctx> {
             ast::Type::Void => None,
             ast::Type::Int => Some(self.context.i32_type().const_zero().into()),
             ast::Type::Bool => Some(self.context.bool_type().const_zero().into()),
-            ast::Type::String | ast::Type::Pointer(_) => {
+            ast::Type::String | ast::Type::Pointer(_) | ast::Type::Slice(_) | ast::Type::Closure(_, _) => {
                 Some(self.context.ptr_type(AddressSpace::default()).const_null().into())
             }
+            ast::Type::GenericParam(_) => Some(self.context.i32_type().const_zero().into()),
             ast::Type::Array(_, _) | ast::Type::Struct(_) => {
                 Some(self.as_llvm_type(ty).const_zero())
             }
@@ -1044,9 +1065,27 @@ impl<'ctx> LlvmBackend<'ctx> {
         func: &IrFunction,
     ) -> Result<FunctionValue<'ctx>, CodegenError> {
         let llvm_func = self.declare_function_signature(func);
+        // Create DWARF debug info subprogram for this function
+        if let (Some(dib), Some(cu), Some(file)) = (&self.dibuilder, &self.compile_unit, &self.debug_file) {
+            let sub_type = dib.create_subroutine_type(file, None, &[], 0);
+            let subprogram = dib.create_function(
+                *cu,
+                &func.name,
+                Some(&func.name),
+                *file,
+                1,  // line number (approximate)
+                sub_type,
+                true,  // is_definition
+                true,  // is_local_to_unit
+                false, // is_definition (scope_line)
+                0,     // flags
+                false, // is_optimized
+            );
+            llvm_func.set_subprogram(subprogram);
+        }
         self.value_map.clear();
         self.block_map.clear();
-        for (index, block) in func.blocks.iter() {
+        for (index, block) in func.blocks.iter().enumerate() {
             let llvm_bb = self.context.append_basic_block(llvm_func, &block.label);
             self.block_map.insert(index, llvm_bb);
         }
@@ -1064,7 +1103,7 @@ impl<'ctx> LlvmBackend<'ctx> {
                     .build_store(alloca, llvm_func.get_nth_param(i as FU32).unwrap()),
             )?;
         }
-        for (_, block) in func.blocks.iter() {
+        for block in &func.blocks {
             for instr in &block.instrs {
                 let dest = match instr {
                     Instruction::Alloca { name, ty } => {
@@ -1649,7 +1688,7 @@ impl<'ctx> LlvmBackend<'ctx> {
                 }
             }
         }
-        for (block_idx, block) in func.blocks.iter() {
+        for (block_idx, block) in func.blocks.iter().enumerate() {
             if visited.contains(&block_idx) {
                 continue;
             }
@@ -1785,6 +1824,10 @@ impl<'ctx> Backend for LlvmBackend<'ctx> {
                 ));
             }
         }
+        // Finalize debug info builder if present
+        if let Some(dib) = &self.dibuilder {
+            dib.finalize();
+        }
         let output_obj = Path::new(output_path);
         let ll_path = if self.config.emit_llvm {
             output_obj.with_extension("ll")
@@ -1796,24 +1839,30 @@ impl<'ctx> Backend for LlvmBackend<'ctx> {
             .map_err(|e| CodegenError::LlvmError(
                 format!("Failed to write LLVM IR: {}", e.to_string()),
             ))?;
-        // Strip debug metadata to avoid llc warnings from invalid debug info versions.
-        if let Ok(contents) = std::fs::read_to_string(&ll_path) {
-            let mut filtered = String::new();
-            for line in contents.lines() {
-                let trimmed = line.trim_start();
-                if trimmed.starts_with("!llvm.dbg.")
-                    || (trimmed.starts_with("!") && trimmed.contains("!DI"))
-                    || trimmed.contains("Debug Info Version")
-                {
-                    continue;
+        // Strip debug metadata ONLY when debug_info is disabled
+        if !self.config.debug_info {
+            if let Ok(contents) = std::fs::read_to_string(&ll_path) {
+                let mut filtered = String::new();
+                for line in contents.lines() {
+                    let trimmed = line.trim_start();
+                    if trimmed.starts_with("!llvm.dbg.")
+                        || (trimmed.starts_with("!") && trimmed.contains("!DI"))
+                        || trimmed.contains("Debug Info Version")
+                    {
+                        continue;
+                    }
+                    filtered.push_str(line);
+                    filtered.push('\n');
                 }
-                filtered.push_str(line);
-                filtered.push('\n');
+                let _ = std::fs::write(&ll_path, filtered);
             }
-            let _ = std::fs::write(&ll_path, filtered);
         }
         let mut llc = std::process::Command::new("llc");
         llc.arg(format!("-O{}", self.config.opt_level.min(3)));
+        // Pass debug info flags to llc when debug_info is enabled
+        if self.config.debug_info {
+            llc.arg("-filetype=obj");
+        }
         if let Some(triple_str) = self.config.target_triple.clone() {
             llc.arg("-mtriple").arg(triple_str);
         }
@@ -1830,6 +1879,124 @@ impl<'ctx> Backend for LlvmBackend<'ctx> {
         if !self.config.emit_llvm {
             let _ = std::fs::remove_file(&ll_path);
         }
+        // Link step: produce executable from object file + runtime
+        if self.config.emit_bin && !self.config.is_lib {
+            self.link_executable(output_obj)?;
+        }
         Ok(())
+    }
+
+    /// Link the object file with the Fusion runtime to produce an executable.
+    fn link_executable(&self, obj_path: &std::path::Path) -> Result<(), CodegenError> {
+        use std::path::Path;
+        let is_windows = cfg!(target_os = "windows");
+        let exe_path = if is_windows {
+            obj_path.with_extension("exe")
+        } else {
+            obj_path.with_extension("")
+        };
+        // Discover the runtime C source or prebuilt object
+        let runtime_src = self.find_runtime_source();
+        // Compile runtime C to object if source is available
+        let runtime_obj = if let Some(src) = runtime_src {
+            let rt_obj = obj_path.with_file_name("fusionrt_link.o");
+            let cc = if is_windows { "clang" } else { "cc" };
+            let mut rt_cmd = std::process::Command::new(cc);
+            rt_cmd.arg("-c").arg("-O2")
+                  .arg("-w") // suppress deprecation warnings
+                  .arg(&src)
+                  .arg("-o").arg(&rt_obj);
+            if is_windows {
+                rt_cmd.arg("-D_CRT_SECURE_NO_WARNINGS");
+            }
+            let rt_status = rt_cmd.status().map_err(|e| {
+                CodegenError::TargetError(format!("Failed to compile runtime: {}", e))
+            })?;
+            if !rt_status.success() {
+                return Err(CodegenError::TargetError("Runtime compilation failed".to_string()));
+            }
+            Some(rt_obj)
+        } else {
+            // Look for prebuilt runtime in bin/
+            let exe_dir = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+            if let Some(dir) = exe_dir {
+                let prebuilt = if is_windows {
+                    dir.join("fusionrt.lib")
+                } else {
+                    dir.join("libfusionrt.a")
+                };
+                if prebuilt.exists() { Some(prebuilt) } else { None }
+            } else {
+                None
+            }
+        };
+        // Link object + runtime into executable
+        let linker = if is_windows { "clang" } else { "cc" };
+        let mut link_cmd = std::process::Command::new(linker);
+        link_cmd.arg(obj_path);
+        if let Some(ref rt) = runtime_obj {
+            link_cmd.arg(rt);
+        }
+        link_cmd.arg("-o").arg(&exe_path);
+        if !is_windows {
+            link_cmd.arg("-no-pie");
+        }
+        link_cmd.arg("-lc");
+        if is_windows {
+            link_cmd.arg("-lws2_32");
+        }
+        
+        // Add library search paths
+        for lib_path in &self.config.lib_paths {
+            link_cmd.arg("-L").arg(lib_path);
+        }
+        
+        // Add external libraries to link against
+        for lib in &self.config.link_libs {
+            link_cmd.arg("-l").arg(lib);
+        }
+        
+        let status = link_cmd.status().map_err(|e| {
+            CodegenError::TargetError(format!("Failed to link: {}", e))
+        })?;
+        if !status.success() {
+            return Err(CodegenError::TargetError(
+                format!("Linker failed for {}", exe_path.display()),
+            ));
+        }
+        // Clean up intermediate object
+        let _ = std::fs::remove_file(obj_path);
+        if let Some(ref rt) = runtime_obj {
+            if rt != obj_path {
+                let _ = std::fs::remove_file(rt);
+            }
+        }
+        Ok(())
+    }
+
+    /// Locate the runtime C source file.
+    fn find_runtime_source(&self) -> Option<std::path::PathBuf> {
+        let candidates = [
+            "runtime/runtime.c",
+            "runtime/native/fusionrt.c",
+            "../runtime/runtime.c",
+            "../runtime/native/fusionrt.c",
+        ];
+        for c in &candidates {
+            let p = std::path::PathBuf::from(c);
+            if p.exists() { return Some(p); }
+        }
+        // Also check relative to the executable
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(root) = exe.parent().and_then(|p| p.parent()) {
+                for c in &candidates {
+                    let p = root.join(c);
+                    if p.exists() { return Some(p); }
+                }
+            }
+        }
+        None
     }
 }

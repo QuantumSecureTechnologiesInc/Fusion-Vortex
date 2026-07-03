@@ -1,0 +1,33 @@
+// WASM backend test: struct definitions and member access
+// Compile with: fuc --target wasm tests/wasm/structs.fu -o structs.wasm
+
+struct Point {
+    x: int,
+    y: int,
+}
+
+struct Rect {
+    origin: Point,
+    width: int,
+    height: int,
+}
+
+fn get_x(p: Point) -> int {
+    return p.x;
+}
+
+fn get_y(p: Point) -> int {
+    return p.y;
+}
+
+fn get_width(r: Rect) -> int {
+    return r.width;
+}
+
+fn get_height(r: Rect) -> int {
+    return r.height;
+}
+
+fn get_origin_x(r: Rect) -> int {
+    return r.origin.x;
+}

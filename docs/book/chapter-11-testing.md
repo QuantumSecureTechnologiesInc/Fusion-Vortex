@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 11: Writing Automated Tests
 
 Tests are imperative for ensuring that your code behaves as expected. Unlike some languages where testing is an afterthought or requires external frameworks, Fusion has a first-class testing system built right into the language and the compiler.

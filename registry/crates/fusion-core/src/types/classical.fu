@@ -1,13 +1,12 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FBool = FBool;
-#[allow(missing_docs, dead_code)]
-type FI64 = FI64;
-#[allow(missing_docs, dead_code)]
-type FString = FString;
+#[allow(missing_docs, dead_code)] type FBool = bool;
+#[allow(missing_docs, dead_code)] type FI64 = i64;
+#[allow(missing_docs, dead_code)] type FString = String;
+// __FU_COMPAT_END__
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-enum ClassicalType {
+pub enum ClassicalType {
     Int(FI64),
     Float(f64),
     Boolean(FBool),

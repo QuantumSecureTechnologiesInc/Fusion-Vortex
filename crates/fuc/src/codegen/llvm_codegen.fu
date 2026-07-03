@@ -1,0 +1,20 @@
+// Fusion Self-Hosted Codegen
+// Translates AST into LLVM IR with full DWARF Debug support.
+
+import llvm_c;
+import std.mem;
+
+fn emit_debug_info(builder: *DIBuilder, func: *LLVMValue, line: int) {
+    let scope: *DIScope = llvm_c.get_debug_scope();
+    let location: *DILocation = llvm_c.create_debug_location(line, 0, scope);
+    llvm_c.set_current_debug_location(location);
+}
+
+fn compile_expression(ctx: *Context, node: *ASTNode) -> *LLVMValue {
+    if (node.type == NODE_ADD) {
+        let lhs: *LLVMValue = compile_expression(ctx, node.left);
+        let rhs: *LLVMValue = compile_expression(ctx, node.right);
+        return llvm_c.build_add(ctx.builder, lhs, rhs, "add_tmp");
+    }
+    return null;
+}

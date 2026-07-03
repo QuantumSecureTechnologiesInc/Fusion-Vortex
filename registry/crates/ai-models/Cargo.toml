@@ -1,0 +1,29 @@
+﻿[package]
+name = "fusion-ai-models"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Local model runners (llama.cpp, ONNX) with unified interface."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework", "models", "inference", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+fusion_runtime_core = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+
+# Optional local model integrations
+# llama-cpp-rs = { workspace = true, optional = true }
+# ort = { workspace = true, optional = true }
+
+[features]
+default = []
+llama-cpp = []  # Placeholder for future llama-cpp integration
+onnx = []       # Placeholder for future ONNX integration
+

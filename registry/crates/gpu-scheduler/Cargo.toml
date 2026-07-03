@@ -1,0 +1,19 @@
+﻿[package]
+name = "fusion_llm_gpu_scheduler"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Framework: Fusion Framework crate: gpu-scheduler."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["fusion", "framework"]
+categories = ["development-tools", "framework"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_llm_inference_engine = { path = "../llm-inference/", version = "0.2.0" } # KV Cache references
+fusion_runtime_core = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+
+

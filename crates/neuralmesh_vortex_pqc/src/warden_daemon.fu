@@ -1,0 +1,74 @@
+// HAFT Warden Daemon - Process Supervisor with Crash Recovery
+// Converted from FU Parts: the_warden_daemon.rs
+// Monitors child process lifecycle with exponential backoff restart
+
+extern fn printf(fmt: string, ...) -> int;
+
+/// Maximum backoff delay in seconds
+const WARDEN_MAX_BACKOFF: int = 60;
+
+/// HAFT Warden Daemon - crash-resistant process supervisor
+struct HaftWardenDaemon {
+    target_binary: string,
+    shutdown_flag: int,
+    restart_count: int,
+}
+
+fn warden_new(binary_path: string) -> HaftWardenDaemon {
+    HaftWardenDaemon {
+        target_binary: binary_path,
+        shutdown_flag: 0,
+        restart_count: 0,
+    }
+}
+
+/// Simulate process health check (in production: try_wait on child process)
+fn warden_check_process_health(warden: HaftWardenDaemon) -> int {
+    // Simulated: returns 0 for running, 1 for crashed
+    // In production: child.try_wait() check
+    if warden.restart_count > 10 {
+        return 1; // Simulated crash after many restarts
+    }
+    return 0; // Process running
+}
+
+/// Execute the warden lifecycle loop
+fn warden_supervise(warden: HaftWardenDaemon) -> HaftWardenDaemon {
+    let mut w = warden;
+    let mut backoff_delay: int = 1;
+
+    printf("Warden Lifecycle Ignition: Spawning %s Process\n", w.target_binary);
+    w.restart_count = w.restart_count + 1;
+
+    // Simulated supervision loop
+    let mut health: int;
+    let mut tick: int = 0;
+    while tick < 10 && w.shutdown_flag == 0 {
+        health = warden_check_process_health(w);
+        if health != 0 {
+            printf("Supervised child runtime crash detected. Restart #%d\n", w.restart_count);
+            break;
+        }
+        tick = tick + 1;
+    }
+
+    // Exponential backoff logic
+    if w.restart_count > 0 && w.shutdown_flag == 0 {
+        printf("Throttling restart sequence. Backoff duration: %ds\n", backoff_delay);
+        backoff_delay = backoff_delay * 2;
+        if backoff_delay > WARDEN_MAX_BACKOFF {
+            backoff_delay = WARDEN_MAX_BACKOFF;
+        }
+    }
+
+    printf("Warden system safely deactivated. Lifecycle tracking closed.\n");
+    return w;
+}
+
+/// Initiate controlled shutdown
+fn warden_shutdown(warden: HaftWardenDaemon) -> HaftWardenDaemon {
+    let mut w = warden;
+    w.shutdown_flag = 1;
+    printf("Sending explicit destruction frame sequence to child process handles.\n");
+    return w;
+}

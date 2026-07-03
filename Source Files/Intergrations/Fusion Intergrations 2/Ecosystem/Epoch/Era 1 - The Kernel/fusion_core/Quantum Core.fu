@@ -1,0 +1,107 @@
+// SOURCE: Source Files/Intergrations/Fusion Intergrations 2/Ecosystem/Epoch/Era 1 - The Kernel/fusion_core/Quantum Core.rs
+// NOTE: Converted into FSN mirror under fsn/converted.
+/// Production-Grade Quantum Runtime.
+/// Uses a thread-safe registry to manage qubit states and enforce physical laws.
+
+use crate::types::tensor::Matrix;
+use crate::error::{FusionError, FusionResult};
+use num_complex::Complex64;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct QubitId(pub usize);
+
+/// Global registry for the Quantum Simulator.
+/// In production, this would interface with a high-performance backend (C++ or CUDA).
+#[derive(Default)]
+struct QuantumRegistry {
+    // Map Qubit ID -> Reference to the entangled State Vector it belongs to
+    qubit_map: FMap<QubitId, Arc<RwLock<QuantumState>>>,
+    next_id: usize,
+}
+
+impl QuantumRegistry {
+    fn allocate(&mut self) -> QubitId {
+        let id = QubitId(self.next_id);
+        self.next_id += 1;
+        
+        // New qubits start in |0> state, independent (not entangled)
+        let state = Arc::new(RwLock::new(QuantumState::zeros(1)));
+        self.qubit_map.insert(id, state);
+        id
+    }
+}
+
+/// Thread-safe Global Runtime Singleton (Simplified Pattern).
+struct QuantumRuntime;
+impl QuantumRuntime {
+    // In a real app, use `lazy_static` or `once_cell` for a singleton.
+    // For this struct, we act as a wrapper around the logic.
+}
+
+#[derive(Debug, Clone)]
+struct QuantumState {
+    pub amplitudes: FVec<Complex64>,
+    pub num_qubits: usize,
+}
+
+impl QuantumState {
+    fn zeros(num_qubits: usize) -> Self {
+        let size = 1 << num_qubits;
+        let mut amplitudes = vec![Complex64::new(0.0, 0.0); size];
+        amplitudes[0] = Complex64::new(1.0, 0.0);
+        Self { amplitudes, num_qubits }
+    }
+}
+
+/// Physical Qubit Handle.
+/// Enforces No-Cloning via Rust's Move semantics.
+#[derive(Debug)]
+struct Qubit {
+    pub id: QubitId,
+    // The state is managed centrally by the Registry/Simulator, 
+    // the Qubit struct is just a handle (token).
+}
+
+impl Qubit {
+    fn new(registry: &mut QuantumRegistry) -> Self {
+        let id = registry.allocate();
+        Self { id }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct QuantumGate {
+    pub name: FString,
+    pub matrix: Matrix<Complex64>,
+    pub num_qubits: usize,
+}
+
+#[derive(Debug, Clone)]
+struct QuantumCircuit {
+    pub num_qubits: usize,
+    pub gates: FVec<(QuantumGate, FVec<usize>)>,
+}
+
+impl QuantumCircuit {
+    fn new(num_qubits: usize) -> Self {
+        Self { num_qubits, gates: Vec::new() }
+    }
+
+    fn apply_gate(&mut self, gate: QuantumGate, targets: FVec<usize>) -> FusionResult<()> {
+        if gate.num_qubits != targets.len() {
+            return Err(FusionError::GateArityMismatch {
+                gate: gate.name,
+                required: gate.num_qubits,
+                provided: targets.len()
+            });
+        }
+        // Basic bounds check
+        for &t in &targets {
+            if t >= self.num_qubits {
+                return Err(FusionError::InvalidQubitAccess(t));
+            }
+        }
+        self.gates.push((gate, targets));
+        Ok(())
+    }
+}

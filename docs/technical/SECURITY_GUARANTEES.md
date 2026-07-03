@@ -17,7 +17,8 @@ This document defines **what Fusion guarantees** and **what it does not**. It is
    - Current policy: externs with aggregates are lowered via by‑pointer ABI rewrite (or rejected if disallowed).
 
 4. **Stdlib safety**
-   - The distributed stdlib in `dist/lib/fusion/std/src` contains **only `.fu` sources**.
+   - The stdlib in `stdlib/` and `src/stdlib/` contains **only `.fu` sources**.
+   - `dist/lib/fusion/std/src` (target layout, not yet built) will contain `lib.fu` and `main.fu`.
    - Stdlib entry points are `lib.fu` and `main.fu` and are valid Fusion syntax.
 
 5. **Sysroot‑based build resolution**

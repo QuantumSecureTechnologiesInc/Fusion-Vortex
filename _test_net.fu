@@ -1,0 +1,17 @@
+extern fn fusion_tcp_connect(host: string, port: int) -> int;
+
+struct TcpStream {
+    socket: int,
+    connected: int,
+}
+
+impl TcpStream {
+    fn connect(addr: string, port: int) -> TcpStream {
+        let s: int = fusion_tcp_connect(addr, port);
+        return TcpStream { socket: s, connected: 1 };
+    }
+}
+
+fn main() -> int {
+    return 0;
+}

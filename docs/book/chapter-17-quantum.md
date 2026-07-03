@@ -1,3 +1,7 @@
+> **Phase 0 audit (2026-06-24) found this doc overclaims reality.**
+> Treat feature lists here as roadmap, not current state.
+> See `docs-truth-audit/TRUTH_REPORT.md` for details.
+
 # Chapter 17: Quantum Computing in Fusion
 
 This chapter introduces Fusion's quantum computing capabilities—the third pillar of Tri-brid computing. Fusion is the world's first general-purpose programming language with **native quantum types**. Unlike languages that treat quantum computing as a library concern, Fusion's type system understands qubits, enforces the no-cloning theorem, and provides compile-time guarantees about quantum circuit validity.

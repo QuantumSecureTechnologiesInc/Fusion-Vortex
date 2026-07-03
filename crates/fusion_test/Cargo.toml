@@ -1,0 +1,50 @@
+[package]
+name = "fusion-test"
+version = "0.1.0"
+edition = "2021"
+description = "Fusion Test Engine — comprehensive test framework for the Fusion programming language"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "fusion-test"
+path = "src/main.rs"
+
+[dependencies]
+# CLI argument parsing
+clap = { version = "4.5", features = ["derive"] }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Colored terminal output
+colored = "2"
+
+# Glob file discovery
+glob = "0.3"
+
+# JUnit XML export
+quick-xml = "0.31"
+
+# Serialization for test results
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Regex for parsing test annotations
+regex = "1"
+
+# Random number generation (property testing)
+rand = "0.8"
+
+# Time measurement (benchmarks)
+instant = "0.1"
+
+# Temp directory for test artifacts
+tempfile = "3"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+[dev-dependencies]
+tempfile = "3"

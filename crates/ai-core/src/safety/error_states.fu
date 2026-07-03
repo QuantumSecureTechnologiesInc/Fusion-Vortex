@@ -1,0 +1,51 @@
+// NeuralSeal Error States - Security Violation Types
+// Converted from FU Parts: neuralseal_error_states.rs
+
+/// Security violation constants (replaces Rust enum with thiserror)
+const SECURITY_OK: int = 0;
+const SECURITY_INJECTION_DETECTED: int = 1;
+const SECURITY_PAYLOAD_TOO_LARGE: int = 2;
+const SECURITY_ACCESS_DENIED: int = 3;
+const SECURITY_PROCESSING_ERROR: int = 4;
+
+/// Security violation with code and message
+struct SecurityViolation {
+    code: int,
+    message: string,
+}
+
+fn make_injection_error() -> SecurityViolation {
+    SecurityViolation {
+        code: SECURITY_INJECTION_DETECTED,
+        message: "Malicious script injection payload detected during character verification pass.",
+    }
+}
+
+fn make_payload_too_large() -> SecurityViolation {
+    SecurityViolation {
+        code: SECURITY_PAYLOAD_TOO_LARGE,
+        message: "Inbound communication buffer exceeds hard infrastructure volume limits.",
+    }
+}
+
+fn make_access_denied() -> SecurityViolation {
+    SecurityViolation {
+        code: SECURITY_ACCESS_DENIED,
+        message: "Execution path denied. Assigned token does not hold relevant structural clearance.",
+    }
+}
+
+fn make_processing_error() -> SecurityViolation {
+    SecurityViolation {
+        code: SECURITY_PROCESSING_ERROR,
+        message: "Internal system integrity state vector has degraded or tripped active locks.",
+    }
+}
+
+fn violation_description(v: SecurityViolation) -> string {
+    return v.message;
+}
+
+fn is_security_violation(code: int) -> int {
+    return code != SECURITY_OK;
+}

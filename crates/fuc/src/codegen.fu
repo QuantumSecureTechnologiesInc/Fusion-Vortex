@@ -1,0 +1,93 @@
+//! Code generation backend abstractions.
+///
+/// Defines the `Backend` trait, `CodegenError` error type, and
+/// `CodegenConfig` shared across all code generation backends.
+
+use crate::ir;
+
+/// Errors produced during code generation.
+pub enum CodegenError {
+    /// LLVM internal error (builder failures, module print errors).
+    LlvmError(String),
+    /// Compiler internal error (missing variables, unresolved symbols).
+    InternalError(String),
+    /// Target-specific error (llc invocation failure, bad triple).
+    TargetError(String),
+    /// WASM backend error.
+    WasmError(String),
+}
+
+/// Configuration options for code generation.
+pub struct CodegenConfig {
+    /// Optimization level (0-3).
+    pub opt_level: int,
+    /// Target triple override (e.g., "x86_64-pc-windows-msvc").
+    pub target_triple: Option<String>,
+    /// Whether to emit textual LLVM IR (.ll).
+    pub emit_llvm: bool,
+    /// Source file path (for debug info and diagnostics).
+    pub source_file_path: string,
+    /// Compile as library (skip entry point checks).
+    pub is_lib: bool,
+    /// Emit DWARF debug information.
+    pub debug_info: bool,
+    /// Link to produce a final executable (not just an object file).
+    pub emit_bin: bool,
+    /// External libraries to link against (e.g., ["hypercycle_pqc"])
+    pub link_libs: FVec<String>,
+    /// Library search paths (e.g., ["v2.0 Vortex/build/Release"])
+    pub lib_paths: FVec<String>,
+}
+
+/// Trait for code generation backends.
+///
+/// Each backend takes a lowered IR module and produces native output
+/// (object file, executable, or LLVM IR text).
+pub trait Backend {
+    /// Returns the backend name (e.g., "LLVM").
+    fn name(&self) -> &str;
+
+    /// Generate code from the given IR module.
+    ///
+    /// Writes output to `output_path` (object file or LLVM IR depending
+    /// on the `emit_llvm` flag in the backend configuration).
+    ///
+    /// Returns `Ok(())` on success, or a `CodegenError` describing the
+    /// failure.
+    fn generate(&mut self, ir: &ir::Module, output_path: &str) -> Result<(), CodegenError>;
+}
+
+// ---------------------------------------------------------------------------
+// Target detection helpers
+// ---------------------------------------------------------------------------
+
+/// Check if a target triple indicates WASM.
+/// Recognizes "wasm32-unknown-unknown", "wasm32-wasi", and similar.
+pub fn is_wasm_target(target: &Option<String>) -> bool {
+    match target {
+        Some(t) => {
+            let t_str: string = t.as_str();
+            // Check for "wasm" prefix
+            let len = t_str.len();
+            if len < 4 {
+                return false;
+            }
+            let c0: int = t_str[0] as int;
+            let c1: int = t_str[1] as int;
+            let c2: int = t_str[2] as int;
+            let c3: int = t_str[3] as int;
+            return (c0 == 119) & (c1 == 97) & (c2 == 115) & (c3 == 109); // 'w','a','s','m'
+        }
+        None => false,
+    }
+}
+
+/// Select the appropriate codegen backend based on target triple.
+/// Returns true if WASM backend should be used.
+pub fn select_wasm_backend(config: &CodegenConfig) -> bool {
+    return is_wasm_target(&((*config).target_triple));
+}
+
+// LLVM backend module (`mod llvm;` above).
+// Use `crate::llvm::LlvmBackend` to access it.
+// WASM backend is declared as `crate::wasm::backend::WasmBackend` (top-level `mod wasm;` in lib.fu).

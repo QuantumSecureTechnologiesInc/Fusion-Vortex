@@ -1,0 +1,17 @@
+extern fn printf(fmt: string, ...) -> int;
+
+fn dispatch(active: int, mx: int, nid: int, ab: int, it: int, cc: int, ps: int) -> int {
+    printf("Node %d\n", nid);
+    return 0;
+}
+
+fn main() -> int {
+    printf("Start\n");
+    let mut nid: int = 1;
+    while nid <= 3 {
+        let r = dispatch(nid - 1, 4, nid, 512, 850000, 3142, 6);
+        nid = nid + 1;
+    }
+    printf("End\n");
+    return 0;
+}

@@ -1,0 +1,1 @@
+@"C:\Users\Matth\AppData\Local\LLVM\bin\clang.exe" %*

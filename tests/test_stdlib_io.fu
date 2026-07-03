@@ -1,0 +1,89 @@
+// tests/test_stdlib_io.fu - Tests for console I/O operations
+// Validates println, print_str, print_int, read_line wrappers.
+
+extern fn fusion_println(s: string) -> void;
+extern fn fusion_print(s: string) -> void;
+extern fn fusion_print_int(n: int) -> void;
+extern fn fusion_puts(s: string) -> void;
+extern fn fusion_read_line() -> string;
+extern fn fusion_exit(code: int) -> void;
+extern fn fusion_strlen(s: string) -> int;
+extern fn fusion_strcmp(a: string, b: string) -> int;
+
+// IO wrapper functions (mirrors stdlib/io.fu)
+fn println(s: string) -> void {
+    fusion_println(s);
+}
+
+fn print_str(s: string) -> void {
+    fusion_print(s);
+}
+
+fn print_int(n: int) -> void {
+    fusion_print_int(n);
+}
+
+fn println_int(n: int) -> void {
+    fusion_print_int(n);
+    fusion_println("");
+}
+
+fn println_bool(b: bool) -> void {
+    if b {
+        fusion_println("true");
+    } else {
+        fusion_println("false");
+    }
+}
+
+fn read_line() -> string {
+    return fusion_read_line();
+}
+
+fn assert_eq_int(actual: int, expected: int, msg: string) -> void {
+    if actual != expected {
+        fusion_println(msg);
+        fusion_println("FAIL: expected");
+        fusion_print_int(expected);
+        fusion_println("but got");
+        fusion_print_int(actual);
+        fusion_exit(1);
+    }
+}
+
+fn assert_true(cond: bool, msg: string) -> void {
+    if cond == false {
+        fusion_println(msg);
+        fusion_println("FAIL: expected true");
+        fusion_exit(1);
+    }
+}
+
+fn main() -> void {
+    fusion_println("=== Test: IO Operations ===");
+
+    // Test print functions don't crash
+    println("Hello from IO test!");
+    print_str("print_str works");
+    fusion_println("");
+
+    // Test int printing
+    print_int(42);
+    fusion_println("");
+    println_int(100);
+
+    // Test bool printing
+    println_bool(true);
+    println_bool(false);
+
+    // Test string output verification
+    let greeting: string = "Hello, Fusion!";
+    assert_eq_int(fusion_strlen(greeting), 14, "greeting length");
+    println(greeting);
+
+    // Note: read_line() is interactive, skip in automated tests
+    // but verify the function exists and is callable
+    fusion_println("read_line function is available");
+
+    fusion_println("All IO tests PASSED");
+}

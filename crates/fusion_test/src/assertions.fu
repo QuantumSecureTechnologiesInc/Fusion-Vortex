@@ -1,0 +1,79 @@
+//! Assertion code generation for the Fusion test engine.
+//!
+//! Generates Fusion source code for assert_eq!, assert_ne!, assert_true!,
+//! assert_false!, assert_contains!, and assert_panics! expansions.
+
+/// Generate an `assert_eq!` expansion for Fusion.
+pub fn generate_assert_eq(left: &str, right: &str) -> String {
+    format!(
+        "if {} != {} {{\n    __test_fail_assert_eq(__file__(), __line__(), \"{}\", \"{}\", {}, {});\n}}",
+        left, right,
+        escape_string(left), escape_string(right),
+        left, right,
+    )
+}
+
+/// Generate an `assert_ne!` expansion.
+pub fn generate_assert_ne(left: &str, right: &str) -> String {
+    format!(
+        "if {} == {} {{\n    __test_fail_assert_ne(__file__(), __line__(), \"{}\", \"{}\", {}, {});\n}}",
+        left, right,
+        escape_string(left), escape_string(right),
+        left, right,
+    )
+}
+
+/// Generate an `assert_true!` expansion.
+pub fn generate_assert_true(expr: &str) -> String {
+    format!(
+        "if !{} {{\n    __test_fail_assert_true(__file__(), __line__(), \"{}\", {});\n}}",
+        expr,
+        escape_string(expr), expr,
+    )
+}
+
+/// Generate an `assert_false!` expansion.
+pub fn generate_assert_false(expr: &str) -> String {
+    format!(
+        "if {} {{\n    __test_fail_assert_false(__file__(), __line__(), \"{}\", {});\n}}",
+        expr,
+        escape_string(expr), expr,
+    )
+}
+
+/// Generate a `#[test]` function wrapper.
+pub fn generate_test_wrapper(test_name: &str, test_body: &str) -> String {
+    format!(
+        "pub fn {}() {{\n    __test_begin(\"{}\");\n    let result = __test_run(|| {{\n        {}\n    }});\n    __test_end(result);\n}}",
+        test_name, test_name, test_body,
+    )
+}
+
+/// Test runtime declarations needed in test files.
+pub fn test_runtime_declarations() -> String {
+    "// === Fusion Test Runtime ===
+extern fn __test_begin(name: *const u8);
+extern fn __test_end(result: int);
+extern fn __test_run(f: fn() -> int) -> int;
+extern fn __test_fail_assert_eq(file: *const u8, line: u32, left_s: *const u8, right_s: *const u8, left: i64, right: i64);
+extern fn __test_fail_assert_ne(file: *const u8, line: u32, left_s: *const u8, right_s: *const u8, left: i64, right: i64);
+extern fn __test_fail_assert_true(file: *const u8, line: u32, expr_s: *const u8, value: bool);
+extern fn __test_fail_assert_false(file: *const u8, line: u32, expr_s: *const u8, value: bool);
+// === End Test Runtime ===".to_string()
+}
+
+/// Escape a string for inclusion in a Fusion string literal.
+pub fn escape_string(s: &str) -> String {
+    let mut result = String::new();
+    for c in s.chars() {
+        match c {
+            '\\' => result.push_str("\\\\"),
+            '"' => result.push_str("\\\""),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            _ => result.push(c),
+        }
+    }
+    result
+}

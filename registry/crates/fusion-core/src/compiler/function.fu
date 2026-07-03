@@ -1,11 +1,12 @@
+// __FU_COMPAT_START__
 #![allow(missing_docs)]
-#[allow(missing_docs, dead_code)]
-type FString = FString;
-#[allow(missing_docs, dead_code)]
-type FSize = FSize;
+use std::fmt;
+#[allow(missing_docs, dead_code)] type FString = String;
+#[allow(missing_docs, dead_code)] type FSize = usize;
+// __FU_COMPAT_END__
 use crate::compiler::chunk::Chunk;
 #[derive(Debug, Clone, PartialEq)]
-struct Function {
+pub struct Function {
     pub arity: FSize,
     pub chunk: Chunk,
     pub name: FString,

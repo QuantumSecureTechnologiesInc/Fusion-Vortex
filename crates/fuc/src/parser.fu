@@ -3,7 +3,7 @@ use crate::ast::{self, Spanned};
 use crate::lexer::Token;
 use chumsky::prelude::*;
 /// Parser error type.
-type ParserError = Simple<Token>;
+pub type ParserError = Simple<Token>;
 fn type_parser() -> impl Parser<Token, ast::Type, Error = ParserError> + Clone {
     recursive(|ty| {
         let ident = select! {
@@ -165,15 +165,98 @@ fn expr_parser() -> impl Parser<
         let parenthesized = expr
             .clone()
             .delimited_by(just(Token::LParen), just(Token::RParen));
+        // Lambda: |params| expr  or  |params| { block }
+        let lambda_param = ident
+            .clone()
+            .then(just(Token::Colon).ignore_then(type_parser()).or_not())
+            .map(|(name, ty)| (name, ty.unwrap_or(ast::Type::Unknown)));
+        let lambda_body_stmts = stmt_parser()
+            .repeated()
+            .delimited_by(just(Token::LBrace), just(Token::RBrace))
+            .map(|stmts| {
+                let mut out: FVec<Spanned<ast::Expression>> = Vec::new();
+                for stmt in stmts {
+                    match stmt.node {
+                        ast::Statement::Expression(e) => out.push(e),
+                        ast::Statement::Return(Some(e)) => out.push(e),
+                        _ => {}
+                    }
+                }
+                if out.is_empty() {
+                    let unit = Spanned {
+                        node: ast::Expression::IntLiteral(0),
+                        span: 0..0,
+                    };
+                    out.push(unit);
+                }
+                out
+            });
+        let lambda_expr = just(Token::Pipe)
+            .ignore_then(
+                lambda_param
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
+                    .then_ignore(just(Token::Pipe)),
+            )
+            .then(lambda_body_stmts.or(expr.clone().map(|e| vec![e])))
+            .map_with_span(|(params, bodies), span| {
+                let body = if bodies.len() == 1 {
+                    bodies[0].clone()
+                } else {
+                    Spanned {
+                        node: bodies.last().map_or(
+                            ast::Expression::IntLiteral(0),
+                            |e| e.node.clone(),
+                        ),
+                        span: span.clone(),
+                    }
+                };
+                Spanned {
+                    node: ast::Expression::Lambda {
+                        params: params
+                            .into_iter()
+                            .map(|(name, ty)| (name, ty))
+                            .collect(),
+                        body: Box::new(body),
+                        captures: Vec::new(),
+                    },
+                    span,
+                }
+            });
         let match_expr = just(Token::KwMatch)
             .ignore_then(expr.clone())
-            .then_ignore(
-                any()
-                    .repeated()
+            .then(
+                just(Token::FatArrow)
+                    .to(ast::MatchPattern::wildcard())
+                    .or(
+                        select! {
+                            Token::IntLiteral(i) => ast::MatchPattern::int_literal(i),
+                            Token::True => ast::MatchPattern::bool_literal(true),
+                            Token::False => ast::MatchPattern::bool_literal(false),
+                            Token::StringLiteral(s) => ast::MatchPattern::string_literal(s),
+                        },
+                    )
+                    .or(ident.clone().map(ast::MatchPattern::variable))
+                    .or(just(Token::Minus).ignore_then(
+                        select! { Token::IntLiteral(i) => i }
+                    ).map(|i: FI64| ast::MatchPattern::int_literal(-i)))
+                    .then(just(Token::KwIf).ignore_then(expr.clone()).or_not())
+                    .then_ignore(just(Token::FatArrow))
+                    .then(expr.clone())
+                    .map(|((pattern, guard), body)| ast::MatchArm {
+                        pattern,
+                        guard: guard.map(Box::new),
+                        body,
+                    })
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
                     .delimited_by(just(Token::LBrace), just(Token::RBrace)),
             )
-            .map_with_span(|scrutinee, span| Spanned {
-                node: scrutinee.node,
+            .map_with_span(|(scrutinee, arms), span| Spanned {
+                node: ast::Expression::Match {
+                    scrutinee: Box::new(scrutinee),
+                    arms,
+                },
                 span,
             });
         let call = path
@@ -195,8 +278,52 @@ fn expr_parser() -> impl Parser<
             .or(array_literal)
             .or(call.map_with_span(|node, span| Spanned { node, span }))
             .or(variable)
+            .or(lambda_expr)
             .or(match_expr)
             .or(parenthesized);
+        // Slice syntax: expr[start..end] or expr[..end] or expr[start..]
+        let slice_full = expr
+            .clone()
+            .then(
+                just(Token::Dot)
+                    .ignore_then(just(Token::Dot))
+                    .ignore_then(expr.clone())
+                    .then(
+                        just(Token::Dot)
+                            .ignore_then(just(Token::Dot))
+                            .ignore_then(expr.clone().or_not()),
+                    ),
+            )
+            .map(|(array, (start, end))| Spanned {
+                node: ast::Expression::Slice {
+                    array: Box::new(array),
+                    start: Some(Box::new(start)),
+                    end: end.map(Box::new),
+                },
+                span: 0..0,
+            });
+        let slice_expr = expr
+            .clone()
+            .then(
+                just(Token::Dot)
+                    .ignore_then(just(Token::Dot))
+                    .ignore_then(just(Token::Assign).or_not())
+                    .ignore_then(expr.clone().or_not())
+                    .or_not(),
+            )
+            .map(|(array, range_opt)| {
+                match range_opt {
+                    Some(Some(end)) => Spanned {
+                        node: ast::Expression::Slice {
+                            array: Box::new(array),
+                            start: None,
+                            end: Some(Box::new(end)),
+                        },
+                        span: 0..0,
+                    },
+                    _ => array,
+                }
+            });
         let postfix = primary
             .clone()
             .then(
@@ -204,6 +331,7 @@ fn expr_parser() -> impl Parser<
                     .clone()
                     .delimited_by(just(Token::LBracket), just(Token::RBracket))
                     .map(PostfixOp::Index)
+                    .or(slice_full.or(slice_expr).map(|_| PostfixOp::Member("".to_string())))
                     .or(
                         just(Token::Dot)
                             .ignore_then(ident.clone())
@@ -546,19 +674,16 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .or_not(),
         )
         .or_not();
-    let generic_header = just(Token::Less)
+    let generic_params = just(Token::Less)
         .ignore_then(
-            any()
-                .try_map(|t, span| {
-                    if t == Token::Greater {
-                        Err(Simple::custom(span, "end of generic header"))
-                    } else {
-                        Ok(t)
-                    }
-                })
-                .repeated(),
+            ident
+                .clone()
+                .separated_by(just(Token::Comma))
+                .allow_trailing(),
         )
-        .then_ignore(just(Token::Greater));
+        .then_ignore(just(Token::Greater))
+        .or_not()
+        .map(|opt| opt.unwrap_or_else(|| Vec::new()));
     let stmt = stmt_parser();
     let block = stmt.repeated().delimited_by(just(Token::LBrace), just(Token::RBrace));
     let function_block = block
@@ -577,13 +702,13 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let struct_def = visibility.clone()
         .ignore_then(just(Token::KwStruct))
         .ignore_then(ident.clone())
-        .then(generic_header.clone().or_not())
+        .then(generic_params.clone())
         .then(
             fields_or_params_list
                 .clone()
                 .delimited_by(just(Token::LBrace), just(Token::RBrace)),
         )
-        .map(|((name, _), fields)| ast::StructDefinition { name, fields });
+        .map(|((name, generics), fields)| ast::StructDefinition { name, generics, fields });
     let struct_def_opaque = visibility.clone()
         .ignore_then(just(Token::KwStruct))
         .ignore_then(ident.clone())
@@ -601,6 +726,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         )
         .map(|(name, _)| ast::StructDefinition {
             name,
+            generics: Vec::new(),
             fields: Vec::new(),
         });
     let return_type_strict = just(Token::Colon)
@@ -663,7 +789,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .ignore_then(just(Token::KwAsync).or_not())
         .ignore_then(just(Token::KwFn))
         .ignore_then(ident.clone())
-        .then(generic_header.clone().or_not())
+        .then(generic_params.clone())
         .then(
             fields_or_params_list.delimited_by(just(Token::LParen), just(Token::RParen)),
         )
@@ -684,8 +810,9 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .or_not(),
         )
         .then(function_block.clone())
-        .map(|(((((name, _), params), return_type), _), body)| ast::Function {
+        .map(|(((((name, generics), params), return_type), _), body)| ast::Function {
             name,
+            generics,
             params,
             return_type,
             body,
@@ -708,6 +835,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         )
         .map(|(name, _)| ast::Function {
             name,
+            generics: Vec::new(),
             params: Vec::new(),
             return_type: ast::Type::Unknown,
             body: Vec::new(),
@@ -740,7 +868,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let enum_decl = visibility.clone()
         .ignore_then(just(Token::KwEnum))
         .ignore_then(ident.clone())
-        .then(generic_header.clone().or_not())
+        .then(generic_params.clone())
         .then(
             enum_variant
                 .separated_by(just(Token::Comma))
@@ -772,7 +900,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let type_decl = visibility.clone()
         .ignore_then(just(Token::KwType))
         .ignore_then(ident.clone())
-        .then(generic_header.clone().or_not())
+        .then(generic_params.clone())
         .then_ignore(just(Token::Assign))
         .then(type_parser())
         .then_ignore(just(Token::Semicolon))
@@ -968,7 +1096,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .ignore_then(just(Token::KwAsync).or_not())
         .ignore_then(just(Token::KwFn))
         .ignore_then(ident.clone())
-        .then(generic_header.clone().or_not())
+        .then(generic_params.clone())
         .then(
             impl_params_list
                 .clone()
@@ -991,8 +1119,9 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .or_not(),
         )
         .then(function_block.clone())
-        .map(|(((((name, _), params), return_type), _), body)| ast::Function {
+        .map(|(((((name, generics), params), return_type), _), body)| ast::Function {
             name,
+            generics,
             params,
             return_type,
             body,
@@ -1016,6 +1145,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .then(function_block.clone())
         .map(|((name, _), body)| ast::Function {
             name,
+            generics: Vec::new(),
             params: Vec::new(),
             return_type: ast::Type::Unknown,
             body,
@@ -1037,21 +1167,44 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         )
         .then(impl_method.repeated().delimited_by(just(Token::LBrace), just(Token::RBrace)))
         .map(|(header_tokens, methods)| {
+            let mut trait_name: Option<FString> = None;
             let mut target = "impl".to_string();
+            // Detect "impl TraitName for TypeName" pattern
+            let mut seen_for = false;
+            let mut after_for: Option<FString> = None;
+            let mut pre_for_upper: Option<FString> = None;
             for token in &header_tokens {
                 if let Token::Identifier(name) = token {
-                    if let Some(first) = name.chars().next() {
-                        if first.is_ascii_uppercase() {
-                            target = name.clone();
-                            break;
+                    if name == "for" {
+                        seen_for = true;
+                    } else if seen_for && after_for.is_none() {
+                        after_for = Some(name.clone());
+                    } else if !seen_for && name.chars().next().map_or(false, |c| c.is_ascii_uppercase()) {
+                        if pre_for_upper.is_none() {
+                            pre_for_upper = Some(name.clone());
                         }
                     }
                 }
             }
-            if target == "impl" {
-                for token in header_tokens {
+            if let Some(for_type) = after_for {
+                trait_name = pre_for_upper;
+                target = for_type;
+            } else {
+                for token in &header_tokens {
                     if let Token::Identifier(name) = token {
-                        target = name;
+                        if let Some(first) = name.chars().next() {
+                            if first.is_ascii_uppercase() {
+                                target = name.clone();
+                                break;
+                            }
+                        }
+                    }
+                }
+                if target == "impl" {
+                    for token in header_tokens {
+                        if let Token::Identifier(name) = token {
+                            target = name;
+                        }
                     }
                 }
             }
@@ -1097,6 +1250,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 }
                 lowered_methods.push(ast::Function {
                     name: format!("{}::{}", target, method.name),
+                    generics: method.generics,
                     params: rewritten_params,
                     return_type: rewritten_return_type,
                     body: method.body,
@@ -1104,7 +1258,9 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
             }
             TopLevel::Impl {
                 def: ast::ImplDefinition {
+                    trait_name,
                     target,
+                    generics: Vec::new(),
                 },
                 methods: lowered_methods,
             }
@@ -1125,27 +1281,52 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
                 .then_ignore(brace_block.clone()),
         )
         .map(|header_tokens| {
+            let mut trait_name: Option<FString> = None;
             let mut target = "impl".to_string();
+            // Detect "impl TraitName for TypeName" pattern
+            let mut seen_for = false;
+            let mut after_for: Option<FString> = None;
+            let mut pre_for_upper: Option<FString> = None;
             for token in &header_tokens {
                 if let Token::Identifier(name) = token {
-                    if let Some(first) = name.chars().next() {
-                        if first.is_ascii_uppercase() {
-                            target = name.clone();
-                            break;
+                    if name == "for" {
+                        seen_for = true;
+                    } else if seen_for && after_for.is_none() {
+                        after_for = Some(name.clone());
+                    } else if !seen_for && name.chars().next().map_or(false, |c| c.is_ascii_uppercase()) {
+                        if pre_for_upper.is_none() {
+                            pre_for_upper = Some(name.clone());
                         }
                     }
                 }
             }
-            if target == "impl" {
-                for token in header_tokens {
+            if let Some(for_type) = after_for {
+                trait_name = pre_for_upper;
+                target = for_type;
+            } else {
+                for token in &header_tokens {
                     if let Token::Identifier(name) = token {
-                        target = name;
+                        if let Some(first) = name.chars().next() {
+                            if first.is_ascii_uppercase() {
+                                target = name.clone();
+                                break;
+                            }
+                        }
+                    }
+                }
+                if target == "impl" {
+                    for token in header_tokens {
+                        if let Token::Identifier(name) = token {
+                            target = name;
+                        }
                     }
                 }
             }
             TopLevel::Impl {
                 def: ast::ImplDefinition {
+                    trait_name,
                     target,
+                    generics: Vec::new(),
                 },
                 methods: Vec::new(),
             }
@@ -1153,23 +1334,25 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
     let trait_decl = visibility
         .clone()
         .ignore_then(just(Token::KwTrait))
-        .ignore_then(
-            ident
+        .ignore_then(ident.clone())
+        .then(generic_params.clone())
+        .then(
+            // Trait method signatures: fn name(params) -> Type;
+            field_or_param
                 .clone()
-                .then(
-                    any()
-                        .try_map(|t, span| {
-                            if t == Token::LBrace {
-                                Err(Simple::custom(span, "end of trait header"))
-                            } else {
-                                Ok(t)
-                            }
-                        })
-                        .repeated()
-                        .then_ignore(brace_block.clone()),
-                ),
+                .then(return_type.clone())
+                .map(|((name, ty), ret)| ast::TraitMethodSig {
+                    name,
+                    params: vec![("self".to_string(), ty)],
+                    return_type: ret,
+                })
+                .separated_by(just(Token::Semicolon))
+                .allow_trailing()
+                .delimited_by(just(Token::LBrace), just(Token::RBrace))
+                .or_not()
+                .map(|opt| opt.unwrap_or_else(|| Vec::new())),
         )
-        .map(|(name, _)| TopLevel::Trait(ast::TraitDefinition { name }));
+        .map(|((name, generics), methods)| TopLevel::Trait(ast::TraitDefinition { name, generics, methods }));
     let attributes = just(Token::Hash)
         .ignore_then(just(Token::LBracket))
         .ignore_then(
@@ -1257,7 +1440,7 @@ fn program_parser() -> impl Parser<Token, ast::Program, Error = ParserError> {
         .then_ignore(end())
 }
 /// Parses source text into an AST program.
-pub fn parse(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
+pub fn parse_program(input: &str) -> (Option<ast::Program>, FVec<ParserError>) {
     let tokens = crate::lexer::lex(input);
     let token_stream = chumsky::Stream::from_iter(
         tokens.len()..tokens.len(),
@@ -1274,7 +1457,7 @@ pub struct ParseOutput {
 }
 /// Real parser output used by host compiler entry paths.
 pub fn parse_host_output(input: &str) -> ParseOutput {
-    let (program, errors) = parse(input);
+    let (program, errors) = parse_program(input);
     ParseOutput { program, errors }
 }
 

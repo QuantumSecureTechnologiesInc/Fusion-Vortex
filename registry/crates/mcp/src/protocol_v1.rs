@@ -1,25 +1,24 @@
-// __FU_COMPAT_START__
-#![allow(missing_docs)]
-#[allow(missing_docs, dead_code)] type FString = String;
-// __FU_COMPAT_END__
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
 /// MCP v1.0 Protocol Version
 pub const FUSION_MCP_VERSION: &str = "1.0";
+
 /// Normative MCP v1.0 message envelope
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpMessage {
     /// Protocol version identifier
-    pub fusion_mcp: FString,
+    pub fusion_mcp: String,
     /// Unique message identifier (UUID)
-    pub id: FString,
+    pub id: String,
     /// Message type discriminator
     #[serde(rename = "type")]
     pub message_type: MessageType,
     /// Message payload
     pub payload: serde_json::Value,
 }
+
 impl McpMessage {
     /// Create a new MCP message with auto-generated UUID
     pub fn new(message_type: MessageType, payload: serde_json::Value) -> Self {
@@ -30,25 +29,31 @@ impl McpMessage {
             payload,
         }
     }
+
     /// Validate message format
     pub fn validate(&self) -> Result<()> {
         if self.fusion_mcp != FUSION_MCP_VERSION {
             anyhow::bail!(
-                "Invalid protocol version: expected {}, got {}", FUSION_MCP_VERSION, self
-                .fusion_mcp
+                "Invalid protocol version: expected {}, got {}",
+                FUSION_MCP_VERSION,
+                self.fusion_mcp
             );
         }
+
         if self.id.is_empty() {
             anyhow::bail!("Message ID cannot be empty");
         }
+
         Ok(())
     }
+
     /// Serialize to newline-delimited JSON
-    pub fn to_ndjson(&self) -> Result<FString> {
+    pub fn to_ndjson(&self) -> Result<String> {
         let mut json = serde_json::to_string(self)?;
         json.push('\n');
         Ok(json)
     }
+
     /// Deserialize from newline-delimited JSON
     pub fn from_ndjson(line: &str) -> Result<Self> {
         let msg: Self = serde_json::from_str(line.trim_end())?;
@@ -56,6 +61,7 @@ impl McpMessage {
         Ok(msg)
     }
 }
+
 /// Message type discriminator
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -65,13 +71,15 @@ pub enum MessageType {
     Stream,
     Error,
 }
+
 /// MCP v1.0 Request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpRequest {
-    pub method: FString,
+    pub method: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
 }
+
 /// MCP v1.0 Response payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpResponse {
@@ -80,16 +88,18 @@ pub struct McpResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<McpError>,
 }
+
 /// MCP v1.0 Stream event payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpStreamEvent {
-    pub tool: FString,
+    pub tool: String,
     pub event: StreamEventType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<FString>,
+    pub message: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
 }
+
 /// Stream event types (normative)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -100,33 +110,37 @@ pub enum StreamEventType {
     Completed,
     Error,
 }
+
 /// MCP v1.0 Error format
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpError {
-    pub code: FString,
-    pub message: FString,
+    pub code: String,
+    pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
 }
+
 impl McpError {
     /// Create a policy violation error
-    pub fn policy_violation(message: impl Into<FString>) -> Self {
+    pub fn policy_violation(message: impl Into<String>) -> Self {
         Self {
             code: "POLICY_VIOLATION".to_string(),
             message: message.into(),
             data: None,
         }
     }
+
     /// Create a tool not found error
-    pub fn tool_not_found(tool: impl Into<FString>) -> Self {
+    pub fn tool_not_found(tool: impl Into<String>) -> Self {
         Self {
             code: "TOOL_NOT_FOUND".to_string(),
             message: format!("Tool '{}' not found", tool.into()),
             data: None,
         }
     }
+
     /// Create a validation error
-    pub fn validation_error(message: impl Into<FString>) -> Self {
+    pub fn validation_error(message: impl Into<String>) -> Self {
         Self {
             code: "VALIDATION_ERROR".to_string(),
             message: message.into(),
@@ -134,30 +148,37 @@ impl McpError {
         }
     }
 }
+
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
+
     #[test]
     fn test_message_creation() {
         let msg = McpMessage::new(
             MessageType::Request,
-            serde_json::json!({ "method" : "call_tool" }),
+            serde_json::json!({"method": "call_tool"}),
         );
+
         assert_eq!(msg.fusion_mcp, "1.0");
         assert_eq!(msg.message_type, MessageType::Request);
-        assert!(! msg.id.is_empty());
+        assert!(!msg.id.is_empty());
     }
+
     #[test]
     fn test_ndjson_serialization() {
         let msg = McpMessage::new(
             MessageType::Response,
-            serde_json::json!({ "result" : "success" }),
+            serde_json::json!({"result": "success"}),
         );
+
         let ndjson = msg.to_ndjson().unwrap();
         assert!(ndjson.ends_with('\n'));
+
         let parsed = McpMessage::from_ndjson(&ndjson).unwrap();
         assert_eq!(parsed.message_type, MessageType::Response);
     }
+
     #[test]
     fn test_policy_violation_error() {
         let err = McpError::policy_violation("NetworkOutbound not permitted");

@@ -1,5 +1,4 @@
 // __FU_COMPAT_START__
-#![allow(missing_docs)]
 use std::os::unix::net::UnixStream;
 use std::io::{Read, Write};
 #[allow(missing_docs, dead_code)] type FString = String;

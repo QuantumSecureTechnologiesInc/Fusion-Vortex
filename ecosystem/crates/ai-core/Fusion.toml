@@ -1,5 +1,5 @@
 [package]
-name = "ai-core"
+name = "fusion-ai-core"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -29,5 +29,4 @@ fusion_std = "1.0.0"
 
 [dev-dependencies]
 tempfile = "3.8"
-
 

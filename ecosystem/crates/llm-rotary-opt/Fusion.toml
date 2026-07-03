@@ -1,5 +1,5 @@
 [package]
-name = "llm-rotary-opt"
+name = "fusion_llm_rotary_opt"
 version = "0.1.0"
 edition = "2021"
 description = "Optimized RoPE kernel using SIMD/Vectorization"
@@ -9,5 +9,4 @@ license = "MIT"
 fusion-core = { workspace = true }
 fusion-ai-core = { workspace = true }
 fusion_std = "1.0.0"
-
 

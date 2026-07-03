@@ -1,13 +1,13 @@
-// src/main.fu
-// HAFT Fusion Demonstration
+// src/main.rs
+use haft_fusion::{FluxTensor, Trinity};
+use std::sync::Arc;
+use tokio::time::{sleep, Duration};
 
-import haft_fusion::{FluxTensor, Trinity, TensorState};
-import std::time::{sleep, Duration};
-
-async fn main() -> int {
-    print("--- INITIALISING HAFT (FUSION ENGINE) ---");
+#[tokio::main]
+async fn main() {
+    println!("--- INITIALIZING HAFT (FUSION ENGINE) ---");
     
-    // 1. Initialise Tensor (Shape: 1000)
+    // 1. Initialize Tensor (Shape: 1000)
     let tensor = FluxTensor::new(vec![1000]);
     let trinity = Trinity::new(tensor.clone());
     
@@ -17,12 +17,12 @@ async fn main() -> int {
     // 3. Simulate Lifecycle
     
     // Scenario A: Standard Operation
-    print("\n[Main] Loading Data...");
+    println!("\n[Main] Loading Data...");
     tensor.load_data(vec![1.0; 1000]).await;
     sleep(Duration::from_secs(1)).await;
     
     // Scenario B: Deep Learning Error (Exploding Gradients)
-    print("\n[Main] Simulating Exploding Gradients...");
+    println!("\n[Main] Simulating Exploding Gradients...");
     {
         let mut grads = tensor.gradients.write().await;
         for i in 0..100 { grads[i] = 500.0; } // Massive gradients
@@ -30,27 +30,25 @@ async fn main() -> int {
     sleep(Duration::from_secs(2)).await; // Allow Agents to react
     
     // Scenario C: Data Degradation (Low Variance)
-    print("\n[Main] Simulating Data Degradation (Entropy Loss)...");
+    println!("\n[Main] Simulating Data Degradation (Entropy Loss)...");
     tensor.load_data(vec![0.001; 1000]).await; // Very low variance
     sleep(Duration::from_secs(3)).await; // Allow Optimizer to Compress
     
     // Scenario D: Corruption (NaN Injection)
-    print("\n[Main] Simulating Memory Corruption (NaN Injection)...");
+    println!("\n[Main] Simulating Memory Corruption (NaN Injection)...");
     {
         let mut data = tensor.hot_data.write().await;
         data[50] = f64::NAN;
-        *tensor.state.write().await = TensorState::Healing; // Trigger check
+        *tensor.state.write().await = haft_fusion::TensorState::Healing; // Trigger check
     }
     sleep(Duration::from_secs(2)).await;
 
     // 4. Report
-    print("\n--- SYSTEM SHUTDOWN: FINAL LOGS ---");
+    println!("\n--- SYSTEM SHUTDOWN: FINAL LOGS ---");
     let logs = tensor.logs.read().await;
     for log in logs.iter() {
-        print(log);
+        println!("{}", log);
     }
     
-    print(format!("\nFinal State: {:?}", *tensor.state.read().await));
-    
-    return 0;
+    println!("\nFinal State: {:?}", *tensor.state.read().await);
 }

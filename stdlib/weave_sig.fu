@@ -1,0 +1,48 @@
+// stdlib/weave_sig.fu - Weave-SIG Post-Quantum Digital Signatures (FFI to C library)
+//
+// Post-quantum signatures: Part of the 50% post-quantum crypto layer.
+// Wraps HyperCycle PQC C library's Weave-SIG (quaternion-based) implementation.
+
+extern fn hc_weave_sig_keygen(public_key: string, secret_key: string) -> int;
+extern fn hc_weave_sig_sign(message: string, msg_len: int, secret_key: string, signature: string) -> int;
+extern fn hc_weave_sig_verify(message: string, msg_len: int, public_key: string, signature: string) -> int;
+
+/// Weave-SIG keypair
+struct WeaveSigKeyPair {
+    public_key: string,  // 96 bytes
+    secret_key: string,  // larger secret key
+}
+
+/// Weave-SIG signature
+struct WeaveSignature {
+    commitment: string, // 96 bytes
+    response: string,   // 192 bytes
+}
+
+/// Generate Weave-SIG keypair
+fn weave_sig_keygen() -> WeaveSigKeyPair {
+    let mut pk: string = "                                                                                                "; // 96 bytes
+    let mut sk: string = "                                                                                                                                                                                                "; // Assume 192 bytes
+    let result: int = hc_weave_sig_keygen(pk, sk);
+    
+    let kp: WeaveSigKeyPair = WeaveSigKeyPair { public_key: pk, secret_key: sk };
+    return kp;
+}
+
+/// Sign a message with Weave-SIG
+fn weave_sig_sign(message: string, sk: string) -> WeaveSignature {
+    let mut sig: string = "                                                                                                                                                                                                                                                                                                        "; // 288 bytes
+    let msg_len: int = 48; // Assume message length
+    let result: int = hc_weave_sig_sign(message, msg_len, sk, sig);
+    
+    let signature: WeaveSignature = WeaveSignature { commitment: sig, response: sig }; // Split in real impl
+    return signature;
+}
+
+/// Verify a Weave-SIG signature
+fn weave_sig_verify(message: string, signature: WeaveSignature, pk: string) -> bool {
+    let msg_len: int = 48; // Assume message length
+    let sig_combined: string = signature.commitment; // Combine in real impl
+    let result: int = hc_weave_sig_verify(message, msg_len, pk, sig_combined);
+    return result == 0; // 0 = success
+}

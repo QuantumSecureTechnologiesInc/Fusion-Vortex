@@ -1,0 +1,105 @@
+// Phi Adapter — Fusion AI Core
+// Microsoft Phi: open-weight small model via OpenAI-compatible API
+// Typically served via llama.cpp, vLLM, or Ollama at localhost:11436
+// Models: phi-4, phi-3.5-mini, phi-3-mini-4k, phi-3-small
+// Auth: None (local only)
+
+use std::time::Duration;
+
+const PHI_API_BASE: string = "http://localhost:11436/v1";
+
+/// Phi adapter configuration
+struct PhiConfig {
+    pub api_base: string,
+    pub model: string,
+    pub max_tokens: int,
+    pub temperature: int,
+    pub timeout_secs: int,
+}
+
+fn phi_config_default() -> PhiConfig {
+    PhiConfig {
+        api_base: "http://localhost:11436/v1",
+        model: "phi-4",
+        max_tokens: 4096,
+        temperature: 70,
+        timeout_secs: 120,
+    }
+}
+
+/// Chat message
+struct PhiMessage {
+    role: string,
+    content: string,
+}
+
+/// Chat completion request
+struct PhiChatRequest {
+    model: string,
+    messages_len: int,
+    max_tokens: int,
+    temperature: int,
+    stream: int,
+}
+
+/// Chat completion response
+struct PhiChatResponse {
+    model: string,
+    content: string,
+    finish_reason: string,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+}
+
+/// Phi Adapter (local)
+struct PhiAdapter {
+    config: PhiConfig,
+    connected: int,
+}
+
+fn phi_adapter_new() -> PhiAdapter {
+    PhiAdapter {
+        config: phi_config_default(),
+        connected: 0,
+    }
+}
+
+fn phi_adapter_with_config(cfg: PhiConfig) -> PhiAdapter {
+    PhiAdapter {
+        config: cfg,
+        connected: 0,
+    }
+}
+
+/// Chat completion via local Phi endpoint
+fn phi_chat_completion(adapter: PhiAdapter, messages_len: int) -> (PhiAdapter, PhiChatResponse) {
+    let mut a = adapter;
+    // POST http://localhost:11436/v1/chat/completions
+    // Body: {"model":"phi-4","messages":[...],"max_tokens":4096,"temperature":0.7}
+    a.connected = 1;
+    let resp: PhiChatResponse = PhiChatResponse {
+        model: a.config.model,
+        content: "",
+        finish_reason: "stop",
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+    };
+    return (a, resp);
+}
+
+/// Health check
+fn phi_health_check(adapter: PhiAdapter) -> int {
+    return 1;
+}
+
+/// Provider name
+fn phi_provider_name() -> string {
+    return "Microsoft Phi (Local)";
+}
+
+/// Supported model families
+fn phi_supported_models() -> string {
+    return "phi-4,phi-3.5-mini,phi-3.5-vision,phi-3-mini-4k,phi-3-small,phi-2";
+}

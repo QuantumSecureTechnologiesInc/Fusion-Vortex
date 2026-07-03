@@ -1,74 +1,33 @@
-// Result<T, E> - Rust-style result type for error handling
-// Represents either Ok(value) or Err(error)
+// stdlib/result.fu - Result types for Fusion
 
-class Result<T, E> {
-    is_ok: int;  // 1 = ok, 0 = err
-    ok_value: T;
-    err_value: E;
-    
-    fn ok(val: T) -> Result<T, E> {
-        let dummy_err: E;
-        return Result::<T, E> { is_ok: 1, ok_value: val, err_value: dummy_err };
+struct ResultBoolString {
+    is_ok: int,
+    ok_value: int,
+    err_value: string,
+}
+
+impl ResultBoolString {
+    fn ok(val: int) -> ResultBoolString {
+        return ResultBoolString { is_ok: 1, ok_value: val, err_value: "" };
     }
-    
-    fn err(error: E) -> Result<T, E> {
-        let dummy_ok: T;
-        return Result::<T, E> { is_ok: 0, ok_value: dummy_ok, err_value: error };
+    fn err(error: string) -> ResultBoolString {
+        return ResultBoolString { is_ok: 0, ok_value: 0, err_value: error };
     }
-    
-    fn is_ok() -> int {
-        return self.is_ok;
-    }
-    
-    fn is_err() -> int {
-        if (self.is_ok == 0) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    
-    fn unwrap() -> T {
-        // Returns ok_value if Ok, panics if Err
-        // TODO: Add proper panic when available
-        return self.ok_value;
-    }
-    
-    fn unwrap_err() -> E {
-        // Returns err_value if Err, panics if Ok
-        // TODO: Add proper panic when available
-        return self.err_value;
-    }
-    
-    fn unwrap_or(default: T) -> T {
-        if (self.is_ok) {
-            return self.ok_value;
-        } else {
-            return default;
-        }
-    }
-    
-    fn map<U>(f: fn(T) -> U) -> Result<U, E> {
-        // Maps Result<T, E> to Result<U, E> by applying a function to Ok value
-        // Note: Requires first-class functions
-        // Placeholder for now
-        if (self.is_ok) {
-            // Would be: Result::<U, E>::ok(f(self.ok_value))
-            return Result::<U, E>::err(self.err_value);
-        } else {
-            return Result::<U, E>::err(self.err_value);
-        }
-    }
-    
-    fn map_err<F>(f: fn(E) -> F) -> Result<T, F> {
-        // Maps Result<T, E> to Result<T, F> by applying a function to Err value
-        // Placeholder for now
-        if (self.is_ok) {
-            return Result::<T, F>::ok(self.ok_value);
-        } else {
-            // Would be: Result::<T, F>::err(f(self.err_value))
-            let dummy_err: F;
-            return Result::<T, F>::err(dummy_err);
-        }
+    fn is_ok(r: ResultBoolString) -> bool { return r.is_ok != 0; }
+    fn is_err(r: ResultBoolString) -> bool { return r.is_ok == 0; }
+    fn unwrap(r: ResultBoolString) -> int { return r.ok_value; }
+    fn unwrap_err(r: ResultBoolString) -> string { return r.err_value; }
+    fn unwrap_or(r: ResultBoolString, default: int) -> int {
+        if r.is_ok != 0 { return r.ok_value; }
+        return default;
     }
 }
+
+fn result_bool_ok(val: int) -> ResultBoolString {
+    return ResultBoolString { is_ok: 1, ok_value: val, err_value: "" };
+}
+fn result_bool_err(error: string) -> ResultBoolString {
+    return ResultBoolString { is_ok: 0, ok_value: 0, err_value: error };
+}
+
+// NOTE: Generic Result<T, E> requires generics support.

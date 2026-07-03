@@ -1,0 +1,21 @@
+﻿[package]
+name = "fusion_q_cloud_agent"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Integration: Cloud provider connector for AGENT."
+authors = ["Fusion Team"]
+repository = "https://github.com/QuantumSecureTechnologiesInc/Fusion-Programming-Language"
+keywords = ["integration", "fusion", "cloud", "agent"]
+categories = ["network-programming", "web-programming"]
+readme = "README.md"
+[dependencies]
+fusion_core = { workspace = true }
+fusion_std = { workspace = true }
+fusion_net = { path = "../fusion_net" }
+fusion_http = { path = "../http" }
+fusion_quantum_sdk = { workspace = true }
+fusion_runtime_core = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }
+tokio = { workspace = true }
