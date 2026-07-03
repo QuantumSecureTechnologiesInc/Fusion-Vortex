@@ -4,7 +4,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$InputPath,
     [Parameter(Mandatory=$true)][string]$OutputPath,
-    [switch]$ResolveModules
+    [bool]$ResolveModules = $false
 )
 
 $ErrorActionPreference = "Stop"

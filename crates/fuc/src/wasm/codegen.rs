@@ -22,6 +22,7 @@ pub struct WasmCodeGenerator {
     memory_section: MemorySection,
     next_local_index: u32,
     local_map: HashMap<String, u32>, // Variable name -> local index
+    local_types: HashMap<String, Type>, // Variable name -> Fusion type
     string_offsets: HashMap<String, u32>, // String literal -> memory offset
     string_data: Vec<u8>,                  // Accumulated string bytes
 }
@@ -38,6 +39,7 @@ impl WasmCodeGenerator {
             memory_section: MemorySection::new(),
             next_local_index: 0,
             local_map: HashMap::new(),
+            local_types: HashMap::new(),
             string_offsets: HashMap::new(),
             string_data: Vec::new(),
         }
@@ -99,27 +101,36 @@ impl WasmCodeGenerator {
         Ok(())
     }
 
-    /// Count additional local variables needed beyond function parameters.
-    fn count_locals(block: &Block) -> u32 {
-        let mut count = 0u32;
+    /// Collect all local variable types from a block (including nested blocks).
+    fn collect_local_types(block: &Block) -> Vec<(String, Type)> {
+        let mut types = Vec::new();
         for stmt in &block.statements {
             match stmt {
-                Statement::Let { .. } | Statement::VariableDeclaration { .. } => {
-                    count += 1;
+                Statement::Let { name, ty, .. } => {
+                    types.push((name.clone(), ty.clone()));
+                }
+                Statement::VariableDeclaration { name, ty, .. } => {
+                    if let Some(t) = ty {
+                        types.push((name.clone(), t.clone()));
+                    }
                 }
                 Statement::If { then_block, else_block, .. } => {
-                    count += Self::count_locals(then_block);
+                    types.extend(Self::collect_local_types(then_block));
                     if let Some(else_blk) = else_block {
-                        count += Self::count_locals(else_blk);
+                        types.extend(Self::collect_local_types(else_blk));
                     }
                 }
                 Statement::While { body, .. } => {
-                    count += Self::count_locals(body);
+                    types.extend(Self::collect_local_types(body));
+                }
+                Statement::For { var, body, .. } => {
+                    types.push((var.clone(), Type::Int));
+                    types.extend(Self::collect_local_types(body));
                 }
                 _ => {}
             }
         }
-        count
+        types
     }
 
     fn generate_function(
@@ -155,17 +166,28 @@ impl WasmCodeGenerator {
         self.export_section.export(name, ExportKind::Func, func_idx);
 
         // Generate function body
-        // Count additional locals beyond params
-        let extra_locals = Self::count_locals(body);
-        let mut func_body = if extra_locals > 0 {
-            WasmFunction::new(vec![(extra_locals, ValType::I64)])
-        } else {
-            WasmFunction::new(vec![])
-        };
+        // Collect local variable types for correct WASM local declarations
+        let local_types = Self::collect_local_types(body);
+        let mut locals_decl: Vec<(u32, ValType)> = Vec::new();
+        for (_, ty) in &local_types {
+            if let Some(vt) = fusion_to_wasm_type(ty) {
+                match locals_decl.last_mut() {
+                    Some((count, last_type)) if *last_type == vt => *count += 1,
+                    _ => locals_decl.push((1, vt)),
+                }
+            }
+        }
+        let mut func_body = WasmFunction::new(locals_decl);
 
         // Reset local tracking for this function
         self.next_local_index = params.len() as u32;
         self.local_map.clear();
+        self.local_types.clear();
+
+        // Track local types for condition coercion
+        for (name, ty) in &local_types {
+            self.local_types.insert(name.clone(), ty.clone());
+        }
 
         // Map parameters to locals
         for (i, param) in params.iter().enumerate() {
@@ -182,6 +204,33 @@ impl WasmCodeGenerator {
         // Add function to code section
         self.code_section.function(&func_body);
 
+        Ok(())
+    }
+
+    /// Coerce a condition expression result to i32 for WASM control flow.
+    fn coerce_condition_to_i32(
+        &mut self,
+        expr: &Expression,
+        func: &mut WasmFunction,
+    ) -> Result<(), String> {
+        self.generate_expression(expr, func)?;
+        match &expr.ty {
+            Some(Type::Bool) => {
+                // Bool is already i32, nothing to do
+            }
+            Some(Type::Int) => {
+                func.instruction(&Instruction::I32WrapI64);
+            }
+            Some(Type::Float) => {
+                // Convert float to i32: f64 != 0.0
+                func.instruction(&Instruction::F64Const(0.0));
+                func.instruction(&Instruction::F64Ne);
+            }
+            _ => {
+                // Unknown type, assume i64 (most common case)
+                func.instruction(&Instruction::I32WrapI64);
+            }
+        }
         Ok(())
     }
 
@@ -219,9 +268,8 @@ impl WasmCodeGenerator {
                 then_block,
                 else_block,
             } => {
-                // Generate condition on stack (as i64), then convert to i32 for WASM if
-                self.generate_expression(cond, func)?;
-                func.instruction(&Instruction::I32WrapI64);
+                // Generate condition and coerce to i32
+                self.coerce_condition_to_i32(cond, func)?;
                 // WASM if: takes i32 condition from stack
                 func.instruction(&Instruction::If(BlockType::Empty));
 
@@ -238,8 +286,6 @@ impl WasmCodeGenerator {
                 }
 
                 func.instruction(&Instruction::End);
-                // If both branches return, we need unreachable to satisfy the type checker
-                func.instruction(&Instruction::Unreachable);
             }
             Statement::While { cond, body } => {
                 // WASM while pattern: block (outer) + loop (inner)
@@ -256,8 +302,7 @@ impl WasmCodeGenerator {
                 func.instruction(&Instruction::Loop(BlockType::Empty));
 
                 // Generate condition
-                self.generate_expression(cond, func)?;
-                func.instruction(&Instruction::I32WrapI64);
+                self.coerce_condition_to_i32(cond, func)?;
                 func.instruction(&Instruction::I32Eqz);
                 func.instruction(&Instruction::BrIf(1));
 
@@ -288,19 +333,8 @@ impl WasmCodeGenerator {
                     return Err("Assignment target must be a variable".to_string());
                 }
             }
-            Statement::For { var, iter, body } => {
-                // For loop: allocate loop var, iterate over array elements
-                let local_idx = self.next_local_index;
-                self.local_map.insert(var.clone(), local_idx);
-                self.next_local_index += 1;
-                // Generate iterator expression
-                self.generate_expression(iter, func)?;
-                // Store initial value
-                func.instruction(&Instruction::LocalSet(local_idx));
-                // For now, emit the body once (simplified for-loop)
-                for s in &body.statements {
-                    self.generate_statement(s, func)?;
-                }
+            Statement::For { .. } => {
+                return Err("WASM backend: For-loop needs runtime representation".to_string());
             }
         }
         Ok(())
@@ -391,36 +425,20 @@ impl WasmCodeGenerator {
                     }
                 }
             }
-            ExpressionKind::MemberAccess { base, field: _field } => {
-                // For now, treat member access as returning the base pointer
-                // TODO: proper GEP-like offset calculation for struct fields
-                self.generate_expression(base, func)?;
+            ExpressionKind::MemberAccess { base: _, field: _ } => {
+                return Err("WASM backend: MemberAccess needs heap allocator".to_string());
             }
-            ExpressionKind::StructLiteral { name: _, fields } => {
-                // Stack-allocate struct: push each field value
-                for (_field_name, field_expr) in fields {
-                    self.generate_expression(field_expr, func)?;
-                }
+            ExpressionKind::StructLiteral { name: _, fields: _ } => {
+                return Err("WASM backend: StructLiteral needs heap allocator".to_string());
             }
-            ExpressionKind::ArrayLiteral(elems) => {
-                // Push each element onto the stack
-                for elem in elems {
-                    self.generate_expression(elem, func)?;
-                }
+            ExpressionKind::ArrayLiteral(_) => {
+                return Err("WASM backend: ArrayLiteral needs heap allocator".to_string());
             }
-            ExpressionKind::Match { scrutinee, arms } => {
-                // Simplified match: evaluate scrutinee, then first arm body
-                self.generate_expression(scrutinee, func)?;
-                func.instruction(&Instruction::Drop);
-                if let Some(first_arm) = arms.first() {
-                    self.generate_expression(&first_arm.body, func)?;
-                } else {
-                    func.instruction(&Instruction::I64Const(0));
-                }
+            ExpressionKind::Match { .. } => {
+                return Err("WASM backend: Match needs pattern dispatch".to_string());
             }
-            ExpressionKind::Closure { params: _, body } => {
-                // Simplified: generate closure body
-                self.generate_expression(body, func)?;
+            ExpressionKind::Closure { .. } => {
+                return Err("WASM backend: Closure needs runtime representation".to_string());
             }
         }
         Ok(())

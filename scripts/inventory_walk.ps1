@@ -14,7 +14,7 @@ if (-not (Test-Path $outDir)) {
 }
 
 # Classification function
-function Classify-File {
+function Get-FileClassification {
     param([string]$RelativePath, [string]$Extension, [string]$ParentDir)
 
     # Extension-based classification
@@ -128,7 +128,7 @@ foreach ($file in $allFiles) {
     $lastModified = $file.LastWriteTimeUtc.ToString("o")
     $parentDir = (Split-Path $relativePath -Parent) -replace '\\', '/'
     $extension = $file.Extension
-    $classification = Classify-File -RelativePath $relativePath -Extension $extension -ParentDir $parentDir
+    $classification = Get-FileClassification -RelativePath $relativePath -Extension $extension -ParentDir $parentDir
 
     $totalBytes += $size
 
@@ -139,7 +139,6 @@ foreach ($file in $allFiles) {
     $classificationCounts[$classification]++
 
     # SHA256 skipped for performance (77K+ files)
-    $sha256 = $null
 
     # Duplicate detection (by stem + size)
     $stem = $file.BaseName

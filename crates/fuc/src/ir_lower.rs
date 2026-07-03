@@ -84,6 +84,10 @@ impl IrBuilder {
         TypedValue { val: Value::Variable(name.to_string()), ty }
     }
 
+    fn float_val(&self, n: f64) -> TypedValue {
+        TypedValue { val: Value::FloatConst(n), ty: Type::Float }
+    }
+
     /// Lower a typed program into an IR module.
     pub fn lower_program(&mut self, prog: &TypedProgram) -> IrModule {
         let mut functions: Vec<IrFunction> = Vec::new();
@@ -130,12 +134,23 @@ impl IrBuilder {
         let mut var_map: HashMap<String, TypedValue> = HashMap::new();
         for (name, ty) in &func.params {
             let reg = self.next_reg();
-            let dest = self.temp_val(reg, ty.clone());
+            let slot = self.temp_val(reg, ty.clone());
             self.emit(Instruction::Alloca {
-                dest: dest.clone(),
+                dest: slot.clone(),
                 ty: ty.clone(),
             });
-            var_map.insert(name.clone(), dest);
+            // Store incoming argument value into the allocated slot
+            self.emit(Instruction::Store {
+                dest: Address::Pointer {
+                    val: slot.clone(),
+                    pointed_to_ty: ty.clone(),
+                },
+                val: TypedValue {
+                    val: Value::Variable(name.clone()),
+                    ty: ty.clone(),
+                },
+            });
+            var_map.insert(name.clone(), slot);
         }
 
         // Lower the function body
@@ -150,6 +165,8 @@ impl IrBuilder {
 
         IrFunction {
             name: func.name.clone(),
+            params: func.params.clone(),
+            return_type: func.return_type.clone(),
             blocks: self.blocks.clone(),
             entry_block: 0,
         }
@@ -176,13 +193,13 @@ impl IrBuilder {
             TypedStatement::Let { name, value, ty } => {
                 let val = self.lower_expression(value, var_map);
                 let reg = self.next_reg();
-                let dest = self.temp_val(reg, ty.clone());
-                self.emit(Instruction::Alloca { dest: dest.clone(), ty: ty.clone() });
+                let slot = self.temp_val(reg, ty.clone());
+                self.emit(Instruction::Alloca { dest: slot.clone(), ty: ty.clone() });
                 self.emit(Instruction::Store {
-                    dest: Address::Variable { name: format!("%{}", reg), ty: ty.clone() },
+                    dest: Address::Pointer { val: slot.clone(), pointed_to_ty: ty.clone() },
                     val,
                 });
-                var_map.insert(name.clone(), dest);
+                var_map.insert(name.clone(), slot);
             }
             TypedStatement::Assignment { target, value } => {
                 let val = self.lower_expression(value, var_map);
@@ -266,16 +283,23 @@ impl IrBuilder {
                 let reg = self.next_reg();
                 let loop_var = self.temp_val(reg, elem_ty.clone());
                 self.emit(Instruction::Alloca { dest: loop_var.clone(), ty: elem_ty.clone() });
+                let loop_var_slot = loop_var.clone();
                 var_map.insert(var.clone(), loop_var);
 
-                // Index variable
+                // Index variable (allocated on stack, accessed via Pointer)
                 let idx_reg = self.next_reg();
                 let idx_val = self.temp_val(idx_reg, Type::Int);
                 self.emit(Instruction::Alloca { dest: idx_val.clone(), ty: Type::Int });
                 self.emit(Instruction::Store {
-                    dest: Address::Variable { name: format!("%{}", idx_reg), ty: Type::Int },
+                    dest: Address::Pointer { val: idx_val.clone(), pointed_to_ty: Type::Int },
                     val: self.int_val(0),
                 });
+
+                // Determine array length for bounds check
+                let array_len = match &iter_val.ty {
+                    Type::Array(_, len) => self.int_val(*len as i64),
+                    _ => self.int_val(i64::MAX), // slice: skip bounds check (no runtime length in IR)
+                };
 
                 self.set_terminator(Terminator::Jump(header_id));
 
@@ -283,34 +307,54 @@ impl IrBuilder {
                 self.switch_to_block(header_id);
                 let load_reg = self.next_reg();
                 let idx_loaded = self.temp_val(load_reg, Type::Int);
-                let elem_ty2 = match &iter_val.ty {
-                    Type::Array(inner, _) | Type::Slice(inner) => (**inner).clone(),
-                    _ => Type::Int,
-                };
                 self.emit(Instruction::Load {
                     dest: idx_loaded.clone(),
-                    src: Address::Variable { name: format!("%{}", idx_reg), ty: Type::Int },
+                    src: Address::Pointer { val: idx_val.clone(), pointed_to_ty: Type::Int },
                 });
-                // Load element from iter at index
-                let elem_ptr_reg = self.next_reg();
-                let elem_ptr = self.temp_val(elem_ptr_reg, Type::Pointer(Box::new(elem_ty2.clone())));
-                self.emit(Instruction::GetElementPtr {
-                    dest: elem_ptr.clone(),
-                    base_ptr: iter_val.clone(),
-                    index: idx_loaded.clone(),
-                    element_ty: elem_ty2.clone(),
+                // Bounds check: idx < array_len
+                let cmp_reg = self.next_reg();
+                let cmp_val = self.temp_val(cmp_reg, Type::Bool);
+                self.emit(Instruction::BinaryOperation {
+                    dest: cmp_val.clone(),
+                    op: BinaryOp::Lt,
+                    op1: idx_loaded,
+                    op2: array_len,
                 });
-                let loop_var_reg = self.next_reg();
-                let loop_var2 = self.temp_val(loop_var_reg, elem_ty2.clone());
-                self.emit(Instruction::Load {
-                    dest: loop_var2,
-                    src: Address::Pointer { val: elem_ptr, pointed_to_ty: elem_ty2 },
+                self.set_terminator(Terminator::ConditionalJump {
+                    cond: cmp_val,
+                    then_block: body_id,
+                    else_block: exit_id,
                 });
-                // TODO: proper bounds check
-                self.set_terminator(Terminator::Jump(body_id));
 
                 // Body
                 self.switch_to_block(body_id);
+                // Reload index for this block
+                let idx_reload_reg = self.next_reg();
+                let idx_reloaded = self.temp_val(idx_reload_reg, Type::Int);
+                self.emit(Instruction::Load {
+                    dest: idx_reloaded.clone(),
+                    src: Address::Pointer { val: idx_val.clone(), pointed_to_ty: Type::Int },
+                });
+                // Load element from iter at index
+                let elem_ptr_reg = self.next_reg();
+                let elem_ptr = self.temp_val(elem_ptr_reg, Type::Pointer(Box::new(elem_ty.clone())));
+                self.emit(Instruction::GetElementPtr {
+                    dest: elem_ptr.clone(),
+                    base_ptr: iter_val.clone(),
+                    index: idx_reloaded.clone(),
+                    element_ty: elem_ty.clone(),
+                });
+                let loop_var_reg2 = self.next_reg();
+                let loop_var2 = self.temp_val(loop_var_reg2, elem_ty.clone());
+                self.emit(Instruction::Load {
+                    dest: loop_var2.clone(),
+                    src: Address::Pointer { val: elem_ptr, pointed_to_ty: elem_ty.clone() },
+                });
+                // Store element into loop variable slot
+                self.emit(Instruction::Store {
+                    dest: Address::Pointer { val: loop_var_slot.clone(), pointed_to_ty: elem_ty.clone() },
+                    val: loop_var2,
+                });
                 self.lower_block(body, var_map, return_type);
                 // Increment index
                 let new_idx_reg = self.next_reg();
@@ -318,11 +362,11 @@ impl IrBuilder {
                 self.emit(Instruction::BinaryOperation {
                     dest: new_idx.clone(),
                     op: BinaryOp::Add,
-                    op1: idx_loaded,
+                    op1: idx_reloaded,
                     op2: self.int_val(1),
                 });
                 self.emit(Instruction::Store {
-                    dest: Address::Variable { name: format!("%{}", idx_reg), ty: Type::Int },
+                    dest: Address::Pointer { val: idx_val.clone(), pointed_to_ty: Type::Int },
                     val: new_idx,
                 });
                 self.set_terminator(Terminator::Jump(header_id));
@@ -339,6 +383,7 @@ impl IrBuilder {
         var_map: &HashMap<String, TypedValue>,
     ) -> TypedValue {
         match &expr.node {
+            TypedExpressionKind::FloatLiteral(f) => self.float_val(*f),
             TypedExpressionKind::IntLiteral(n) => self.int_val(*n),
             TypedExpressionKind::BoolLiteral(b) => self.bool_val(*b),
             TypedExpressionKind::StringLiteral(s) => {
@@ -347,12 +392,12 @@ impl IrBuilder {
                 self.string_val(name)
             }
             TypedExpressionKind::Variable(name) => {
-                if let Some(var) = var_map.get(name) {
+                if let Some(slot) = var_map.get(name) {
                     let reg = self.next_reg();
-                    let dest = self.temp_val(reg, var.ty.clone());
+                    let dest = self.temp_val(reg, slot.ty.clone());
                     self.emit(Instruction::Load {
                         dest: dest.clone(),
-                        src: Address::Variable { name: name.clone(), ty: var.ty.clone() },
+                        src: Address::Pointer { val: slot.clone(), pointed_to_ty: slot.ty.clone() },
                     });
                     dest
                 } else {
@@ -454,12 +499,12 @@ impl IrBuilder {
                 }
                 dest
             }
-            TypedExpressionKind::MemberAccess { base, field: _field } => {
+            TypedExpressionKind::MemberAccess { base, field: _, field_index } => {
                 let base_val = self.lower_expression(base, var_map);
                 let reg = self.next_reg();
                 let dest = self.temp_val(reg, expr.ty.clone());
                 if let Type::Struct(name) = &base_val.ty {
-                    let field_idx = 0usize; // simplified: always field 0
+                    let field_idx = *field_index;
                     let field_ptr_reg = self.next_reg();
                     let field_ptr = self.temp_val(field_ptr_reg, Type::Pointer(Box::new(expr.ty.clone())));
                     let name_clone = name.clone();
@@ -513,22 +558,124 @@ impl IrBuilder {
                 });
                 dest
             }
-            TypedExpressionKind::Match { scrutinee: _, arms } => {
-                let mut arm_blocks: Vec<usize> = Vec::new();
+            TypedExpressionKind::Match { scrutinee, arms } => {
+                let scrutinee_val = self.lower_expression(scrutinee, var_map);
+
                 let merge_id = self.new_block("match_merge".to_string());
+                let default_id = self.new_block("match_default".to_string());
 
-                // Create a block for each arm
-                for i in 0..arms.len() {
-                    arm_blocks.push(self.new_block(format!("match_arm_{}", i)));
+                let n_arms = arms.len();
+                let mut arm_body_blocks: Vec<usize> = Vec::new();
+                let mut test_blocks: Vec<usize> = Vec::new();
+
+                // Create arm body blocks
+                for i in 0..n_arms {
+                    arm_body_blocks.push(self.new_block(format!("match_arm_{}", i)));
                 }
-                let _default_id = self.new_block("match_default".to_string());
 
-                // Jump to first arm (simplified: no pattern matching in IR yet)
-                self.set_terminator(Terminator::Jump(arm_blocks[0]));
+                // Create test blocks for all arms except the last
+                for i in 0..n_arms.saturating_sub(1) {
+                    test_blocks.push(self.new_block(format!("match_test_{}", i)));
+                }
 
-                // Lower each arm
-                for (i, arm) in arms.iter().enumerate() {
-                    self.switch_to_block(arm_blocks[i]);
+                if n_arms == 0 {
+                    self.set_terminator(Terminator::Unreachable);
+                    self.switch_to_block(default_id);
+                    self.set_terminator(Terminator::Unreachable);
+                    self.switch_to_block(merge_id);
+                    let result_reg = self.next_reg();
+                    return self.temp_val(result_reg, expr.ty.clone());
+                }
+
+                // Jump to first test block (or first arm body if only 1 arm)
+                if test_blocks.is_empty() {
+                    self.set_terminator(Terminator::Jump(arm_body_blocks[0]));
+                } else {
+                    self.set_terminator(Terminator::Jump(test_blocks[0]));
+                }
+
+                // Generate test blocks for arms 0..n-1
+                for i in 0..n_arms.saturating_sub(1) {
+                    let arm = &arms[i];
+                    self.switch_to_block(test_blocks[i]);
+
+                    // Determine next block if this test fails
+                    let next_block = if i + 1 < test_blocks.len() {
+                        test_blocks[i + 1]
+                    } else {
+                        arm_body_blocks[n_arms - 1] // last arm body is fallthrough
+                    };
+
+                    match arm.pattern.kind.as_str() {
+                        "wildcard" | "var" => {
+                            self.set_terminator(Terminator::Jump(arm_body_blocks[i]));
+                        }
+                        "int" => {
+                            let cmp_reg = self.next_reg();
+                            let cmp_val = self.temp_val(cmp_reg, Type::Bool);
+                            self.emit(Instruction::BinaryOperation {
+                                dest: cmp_val.clone(),
+                                op: BinaryOp::Eq,
+                                op1: scrutinee_val.clone(),
+                                op2: self.int_val(arm.pattern.int_val),
+                            });
+                            self.set_terminator(Terminator::ConditionalJump {
+                                cond: cmp_val,
+                                then_block: arm_body_blocks[i],
+                                else_block: next_block,
+                            });
+                        }
+                        "bool" => {
+                            let cmp_reg = self.next_reg();
+                            let cmp_val = self.temp_val(cmp_reg, Type::Bool);
+                            self.emit(Instruction::BinaryOperation {
+                                dest: cmp_val.clone(),
+                                op: BinaryOp::Eq,
+                                op1: scrutinee_val.clone(),
+                                op2: self.bool_val(arm.pattern.bool_val),
+                            });
+                            self.set_terminator(Terminator::ConditionalJump {
+                                cond: cmp_val,
+                                then_block: arm_body_blocks[i],
+                                else_block: next_block,
+                            });
+                        }
+                        "string" => {
+                            self.emit(Instruction::Comment("TODO: string pattern match".to_string()));
+                            self.set_terminator(Terminator::Jump(next_block));
+                        }
+                        _ => {
+                            self.set_terminator(Terminator::Jump(next_block));
+                        }
+                    }
+                }
+
+                // Generate arm body blocks
+                for i in 0..n_arms {
+                    let arm = &arms[i];
+                    self.switch_to_block(arm_body_blocks[i]);
+
+                    // Determine fallback block for guard failure
+                    let guard_fail_block = if i + 1 < test_blocks.len() {
+                        test_blocks[i + 1]
+                    } else if i + 1 < n_arms {
+                        arm_body_blocks[i + 1]
+                    } else {
+                        default_id
+                    };
+
+                    // Handle guard
+                    if let Some(guard) = &arm.guard {
+                        let guard_val = self.lower_expression(guard, var_map);
+                        let guard_pass_id = self.new_block(format!("match_guard_pass_{}", i));
+                        self.set_terminator(Terminator::ConditionalJump {
+                            cond: guard_val,
+                            then_block: guard_pass_id,
+                            else_block: guard_fail_block,
+                        });
+                        self.switch_to_block(guard_pass_id);
+                    }
+
                     let val = self.lower_expression(&arm.body, var_map);
                     let reg = self.next_reg();
                     let result = self.temp_val(reg, expr.ty.clone());
@@ -537,7 +684,7 @@ impl IrBuilder {
                 }
 
                 // Default
-                self.switch_to_block(_default_id);
+                self.switch_to_block(default_id);
                 self.set_terminator(Terminator::Unreachable);
 
                 // Merge
@@ -572,14 +719,13 @@ impl IrBuilder {
                     Address::Variable { name: name.clone(), ty: expr.ty.clone() }
                 }
             }
-            TypedExpressionKind::MemberAccess { base, field: _field } => {
+            TypedExpressionKind::MemberAccess { base, field: _, field_index } => {
                 let base_addr = self.lower_lvalue(base, var_map);
                 let base_val = self.lower_expression(base, var_map);
                 if let Type::Struct(struct_name) = &base_val.ty {
-                    let field_idx = 0usize; // simplified
                     Address::Field {
                         base: Box::new(base_addr),
-                        field_index: field_idx,
+                        field_index: *field_index,
                         field_ty: expr.ty.clone(),
                         struct_name: struct_name.clone(),
                     }

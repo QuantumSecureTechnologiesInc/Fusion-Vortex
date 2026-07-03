@@ -186,6 +186,8 @@ pub struct BasicBlock {
 #[derive(Debug, Clone)]
 pub struct IrFunction {
     pub name: String,
+    pub params: Vec<(String, Type)>,
+    pub return_type: Type,
     pub blocks: Vec<BasicBlock>,
     pub entry_block: usize,
 }

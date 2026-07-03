@@ -39,6 +39,7 @@ pub struct TypedExpression {
 
 pub enum TypedExpressionKind {
     IntLiteral(i64),
+    FloatLiteral(f64),
     BoolLiteral(bool),
     StringLiteral(String),
     Variable(String),
@@ -47,7 +48,7 @@ pub enum TypedExpressionKind {
     UnaryOperation { op: UnaryOp, expr: Box<TypedExpression> },
     ArrayLiteral(Vec<TypedExpression>),
     StructLiteral { name: String, fields: Vec<(String, ir::Type, TypedExpression)> },
-    MemberAccess { base: Box<TypedExpression>, field: String },
+    MemberAccess { base: Box<TypedExpression>, field: String, field_index: usize },
     AddressOf(Box<TypedExpression>),
     Dereference(Box<TypedExpression>),
     Index { array: Box<TypedExpression>, index: Box<TypedExpression> },
@@ -271,7 +272,7 @@ impl Analyzer {
                 (TypedExpressionKind::IntLiteral(*n), ir::Type::Int)
             }
             ExpressionKind::Literal(Literal::Float(n)) => {
-                (TypedExpressionKind::IntLiteral(*n as i64), ir::Type::Float)
+                (TypedExpressionKind::FloatLiteral(*n), ir::Type::Float)
             }
             ExpressionKind::Literal(Literal::Boolean(b)) => {
                 (TypedExpressionKind::BoolLiteral(*b), ir::Type::Bool)
@@ -315,18 +316,36 @@ impl Analyzer {
             }
             ExpressionKind::MemberAccess { base, field } => {
                 let typed_base = self.type_check_expr(base, locals, errors);
-                let field_ty = match &typed_base.ty {
+                let (field_ty, field_index) = match &typed_base.ty {
                     ir::Type::Struct(name) => {
-                        self.structs.get(name)
-                            .and_then(|fields| fields.iter().find(|(n, _)| n == field))
-                            .map(|(_, t)| t.clone())
-                            .unwrap_or(ir::Type::Unknown)
+                        match self.structs.get(name) {
+                            Some(fields) => {
+                                match fields.iter().enumerate().find(|(_, (n, _))| n == field) {
+                                    Some((idx, (_, ty))) => (ty.clone(), idx),
+                                    None => {
+                                        errors.push(format!(
+                                            "unknown field '{}' on struct '{}'",
+                                            field, name
+                                        ));
+                                        (ir::Type::Unknown, 0)
+                                    }
+                                }
+                            }
+                            None => {
+                                errors.push(format!("unknown struct '{}'", name));
+                                (ir::Type::Unknown, 0)
+                            }
+                        }
                     }
-                    _ => ir::Type::Unknown,
+                    other => {
+                        errors.push(format!("member access on non-struct type: {:?}", other));
+                        (ir::Type::Unknown, 0)
+                    }
                 };
                 (TypedExpressionKind::MemberAccess {
                     base: Box::new(typed_base),
                     field: field.clone(),
+                    field_index,
                 }, field_ty)
             }
             ExpressionKind::StructLiteral { name, fields } => {
