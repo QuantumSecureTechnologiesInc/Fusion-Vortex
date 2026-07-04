@@ -81,3 +81,31 @@ updates:
 # Security updates are automatically enabled and get higher priority
 # They will be created immediately when vulnerabilities are detected
 # regardless of the schedule above
+
+  # npm dependencies (Fusion Visual UI)
+  - package-ecosystem: "npm"
+    directory: "/fusion-visual-ui"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+      - "visual-ui"
+      - "automated"
+    commit-message:
+      prefix: "deps(npm)"
+      prefix-development: "deps(npm-dev)"
+      include: "scope"
+    versioning-strategy: "increase"
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@types/*"
+          - "eslint*"
+      dev-dependencies:
+        dependency-type: "development"
