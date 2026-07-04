@@ -12,9 +12,10 @@
 //   >= HEAP_BASE so they don't conflict with runtime allocations that
 //   start the bump pointer at HEAP_BASE).
 
+#[allow(unused_imports)] // MatchPattern used in tests via super::*
 use crate::ast::{
-    BinaryOp, Block, Declaration, Expression, ExpressionKind, Literal, MatchArm, Parameter,
-    Pattern, Statement, Type, UnaryOp,
+    BinaryOp, Block, Declaration, Expression, ExpressionKind, Literal, MatchArm, MatchPattern, Parameter,
+    Statement, Type, UnaryOp,
 };
 use crate::wasm::types::*;
 use std::collections::HashMap;
@@ -137,9 +138,9 @@ impl WasmCodeGenerator {
         // First pass: collect struct declarations so MemberAccess can
         // resolve field indices before any function bodies are compiled.
         for decl in declarations {
-            if let Declaration::Struct { name, fields, .. } = decl {
-                let field_names: Vec<String> = fields.iter().map(|f| f.name.clone()).collect();
-                self.struct_fields.insert(name.clone(), field_names);
+            if let Declaration::StructDefinition(def) = decl {
+                let field_names: Vec<String> = def.fields.iter().map(|(name, _)| name.clone()).collect();
+                self.struct_fields.insert(def.name.clone(), field_names);
             }
         }
 
@@ -181,7 +182,7 @@ impl WasmCodeGenerator {
             Declaration::ModuleDecl { .. }
             | Declaration::UseDecl { .. }
             | Declaration::ImportDecl { .. }
-            | Declaration::Struct { .. } => {
+            | Declaration::StructDefinition(_) => {
                 // Structs were handled in the pre-pass; module/use/import skipped.
             }
             _ => {}
@@ -807,23 +808,19 @@ impl WasmCodeGenerator {
         let arm = &arms[0];
         let rest = &arms[1..];
 
-        match &arm.pattern {
-            Pattern::Wildcard | Pattern::Variable(_) => {
-                // Unconditional — just emit the body; ignore remaining arms.
-                self.generate_expression(&arm.body, func)?;
-            }
-            Pattern::Literal(lit) => {
+        match arm.pattern.kind.as_str() {
+            "int" | "bool" | "string" => {
                 // Evaluate the scrutinee.
                 self.generate_expression(scrutinee, func)?;
 
                 // Push the pattern value for comparison.
-                match lit {
-                    Literal::Integer(n) => {
-                        func.instruction(&Instruction::I64Const(*n));
+                match arm.pattern.kind.as_str() {
+                    "int" => {
+                        func.instruction(&Instruction::I64Const(arm.pattern.int_val));
                         func.instruction(&Instruction::I64Eq);
                     }
-                    Literal::Boolean(b) => {
-                        func.instruction(&Instruction::I32Const(if *b { 1 } else { 0 }));
+                    "bool" => {
+                        func.instruction(&Instruction::I32Const(if arm.pattern.bool_val { 1 } else { 0 }));
                         // Scrutinee was i64 (Int), convert comparison to i32.
                         func.instruction(&Instruction::I32WrapI64);
                         func.instruction(&Instruction::I32Eq);
@@ -848,6 +845,10 @@ impl WasmCodeGenerator {
                     self.emit_match_arms(scrutinee, rest, func)?;
                     func.instruction(&Instruction::End);
                 }
+            }
+            _ => {
+                // wildcard, var, or unknown pattern — just emit the body.
+                self.generate_expression(&arm.body, func)?;
             }
         }
         Ok(())
@@ -1251,7 +1252,7 @@ mod tests {
                     Statement::Let {
                         name: "a".to_string(),
                         value: arr_expr,
-                        ty: Type::Array(Box::new(Type::Int)),
+                        ty: Type::Array(Box::new(Type::Int), 3),
                     },
                     Statement::Return(Some(make_int(0))),
                 ],
@@ -1273,15 +1274,18 @@ mod tests {
             scrutinee: Box::new(make_var("x")),
             arms: vec![
                 MatchArm {
-                    pattern: Pattern::Literal(Literal::Integer(0)),
+                    pattern: MatchPattern::int_literal(0),
+                    guard: None,
                     body: make_int(10),
                 },
                 MatchArm {
-                    pattern: Pattern::Literal(Literal::Integer(1)),
+                    pattern: MatchPattern::int_literal(1),
+                    guard: None,
                     body: make_int(20),
                 },
                 MatchArm {
-                    pattern: Pattern::Wildcard,
+                    pattern: MatchPattern::wildcard(),
+                    guard: None,
                     body: make_int(99),
                 },
             ],
