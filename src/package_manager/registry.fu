@@ -42,11 +42,10 @@ impl RegistryClient {
     }
     /// Search packages in registry
     pub fn search(&mut self, query: &str) -> Result<FVec<PackageMetadata>, FString> {
-        let url = format!("{}/api/v1/search", self.registry_url);
+        let url = format!("{}/api/v1/search?q={}", self.registry_url, query);
         let response = self
             .client
             .get(&url)
-            .query(&[("q", query)])
             .send()
             .map_err(|e| format!("HTTP request failed: {}", e))?;
         if !response.status().is_success() {
