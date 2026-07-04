@@ -28,6 +28,7 @@ editors/vscode-fusion/node_modules/
 ui/admin-portal/node_modules/
 
 # Build outputs
+.next/
 bin/cc.exe
 bin/clang_real.exe
 runtime/hashmap_runtime.o

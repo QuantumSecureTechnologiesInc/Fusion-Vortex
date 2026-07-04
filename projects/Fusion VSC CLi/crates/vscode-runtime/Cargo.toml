@@ -23,7 +23,7 @@ tower-lsp = { workspace = true }
 # For extension execution - external crates
 wasmer = "4.2"
 wasmer-compiler-cranelift = "4.2"
-wasmtime = "16.0"
+wasmtime = "24.0"
 reqwest = { workspace = true, features = ["stream"] }
 
 # For Node.js bridge

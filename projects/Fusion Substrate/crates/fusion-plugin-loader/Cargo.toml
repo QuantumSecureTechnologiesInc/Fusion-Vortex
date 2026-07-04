@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 description = "WASM-based plugin loader with sandboxing"
 
 [dependencies]
-wasmtime = "16.0"
+wasmtime = "24.0"
 anyhow = "1.0"
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"] }
