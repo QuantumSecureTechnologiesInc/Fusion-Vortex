@@ -1,0 +1,33 @@
+# Cargo configuration for Fusion v2.0 Vortex
+#
+# Critical dependency pins — do NOT remove without running full test suite.
+# These ensure cargo update stays within safe ranges for compiler-critical crates.
+
+[build]
+# Suppress noisy profile warnings from workspace members
+# rustflags = ["-C", "link-arg=-s"]
+
+[alias]
+# Quick checks for dependency updates
+check-all = "check --workspace --all-features"
+test-all = "test --workspace --all-features"
+
+# Safety aliases for dependency updates
+# Run before merging any dependency PR:
+#   cargo safe-update   → updates within semver ranges (safe)
+#   cargo deny check    → verifies licenses + advisories + bans
+safe-update = "update --dry-run"
+
+[registries.crates-io]
+protocol = "sparse"
+
+# Minimum versions for critical compiler dependencies.
+# cargo-deny [bans] section enforces these at CI time.
+#
+# CRITICAL — DO NOT UPDATE WITHOUT FULL WASM + LLVM TEST:
+#   wasmtime    = "24.0"   (WASM runtime in tests)
+#   wasm-encoder = "0.219" (WASM bytecode generation)
+#   wasmparser  = "0.219"  (WASM validation)
+#   inkwell     = "0.9.0"  (LLVM 20.1.8 bindings — requires system LLVM)
+#   ring        = "0.17.8" (crypto primitives)
+#   libc        = "0.2"    (FFI/syscall stubs)
