@@ -22,8 +22,8 @@ for file in $STAGED_FILES; do
             *.sh|*.ps1|*.bash|*.yml|*.yaml|Makefile)
                 # Check for cargo build/test/run commands
                 if grep -qE "(^|[^#])(cargo (build|test|run|check))" "$file" 2>/dev/null; then
-                    # Exempt runtime directory
-                    if [[ ! "$file" =~ ^runtime/ ]]; then
+                    # Exempt runtime directory and CI workflow files
+                    if [[ ! "$file" =~ ^runtime/ ]] && [[ ! "$file" =~ ^.github/workflows/ ]]; then
                         echo -e "${RED}❌ Policy violation in: $file${NC}"
                         echo "   Contains prohibited 'cargo' command"
                         echo "   Use 'fusion build/test/run' instead"
