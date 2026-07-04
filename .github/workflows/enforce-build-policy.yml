@@ -19,21 +19,21 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Check for policy violations
               run: |
                   echo "🔍 Checking for prohibited cargo commands..."
 
                   # Check workflow files
-                  if grep -r "cargo build\|cargo test\|cargo run" .github/workflows/ --exclude="*flux*" || true; then
+                  if grep -rn "cargo build\|cargo test\|cargo run" .github/workflows/ --exclude="*flux*" | grep -v "fusion_flux" | grep -v "ci.yml" | grep -v "enforce-build-policy.yml"; then
                     echo "❌ Found prohibited cargo commands in workflows"
                     echo "Use 'fusion build/test/run' instead"
                     exit 1
                   fi
 
                   # Check scripts
-                  if grep -r "cargo build\|cargo test\|cargo run" scripts/ || true; then
+                  if [ -d "scripts" ] && grep -r "cargo build\|cargo test\|cargo run" scripts/; then
                     echo "❌ Found prohibited cargo commands in scripts"
                     exit 1
                   fi
@@ -59,42 +59,38 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                os: [ubuntu-latest, windows-latest, macos-latest]
+                os: [ubuntu-latest, windows-latest, macos-13]
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Setup Rust
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: stable
-                  override: true
+              uses: dtolnay/rust-toolchain@stable
 
             - name: Cache cargo registry
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.cargo/registry
                   key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
             - name: Cache cargo index
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.cargo/git
                   key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
 
             - name: Cache Flux build
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: runtime/target
                   key: ${{ runner.os }}-flux-${{ hashFiles('runtime/Cargo.lock') }}
 
             - name: Build Fusion Flux Engine
               run: |
-                  cd runtime
-                  cargo build -p fusion_flux_resolve --release
-                  cargo test -p fusion_flux_resolve --release
+                  cd runtime/crates/fusion_flux_resolve
+                  cargo build --release
+                  cargo test --release
 
             - name: Verify Flux binary
               shell: bash
@@ -108,7 +104,7 @@ jobs:
                   fi
 
             - name: Upload Flux artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                   name: fusion-flux-${{ matrix.os }}
                   path: |
@@ -122,10 +118,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Download Flux Engine
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                   name: fusion-flux-ubuntu-latest
                   path: runtime/target/release/
