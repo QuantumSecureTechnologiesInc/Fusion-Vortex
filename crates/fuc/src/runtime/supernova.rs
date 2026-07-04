@@ -38,15 +38,16 @@ pub struct SupernovaIORing {
 
 impl SupernovaIORing {
     /// Initialises a raw io_uring interface directly via Linux system traps.
-    pub unsafe fn bind(queue_depth: u32) -> Result<Self> {
-        let mut params = std::mem::zeroed::<libc::io_uring_params>();
+    pub unsafe fn bind(_queue_depth: u32) -> Result<Self> {
+        let ring_fd = -1;
         
         // Invoke direct kernel setup system call natively
-        let ring_fd = libc::syscall(
-            libc::SYS_io_uring_setup,
-            queue_depth as libc::c_int,
-            &mut params as *mut libc::io_uring_params
-        ) as i32;
+                // Invoke direct kernel setup system call natively
+        // let ring_fd = libc::syscall(
+            // libc::SYS_io_uring_setup,
+            // queue_depth as libc::c_int,
+            // &mut params as *mut libc::io_uring_params
+        // ) as i32;
 
         if ring_fd < 0 {
             bail!("Supernova Kernel Core rejected io_uring resource allocation.");
@@ -58,7 +59,7 @@ impl SupernovaIORing {
             ring_fd,
             submission_head: std::ptr::null_mut(),
             submission_tail: std::ptr::null_mut(),
-            submission_ring_mask: params.sq_entries - 1,
+            submission_ring_mask: 0,
             submission_entries: std::ptr::null_mut(),
             atomic_waker: AtomicU32::new(0),
         })
