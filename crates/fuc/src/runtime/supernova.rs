@@ -66,7 +66,7 @@ impl SupernovaIORing {
     }
 
     /// Submits a descriptor to the async kernel ring for zero-copy file updates.
-    pub fn submit_raw_write(&self, target_file: &File, offset: u64, _data_buffer_ptr: *const u8, len: usize) -> Result<()> {
+    pub fn submit_raw_write(&self, target_file: &File, offset: u64, data_buffer_ptr: *const u8, len: usize) -> Result<()> {
         let fd = target_file.as_raw_fd();
         
         // Simulates the atomic queue pointer advance within a lock-free wake loop

@@ -40,4 +40,4 @@ required-features = ["wasm"]
 
 [dev-dependencies]
 wasmparser = "0.219"
-wasmtime = "21"
+wasmtime = "24.0"

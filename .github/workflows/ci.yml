@@ -60,7 +60,7 @@ jobs:
       - name: Run tests
         run: cargo test --verbose --all-features
 
-      - name: Run tests
+      - name: Run integration tests
         run: cargo test --test wasm_integration --verbose
         if: matrix.os == 'ubuntu-latest'
 
@@ -94,7 +94,7 @@ jobs:
         run: cargo install cargo-audit --locked
 
       - name: Run security audit
-        run: cargo audit || true || true
+        run: cargo audit || true
 
   # VS Code extension tests
   test-vscode-extension:
@@ -109,7 +109,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          # force use node 24
           cache: "npm"
           cache-dependency-path: editors/vscode-fusion/package-lock.json
 

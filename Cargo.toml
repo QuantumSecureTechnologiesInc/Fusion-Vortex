@@ -149,7 +149,7 @@ proptest = "1.6.0"
 async-graphql = "7.0"
 petgraph = "0.6"
 axum = "0.7"
-wasmtime = "17.0"
+wasmtime = "24.0"
 pyo3 = "0.20"
 
 # Crypto

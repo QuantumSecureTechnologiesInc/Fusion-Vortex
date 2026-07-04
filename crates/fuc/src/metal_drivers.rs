@@ -14,16 +14,9 @@ pub struct MetalDriverCore {
 impl MetalDriverCore {
     pub unsafe fn initialize_io_uring(_capacity: u32) -> Result<Self> {
         // Setup raw kernel tracking mappings via system architecture traps natively
-        let ring_fd = -1;
+        let fd = -1;
         
-        // System execution registration syscall interception mapping
-                // System execution registration syscall interception mapping
-        // let ring_fd = libc::syscall(
-            // libc::SYS_io_uring_setup,
-            // capacity as libc::c_int,
-            // &mut params as *mut libc::io_uring_params
-        // ) as i32;
-
+        let ring_fd = fd;
         if ring_fd < 0 {
             bail!("System core architecture rejected io_uring resource allocation framework initialization.");
         }
