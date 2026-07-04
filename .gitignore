@@ -64,3 +64,7 @@ target_fuc2/
 target_fuc/
 target_fuc_native/
 target_fuc2/
+
+# Next.js
+.next
+node_modules
