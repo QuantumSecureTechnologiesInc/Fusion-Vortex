@@ -39,13 +39,13 @@ pub struct SupernovaIORing {
 impl SupernovaIORing {
     /// Initialises a raw io_uring interface directly via Linux system traps.
     pub unsafe fn bind(queue_depth: u32) -> Result<Self> {
-        let mut params = std::mem::zeroed::<libc::io_uring_params>();
+        let mut params: [u32; 30] = std::mem::zeroed();
         
         // Invoke direct kernel setup system call natively
         let ring_fd = libc::syscall(
             libc::SYS_io_uring_setup,
             queue_depth as libc::c_int,
-            &mut params as *mut libc::io_uring_params
+            &mut params as *mut _ as *mut std::ffi::c_void
         ) as i32;
 
         if ring_fd < 0 {
@@ -58,14 +58,14 @@ impl SupernovaIORing {
             ring_fd,
             submission_head: std::ptr::null_mut(),
             submission_tail: std::ptr::null_mut(),
-            submission_ring_mask: params.sq_entries - 1,
+            submission_ring_mask: params[0] - 1,
             submission_entries: std::ptr::null_mut(),
             atomic_waker: AtomicU32::new(0),
         })
     }
 
     /// Submits a descriptor to the async kernel ring for zero-copy file updates.
-    pub fn submit_raw_write(&self, target_file: &File, offset: u64, data_buffer_ptr: *const u8, len: usize) -> Result<()> {
+    pub fn submit_raw_write(&self, target_file: &File, offset: u64, _data_buffer_ptr: *const u8, len: usize) -> Result<()> {
         let fd = target_file.as_raw_fd();
         
         // Simulates the atomic queue pointer advance within a lock-free wake loop

@@ -14,13 +14,13 @@ pub struct MetalDriverCore {
 impl MetalDriverCore {
     pub unsafe fn initialize_io_uring(capacity: u32) -> Result<Self> {
         // Setup raw kernel tracking mappings via system architecture traps natively
-        let mut params = std::mem::zeroed::<libc::io_uring_params>();
+        let mut params: [u32; 30] = std::mem::zeroed();
         
         // System execution registration syscall interception mapping
         let ring_fd = libc::syscall(
             libc::SYS_io_uring_setup,
             capacity as libc::c_int,
-            &mut params as *mut libc::io_uring_params
+            &mut params as *mut _ as *mut std::ffi::c_void
         ) as i32;
 
         if ring_fd < 0 {

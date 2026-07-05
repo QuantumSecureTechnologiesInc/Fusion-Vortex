@@ -16,10 +16,20 @@ pub fn is_dirty(root: &Path, artifact: &Path) -> bool {
 
 fn calculate_tree_hash(root: &Path) -> String {
     let mut hasher = Sha256::new();
-    for entry in WalkDir::new(root).sort_by_file_name() {
-        let entry = entry.unwrap();
+    let walker = WalkDir::new(root).sort_by_file_name().into_iter().filter_entry(|e| {
+        let name = e.file_name().to_string_lossy();
+        // Skip hidden directories (like .git), target, and node_modules entirely
+        !name.starts_with('.') && name != "target" && name != "node_modules"
+    });
+    for entry in walker {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
         if entry.path().extension().map_or(false, |e| e == "fu") {
-            hasher.update(fs::read(entry.path()).expect("Source unreadable"));
+            if let Ok(content) = fs::read(entry.path()) {
+                hasher.update(content);
+            }
         }
     }
     hex::encode(hasher.finalize())
