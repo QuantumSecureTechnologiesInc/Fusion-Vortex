@@ -16,9 +16,7 @@
     "quantum computing",
     "machine learning"
   ],
-  "activationEvents": [
-    
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -79,10 +77,10 @@
     "package": "vsce package"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
-    "@types/vscode": "^1.110.0",
-    "typescript": "^6.0.2",
-    "@vscode/vsce": "^3.7.1"
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^3.9.2",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
