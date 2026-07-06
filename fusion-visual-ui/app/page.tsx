@@ -5,6 +5,14 @@ import { Terminal, Cpu, Zap, Activity, Folder, Play, Layers } from 'lucide-react
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 
+const fileExplorerItems = ['src', 'main.fsn', 'utils.fsn', 'tests', 'Cargo.toml', 'Flux.lock'];
+
+const actionCards = [
+    { icon: <Play size={20} />, label: "Run Tests", desc: "Execute full suite" },
+    { icon: <Layers size={20} />, label: "Compile", desc: "Build release binary" },
+    { icon: <Folder size={20} />, label: "Deliver", desc: "Package for deployment" },
+];
+
 export default function Home() {
   const [intent, setIntent] = useState('');
   const [status, setStatus] = useState<string[]>([]);
@@ -60,7 +68,7 @@ export default function Home() {
         <aside className={styles.sidebar}>
             <div className={styles.sidebarHeader}>Project Explorer</div>
             <div className={styles.fileExplorer}>
-                {['src', 'main.fsn', 'utils.fsn', 'tests', 'Cargo.toml', 'Flux.lock'].map((item, i) => (
+                {fileExplorerItems.map((item, i) => (
                     <div key={i} className={styles.fileItem}>
                         <Folder size={14} color="#bd00ff" />
                         {item}
@@ -100,25 +108,20 @@ export default function Home() {
                                         onChange={(e) => setIntent(e.target.value)}
                                         placeholder="Enter your intent (e.g., 'Setup robust machine learning pipeline')..." 
                                         className={styles.intentInput}
-                                        aria-label="Compilation intent"
                                         autoFocus
                                     />
-                                    <button type="submit" className={styles.executeBtn} disabled={!intent.trim() || isCompiling}>
+                                    <button type="submit" className={styles.executeBtn}>
                                         EXECUTE
                                     </button>
                                 </div>
                             </form>
                             <div className={styles.actionsGrid}>
-                                {[
-                                    { icon: <Play size={20} />, label: "Run Tests", desc: "Execute full suite" },
-                                    { icon: <Layers size={20} />, label: "Compile", desc: "Build release binary" },
-                                    { icon: <Folder size={20} />, label: "Deliver", desc: "Package for deployment" },
-                                ].map((action, i) => (
-                                    <button key={i} type="button" className={styles.actionCard} aria-label={`${action.label}: ${action.desc}`}>
+                                {actionCards.map((action, i) => (
+                                    <div key={i} className={styles.actionCard}>
                                         <div className={styles.actionIcon}>{action.icon}</div>
                                         <div className={styles.actionLabel}>{action.label}</div>
                                         <div className={styles.actionDesc}>{action.desc}</div>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
                         </motion.div>

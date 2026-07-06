@@ -24,7 +24,22 @@ This project uses GitHub Dependabot to automatically manage and update dependenc
   - Production dependencies grouped together
   - Dev dependencies (`@types/*`, `@typescript-eslint/*`) grouped separately
 
-### 3. GitHub Actions
+### 3. npm (Fusion Visual UI)
+
+- **Directory**: `/fusion-visual-ui`
+
+- **Schedule**: Weekly on Thursdays at 09:00 UTC
+
+- **Max PRs**: 10
+
+- **Grouping**:
+
+  - Production dependencies grouped together
+
+  - Dev dependencies (`@types/*`, `eslint*`) grouped separately
+
+
+### 4. GitHub Actions
 
 - **Directory**: `/` (root)
 - **Schedule**: Weekly on Wednesdays at 09:00 UTC
