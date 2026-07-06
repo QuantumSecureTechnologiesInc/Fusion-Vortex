@@ -5,3 +5,7 @@
 
 [cargo]
 features = ["wasm"]
+
+[check]
+allTargets = true
+features = ["wasm"]

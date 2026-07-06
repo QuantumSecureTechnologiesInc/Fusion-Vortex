@@ -331,7 +331,12 @@ impl Parser {
                 Ok(Type::Array(Box::new(elem), len))
             }
             Some(Token::Identifier(_)) => {
-                let name = self.parse_identifier()?;
+                let mut name = self.parse_identifier()?;
+                while self.peek() == Some(&Token::ColonColon) {
+                    self.advance();
+                    name.push_str("::");
+                    name.push_str(&self.parse_identifier()?);
+                }
                 Ok(Type::Struct(name))
             }
             Some(Token::LParen) => {
@@ -737,7 +742,12 @@ impl Parser {
                 })
             }
             Some(Token::Identifier(_)) => {
-                let name = self.parse_identifier()?;
+                let mut name = self.parse_identifier()?;
+                while self.peek() == Some(&Token::ColonColon) {
+                    self.advance();
+                    name.push_str("::");
+                    name.push_str(&self.parse_identifier()?);
+                }
                 Ok(Expression {
                     kind: ExpressionKind::Variable(name),
                     ty: None,

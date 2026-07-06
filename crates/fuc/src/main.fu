@@ -21,21 +21,4 @@ pub fn main() -> int {
     let args = cli::parseargs();
     let result = stage1_parser_api::compile_entry(args);
     return result;
-}//! 7 mods + sema_shape_check
-
-mod stage1_parser_api;
-mod stage1_sema_api;
-mod ast;
-mod lexer;
-mod parser;
-mod sema;
-mod dummy;
-
-extern fn printf(fmt: string, ...) -> int;
-
-pub fn main() -> int {
-    printf("[fuc-native] before sema_shape_check\n");
-    let result = stage1_parser_api::sema_shape_check("test.fu");
-    printf("[fuc-native] sema_shape_check: %d\n", result);
-    return result;
 }
