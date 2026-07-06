@@ -192,8 +192,13 @@
     transition: background 0.2s;
 }
 
-.execute-btn:hover {
+.execute-btn:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.2);
+}
+
+.execute-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .actions-grid {
@@ -205,6 +210,11 @@
 
 .action-card {
     padding: 1rem;
+    text-align: left;
+    display: block;
+    width: 100%;
+    color: inherit;
+    font-family: inherit;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 0.5rem;

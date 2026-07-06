@@ -100,9 +100,10 @@ export default function Home() {
                                         onChange={(e) => setIntent(e.target.value)}
                                         placeholder="Enter your intent (e.g., 'Setup robust machine learning pipeline')..." 
                                         className={styles.intentInput}
+                                        aria-label="Compilation intent"
                                         autoFocus
                                     />
-                                    <button type="submit" className={styles.executeBtn}>
+                                    <button type="submit" className={styles.executeBtn} disabled={!intent.trim() || isCompiling}>
                                         EXECUTE
                                     </button>
                                 </div>
@@ -113,11 +114,11 @@ export default function Home() {
                                     { icon: <Layers size={20} />, label: "Compile", desc: "Build release binary" },
                                     { icon: <Folder size={20} />, label: "Deliver", desc: "Package for deployment" },
                                 ].map((action, i) => (
-                                    <div key={i} className={styles.actionCard}>
+                                    <button key={i} type="button" className={styles.actionCard} aria-label={`${action.label}: ${action.desc}`}>
                                         <div className={styles.actionIcon}>{action.icon}</div>
                                         <div className={styles.actionLabel}>{action.label}</div>
                                         <div className={styles.actionDesc}>{action.desc}</div>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         </motion.div>
