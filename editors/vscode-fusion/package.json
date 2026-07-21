@@ -85,7 +85,7 @@
     "@vscode/vsce": "^3.7.1"
   },
   "dependencies": {
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^10.1.0"
   },
   "repository": {
     "type": "git",
